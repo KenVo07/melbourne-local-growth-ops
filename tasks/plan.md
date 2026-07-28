@@ -1,69 +1,45 @@
-# TSK-45 implementation plan
+# M1 parallel-development foundation plan
 
 ## Outcome
 
-Deliver a versioned, strict TypeScript and Zod contract package for the
-Melbourne Local Growth Ops product family. The package models independently
-sellable capabilities and isolated website deployments without introducing a
-shared public runtime or database.
+Create the smallest shared M1 foundation that lets four feature branches work
+independently from `integration/m1`. Preserve the M0 contracts and architecture,
+lock only the interfaces needed at integration seams, and do not implement the
+four feature streams.
 
-## Toolchain and scope
+## Baseline and scope
 
-- Pin Node.js 24.18.0 LTS and pnpm 11.9.0.
-- Publish `@melbourne-local-growth-ops/contracts` as compiled ESM with
-  TypeScript declarations.
-- Bootstrap only the workspace files required to build and test this package.
-- Leave applications, the complete monorepo, CI, and deployment tooling to
-  TSK-49.
+- Base all M1 branches on `origin/main@21e4ebf`.
+- Preserve `m0-complete` and never rewrite `main`.
+- Keep Node.js 24.18.0 and pnpm 11.9.0 pins.
+- Extend the workspace only with meaningful interface packages.
+- Add a pull-request quality gate without selecting a new linter.
+- Leave all feature implementation to TSK-50 through TSK-56.
 
-## Contract model
+## Shared interface slice
 
-- Keep commercial and operational records separate from public deployment
-  configuration.
-- Use strict, schema-versioned objects and closed discriminated unions.
-- Model representative website modules: `LEAD_FORM`, `BOOKING_CTA`, and
-  `ANALYTICS`.
-- Model representative connectors: `EMAIL_DELIVERY`, `BOOKING_LINK`, and
-  `GOOGLE_ANALYTICS_4`.
-- Keep Google Presence and Reputation configuration envelopes minimal.
-- Resolve optional infrastructure from both enabled modules and connectors.
-  Configured infrastructure must equal the resolved dependency set.
+- `packages/site-core`: the validated configuration alias, template contract,
+  and module definition boundary.
+- `packages/deployment`: the deployment manifest exchanged with deployment and
+  handoff tooling.
+- `packages/integrations`: the provider-neutral lead-delivery adapter.
+- `packages/observability`: a technical-only event envelope with no form body.
+- Do not create empty app, template, module, or script packages. Feature owners
+  create those paths with their first vertical slice.
 
-## Delivery and handoff
+## Coordination model
 
-- An absent handoff record means handoff has not been initiated.
-- `PLANNED` and `IN_PROGRESS` retain `MANAGED_ISOLATED` delivery and agency
-  operational ownership.
-- `COMPLETED` requires `CLIENT_HANDOFF`, client operational ownership, and no
-  private agency repository, credential, or secret dependency.
+- Foundation changes flow through `feat/m1-foundation` into `integration/m1`.
+- Four feature branches start from the pushed integration commit.
+- Shared interface changes require a written interface request and integration
+  owner approval.
+- Feature agents commit and push vertical slices but do not merge.
 
-## Validation API
+## Verification
 
-- Return only package-level `ValidationIssue` objects with a closed code union,
-  a readonly `(string | number)[]` path, and a descriptive message.
-- Translate Zod issues at the package boundary; do not expose Zod internals or
-  rejected input values.
-- Provide structural website validation and aggregate bundle validation for
-  cross-record rules.
-
-## Delivery sequence
-
-1. Lock this plan, the task checklist, and the tracked TSK-45 specification.
-2. Add the minimal workspace and package build.
-3. Implement schemas and validation in RED-GREEN-REFACTOR slices.
-4. Verify tests, type checking, build output, ESM import, frozen install, and
-   dependency signatures.
-5. Review the public API and remove unnecessary complexity.
-
-## Domain-rules qualification
-
-`packages/contracts/src/DOMAIN_RULES.md` remains unchanged and untracked. It is
-not a build or test input. Approved rules are repeated in the tracked TSK-45
-specification. The following statements are not adopted as written:
-
-- Minimum-term and declining-buyout rules are unapproved commercial
-  assumptions.
-- Database, authentication, storage, and queues are infrastructure
-  dependencies, not independently sold product capabilities.
-- Client-owned handoff infrastructure applies only after handoff is completed,
-  not during planning or transfer.
+- Run frozen install, build, tests, type checking, and diff checks.
+- Review package boundaries and prohibit deep imports into `contracts`.
+- Check for committed `.env` files and likely credentials.
+- Confirm the foundation contains no deployment, form, rendering, or console
+  feature implementation.
+- Bootstrap and verify all four worktrees after integration is pushed.
