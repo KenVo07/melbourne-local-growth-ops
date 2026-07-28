@@ -24,3 +24,9 @@ We request approval to adopt **Next.js + TypeScript** as the standard frontend f
 ## Requested Actions
 - Please approve this direction.
 - Merge the framework foundation changes into `integration/m1` so that feature agents can safely scaffold their apps.
+
+## Approval
+**Status:** Approved
+**Date:** 2026-07-28
+**Integration Owner:** M1 Coordinator
+**Notes:** Approved Next.js + TypeScript as the shared frontend framework.
