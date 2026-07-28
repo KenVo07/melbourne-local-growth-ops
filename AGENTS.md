@@ -20,9 +20,14 @@ human resolution rather than silently choosing one.
 
 ## Current commands
 
-No package manifest or executable toolchain exists yet. Do not invent or claim
-build, lint, typecheck, or test results. Before implementation, inspect the root
-for the current package-manager files and run the exact scripts they declare.
+Use Node.js 24.18.0 and pnpm 11.9.0 as pinned in the repository.
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+pnpm build
+```
 
 Useful read-only checks:
 
@@ -55,4 +60,5 @@ outside the approved task.
 
 The current task specification is
 [TSK-45 contract schemas](docs/tasks/TSK-45-contract-schemas.md). It is
-documentation only until implementation is separately approved.
+implemented in `packages/contracts`; consult its specification before changing
+the public contract.

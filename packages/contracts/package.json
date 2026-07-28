@@ -1,0 +1,27 @@
+{
+  "name": "@melbourne-local-growth-ops/contracts",
+  "version": "0.1.0",
+  "description": "Executable contracts for Melbourne Local Growth Ops",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  }
+}

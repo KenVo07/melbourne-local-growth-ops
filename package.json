@@ -1,0 +1,19 @@
+{
+  "name": "melbourne-local-growth-ops",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": "24.18.0",
+    "pnpm": "11.9.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @melbourne-local-growth-ops/contracts build",
+    "test": "pnpm --filter @melbourne-local-growth-ops/contracts test",
+    "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts typecheck"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

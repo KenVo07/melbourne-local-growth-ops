@@ -40,8 +40,10 @@ interfaces.
 | `packages/contracts` | Versioned schemas, events, entitlements, delivery profiles, and validation |
 | `packages/security` | Security helpers, access checks, audit support, and redaction |
 
-These paths describe the intended M1 structure. The current repository has not
-yet been bootstrapped into this monorepo.
+These paths describe the intended M1 structure. TSK-45 introduced only the
+minimal pnpm workspace and `packages/contracts` implementation needed for
+executable contracts. The applications, remaining packages, CI, and deployment
+tooling are still deferred to TSK-49.
 
 ## Default infrastructure posture
 

@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+
+useNodeVersion: 24.18.0
+
+allowBuilds:
+  esbuild: true
