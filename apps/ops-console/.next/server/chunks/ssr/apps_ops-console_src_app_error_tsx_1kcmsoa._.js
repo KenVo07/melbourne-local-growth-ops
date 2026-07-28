@@ -1,0 +1,3 @@
+module.exports=[42070,a=>{"use strict";var b=a.i(87439),c=a.i(45835);a.s(["default",0,function({error:a,reset:d}){return(0,c.useEffect)(()=>{console.error(a)},[a]),(0,b.jsxs)("div",{className:"error-state",children:[(0,b.jsx)("h2",{children:"Something went wrong!"}),(0,b.jsx)("p",{children:"The data might be invalid or the service is temporarily unavailable."}),(0,b.jsx)("button",{className:"btn",onClick:()=>d(),style:{marginTop:"1rem"},children:"Try again"})]})}])}];
+
+//# sourceMappingURL=apps_ops-console_src_app_error_tsx_1kcmsoa._.js.map
