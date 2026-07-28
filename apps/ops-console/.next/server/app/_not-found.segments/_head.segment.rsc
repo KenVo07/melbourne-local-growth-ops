@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[5096,["/_next/static/chunks/21kmzdwc5_5ho.js","/_next/static/chunks/1x_2j23c8bv_n.js"],"ViewportBoundary"]
+3:I[5096,["/_next/static/chunks/21kmzdwc5_5ho.js","/_next/static/chunks/1x_2j23c8bv_n.js"],"MetadataBoundary"]
+4:"$Sreact.suspense"
+0:{"rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Melbourne Local Growth Ops - Ops Console"}],["$","meta","1",{"name":"description","content":"Read-only operational visibility for MLGO platforms."}]]}]}]}],null]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"MerepKrwbsDOhDqyS9aW5"}
