@@ -104,7 +104,7 @@ self.__SERVER_FILES_MANIFEST={
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "D:\\Projects\\mlgo-antigravity",
+    "outputFileTracingRoot": "D:\\Projects\\melbourne-local-growth-ops",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -304,11 +304,11 @@ self.__SERVER_FILES_MANIFEST={
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.mjs",
     "turbopack": {
-      "root": "D:\\Projects\\mlgo-antigravity"
+      "root": "D:\\Projects\\melbourne-local-growth-ops"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "D:\\Projects\\mlgo-antigravity\\apps\\ops-console",
+  "appDir": "D:\\Projects\\melbourne-local-growth-ops\\apps\\ops-console",
   "relativeAppDir": "apps\\ops-console",
   "files": [
     ".next\\package.json",
