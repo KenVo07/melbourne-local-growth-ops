@@ -9,6 +9,13 @@ import type {
   WebsiteConfigurationId,
 } from "@melbourne-local-growth-ops/contracts";
 
+export { createDeploymentIntent } from "./deployment-intent.js";
+export type {
+  DeploymentIntent,
+  DeploymentIntentOwnership,
+  RequestedDeploymentProvenance,
+} from "./deployment-intent.js";
+
 export interface BuildProvenance {
   readonly buildId: string;
   readonly sourceRevision: string;
