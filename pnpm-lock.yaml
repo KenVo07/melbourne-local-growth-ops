@@ -21,6 +21,30 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
 
+  packages/deployment:
+    dependencies:
+      '@melbourne-local-growth-ops/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/integrations:
+    dependencies:
+      '@melbourne-local-growth-ops/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/observability:
+    dependencies:
+      '@melbourne-local-growth-ops/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/site-core:
+    dependencies:
+      '@melbourne-local-growth-ops/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
 packages:
 
   '@emnapi/core@1.11.1':

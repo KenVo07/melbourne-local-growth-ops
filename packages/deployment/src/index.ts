@@ -1,0 +1,39 @@
+import type {
+  AccountOwner,
+  ClientId,
+  DeliveryMode,
+  DeploymentId,
+  DomainConfiguration,
+  Handoff,
+  InfrastructureKind,
+  WebsiteConfigurationId,
+} from "@melbourne-local-growth-ops/contracts";
+
+export interface BuildProvenance {
+  readonly buildId: string;
+  readonly sourceRevision: string;
+  readonly generatedAt: string;
+}
+
+export interface InfrastructureOwnership {
+  readonly kind: InfrastructureKind;
+  readonly owner: AccountOwner;
+}
+
+/**
+ * Transfer object shared by deployment, operations, and handoff tooling.
+ * It records provenance; it does not perform deployment.
+ */
+export interface DeploymentManifest {
+  readonly schemaVersion: 1;
+  readonly deploymentId: DeploymentId;
+  readonly clientId: ClientId;
+  readonly configurationId: WebsiteConfigurationId;
+  readonly configurationVersion: number;
+  readonly applicationVersion: string;
+  readonly deliveryMode: DeliveryMode;
+  readonly infrastructureOwnership: readonly InfrastructureOwnership[];
+  readonly domains: readonly DomainConfiguration[];
+  readonly buildProvenance: BuildProvenance;
+  readonly handoff?: Handoff;
+}
