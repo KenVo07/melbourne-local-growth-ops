@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "pnpm --filter @melbourne-local-growth-ops/contracts build",
+    "check": "pnpm test && pnpm typecheck && pnpm build",
     "test": "pnpm --filter @melbourne-local-growth-ops/contracts test",
     "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts typecheck"
   },
