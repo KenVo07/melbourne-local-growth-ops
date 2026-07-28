@@ -39,6 +39,27 @@ export interface WebsiteTemplate {
   ): WebsiteComposition;
 }
 
+/**
+ * Passing a WebsiteTemplate directly is the initial composition seam. Stable
+ * template ID resolution and template-version provenance belong to the later
+ * registry and orchestration slice.
+ */
+export function composeWebsite(
+  input: unknown,
+  template: WebsiteTemplate,
+): ValidationResult<WebsiteComposition> {
+  const configuration = validateWebsiteConfiguration(input);
+
+  if (!configuration.success) {
+    return configuration;
+  }
+
+  return {
+    success: true,
+    data: template.compose(configuration.data),
+  };
+}
+
 export type WebsiteModuleType = WebsiteModule["type"];
 
 export interface WebsiteModuleContract {
