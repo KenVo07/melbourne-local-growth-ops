@@ -33,6 +33,15 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/integrations/resend:
+    dependencies:
+      '@melbourne-local-growth-ops/contracts':
+        specifier: workspace:*
+        version: link:../../contracts
+      '@melbourne-local-growth-ops/integrations':
+        specifier: workspace:*
+        version: link:..
+
   packages/observability:
     dependencies:
       '@melbourne-local-growth-ops/contracts':
