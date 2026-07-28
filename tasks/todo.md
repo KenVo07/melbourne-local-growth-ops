@@ -15,13 +15,13 @@
 
 ## Integration
 
-- [ ] Verify, review, simplify, commit, and push `feat/m1-foundation`.
-- [ ] Merge foundation with `--no-ff` into `integration/m1`.
-- [ ] Re-run all checks and push `integration/m1`.
+- [x] Verify, review, simplify, commit, and push `feat/m1-foundation`.
+- [x] Merge foundation with `--no-ff` into `integration/m1`.
+- [x] Re-run all checks and push `integration/m1`.
 
 ## Worktrees
 
-- [ ] Create the four feature branches/worktrees without overwriting paths.
-- [ ] Install and check every worktree.
-- [ ] Add local-only `.agent-worktree-info.md` files.
-- [ ] Return the primary repository to `main` and report exact next steps.
+- [x] Create the four feature branches/worktrees without overwriting paths.
+- [x] Install and check every worktree.
+- [x] Add local-only `.agent-worktree-info.md` files.
+- [x] Return the primary repository to `main` and report exact next steps.
