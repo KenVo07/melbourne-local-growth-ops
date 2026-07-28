@@ -9,6 +9,8 @@ import type {
   DeliveryMode,
   DeploymentId,
   DomainConfiguration,
+  Handoff,
+  InfrastructureKind,
   ValidationIssue,
   ValidationIssueCode,
   ValidationResult,
@@ -28,6 +30,11 @@ export interface DeploymentIntentOwnership {
   readonly domainOwner: "CLIENT";
 }
 
+export interface DeploymentIntentInfrastructureOwnership {
+  readonly kind: InfrastructureKind;
+  readonly owner: AccountOwner;
+}
+
 /**
  * A deterministic, provider-unverified plan for one isolated deployment.
  *
@@ -43,8 +50,11 @@ export interface DeploymentIntent {
   readonly configurationVersion: number;
   readonly deliveryMode: DeliveryMode;
   readonly ownership: DeploymentIntentOwnership;
+  readonly infrastructureOwnership:
+    readonly DeploymentIntentInfrastructureOwnership[];
   readonly domains: readonly DomainConfiguration[];
   readonly requestedProvenance: RequestedDeploymentProvenance;
+  readonly handoff?: Handoff;
 }
 
 const inputKeys = new Set([
@@ -261,6 +271,14 @@ export function createDeploymentIntent(
       Object.freeze({ ...domain }),
     ),
   );
+  const infrastructureOwnership = Object.freeze(
+    runtimeConfiguration.configuredInfrastructure.map((infrastructure) =>
+      Object.freeze({
+        kind: infrastructure.kind,
+        owner: infrastructure.accountOwner,
+      }),
+    ),
+  );
 
   return {
     success: true,
@@ -279,10 +297,14 @@ export function createDeploymentIntent(
         sourceRepositoryOwner: deploymentRecord.sourceRepositoryOwner,
         domainOwner: deploymentRecord.domainOwner,
       }),
+      infrastructureOwnership,
       domains,
       requestedProvenance: Object.freeze({
         ...requestedProvenanceResult.data,
       }),
+      ...(deploymentRecord.handoff === undefined
+        ? {}
+        : { handoff: Object.freeze({ ...deploymentRecord.handoff }) }),
     }),
   };
 }

@@ -12,9 +12,33 @@ import type {
 export { createDeploymentIntent } from "./deployment-intent.js";
 export type {
   DeploymentIntent,
+  DeploymentIntentInfrastructureOwnership,
   DeploymentIntentOwnership,
   RequestedDeploymentProvenance,
 } from "./deployment-intent.js";
+export {
+  deploymentIdempotencyKey,
+  executeDeployment,
+} from "./execute-deployment.js";
+export type {
+  DeploymentExecutionError,
+  DeploymentExecutionErrorCode,
+  DeploymentExecutionOptions,
+  DeploymentExecutionResult,
+  DeploymentLogger,
+  DeploymentLogEvent,
+} from "./execute-deployment.js";
+export { DeterministicFakeVercelAdapter } from "./fake-vercel-adapter.js";
+export type {
+  DeterministicFakeVercelOptions,
+} from "./fake-vercel-adapter.js";
+export type {
+  DeploymentProvider,
+  DeploymentProviderFailureCode,
+  DeploymentProviderObservation,
+  DeploymentProviderRequest,
+  DeploymentProviderResult,
+} from "./provider-boundary.js";
 
 export interface BuildProvenance {
   readonly buildId: string;
