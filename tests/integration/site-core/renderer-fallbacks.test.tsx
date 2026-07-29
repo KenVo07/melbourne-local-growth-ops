@@ -97,4 +97,42 @@ describe("managed module renderer behavior", () => {
       }),
     );
   });
+
+  it("throws a typed error when a resolved module is incompatible with its renderer", () => {
+    const result = composeManagedWebsite(
+      managedWebsiteDefinition("client-a"),
+      {
+        templates: createWebsiteTemplateRegistry([contractorTemplateV1]),
+        modules: createWebsiteModuleRegistry([
+          analyticsContract,
+          bookingCtaContract,
+        ]),
+      },
+    );
+    if (!result.success) {
+      throw new Error("Valid renderer fixture must compose.");
+    }
+
+    const bookingModule = result.data.regions
+      .flatMap((region) => region.modules)
+      .find((module) => module.type === "BOOKING_CTA");
+    const analyticsModule = result.data.regions
+      .flatMap((region) => region.modules)
+      .find((module) => module.type === "ANALYTICS");
+    if (bookingModule === undefined || analyticsModule === undefined) {
+      throw new Error("Renderer fixture must include both modules.");
+    }
+
+    expect(() =>
+      bookingCtaRenderer.render({
+        ...bookingModule,
+        connector: analyticsModule.connector,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<ManagedWebsiteRenderError>>({
+        code: "INCOMPATIBLE_MODULE_RENDERER",
+        moduleId: "booking-client-a",
+      }),
+    );
+  });
 });

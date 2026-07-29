@@ -45,13 +45,18 @@ function rendererKey(reference: WebsiteModuleReference): string {
   return `${reference.type}\u0000${reference.moduleVersion}`;
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 export function createManagedModuleRendererRegistry(
   renderers: readonly ManagedModuleRenderer[],
 ): ManagedModuleRendererRegistry {
   const sorted = [...renderers].sort(
     (left, right) =>
-      left.reference.type.localeCompare(right.reference.type) ||
-      left.reference.moduleVersion.localeCompare(
+      compareText(left.reference.type, right.reference.type) ||
+      compareText(
+        left.reference.moduleVersion,
         right.reference.moduleVersion,
       ),
   );

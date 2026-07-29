@@ -54,6 +54,7 @@ describe("configuration-to-rendering pipeline", () => {
     expect(html).toContain('data-module-id="booking-client-a"');
     expect(html).toContain('data-module-version="1.0.0"');
     expect(html).not.toContain("analytics-client-a");
+    expect(html).not.toContain('aria-label="analytics modules"');
   });
 
   it("stops invalid configuration before template composition and rendering", () => {

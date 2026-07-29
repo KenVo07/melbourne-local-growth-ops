@@ -39,34 +39,32 @@ export function ManagedWebsiteShell({
             </p>}
       </header>
 
-      {composition.regions.map((region) => (
-        <section
-          aria-label={regionLabel(region.regionId)}
-          className={`site-region site-region-${region.regionId}`}
-          key={region.regionId}
-        >
-          {region.modules.map((module) => (
-            <ModuleSlot
-              key={module.moduleId}
-              module={module}
-              renderers={renderers}
-            />
-          ))}
-        </section>
-      ))}
+      {composition.regions.map((region) => {
+        const modules = region.modules.map((module) =>
+          renderModuleSlot(module, renderers),
+        );
+        if (modules.every((module) => module === null)) {
+          return null;
+        }
+
+        return (
+          <section
+            aria-label={regionLabel(region.regionId)}
+            className={`site-region site-region-${region.regionId}`}
+            key={region.regionId}
+          >
+            {modules}
+          </section>
+        );
+      })}
     </main>
   );
 }
 
-interface ModuleSlotProps {
-  readonly module: ResolvedWebsiteModule;
-  readonly renderers: ManagedModuleRendererRegistry;
-}
-
-function ModuleSlot({
-  module,
-  renderers,
-}: ModuleSlotProps): ReactNode {
+function renderModuleSlot(
+  module: ResolvedWebsiteModule,
+  renderers: ManagedModuleRendererRegistry,
+): ReactNode {
   const reference = {
     type: module.type,
     moduleVersion: module.moduleVersion,
@@ -87,6 +85,7 @@ function ModuleSlot({
       data-module-id={module.moduleId}
       data-module-type={module.type}
       data-module-version={module.moduleVersion}
+      key={module.moduleId}
     >
       {content}
     </div>
@@ -103,6 +102,7 @@ function renderFallback(module: ResolvedWebsiteModule): ReactNode {
           className="module-fallback"
           data-module-id={module.moduleId}
           data-module-version={module.moduleVersion}
+          key={module.moduleId}
           role="status"
         >
           {module.contract.fallback.description}
