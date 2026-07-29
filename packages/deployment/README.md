@@ -147,3 +147,67 @@ pnpm check
 
 These commands use deterministic fixtures and make no live provider or DNS
 request.
+
+## Client handoff and recovery
+
+The handoff API accepts a validated client configuration, an observed
+`DeploymentManifest`, and an exact allowlist of already portable artifacts.
+Callers must transform or vendor reusable runtime code before it crosses this
+boundary. The toolkit never copies the Website Factory workspace or discovers
+files implicitly.
+
+```ts
+import {
+  createClientHandoffExport,
+  verifyClientHandoffDirectory,
+  writeClientHandoffDirectory,
+  type ClientHandoffExportInput,
+} from "@melbourne-local-growth-ops/deployment";
+
+declare const input: ClientHandoffExportInput;
+
+const planned = createClientHandoffExport(input); // pure and deterministic
+if (!planned.success) {
+  throw new Error(planned.issues[0]?.code);
+}
+
+// Explicit apply boundary: destination must be empty; files are never replaced.
+const written = await writeClientHandoffDirectory(
+  planned.export,
+  "C:/client-owned-repository",
+);
+if (!written.success) {
+  throw new Error(written.issues[0]?.code);
+}
+
+const transferred = await verifyClientHandoffDirectory(written.directory);
+if (!transferred.success) {
+  throw new Error(transferred.issues[0]?.code);
+}
+```
+
+The exported repository contains the supplied source/assets/package metadata
+plus a generated `README.md`, `.env.example`, `HANDOFF-CHECKLIST.md`,
+`handoff-manifest.json`, its SHA-256 digest, and a self-contained integrity
+verifier. The manifest records only environment variable names and purposes,
+never values.
+
+Artifacts fail closed when they contain unsafe paths, factory/internal paths,
+another client identifier, credential-shaped material, private registries,
+workspace/local/Git dependency references, undocumented environment variables,
+or unsupported agency-managed modules/connectors. Package dependencies must be
+present in the caller's explicit public-dependency allowlist.
+
+The command boundaries in `scripts/handoff/` are:
+
+- `plan.mjs`: pure export planning and scan summary.
+- `export.mjs`: explicit write to an empty destination.
+- `verify.mjs`: exact transfer verification followed by a clean-directory
+  frozen install, typecheck, production build, tests, and integrity check. It
+  removes ambient credential-bearing environment variables.
+- `recovery.mjs`: recovery preflight only; it performs no provider, DNS, or data
+  mutation.
+
+See the [client source handoff runbook](../../docs/runbooks/client-source-handoff.md),
+[recovery and ownership-transfer runbook](../../docs/runbooks/client-recovery-and-transfer.md),
+and [optional-data backup/restore runbook](../../docs/runbooks/optional-data-backup-restore.md).
