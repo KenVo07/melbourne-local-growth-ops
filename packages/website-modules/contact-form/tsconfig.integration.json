@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "paths": {
+      "@melbourne-local-growth-ops/contact-form": ["./src/index.ts"],
+      "@melbourne-local-growth-ops/resend": [
+        "../../integrations/resend/src/index.ts"
+      ]
+    }
+  },
+  "include": ["../../../tests/integration/contact-form/**/*.ts"]
+}
