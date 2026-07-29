@@ -392,7 +392,7 @@ export function verifyClientHandoffExport(
       issues.push(issue(
         "UNEXPECTED_EXPORTED_FILE",
         path,
-        "Transferred repository contains a file outside the signed inventory",
+        "Transferred repository contains a file outside the manifest inventory",
       ));
     }
   }
