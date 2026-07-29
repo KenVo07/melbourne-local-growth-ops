@@ -1,7 +1,11 @@
+import { resolve } from "node:path";
+
 import type {
   ManagedWebsiteDefinition,
   WebsiteModuleContract,
 } from "@melbourne-local-growth-ops/site-core";
+
+const publicDirectory = resolve(process.cwd(), "public");
 
 export const managedWebsiteDefinition: ManagedWebsiteDefinition = {
   configuration: {
@@ -66,6 +70,20 @@ export const managedWebsiteDefinition: ManagedWebsiteDefinition = {
     { type: "BOOKING_CTA", moduleVersion: "1.0.0" },
     { type: "ANALYTICS", moduleVersion: "1.0.0" },
   ],
+  assets: {
+    clientId: "harbour-electrical",
+    publicDirectory,
+    assets: [
+      {
+        assetId: "hero-primary",
+        kind: "IMAGE",
+        sourcePath: "assets/hero/primary.png",
+        mediaType: "image/png",
+        width: 1672,
+        height: 941,
+      },
+    ],
+  },
 };
 
 export const managedWebsiteModuleContracts: readonly WebsiteModuleContract[] =

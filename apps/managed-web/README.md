@@ -16,6 +16,8 @@ The definition contains:
 - unknown configuration validated at the site-core boundary;
 - an exact template ID/version;
 - an exact module version for each configured module type;
+- a client-scoped local asset source rooted in this deployment's `public`
+  directory;
 - no secrets or commercial contract state.
 
 ## Rendering path
@@ -25,7 +27,8 @@ The definition contains:
 1. validates and composes the single client definition;
 2. resolves the exact contractor template and module contracts;
 3. passes the immutable managed composition to `ManagedWebsiteShell`;
-4. renders regions and modules in template order.
+4. renders resolved local images through Next.js `Image`;
+5. renders regions and modules in template order.
 
 React and Next.js remain inside this application. `site-core` and `templates`
 are framework-neutral.
@@ -53,6 +56,11 @@ owned contact-form implementation.
 - No client lookup or shared client state
 - Client-owned booking and analytics connectors
 - Static assets and source remain inside the deployment
+
+The current hero lives at `public/assets/hero/primary.png` and is published as
+`/assets/hero/primary.png`. Next.js handles responsive local-image rendering
+from validated intrinsic metadata. Remote URLs, SVG, GIF, raw image markup,
+byte-level probing, and build-time transcoding are outside this capability.
 
 ## Commands
 

@@ -18,6 +18,10 @@ import {
   managedWebsiteDefinition,
 } from "./fixtures";
 
+const managedWebPublicDirectory = fileURLToPath(
+  new URL("../../../apps/managed-web/public", import.meta.url),
+);
+
 describe("managed website client isolation", () => {
   it("keeps concurrent composition and rendered HTML client-specific", async () => {
     const registries = {
@@ -34,7 +38,20 @@ describe("managed website client isolation", () => {
     const [clientA, clientB] = await Promise.all(
       ["client-a", "client-b"].map(async (clientId) => {
         const result = composeManagedWebsite(
-          managedWebsiteDefinition(clientId),
+          managedWebsiteDefinition(clientId, {
+            clientId,
+            publicDirectory: managedWebPublicDirectory,
+            assets: [
+              {
+                assetId: "hero-primary",
+                kind: "IMAGE",
+                sourcePath: "assets/hero/primary.png",
+                mediaType: "image/png",
+                width: 1672,
+                height: 941,
+              },
+            ],
+          }),
           registries,
         );
         if (!result.success) {
@@ -52,9 +69,16 @@ describe("managed website client isolation", () => {
 
     expect(clientA).toContain("Business client-a");
     expect(clientA).toContain("booking-client-a");
+    expect(clientA).toContain(
+      "Business client-a electrician providing a local service",
+    );
     expect(clientA).not.toContain("client-b");
     expect(clientB).toContain("Business client-b");
     expect(clientB).toContain("booking-client-b");
+    expect(clientB).toContain(
+      "Business client-b electrician providing a local service",
+    );
     expect(clientB).not.toContain("client-a");
   });
 });
+import { fileURLToPath } from "node:url";
