@@ -4,8 +4,7 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "sourceMap": false,
-    "types": ["node"]
+    "sourceMap": false
   },
   "include": ["src/**/*.ts"],
   "exclude": []

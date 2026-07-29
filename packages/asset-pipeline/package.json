@@ -1,5 +1,5 @@
 {
-  "name": "@melbourne-local-growth-ops/site-core",
+  "name": "@melbourne-local-growth-ops/asset-pipeline",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,9 +14,5 @@
     "build": "tsc --project tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc --project tsconfig.test.json --noEmit"
-  },
-  "dependencies": {
-    "@melbourne-local-growth-ops/asset-pipeline": "workspace:*",
-    "@melbourne-local-growth-ops/contracts": "workspace:*"
   }
 }

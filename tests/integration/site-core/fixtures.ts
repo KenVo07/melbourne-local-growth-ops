@@ -5,6 +5,7 @@ import type {
 
 export function managedWebsiteDefinition(
   clientId: string,
+  assets?: ManagedWebsiteDefinition["assets"],
 ): ManagedWebsiteDefinition {
   return {
     configuration: {
@@ -63,6 +64,7 @@ export function managedWebsiteDefinition(
       { type: "BOOKING_CTA", moduleVersion: "1.0.0" },
       { type: "ANALYTICS", moduleVersion: "1.0.0" },
     ],
+    ...(assets === undefined ? {} : { assets }),
   };
 }
 

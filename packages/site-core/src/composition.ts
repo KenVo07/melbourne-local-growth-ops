@@ -3,6 +3,7 @@ import type {
   ValidatedWebsiteConfiguration,
   WebsiteComposition,
   WebsiteTemplate,
+  WebsiteTemplateAssetContext,
 } from "./index.js";
 
 /**
@@ -12,8 +13,9 @@ import type {
 export function composeValidatedWebsite(
   configuration: ValidatedWebsiteConfiguration,
   template: WebsiteTemplate,
+  assets?: WebsiteTemplateAssetContext,
 ): WebsiteComposition {
-  const composition = template.compose(configuration);
+  const composition = template.compose(configuration, assets);
 
   if (
     composition.templateId !== template.templateId ||

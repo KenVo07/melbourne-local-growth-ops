@@ -1,7 +1,9 @@
 import type {
   ManagedWebsiteComposition,
+  ResolvedWebsiteImage,
   ResolvedWebsiteModule,
 } from "@melbourne-local-growth-ops/site-core";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 import {
@@ -29,14 +31,18 @@ export function ManagedWebsiteShell({
         composition.provenance.template.templateVersion
       }
     >
-      <header className="site-introduction">
-        <p className="site-eyebrow">Melbourne local service</p>
-        <h1>{composition.configuration.display.businessName}</h1>
-        {composition.configuration.display.tagline === undefined
-          ? null
-          : <p className="site-tagline">
-              {composition.configuration.display.tagline}
-            </p>}
+      <header className="site-hero">
+        <div className="site-introduction">
+          <p className="site-eyebrow">Melbourne local service</p>
+          <h1>{composition.configuration.display.businessName}</h1>
+          {composition.configuration.display.tagline === undefined
+            ? null
+            : <p className="site-tagline">
+                {composition.configuration.display.tagline}
+              </p>}
+        </div>
+
+        {composition.assets.map(renderImageSlot)}
       </header>
 
       {composition.regions.map((region) => {
@@ -58,6 +64,28 @@ export function ManagedWebsiteShell({
         );
       })}
     </main>
+  );
+}
+
+function renderImageSlot(image: ResolvedWebsiteImage): ReactNode {
+  return (
+    <figure
+      className={`asset-slot asset-slot-${image.slotId}`}
+      data-asset-id={image.asset.assetId}
+      data-asset-media-type={image.asset.mediaType}
+      data-asset-slot={image.slotId}
+      key={image.slotId}
+    >
+      <Image
+        alt={image.alt}
+        className="managed-image"
+        height={image.asset.height}
+        preload={image.priority}
+        sizes={image.sizes}
+        src={image.asset.publicPath}
+        width={image.asset.width}
+      />
+    </figure>
   );
 }
 
