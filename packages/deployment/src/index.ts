@@ -72,6 +72,41 @@ export { VercelDeploymentAdapter } from "./vercel-adapter.js";
 export type {
   VercelDeploymentAdapterOptions,
 } from "./vercel-adapter.js";
+export { createClientHandoffExport } from "./handoff-export.js";
+export {
+  createOptionalDataRestorePlan,
+} from "./handoff-recovery.js";
+export {
+  validateClientHandoffManifest,
+  verifyClientHandoffExport,
+} from "./handoff-verification.js";
+export {
+  verifyClientHandoffDirectory,
+  writeClientHandoffDirectory,
+} from "./handoff-filesystem.js";
+export type {
+  ClientHandoffDirectoryResult,
+  ClientHandoffDirectoryWriteResult,
+  ClientHandoffExport,
+  ClientHandoffExportFile,
+  ClientHandoffExportInput,
+  ClientHandoffExportResult,
+  ClientHandoffIssue,
+  ClientHandoffIssueCode,
+  ClientHandoffManifest,
+  ClientHandoffManifestValidationResult,
+  ClientHandoffOwnership,
+  ClientHandoffVerificationResult,
+  HandoffArtifactCategory,
+  HandoffArtifactInput,
+  HandoffConnectorSelection,
+  HandoffFileInventoryRecord,
+  HandoffModuleSelection,
+  OptionalDataResourceDeclaration,
+  OptionalDataRestorePlan,
+  OptionalDataRestorePlanResult,
+  RequiredEnvironmentVariable,
+} from "./handoff-types.js";
 
 export interface BuildProvenance {
   readonly buildId: string;
