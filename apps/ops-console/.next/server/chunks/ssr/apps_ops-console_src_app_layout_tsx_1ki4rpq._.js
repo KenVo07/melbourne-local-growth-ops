@@ -1,3 +1,0 @@
-module.exports=[84842,a=>{"use strict";var b=a.i(78684);a.s(["default",0,function({children:a}){return(0,b.jsx)("html",{lang:"en",children:(0,b.jsx)("body",{children:(0,b.jsxs)("div",{className:"layout",children:[(0,b.jsxs)("header",{className:"header",children:[(0,b.jsx)("h1",{children:"Ops Console"}),(0,b.jsx)("nav",{children:(0,b.jsx)("a",{href:"/",children:"Deployments"})})]}),(0,b.jsx)("main",{className:"main",children:a})]})})})},"metadata",0,{title:"Melbourne Local Growth Ops - Ops Console",description:"Read-only operational visibility for MLGO platforms."}])},24597,a=>{a.n(a.i(84842))}];
-
-//# sourceMappingURL=apps_ops-console_src_app_layout_tsx_1ki4rpq._.js.map
