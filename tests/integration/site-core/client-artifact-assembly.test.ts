@@ -199,10 +199,27 @@ describe("client source artifact assembly", () => {
       outputDirectory,
       factoryRevision: "factory-revision",
     });
-
-    const verification = await verifyClientSourceArtifact(
-      artifact.sourceDirectory,
+    await writeFile(
+      join(artifact.sourceDirectory, "tests", "environment.test.mjs"),
+      [
+        'import assert from "node:assert/strict";',
+        'import test from "node:test";',
+        "",
+        "test('does not inherit ambient credentials', () => {",
+        "  assert.equal(process.env.MLGO_TEST_AMBIENT_SECRET, undefined);",
+        "});",
+        "",
+      ].join("\n"),
     );
+    process.env.MLGO_TEST_AMBIENT_SECRET = "must-not-reach-build";
+    let verification;
+    try {
+      verification = await verifyClientSourceArtifact(
+        artifact.sourceDirectory,
+      );
+    } finally {
+      delete process.env.MLGO_TEST_AMBIENT_SECRET;
+    }
 
     expect(verification).toEqual({
       success: true,

@@ -11,6 +11,7 @@ import {
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { createIsolatedBuildEnvironment } from "./build-environment";
 import { generateClientWebsiteSnapshot } from "./generate-client-website";
 import type {
   AssembleClientSourceArtifactOptions,
@@ -483,7 +484,7 @@ async function generatePortableLockfile(sourceDirectory: string): Promise<void> 
       packageManager.arguments_,
       {
         cwd: sourceDirectory,
-        env: process.env,
+        env: createIsolatedBuildEnvironment(process.env),
         stdio: "ignore",
       },
     );

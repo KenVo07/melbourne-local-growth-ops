@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 
+import { createIsolatedBuildEnvironment } from "./build-environment";
+
 export interface ClientSourceVerificationResult {
   readonly success: true;
   readonly checks: readonly ["INSTALL", "TYPECHECK", "TEST", "BUILD"];
@@ -57,7 +59,7 @@ async function runPnpm(directory: string, arguments_: readonly string[]) {
       command.arguments,
       {
         cwd: directory,
-        env: process.env,
+        env: createIsolatedBuildEnvironment(process.env),
         stdio: process.env.MLGO_DEBUG_VERIFY === "1" ? "inherit" : "ignore",
       },
     );
