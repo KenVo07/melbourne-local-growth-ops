@@ -88,3 +88,116 @@ not client configuration. Each composition receives only the validated
 configuration supplied for that call, so a registry can be reused concurrently
 without becoming a shared public website runtime. Template implementations must
 also remain stateless and must not retain client configuration between calls.
+
+## Managed module composition
+
+### `createWebsiteModuleRegistry(contracts)`
+
+Creates an immutable, deterministic registry of `WebsiteModuleContract`
+metadata. Registrations are sorted by closed module type and then exact version.
+Resolution never chooses an implicit latest version:
+
+```ts
+import {
+  createWebsiteModuleRegistry,
+} from "@melbourne-local-growth-ops/site-core";
+
+const modules = createWebsiteModuleRegistry([
+  {
+    type: "BOOKING_CTA",
+    version: "1.0.0",
+    executionBoundary: "RENDER_ONLY",
+    dependencies: [],
+    portability: "TRANSFERABLE",
+    analyticsEvents: ["booking_cta_clicked"],
+    fallback: {
+      strategy: "ERROR",
+      description: "Booking is temporarily unavailable.",
+    },
+  },
+]);
+
+modules.resolve({
+  type: "BOOKING_CTA",
+  moduleVersion: "1.0.0",
+});
+```
+
+Contract arrays and fallback metadata are snapshotted so subsequent caller
+mutation cannot alter registry behavior.
+
+### `composeManagedWebsite(definition, registries)`
+
+`ManagedWebsiteDefinition` combines three deployment-specific inputs:
+
+1. one unknown client configuration;
+2. one exact `WebsiteTemplateReference`;
+3. one exact module-version selection for every module type present in
+   `configuration.modules`.
+
+The version selections are orchestration metadata. They do not add a competing
+runtime configuration schema or change `WebsiteRuntimeConfig`.
+
+```ts
+const result = composeManagedWebsite(
+  {
+    configuration: unknownClientConfiguration,
+    template: {
+      templateId: "contractor",
+      templateVersion: "1.0.0",
+    },
+    modules: [
+      { type: "BOOKING_CTA", moduleVersion: "1.0.0" },
+      { type: "ANALYTICS", moduleVersion: "1.0.0" },
+    ],
+  },
+  {
+    templates: templateRegistry,
+    modules: moduleRegistry,
+  },
+);
+```
+
+Configuration validation runs first. Invalid input returns the shared
+`ValidationResult` unchanged and does not resolve or invoke a template.
+Successful composition then:
+
+- resolves exact template and module versions;
+- requires contract dependencies to match the module instance declaration;
+- requires dependencies to be present in configured infrastructure;
+- pairs every module with its already-validated connector;
+- verifies unique region IDs and exactly-once module placement;
+- preserves template, configuration, and module-version provenance;
+- returns modules in template region and placement order.
+
+All entries in `WebsiteRuntimeConfig.modules` are enabled. The shared contract
+does not define a separate `enabled` flag.
+
+## Module pipeline errors
+
+Registration, selection, dependency, or placement failures throw
+`WebsiteModulePipelineError`. Configuration failures remain
+`ValidationResult` failures.
+
+| Code | Meaning |
+| --- | --- |
+| `DUPLICATE_MODULE_REGISTRATION` | An exact type/version pair was registered twice. |
+| `UNKNOWN_MODULE` | No contract is registered for the configured module type. |
+| `UNSUPPORTED_MODULE_VERSION` | The type exists but the exact selected version does not. |
+| `DUPLICATE_MODULE_SELECTION` | A deployment selected multiple versions for one type. |
+| `MISSING_MODULE_SELECTION` | An enabled type has no version selection. |
+| `UNEXPECTED_MODULE_SELECTION` | A version was selected for a type not enabled in the configuration. |
+| `MODULE_DEPENDENCY_MISMATCH` | Contract dependencies differ from the module instance declaration. |
+| `UNSATISFIED_MODULE_DEPENDENCY` | A contract dependency is absent from configured infrastructure. |
+| `DUPLICATE_COMPOSITION_REGION` | A template emitted the same region ID more than once. |
+| `UNKNOWN_COMPOSITION_MODULE` | A template placed a module ID absent from configuration. |
+| `DUPLICATE_COMPOSITION_MODULE` | A module was placed more than once. |
+| `UNPLACED_CONFIGURATION_MODULE` | An enabled module was not placed. |
+
+The contracts validator normally reports unsatisfied instance or connector
+infrastructure as `INFRASTRUCTURE_DEPENDENCY_MISMATCH` before module resolution.
+The pipeline error is retained as a defensive invariant for validated inputs.
+
+The module registry stores implementation metadata only. It contains no
+renderer, handler, client configuration, or mutable per-client state, so one
+registry may safely serve concurrent isolated composition calls.
