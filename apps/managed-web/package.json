@@ -2,6 +2,7 @@
   "name": "@melbourne-local-growth-ops/managed-web",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "assemble:client": "tsx src/generation/cli.ts",
     "dev": "next dev",
