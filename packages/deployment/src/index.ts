@@ -34,11 +34,44 @@ export type {
 } from "./fake-vercel-adapter.js";
 export type {
   DeploymentProvider,
+  DeploymentProviderDomainObservation,
   DeploymentProviderFailureCode,
   DeploymentProviderObservation,
   DeploymentProviderRequest,
   DeploymentProviderResult,
 } from "./provider-boundary.js";
+export type {
+  VercelHttpOperation,
+  VercelHttpRequest,
+  VercelHttpResponse,
+  VercelHttpTransport,
+} from "./vercel-http.js";
+export {
+  planVercelDeployment,
+  vercelProjectName,
+} from "./vercel-plan.js";
+export type {
+  VercelDeploymentPlan,
+  VercelPlannedAction,
+  VercelPlanOptions,
+} from "./vercel-plan.js";
+export type {
+  VercelDomainStatus,
+  VercelGitSource,
+  VercelInspectionErrorCode,
+  VercelInspectionResult,
+  VercelLifecycleEvent,
+  VercelLifecycleLogger,
+  VercelObservedDomain,
+  VercelObservedState,
+  VercelRollbackErrorCode,
+  VercelRollbackOptions,
+  VercelRollbackResult,
+} from "./vercel-lifecycle-types.js";
+export { VercelDeploymentAdapter } from "./vercel-adapter.js";
+export type {
+  VercelDeploymentAdapterOptions,
+} from "./vercel-adapter.js";
 
 export interface BuildProvenance {
   readonly buildId: string;

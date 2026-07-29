@@ -64,6 +64,14 @@ function providerSuccess(
       buildId: `fake-build-${deploymentHash}`,
       sourceRevision: request.requestedProvenance.sourceRevision,
       observedAt,
+      domainObservations: Object.freeze(
+        request.domains.map((domain) =>
+          Object.freeze({
+            hostname: domain.hostname,
+            status: "ATTACHED" as const,
+          })
+        ),
+      ),
     }),
   });
 }

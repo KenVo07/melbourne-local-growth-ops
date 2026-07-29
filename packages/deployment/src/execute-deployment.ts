@@ -14,6 +14,8 @@ export type DeploymentExecutionErrorCode =
   | "PROVIDER_UNAVAILABLE"
   | "PROVIDER_REJECTED"
   | "IDEMPOTENCY_CONFLICT"
+  | "DOMAIN_PENDING_VERIFICATION"
+  | "DOMAIN_CONFLICT"
   | "MALFORMED_PROVIDER_RESPONSE";
 
 export interface DeploymentExecutionError {
@@ -91,6 +93,9 @@ const providerFailureCodes = new Set<DeploymentProviderFailureCode>([
   "UNAVAILABLE",
   "REJECTED",
   "IDEMPOTENCY_CONFLICT",
+  "MALFORMED_RESPONSE",
+  "DOMAIN_PENDING_VERIFICATION",
+  "DOMAIN_CONFLICT",
 ]);
 
 function freezeEvent(event: DeploymentLogEvent): DeploymentLogEvent {
@@ -190,6 +195,24 @@ function normalizedProviderFailure(
         message: "Deployment provider detected an idempotency conflict",
         retryable: false,
       };
+    case "MALFORMED_RESPONSE":
+      return {
+        code: "MALFORMED_PROVIDER_RESPONSE",
+        message: "Deployment provider returned an invalid response",
+        retryable: false,
+      };
+    case "DOMAIN_PENDING_VERIFICATION":
+      return {
+        code: "DOMAIN_PENDING_VERIFICATION",
+        message: "Deployment domain is pending provider verification",
+        retryable: false,
+      };
+    case "DOMAIN_CONFLICT":
+      return {
+        code: "DOMAIN_CONFLICT",
+        message: "Deployment domain is assigned to another provider project",
+        retryable: false,
+      };
   }
 }
 
@@ -232,6 +255,36 @@ function validateProviderObservation(
   }
 
   const observation = value.observation;
+  const expectedDomains = request.domains
+    .map((domain) => domain.hostname)
+    .sort();
+  if (!Array.isArray(observation.domainObservations)) {
+    return undefined;
+  }
+  const domainObservations = observation.domainObservations.map((domain) => {
+    if (
+      !isRecord(domain) ||
+      !isNonEmptyString(domain.hostname) ||
+      domain.status !== "ATTACHED"
+    ) {
+      return undefined;
+    }
+    return Object.freeze({
+      hostname: domain.hostname,
+      status: "ATTACHED" as const,
+    });
+  });
+  if (
+    domainObservations.some((domain) => domain === undefined) ||
+    new Set(domainObservations.map((domain) => domain?.hostname)).size !==
+      domainObservations.length ||
+    JSON.stringify(
+      domainObservations.map((domain) => domain?.hostname).sort(),
+    ) !== JSON.stringify(expectedDomains)
+  ) {
+    return undefined;
+  }
+
   if (
     observation.providerName !== providerName ||
     observation.projectIdentity !== request.projectIdentity ||
@@ -257,6 +310,12 @@ function validateProviderObservation(
     buildId: observation.buildId,
     sourceRevision: observation.sourceRevision,
     observedAt: observation.observedAt,
+    domainObservations: Object.freeze(
+      domainObservations as {
+        readonly hostname: string;
+        readonly status: "ATTACHED";
+      }[],
+    ),
   });
 }
 
