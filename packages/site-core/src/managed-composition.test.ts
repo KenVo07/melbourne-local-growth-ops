@@ -321,6 +321,36 @@ describe("composeManagedWebsite", () => {
     });
   });
 
+  it("returns shared validation issues for unsatisfied module infrastructure", () => {
+    const compose = vi.fn<WebsiteTemplate["compose"]>();
+    const configuration = configurationFixture({
+      clientId: "client-a",
+      bookingModuleId: "booking-a",
+    }) as {
+      modules: { infrastructureDependencies?: string[] }[];
+      configuredInfrastructure: unknown[];
+    };
+    configuration.modules[0] = {
+      ...configuration.modules[0],
+      infrastructureDependencies: ["DATABASE"],
+    };
+    configuration.configuredInfrastructure = [];
+
+    const result = composeManagedWebsite(
+      definition(configuration),
+      registries(
+        [moduleContract("BOOKING_CTA", "1.0.0", ["DATABASE"])],
+        template(compose),
+      ),
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      issues: [{ code: "INFRASTRUCTURE_DEPENDENCY_MISMATCH" }],
+    });
+    expect(compose).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown, duplicate, or unplaced template module IDs", () => {
     const configuration = configurationFixture({
       clientId: "client-a",
