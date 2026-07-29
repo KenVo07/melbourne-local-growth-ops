@@ -63,16 +63,16 @@ export default async function DeploymentDetailPage({
             <thead>
               <tr>
                 <th>Timestamp</th>
-                <th>Event Type</th>
-                <th>Event ID</th>
+                <th>Event Name</th>
+                <th>Correlation ID</th>
               </tr>
             </thead>
             <tbody>
-              {events.map(evt => (
-                <tr key={evt.id}>
+              {events.map((evt, idx) => (
+                <tr key={idx}>
                   <td>{new Date(evt.timestamp).toLocaleString()}</td>
-                  <td>{evt.type}</td>
-                  <td>{evt.id}</td>
+                  <td>{evt.eventName}</td>
+                  <td>{evt.correlationId}</td>
                 </tr>
               ))}
             </tbody>

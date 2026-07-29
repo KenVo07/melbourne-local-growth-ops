@@ -7,6 +7,11 @@ import type {
   WebsiteModule,
   WebsiteRuntimeConfig,
 } from "@melbourne-local-growth-ops/contracts";
+import { composeValidatedWebsite } from "./composition.js";
+import type {
+  WebsiteTemplateReference,
+  WebsiteTemplateRegistry,
+} from "./template-registry.js";
 
 /**
  * This alias deliberately reuses the TSK-45 runtime model. Site core must not
@@ -39,6 +44,39 @@ export interface WebsiteTemplate {
   ): WebsiteComposition;
 }
 
+/**
+ * Composes through an explicit template after validating unknown configuration.
+ * Registry orchestration resolves a stable template reference before reusing
+ * this boundary.
+ */
+export function composeWebsite(
+  input: unknown,
+  template: WebsiteTemplate,
+): ValidationResult<WebsiteComposition> {
+  const configuration = validateWebsiteConfiguration(input);
+
+  if (!configuration.success) {
+    return configuration;
+  }
+
+  return {
+    success: true,
+    data: composeValidatedWebsite(configuration.data, template),
+  };
+}
+
+/**
+ * Resolves one exact template ID/version pair and composes through the same
+ * validation and provenance boundary as direct template composition.
+ */
+export function composeWebsiteFromRegistry(
+  input: unknown,
+  reference: WebsiteTemplateReference,
+  registry: WebsiteTemplateRegistry,
+): ValidationResult<WebsiteComposition> {
+  return composeWebsite(input, registry.resolve(reference));
+}
+
 export type WebsiteModuleType = WebsiteModule["type"];
 
 export interface WebsiteModuleContract {
@@ -53,3 +91,34 @@ export interface WebsiteModuleContract {
     readonly description: string;
   };
 }
+
+export {
+  composeManagedWebsite,
+} from "./managed-composition.js";
+export type {
+  ManagedWebsiteComposition,
+  ManagedWebsiteCompositionProvenance,
+  ManagedWebsiteCompositionRegion,
+  ManagedWebsiteDefinition,
+  ManagedWebsiteRegistries,
+  ResolvedWebsiteModule,
+  WebsiteModuleProvenance,
+} from "./managed-composition.js";
+export {
+  createWebsiteModuleRegistry,
+  WebsiteModulePipelineError,
+} from "./module-registry.js";
+export type {
+  WebsiteModulePipelineErrorCode,
+  WebsiteModuleReference,
+  WebsiteModuleRegistry,
+} from "./module-registry.js";
+export {
+  createWebsiteTemplateRegistry,
+  WebsiteTemplatePipelineError,
+} from "./template-registry.js";
+export type {
+  WebsiteTemplatePipelineErrorCode,
+  WebsiteTemplateReference,
+  WebsiteTemplateRegistry,
+} from "./template-registry.js";
