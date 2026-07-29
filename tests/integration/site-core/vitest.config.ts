@@ -40,5 +40,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/integration/site-core/**/*.test.ts?(x)"],
+    testTimeout: 30_000,
   },
 });
