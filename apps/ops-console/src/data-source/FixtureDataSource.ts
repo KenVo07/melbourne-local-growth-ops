@@ -18,35 +18,37 @@ export class FixtureDataSource implements OpsConsoleDataSource {
 
   async getDeploymentEvents(id: string): Promise<ObservabilityEvent[]> {
     await new Promise(resolve => setTimeout(resolve, 300));
-    // Mock events conforming to ObservabilityEvent
+    if (id === "dpl_unk_004") {
+      return [];
+    }
+
+    const baseEvent = {
+      schemaVersion: 1 as const,
+      clientId: "cli_12345" as any,
+      deploymentId: id as any,
+    };
+
+    if (id === "dpl_fail_003") {
+      return [
+        { ...baseEvent, eventName: "DEPLOYMENT_STARTED", category: "DEPLOYMENT", timestamp: "2026-07-28T10:00:00Z", correlationId: "cor_1" },
+        { ...baseEvent, eventName: "DEPLOYMENT_FAILED", category: "DEPLOYMENT", timestamp: "2026-07-28T10:05:00Z", correlationId: "cor_2", errorCategory: "PROVIDER" },
+      ];
+    }
+
+    if (id === "dpl_test_002") {
+      return [
+        { ...baseEvent, eventName: "DEPLOYMENT_STARTED", category: "DEPLOYMENT", timestamp: "2026-07-28T10:00:00Z", correlationId: "cor_1" },
+        { ...baseEvent, eventName: "DEPLOYMENT_FAILED", category: "DEPLOYMENT", timestamp: "2026-07-28T10:05:00Z", correlationId: "cor_2", errorCategory: "TIMEOUT" },
+        { ...baseEvent, eventName: "DEPLOYMENT_RETRY", category: "DEPLOYMENT", timestamp: "2026-07-28T10:10:00Z", correlationId: "cor_3" },
+        { ...baseEvent, eventName: "DEPLOYMENT_SUCCESS", category: "DEPLOYMENT", timestamp: "2026-07-28T10:15:00Z", correlationId: "cor_3" },
+      ];
+    }
+
+    // Default healthy for dpl_prod_001
     return [
-      {
-        schemaVersion: 1,
-        eventName: "DEPLOYMENT_STARTED",
-        category: "DEPLOYMENT",
-        clientId: "cli_12345" as any,
-        deploymentId: id as any,
-        timestamp: "2026-07-28T10:00:00Z",
-        correlationId: "cor_1",
-      },
-      {
-        schemaVersion: 1,
-        eventName: "BUILD_COMPLETED",
-        category: "BUILD",
-        clientId: "cli_12345" as any,
-        deploymentId: id as any,
-        timestamp: "2026-07-28T10:02:00Z",
-        correlationId: "cor_2",
-      },
-      {
-        schemaVersion: 1,
-        eventName: "DEPLOYMENT_SUCCESS",
-        category: "DEPLOYMENT",
-        clientId: "cli_12345" as any,
-        deploymentId: id as any,
-        timestamp: "2026-07-28T10:05:00Z",
-        correlationId: "cor_3",
-      },
+      { ...baseEvent, eventName: "DEPLOYMENT_STARTED", category: "DEPLOYMENT", timestamp: "2026-07-28T10:00:00Z", correlationId: "cor_1" },
+      { ...baseEvent, eventName: "BUILD_COMPLETED", category: "BUILD", timestamp: "2026-07-28T10:02:00Z", correlationId: "cor_2" },
+      { ...baseEvent, eventName: "DEPLOYMENT_SUCCESS", category: "DEPLOYMENT", timestamp: "2026-07-28T10:05:00Z", correlationId: "cor_3" },
     ];
   }
 }
