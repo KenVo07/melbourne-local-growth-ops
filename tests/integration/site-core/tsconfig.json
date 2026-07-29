@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM"],
+    "types": ["node", "react", "vitest/globals"],
+    "paths": {
+      "@melbourne-local-growth-ops/site-core": [
+        "../../../packages/site-core/src/index.ts"
+      ],
+      "@melbourne-local-growth-ops/templates": [
+        "../../../packages/templates/src/index.ts"
+      ]
+    }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}
