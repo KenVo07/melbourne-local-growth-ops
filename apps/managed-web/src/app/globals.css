@@ -80,6 +80,15 @@ h1 {
   line-height: 0.92;
 }
 
+h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
 .site-tagline {
   max-width: 42rem;
   margin: 2rem 0 0;
@@ -99,6 +108,76 @@ h1 {
 .module-slot {
   border-top: 1px solid var(--line);
   padding-top: 1.5rem;
+}
+
+.lead-form {
+  display: grid;
+  width: 100%;
+  gap: 1.5rem;
+}
+
+.lead-form-heading {
+  max-width: 42rem;
+}
+
+.lead-form-fields {
+  display: grid;
+  gap: 1rem;
+}
+
+.lead-form-field {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.lead-form-field input,
+.lead-form-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  padding: 0.875rem 1rem;
+}
+
+.lead-form-field input:focus-visible,
+.lead-form-field textarea:focus-visible,
+.lead-form button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.lead-form button {
+  min-height: 3.25rem;
+  width: fit-content;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  padding: 0.875rem 1.5rem;
+}
+
+.lead-form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.lead-form-status {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--muted-ink);
+}
+
+.lead-form-honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .booking-cta {
@@ -143,6 +222,14 @@ h1 {
   .module-slot {
     display: flex;
     justify-content: flex-start;
+  }
+
+  .lead-form-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lead-form-field-wide {
+    grid-column: 1 / -1;
   }
 
   .site-hero {

@@ -1,19 +1,20 @@
 import type {
-  ResolvedWebsiteModule,
-  WebsiteModuleReference,
-} from "@melbourne-local-growth-ops/site-core";
-
+  RuntimeBookingModule,
+  RuntimeModuleReference,
+  RuntimeWebsiteModule,
+} from "../runtime-types";
 import {
   ManagedWebsiteRenderError,
   type ManagedModuleRenderer,
 } from "./module-renderer-registry";
+import { TrackedBookingLink } from "./TrackedBookingLink";
 
-const reference: WebsiteModuleReference = Object.freeze({
+const reference: RuntimeModuleReference = Object.freeze({
   type: "BOOKING_CTA",
   moduleVersion: "1.0.0",
 });
 
-function renderBookingCta(module: ResolvedWebsiteModule) {
+function renderBookingCta(module: RuntimeWebsiteModule) {
   if (
     module.type !== "BOOKING_CTA" ||
     module.configuration.type !== "BOOKING_CTA" ||
@@ -26,10 +27,14 @@ function renderBookingCta(module: ResolvedWebsiteModule) {
     });
   }
 
+  const bookingModule = module as RuntimeBookingModule;
   return (
-    <a className="booking-cta" href={module.connector.bookingUrl}>
-      {module.configuration.label}
-    </a>
+    <TrackedBookingLink
+      eventName="booking_cta_clicked"
+      href={bookingModule.connector.bookingUrl}
+    >
+      {bookingModule.configuration.label}
+    </TrackedBookingLink>
   );
 }
 

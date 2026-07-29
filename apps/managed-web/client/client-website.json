@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "configuration": {
+    "schemaVersion": 1,
+    "configurationId": "configuration-harbour-electrical",
+    "configurationVersion": 1,
+    "clientId": "harbour-electrical",
+    "entitlementId": "entitlement-harbour-electrical",
+    "deploymentId": "deployment-harbour-electrical",
+    "display": {
+      "businessName": "Harbour Electrical & Air",
+      "tagline": "Straightforward electrical and split-system service across Melbourne.",
+      "locationIds": ["location-melbourne"]
+    },
+    "domains": [
+      {
+        "hostname": "harbour-electrical.example.com.au",
+        "canonical": true
+      }
+    ],
+    "modules": [
+      {
+        "schemaVersion": 1,
+        "moduleId": "booking-primary",
+        "connectorId": "booking-primary",
+        "type": "BOOKING_CTA",
+        "label": "Request a service time"
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "lead-primary",
+        "connectorId": "email-primary",
+        "type": "LEAD_FORM",
+        "fields": ["NAME", "EMAIL", "PHONE", "MESSAGE"]
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "analytics-primary",
+        "connectorId": "analytics-primary",
+        "type": "ANALYTICS"
+      }
+    ],
+    "connectors": [
+      {
+        "schemaVersion": 1,
+        "connectorId": "booking-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "BOOKING_LINK",
+        "bookingUrl": "https://harbour-electrical.example.com.au/book"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "email-primary",
+        "accountOwner": "CLIENT",
+        "portability": "TRANSFERABLE",
+        "type": "EMAIL_DELIVERY",
+        "provider": "RESEND",
+        "fromAddress": "website@harbour-electrical.example.com.au",
+        "recipientAddresses": ["owner@harbour-electrical.example.com.au"],
+        "secretReferenceId": "resend-harbour-electrical"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "analytics-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "GOOGLE_ANALYTICS_4",
+        "measurementId": "G-MLGO123456"
+      }
+    ],
+    "configuredInfrastructure": []
+  },
+  "template": {
+    "templateId": "contractor",
+    "templateVersion": "1.0.0"
+  },
+  "modules": [
+    {
+      "type": "BOOKING_CTA",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "LEAD_FORM",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "ANALYTICS",
+      "moduleVersion": "1.0.0"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "hero-primary",
+      "kind": "IMAGE",
+      "sourcePath": "assets/hero/primary.png",
+      "mediaType": "image/png",
+      "width": 1672,
+      "height": 941
+    }
+  ]
+}
