@@ -7,7 +7,7 @@ import type {
   WebsiteModule,
   WebsiteRuntimeConfig,
 } from "@melbourne-local-growth-ops/contracts";
-import { createTemplateProvenanceMismatchError } from "./template-registry.js";
+import { composeValidatedWebsite } from "./composition.js";
 import type {
   WebsiteTemplateReference,
   WebsiteTemplateRegistry,
@@ -59,18 +59,9 @@ export function composeWebsite(
     return configuration;
   }
 
-  const composition = template.compose(configuration.data);
-
-  if (
-    composition.templateId !== template.templateId ||
-    composition.templateVersion !== template.version
-  ) {
-    throw createTemplateProvenanceMismatchError(template, composition);
-  }
-
   return {
     success: true,
-    data: composition,
+    data: composeValidatedWebsite(configuration.data, template),
   };
 }
 
@@ -101,6 +92,27 @@ export interface WebsiteModuleContract {
   };
 }
 
+export {
+  composeManagedWebsite,
+} from "./managed-composition.js";
+export type {
+  ManagedWebsiteComposition,
+  ManagedWebsiteCompositionProvenance,
+  ManagedWebsiteCompositionRegion,
+  ManagedWebsiteDefinition,
+  ManagedWebsiteRegistries,
+  ResolvedWebsiteModule,
+  WebsiteModuleProvenance,
+} from "./managed-composition.js";
+export {
+  createWebsiteModuleRegistry,
+  WebsiteModulePipelineError,
+} from "./module-registry.js";
+export type {
+  WebsiteModulePipelineErrorCode,
+  WebsiteModuleReference,
+  WebsiteModuleRegistry,
+} from "./module-registry.js";
 export {
   createWebsiteTemplateRegistry,
   WebsiteTemplatePipelineError,
