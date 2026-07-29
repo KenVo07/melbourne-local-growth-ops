@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@melbourne-local-growth-ops/contracts": "workspace:*",
+    "@melbourne-local-growth-ops/observability": "workspace:*",
     "next": "^16.2.12",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
