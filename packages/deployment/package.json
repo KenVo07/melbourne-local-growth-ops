@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run && node --test ../../scripts/deployment/deployment-commands.test.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json --noEmit"
   },
   "dependencies": {

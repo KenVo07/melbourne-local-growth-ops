@@ -1,74 +1,138 @@
 # Deployment package
 
-`@melbourne-local-growth-ops/deployment` owns the package-level boundary between
-validated deployment intent and observed deployment state. It does not perform
-DNS changes, read credentials, or include a live Vercel client.
+`@melbourne-local-growth-ops/deployment` owns the boundary from validated
+deployment intent to validated observed deployment state. The package can plan,
+apply, inspect, and roll back an isolated Vercel deployment. It never changes
+external DNS and never reads credentials.
 
-## State model
+## Lifecycle
 
-1. `createDeploymentIntent` produces a deterministic, provider-unverified plan
-   from validated website runtime configuration, a validated operational
-   deployment record, and caller-provided requested provenance.
-2. `executeDeployment` sends a secret-free provider request through a
-   `DeploymentProvider`.
-3. The executor validates the provider response at runtime. Provider failures,
-   thrown errors, and malformed responses fail closed with normalized errors.
-4. A `DeploymentManifest` is created only after a valid successful provider
-   observation. Its build provenance is observed state, not a requested
-   placeholder.
+```text
+DeploymentIntent
+  -> deterministic VercelDeploymentPlan
+  -> explicit apply
+  -> isolated project reconciliation
+  -> deployment observation
+  -> domain attachment and inspection
+  -> DeploymentManifest
+  -> validated rollback target
+```
 
-`projectIdentity` is deterministic for the client/deployment pair. It is an
-internal isolation key, not proof that a project name is globally available at
-Vercel or another provider.
+`DeploymentIntent` contains requested provenance. A `DeploymentManifest` is
+created only after Vercel reports a `READY` deployment and every configured
+domain is observed as attached and verified. Its build provenance is observed
+state, never a requested placeholder.
 
-## Provider boundary
+`projectIdentity` and the derived project name are deterministic for a
+client/deployment pair. They isolate two clients inside this lifecycle, but do
+not claim global Vercel-name uniqueness before provider reconciliation.
 
-Adapters implement `DeploymentProvider` and receive a
-`DeploymentProviderRequest` containing client/configuration identity, domains,
-requested provenance, attempt number, and an idempotency key. Requests contain
-no credential or secret values.
+## Planning and applying
 
-Successful results must include:
+The production adapter uses an injected HTTP transport. Authentication is the
+transport's responsibility; the adapter accepts no token and sends no
+authorization header in its typed request objects.
 
-- the adapter's provider name;
-- the unchanged project identity and idempotency key;
-- provider project, deployment, preview, and build identifiers;
-- the requested source revision;
-- an observed ISO timestamp.
+```ts
+import {
+  VercelDeploymentAdapter,
+  type VercelHttpTransport,
+} from "@melbourne-local-growth-ops/deployment";
 
-The executor rejects HTTP preview URLs, URLs with embedded credentials, blank
-identifiers, mismatched identity/provenance, invalid timestamps, unknown error
-codes, and incomplete response shapes. Unknown response fields are not copied
-into logs or manifests.
+declare const transport: VercelHttpTransport; // supplied by the host
+declare const intent: DeploymentIntent;
 
-## Retry and idempotency
+const lifecycle = new VercelDeploymentAdapter({
+  transport,
+  teamId: "team-owned-by-the-agency",
+  gitSource: {
+    type: "github",
+    org: "agency",
+    repo: "managed-web",
+    ref: "main",
+  },
+});
 
-The default retry bound is three attempts; callers may select one through five.
-Only `RATE_LIMITED`, `TIMEOUT`, and `UNAVAILABLE` are retryable.
-`REJECTED`, `IDEMPOTENCY_CONFLICT`, and malformed responses stop immediately.
+const plan = lifecycle.plan(intent); // pure: no transport calls
+if (plan.externalDnsMutation !== false) {
+  throw new Error("Unexpected plan");
+}
 
-The idempotency key is deterministic across execution-relevant intent state,
-including client/project identity, configuration and delivery state, domains,
-infrastructure ownership, handoff state, and requested provenance. Provider
-adapters must preserve its semantics. An adapter may encode or hash the key to
-meet provider length requirements, but must detect conflicting reuse.
+const applied = await lifecycle.apply(intent, { maxAttempts: 3 });
+if (!applied.success) {
+  // Handle only the normalized code/message. No raw provider payload escapes.
+  throw new Error(applied.error.code);
+}
+
+const manifest = applied.manifest;
+const observed = applied.providerObservation;
+```
+
+The plan lists intended reads and writes, including conditional project/domain
+creation. Only `apply` crosses the mutation boundary. The adapter maps provider
+JSON inside the adapter and validates all project, deployment, domain, and
+rollback responses before returning typed state.
+
+## Inspection and rollback
+
+```ts
+const inspection = await lifecycle.inspect(intent, observed);
+if (
+  inspection.success &&
+  inspection.state.domains.every((domain) => domain.status === "ATTACHED")
+) {
+  const rollback = await lifecycle.rollback(intent, observed, {
+    maxAttempts: 3,
+  });
+  if (!rollback.success) {
+    throw new Error(rollback.error.code);
+  }
+}
+```
+
+A rollback target must be a previous valid `VERCEL` observation for the exact
+intent identity, source revision, idempotency key, project, deployment, and
+domain set. The adapter validates the target before requesting rollback and
+inspects it again afterward.
+
+See the [domain setup runbook](../../docs/runbooks/vercel-domain-setup.md) and
+[rollback runbook](../../docs/runbooks/vercel-deployment-rollback.md).
+
+## Command boundaries
+
+The injectable boundaries in `scripts/deployment/` keep runtime wiring outside
+the package:
+
+- `plan.mjs` produces the dry-run plan and has no side effects.
+- `apply.mjs` is the explicit provider-mutation boundary.
+- `inspect.mjs` performs provider reads only.
+- `rollback.mjs` validates and requests rollback.
+
+Hosts inject a configured lifecycle and a writer. A thrown host/transport error
+is replaced by the stable `COMMAND_FAILED` result; its original message is not
+written.
+
+## Retry, idempotency, and concurrency
+
+Apply retries are bounded from one through five. Rate limits, timeouts, and
+provider unavailability are retryable; provider rejection, conflicts, malformed
+responses, and unresolved domains fail closed. A deterministic idempotency key
+covers execution-relevant intent state. Successful and in-flight operations are
+deduplicated so repeated/concurrent calls do not create duplicate deployments.
+
+Rollback has the same bounded transient retry policy and deduplicates
+repeated/concurrent requests for the same validated project/deployment target.
 
 ## Logging and secrets
 
-`DeploymentLogger` receives a closed event union containing attempt numbers,
-normalized error codes, project identity, and adapter name. Provider error
-messages, thrown exceptions, provider-returned identifiers, configuration
-content, environment values, and credentials are never logged by this package.
-Logger failures are isolated so they cannot turn a completed provider action
-into a duplicate retry.
+`DeploymentLogger` and `VercelLifecycleLogger` expose closed event unions. Events
+contain operation status, attempt number, normalized codes, project identity,
+and domain hostname where applicable. They never contain raw HTTP bodies,
+headers, repository payloads, environment values, credentials, or provider
+error messages. Logger failures cannot change lifecycle behavior.
 
-## Deterministic fake Vercel adapter
-
-`DeterministicFakeVercelAdapter` is an in-memory test adapter. The caller
-provides the observed timestamp, and all fake identifiers are derived
-deterministically from request identity. It supports bounded failure injection,
-idempotent repeated/concurrent execution, and conflict detection. It performs
-no network, filesystem, DNS, Vercel API, or credential access.
+`DeterministicFakeVercelAdapter` remains available for provider-neutral tests.
+It performs no network, filesystem, DNS, Vercel API, or credential access.
 
 ## Verification
 
@@ -81,4 +145,5 @@ pnpm --filter @melbourne-local-growth-ops/deployment build
 pnpm check
 ```
 
-No live deployment or domain mutation is part of these commands.
+These commands use deterministic fixtures and make no live provider or DNS
+request.
