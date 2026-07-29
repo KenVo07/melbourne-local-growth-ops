@@ -4,7 +4,10 @@ import { DeploymentViewModel } from '../view-models/DeploymentViewModel';
 
 export default async function DeploymentsPage() {
   const records = await dataSource.listDeployments();
-  const deployments = records.map(r => new DeploymentViewModel(r));
+  const deployments = await Promise.all(records.map(async (r) => {
+    const events = await dataSource.getDeploymentEvents(r.deploymentId);
+    return new DeploymentViewModel(r, events);
+  }));
 
   return (
     <div>
@@ -23,6 +26,7 @@ export default async function DeploymentsPage() {
                 <th>Client ID</th>
                 <th>Delivery Mode</th>
                 <th>Status</th>
+                <th>Health</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -35,6 +39,11 @@ export default async function DeploymentsPage() {
                   <td>
                     <span className={`badge ${dep.isHandoffCompleted ? 'success' : ''}`}>
                       {dep.statusBadge}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${dep.health}`}>
+                      {dep.health}
                     </span>
                   </td>
                   <td>

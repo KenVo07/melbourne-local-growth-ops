@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { dataSource } from '../../../data-source/FixtureDataSource';
 import { DeploymentViewModel } from '../../../view-models/DeploymentViewModel';
+import { TechnicalAuditTimeline } from '../../../components/TechnicalAuditTimeline';
 
 export default async function DeploymentDetailPage({
   params,
@@ -14,16 +15,21 @@ export default async function DeploymentDetailPage({
     notFound();
   }
 
-  const deployment = new DeploymentViewModel(record);
   const events = await dataSource.getDeploymentEvents(id);
+  const deployment = new DeploymentViewModel(record, events);
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h2>Deployment: {deployment.id}</h2>
-        <span className={`badge ${deployment.isHandoffCompleted ? 'success' : ''}`}>
-          {deployment.statusBadge}
-        </span>
+        <div>
+          <span className={`badge ${deployment.isHandoffCompleted ? 'success' : ''}`} style={{ marginRight: '0.5rem' }}>
+            {deployment.statusBadge}
+          </span>
+          <span className={`badge ${deployment.health}`}>
+            Health: {deployment.health}
+          </span>
+        </div>
       </div>
 
       <div className="card">
@@ -31,12 +37,20 @@ export default async function DeploymentDetailPage({
         <table className="table">
           <tbody>
             <tr>
-              <th>Client ID</th>
-              <td>{deployment.clientId}</td>
+              <th>Configuration Version</th>
+              <td>{deployment.raw.websiteConfigurationId}</td>
             </tr>
             <tr>
               <th>Delivery Mode</th>
               <td>{deployment.deliveryMode}</td>
+            </tr>
+            <tr>
+              <th>Handoff Status</th>
+              <td>{deployment.raw.handoff?.status || 'None'}</td>
+            </tr>
+            <tr>
+              <th>Domain Owner</th>
+              <td>{deployment.raw.domainOwner}</td>
             </tr>
             <tr>
               <th>Operational Owner</th>
@@ -55,28 +69,11 @@ export default async function DeploymentDetailPage({
       </div>
 
       <div className="card">
-        <h3>Technical Event Inspector</h3>
+        <h3>Technical Audit Timeline</h3>
         {events.length === 0 ? (
           <p>No events found for this deployment.</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Event Name</th>
-                <th>Correlation ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((evt, idx) => (
-                <tr key={idx}>
-                  <td>{new Date(evt.timestamp).toLocaleString()}</td>
-                  <td>{evt.eventName}</td>
-                  <td>{evt.correlationId}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <TechnicalAuditTimeline events={events} />
         )}
       </div>
     </div>

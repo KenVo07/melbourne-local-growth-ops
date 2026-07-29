@@ -36,6 +36,32 @@ const rawDeployments = [
       targetOwner: "CLIENT",
       completedAt: "2026-01-15T10:00:00Z"
     }
+  },
+  {
+    schemaVersion: 1,
+    deploymentId: "dpl_fail_003",
+    clientId: "cli_11111",
+    websiteConfigurationId: "wcf_fail_003",
+    deliveryMode: "MANAGED_ISOLATED",
+    operationalOwner: "AGENCY",
+    hostingAccountOwner: "AGENCY",
+    sourceRepositoryOwner: "AGENCY",
+    domainOwner: "CLIENT",
+    privateAgencyRepositoryDependency: true,
+    secretReferences: []
+  },
+  {
+    schemaVersion: 1,
+    deploymentId: "dpl_unk_004",
+    clientId: "cli_22222",
+    websiteConfigurationId: "wcf_unk_004",
+    deliveryMode: "MANAGED_ISOLATED",
+    operationalOwner: "AGENCY",
+    hostingAccountOwner: "AGENCY",
+    sourceRepositoryOwner: "AGENCY",
+    domainOwner: "CLIENT",
+    privateAgencyRepositoryDependency: true,
+    secretReferences: []
   }
 ];
 
