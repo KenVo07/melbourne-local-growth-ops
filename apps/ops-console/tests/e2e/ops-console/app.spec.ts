@@ -6,7 +6,7 @@ test.describe('Ops Console E2E', () => {
 
     await expect(page).toHaveTitle(/Melbourne Local Growth Ops/);
     await expect(page.locator('h1')).toHaveText('Ops Console');
-    
+
     // Wait for the table to populate
     await expect(page.locator('table.table tbody tr')).toHaveCount(4);
     

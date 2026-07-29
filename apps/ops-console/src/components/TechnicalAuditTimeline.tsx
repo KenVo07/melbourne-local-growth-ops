@@ -11,7 +11,7 @@ export function TechnicalAuditTimeline({ events }: { events: ObservabilityEvent[
   const filteredEvents = filter === "ALL" ? events : events.filter(e => e.category === filter);
 
   // Sort events newest first
-  const sortedEvents = [...filteredEvents].sort((a, b) => 
+  const sortedEvents = [...filteredEvents].sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
@@ -19,9 +19,9 @@ export function TechnicalAuditTimeline({ events }: { events: ObservabilityEvent[
     <div>
       <div style={{ marginBottom: "1rem" }}>
         <label htmlFor="category-filter" style={{ marginRight: "0.5rem" }}>Filter by Category:</label>
-        <select 
+        <select
           id="category-filter"
-          value={filter} 
+          value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="form-control"
         >

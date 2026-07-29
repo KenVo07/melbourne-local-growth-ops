@@ -16,7 +16,7 @@ It allows operations and engineering staff to view the current registry of activ
   - `failed`: The most recent event contains an `errorCategory`.
   - `degraded`: The most recent event is successful, but there is an error in the last 5 events.
   - `healthy`: No errors in the most recent events.
-- **Exclusions**: 
+- **Exclusions**:
   - Do not use background jobs, direct external APIs (e.g. Vercel APIs), or databases for health evaluation. Health must be derived purely from the event stream payload at read time.
 
 ## Commands
