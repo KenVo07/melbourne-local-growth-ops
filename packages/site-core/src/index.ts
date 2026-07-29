@@ -12,6 +12,10 @@ import type {
   WebsiteTemplateReference,
   WebsiteTemplateRegistry,
 } from "./template-registry.js";
+import type {
+  ResolvedWebsiteImage,
+  WebsiteTemplateAssetContext,
+} from "./asset-composition.js";
 
 /**
  * This alias deliberately reuses the TSK-45 runtime model. Site core must not
@@ -34,6 +38,7 @@ export interface WebsiteComposition {
   readonly templateId: string;
   readonly templateVersion: string;
   readonly regions: readonly WebsiteCompositionRegion[];
+  readonly assets?: readonly ResolvedWebsiteImage[];
 }
 
 export interface WebsiteTemplate {
@@ -41,6 +46,7 @@ export interface WebsiteTemplate {
   readonly version: string;
   compose(
     configuration: ValidatedWebsiteConfiguration,
+    assets?: WebsiteTemplateAssetContext,
   ): WebsiteComposition;
 }
 
@@ -78,6 +84,15 @@ export function composeWebsiteFromRegistry(
 }
 
 export type WebsiteModuleType = WebsiteModule["type"];
+
+export type {
+  AssetManifest,
+  AssetManifestSource,
+  ImageAssetManifestEntry,
+  ResolvedWebsiteImage,
+  WebsiteImageSelection,
+  WebsiteTemplateAssetContext,
+} from "./asset-composition.js";
 
 export interface WebsiteModuleContract {
   readonly type: WebsiteModuleType;

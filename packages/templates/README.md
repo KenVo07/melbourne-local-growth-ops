@@ -1,9 +1,9 @@
 # `@melbourne-local-growth-ops/templates`
 
 Framework-neutral website compositions for the private Website Factory.
-Templates consume only `ValidatedWebsiteConfiguration` and return
-`WebsiteComposition`; they do not import React, Next.js, deployment tooling, or
-client secrets.
+Templates consume `ValidatedWebsiteConfiguration` plus an optional
+framework-neutral asset-selection context and return `WebsiteComposition`.
+They do not import React, Next.js, deployment tooling, or client secrets.
 
 ## Contractor template v1
 
@@ -30,3 +30,12 @@ and calls do not retain client configuration.
 
 The template only describes placement. Concrete module rendering and server
 handlers remain outside this package.
+
+When an asset context is present, contractor v1 also selects the optional
+`hero-primary` image for the `hero` slot. The template owns its usage metadata:
+meaningful client-specific alternative text, responsive `sizes`, preload
+priority, and optional-selection behavior. Intrinsic width, height, media type,
+source path, and public path remain in the asset manifest.
+
+If the asset is absent, the template omits the slot and otherwise produces the
+same composition as an asset-free definition.

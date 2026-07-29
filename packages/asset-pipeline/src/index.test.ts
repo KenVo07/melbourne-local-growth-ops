@@ -111,6 +111,8 @@ describe("generateAssetManifest", () => {
     expect(Object.isFrozen(manifest)).toBe(true);
     expect(Object.isFrozen(manifest.assets)).toBe(true);
     expect(Object.isFrozen(manifest.assets[0])).toBe(true);
+    expect(JSON.stringify(manifest)).not.toContain(root);
+    expect(manifest).not.toHaveProperty("publicDirectory");
   });
 
   it.each([

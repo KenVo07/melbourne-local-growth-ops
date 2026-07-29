@@ -2,6 +2,7 @@ import type {
   ValidatedWebsiteConfiguration,
   WebsiteComposition,
   WebsiteTemplate,
+  WebsiteTemplateAssetContext,
 } from "@melbourne-local-growth-ops/site-core";
 
 function sortedModuleIds(
@@ -18,12 +19,21 @@ function sortedModuleIds(
 
 function composeContractorWebsite(
   configuration: ValidatedWebsiteConfiguration,
+  assets?: WebsiteTemplateAssetContext,
 ): WebsiteComposition {
   const primaryModuleIds = Object.freeze([
     ...sortedModuleIds(configuration, "BOOKING_CTA"),
     ...sortedModuleIds(configuration, "LEAD_FORM"),
   ]);
   const analyticsModuleIds = sortedModuleIds(configuration, "ANALYTICS");
+  const hero = assets?.selectImage({
+    slotId: "hero",
+    assetId: "hero-primary",
+    required: false,
+    alt: `${configuration.display.businessName} electrician providing a local service`,
+    sizes: "(min-width: 48rem) 50vw, 100vw",
+    priority: true,
+  });
 
   return Object.freeze({
     templateId: "contractor",
@@ -38,6 +48,9 @@ function composeContractorWebsite(
         moduleIds: analyticsModuleIds,
       }),
     ]),
+    ...(hero === undefined
+      ? {}
+      : { assets: Object.freeze([hero]) }),
   });
 }
 

@@ -1,8 +1,10 @@
 import {
   validateWebsiteConfiguration,
+  type ResolvedWebsiteImage,
   type ValidatedWebsiteConfiguration,
+  type WebsiteTemplateAssetContext,
 } from "@melbourne-local-growth-ops/site-core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { contractorTemplateV1 } from "./index.js";
 
@@ -119,5 +121,50 @@ describe("contractorTemplateV1", () => {
     expect(clientB.regions[0]?.moduleIds).toEqual(["booking-b"]);
     expect(JSON.stringify(clientA)).not.toContain("booking-b");
     expect(JSON.stringify(clientB)).not.toContain("booking-a");
+  });
+
+  it("selects an optional hero while keeping usage metadata in the template", () => {
+    const selectedHero: ResolvedWebsiteImage = {
+      slotId: "hero",
+      asset: {
+        assetId: "hero-primary",
+        kind: "IMAGE",
+        sourcePath: "assets/hero/primary.webp",
+        publicPath: "/assets/hero/primary.webp",
+        mediaType: "image/webp",
+        width: 1600,
+        height: 900,
+      },
+      alt: "Business client-a electrician providing a local service",
+      sizes: "(min-width: 48rem) 50vw, 100vw",
+      priority: true,
+    };
+    const selectImage = vi
+      .fn<WebsiteTemplateAssetContext["selectImage"]>()
+      .mockReturnValue(selectedHero);
+
+    const composition = contractorTemplateV1.compose(
+      configurationFixture("client-a", []),
+      { selectImage },
+    );
+
+    expect(selectImage).toHaveBeenCalledWith({
+      slotId: "hero",
+      assetId: "hero-primary",
+      required: false,
+      alt: "Business client-a electrician providing a local service",
+      sizes: "(min-width: 48rem) 50vw, 100vw",
+      priority: true,
+    });
+    expect(composition.assets).toEqual([selectedHero]);
+  });
+
+  it("omits the optional hero when no matching asset is available", () => {
+    const composition = contractorTemplateV1.compose(
+      configurationFixture("client-a", []),
+      { selectImage: () => undefined },
+    );
+
+    expect(composition).not.toHaveProperty("assets");
   });
 });

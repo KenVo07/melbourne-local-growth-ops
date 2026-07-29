@@ -2,6 +2,7 @@ import type {
   ValidatedWebsiteConfiguration,
   WebsiteComposition,
   WebsiteTemplate,
+  WebsiteTemplateAssetContext,
 } from "./index.js";
 
 /**
@@ -108,8 +109,9 @@ function registeredTemplate(template: WebsiteTemplate): RegisteredTemplate {
       version: templateVersion,
       compose(
         configuration: ValidatedWebsiteConfiguration,
+        assets?: WebsiteTemplateAssetContext,
       ): WebsiteComposition {
-        return template.compose(configuration);
+        return template.compose(configuration, assets);
       },
     }),
   };

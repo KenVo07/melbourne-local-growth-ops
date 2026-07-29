@@ -1,3 +1,10 @@
+import {
+  createAssetResolver,
+  createEmptyAssetManifest,
+  generateAssetManifest,
+  type AssetManifest,
+  type AssetManifestSource,
+} from "@melbourne-local-growth-ops/asset-pipeline";
 import type {
   InfrastructureKind,
   ModuleId,
@@ -7,6 +14,7 @@ import type {
   WebsiteConfigurationId,
 } from "@melbourne-local-growth-ops/contracts";
 
+import { createWebsiteTemplateAssetContext } from "./asset-composition.js";
 import { composeValidatedWebsite } from "./composition.js";
 import {
   compareText,
@@ -18,6 +26,7 @@ import type {
 } from "./module-registry.js";
 import type {
   ValidatedWebsiteConfiguration,
+  ResolvedWebsiteImage,
   WebsiteComposition,
   WebsiteModuleContract,
   WebsiteModuleType,
@@ -30,6 +39,7 @@ export interface ManagedWebsiteDefinition {
   readonly configuration: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
+  readonly assets?: AssetManifestSource;
 }
 
 export interface ManagedWebsiteRegistries {
@@ -63,6 +73,8 @@ export interface ManagedWebsiteCompositionProvenance {
 
 export interface ManagedWebsiteComposition {
   readonly configuration: ValidatedWebsiteConfiguration;
+  readonly assetManifest: AssetManifest;
+  readonly assets: readonly ResolvedWebsiteImage[];
   readonly template: WebsiteComposition;
   readonly regions: readonly ManagedWebsiteCompositionRegion[];
   readonly provenance: ManagedWebsiteCompositionProvenance;
@@ -78,6 +90,15 @@ export function composeManagedWebsite(
   }
 
   const configuration = deepFreeze(validation.data);
+  const assetManifest =
+    definition.assets === undefined
+      ? createEmptyAssetManifest(configuration.clientId)
+      : generateAssetManifest(definition.assets);
+  const assetResolver = createAssetResolver(
+    assetManifest,
+    configuration.clientId,
+  );
+  const assetContext = createWebsiteTemplateAssetContext(assetResolver);
   const selections = validateSelections(configuration, definition.modules);
   const resolvedById = resolveModules(
     configuration,
@@ -85,7 +106,12 @@ export function composeManagedWebsite(
     registries.modules,
   );
   const template = registries.templates.resolve(definition.template);
-  const templateComposition = composeValidatedWebsite(configuration, template);
+  const templateComposition = composeValidatedWebsite(
+    configuration,
+    template,
+    assetContext,
+  );
+  const assets = Object.freeze([...(templateComposition.assets ?? [])]);
   const regions = resolveRegions(templateComposition, resolvedById);
   const orderedModules = regions.flatMap((region) => region.modules);
 
@@ -93,6 +119,8 @@ export function composeManagedWebsite(
     success: true,
     data: Object.freeze({
       configuration,
+      assetManifest,
+      assets,
       template: templateComposition,
       regions,
       provenance: Object.freeze({
