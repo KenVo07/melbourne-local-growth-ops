@@ -9,7 +9,7 @@ test.describe('Ops Console E2E', () => {
 
     // Wait for the table to populate
     await expect(page.locator('table.table tbody tr')).toHaveCount(4);
-    
+
     // Verify health displays
     await expect(page.locator('text=dpl_prod_001').locator('..').locator('text=healthy')).toBeVisible();
     await expect(page.locator('text=dpl_test_002').locator('..').locator('text=degraded')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Ops Console E2E', () => {
 
     // Verify all events
     await expect(page.locator('table.table').nth(1).locator('tbody tr')).toHaveCount(3);
-    
+
     // Filter by BUILD
     await page.selectOption('select#category-filter', 'BUILD');
     await expect(page.locator('table.table').nth(1).locator('tbody tr')).toHaveCount(1);
@@ -35,7 +35,7 @@ test.describe('Ops Console E2E', () => {
 
   test('gracefully handles missing events (unknown health)', async ({ page }) => {
     await page.goto('/deployments/dpl_unk_004');
-    
+
     await expect(page.locator('h3').first()).toHaveText('Configuration Details');
     await expect(page.locator('text=Technical Audit Timeline')).toBeVisible();
 
