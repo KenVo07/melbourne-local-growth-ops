@@ -102,6 +102,8 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  packages/asset-pipeline: {}
+
   packages/contracts:
     dependencies:
       zod:
@@ -140,6 +142,9 @@ importers:
 
   packages/site-core:
     dependencies:
+      '@melbourne-local-growth-ops/asset-pipeline':
+        specifier: workspace:*
+        version: link:../asset-pipeline
       '@melbourne-local-growth-ops/contracts':
         specifier: workspace:*
         version: link:../contracts
