@@ -13,7 +13,15 @@ export type DeploymentProviderFailureCode =
   | "TIMEOUT"
   | "UNAVAILABLE"
   | "REJECTED"
-  | "IDEMPOTENCY_CONFLICT";
+  | "IDEMPOTENCY_CONFLICT"
+  | "MALFORMED_RESPONSE"
+  | "DOMAIN_PENDING_VERIFICATION"
+  | "DOMAIN_CONFLICT";
+
+export interface DeploymentProviderDomainObservation {
+  readonly hostname: string;
+  readonly status: "ATTACHED";
+}
 
 export interface DeploymentProviderRequest {
   readonly schemaVersion: 1;
@@ -39,6 +47,7 @@ export interface DeploymentProviderObservation {
   readonly buildId: string;
   readonly sourceRevision: string;
   readonly observedAt: string;
+  readonly domainObservations: readonly DeploymentProviderDomainObservation[];
 }
 
 export type DeploymentProviderResult =
