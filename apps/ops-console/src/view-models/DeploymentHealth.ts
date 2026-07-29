@@ -11,8 +11,17 @@ export function deriveDeploymentHealth(
     return "unknown";
   }
 
+  // Defensive health derivation: only consider matching events
+  const matchingEvents = events.filter(
+    (e) => e.clientId === deployment.clientId && e.deploymentId === deployment.deploymentId
+  );
+
+  if (matchingEvents.length === 0) {
+    return "unknown";
+  }
+
   // Sort events newest first
-  const sortedEvents = [...events].sort((a, b) => {
+  const sortedEvents = [...matchingEvents].sort((a, b) => {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 

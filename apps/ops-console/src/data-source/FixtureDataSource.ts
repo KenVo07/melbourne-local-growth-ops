@@ -18,15 +18,20 @@ export class FixtureDataSource implements OpsConsoleDataSource {
 
   async getDeploymentEvents(id: string): Promise<ObservabilityEvent[]> {
     await new Promise(resolve => setTimeout(resolve, 300));
-    if (id === "dpl_unk_004") {
+    const deployment = deploymentFixtures.find(d => d.deploymentId === id);
+    if (!deployment) {
       return [];
     }
 
     const baseEvent = {
       schemaVersion: 1 as const,
-      clientId: "cli_12345" as any,
-      deploymentId: id as any,
+      clientId: deployment.clientId as any,
+      deploymentId: deployment.deploymentId as any,
     };
+
+    if (id === "dpl_unk_004") {
+      return [];
+    }
 
     if (id === "dpl_fail_003") {
       return [
