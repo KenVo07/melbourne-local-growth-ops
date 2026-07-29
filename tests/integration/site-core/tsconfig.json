@@ -11,6 +11,21 @@
     "lib": ["ES2024", "DOM"],
     "types": ["node", "react", "vitest/globals"],
     "paths": {
+      "@melbourne-local-growth-ops/asset-pipeline": [
+        "../../../packages/asset-pipeline/src/index.ts"
+      ],
+      "@melbourne-local-growth-ops/contact-form": [
+        "../../../packages/website-modules/contact-form/src/index.ts"
+      ],
+      "@melbourne-local-growth-ops/contracts": [
+        "../../../packages/contracts/src/index.ts"
+      ],
+      "@melbourne-local-growth-ops/deployment": [
+        "../../../packages/deployment/src/index.ts"
+      ],
+      "@melbourne-local-growth-ops/resend": [
+        "../../../packages/integrations/resend/src/index.ts"
+      ],
       "@melbourne-local-growth-ops/site-core": [
         "../../../packages/site-core/src/index.ts"
       ],

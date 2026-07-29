@@ -1,12 +1,13 @@
-import type {
-  ResolvedWebsiteModule,
-  WebsiteModuleReference,
-} from "@melbourne-local-growth-ops/site-core";
 import type { ReactNode } from "react";
 
+import type {
+  RuntimeModuleReference,
+  RuntimeWebsiteModule,
+} from "../runtime-types";
+
 export interface ManagedModuleRenderer {
-  readonly reference: WebsiteModuleReference;
-  render(module: ResolvedWebsiteModule): ReactNode;
+  readonly reference: RuntimeModuleReference;
+  render(module: RuntimeWebsiteModule): ReactNode;
 }
 
 export type ManagedWebsiteRenderErrorCode =
@@ -16,14 +17,14 @@ export type ManagedWebsiteRenderErrorCode =
 
 interface ManagedWebsiteRenderErrorDetails {
   readonly code: ManagedWebsiteRenderErrorCode;
-  readonly reference: WebsiteModuleReference;
+  readonly reference: RuntimeModuleReference;
   readonly moduleId?: string;
 }
 
 export class ManagedWebsiteRenderError extends Error {
   override readonly name = "ManagedWebsiteRenderError";
   readonly code: ManagedWebsiteRenderErrorCode;
-  readonly reference: WebsiteModuleReference;
+  readonly reference: RuntimeModuleReference;
   readonly moduleId: string | undefined;
 
   constructor(details: ManagedWebsiteRenderErrorDetails) {
@@ -35,13 +36,13 @@ export class ManagedWebsiteRenderError extends Error {
 }
 
 export interface ManagedModuleRendererRegistry {
-  readonly registrations: readonly WebsiteModuleReference[];
+  readonly registrations: readonly RuntimeModuleReference[];
   resolve(
-    reference: WebsiteModuleReference,
+    reference: RuntimeModuleReference,
   ): ManagedModuleRenderer | undefined;
 }
 
-function rendererKey(reference: WebsiteModuleReference): string {
+function rendererKey(reference: RuntimeModuleReference): string {
   return `${reference.type}\u0000${reference.moduleVersion}`;
 }
 
@@ -76,7 +77,7 @@ export function createManagedModuleRendererRegistry(
       key,
       Object.freeze({
         reference,
-        render(module: ResolvedWebsiteModule): ReactNode {
+        render(module: RuntimeWebsiteModule): ReactNode {
           return renderer.render(module);
         },
       }),
@@ -89,7 +90,7 @@ export function createManagedModuleRendererRegistry(
 
   return Object.freeze({
     registrations,
-    resolve(reference: WebsiteModuleReference) {
+    resolve(reference: RuntimeModuleReference) {
       return renderersByReference.get(rendererKey(reference));
     },
   });

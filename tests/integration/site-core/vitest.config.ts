@@ -8,6 +8,27 @@ export default defineConfig({
   root: repositoryRoot,
   resolve: {
     alias: {
+      "@melbourne-local-growth-ops/asset-pipeline": fileURLToPath(
+        new URL("../../../packages/asset-pipeline/src/index.ts", import.meta.url),
+      ),
+      "@melbourne-local-growth-ops/contact-form": fileURLToPath(
+        new URL(
+          "../../../packages/website-modules/contact-form/src/index.ts",
+          import.meta.url,
+        ),
+      ),
+      "@melbourne-local-growth-ops/contracts": fileURLToPath(
+        new URL("../../../packages/contracts/src/index.ts", import.meta.url),
+      ),
+      "@melbourne-local-growth-ops/deployment": fileURLToPath(
+        new URL("../../../packages/deployment/src/index.ts", import.meta.url),
+      ),
+      "@melbourne-local-growth-ops/resend": fileURLToPath(
+        new URL(
+          "../../../packages/integrations/resend/src/index.ts",
+          import.meta.url,
+        ),
+      ),
       "@melbourne-local-growth-ops/site-core": fileURLToPath(
         new URL("../../../packages/site-core/src/index.ts", import.meta.url),
       ),

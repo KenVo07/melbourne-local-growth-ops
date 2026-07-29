@@ -1,18 +1,18 @@
-import type {
-  ManagedWebsiteComposition,
-  ResolvedWebsiteImage,
-  ResolvedWebsiteModule,
-} from "@melbourne-local-growth-ops/site-core";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
+import type {
+  ManagedWebsiteRuntime,
+  RuntimeWebsiteImage,
+  RuntimeWebsiteModule,
+} from "../runtime-types";
 import {
   ManagedWebsiteRenderError,
   type ManagedModuleRendererRegistry,
 } from "./module-renderer-registry";
 
 export interface ManagedWebsiteShellProps {
-  readonly composition: ManagedWebsiteComposition;
+  readonly composition: ManagedWebsiteRuntime;
   readonly renderers: ManagedModuleRendererRegistry;
 }
 
@@ -67,7 +67,7 @@ export function ManagedWebsiteShell({
   );
 }
 
-function renderImageSlot(image: ResolvedWebsiteImage): ReactNode {
+function renderImageSlot(image: RuntimeWebsiteImage): ReactNode {
   return (
     <figure
       className={`asset-slot asset-slot-${image.slotId}`}
@@ -90,7 +90,7 @@ function renderImageSlot(image: ResolvedWebsiteImage): ReactNode {
 }
 
 function renderModuleSlot(
-  module: ResolvedWebsiteModule,
+  module: RuntimeWebsiteModule,
   renderers: ManagedModuleRendererRegistry,
 ): ReactNode {
   const reference = {
@@ -120,7 +120,7 @@ function renderModuleSlot(
   );
 }
 
-function renderFallback(module: ResolvedWebsiteModule): ReactNode {
+function renderFallback(module: RuntimeWebsiteModule): ReactNode {
   switch (module.contract.fallback.strategy) {
     case "HIDE":
       return null;
