@@ -6,7 +6,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -33,7 +33,7 @@ function writeAsset(
   contents = "structural image fixture",
 ): void {
   const file = join(root, ...sourcePath.split("/"));
-  mkdirSync(join(file, ".."), { recursive: true });
+  mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, contents);
 }
 
