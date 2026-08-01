@@ -8,13 +8,21 @@
     "pnpm": "11.9.0"
   },
   "scripts": {
-    "build": "pnpm --filter @melbourne-local-growth-ops/contracts build",
-    "check": "pnpm test && pnpm typecheck && pnpm build",
-    "test": "pnpm --filter @melbourne-local-growth-ops/contracts test",
-    "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts typecheck"
+    "build": "pnpm --recursive --if-present run build",
+    "check": "pnpm build && pnpm test && pnpm typecheck",
+    "test": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run test",
+    "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run typecheck"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "typescript": "7.0.2",
     "vitest": "4.1.10"
+  },
+  "dependencies": {
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   }
 }

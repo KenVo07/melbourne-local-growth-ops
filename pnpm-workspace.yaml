@@ -1,7 +1,13 @@
 packages:
+  - apps/*
   - packages/*
+  - packages/*/*
 
 useNodeVersion: 24.18.0
 
 allowBuilds:
   esbuild: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - resend@6.18.1

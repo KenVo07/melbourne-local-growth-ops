@@ -1,0 +1,34 @@
+{
+  "name": "@melbourne-local-growth-ops/managed-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assemble:client": "tsx src/generation/cli.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run --config ../../tests/integration/site-core/vitest.config.ts",
+    "test:e2e": "playwright test",
+    "typecheck": "next typegen && tsc --noEmit && tsc --project ../../tests/integration/site-core/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@melbourne-local-growth-ops/asset-pipeline": "workspace:*",
+    "@melbourne-local-growth-ops/contact-form": "workspace:*",
+    "@melbourne-local-growth-ops/resend": "workspace:*",
+    "@melbourne-local-growth-ops/site-core": "workspace:*",
+    "@melbourne-local-growth-ops/templates": "workspace:*",
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "tsx": "^4.20.6",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

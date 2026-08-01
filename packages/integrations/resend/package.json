@@ -1,0 +1,23 @@
+{
+  "name": "@melbourne-local-growth-ops/resend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --project tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@melbourne-local-growth-ops/contracts": "workspace:*",
+    "@melbourne-local-growth-ops/integrations": "workspace:*",
+    "resend": "6.18.1"
+  }
+}

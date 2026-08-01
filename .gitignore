@@ -5,3 +5,10 @@ coverage/
 .env.*
 *.pem
 *.key
+
+# Ops Console generated output
+/apps/ops-console/.next/
+/apps/ops-console/playwright-report/
+/apps/ops-console/test-results/
+
+/docs/learning

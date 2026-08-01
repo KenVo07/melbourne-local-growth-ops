@@ -1,36 +1,27 @@
-# TSK-45 implementation checklist
+# M1 parallel-development foundation checklist
 
-## Specification
+## Baseline
 
-- [x] Lock the implementation plan.
-- [x] Record approved rules in the tracked TSK-45 specification.
-- [x] Record qualifications to the untracked domain-rules note.
+- [x] Verify clean `main`, `origin/main`, and `m0-complete`.
+- [x] Run the M0 frozen install and full check.
+- [x] Read the authoritative M1 milestone, build plan, and TSK-49–56.
 
-## Minimal workspace
+## Foundation
 
-- [x] Pin Node.js 24.18.0 and pnpm 11.9.0.
-- [x] Add the minimal pnpm workspace, TypeScript, and Vitest configuration.
-- [x] Add the ESM contracts package and generated lockfile.
+- [x] Add minimal shared interface packages and tests.
+- [x] Add CI quality gates.
+- [x] Add architecture, assignment, integration, and interface-request docs.
+- [x] Add four self-contained agent prompts.
 
-## Contract slices
+## Integration
 
-- [x] Add branded identifiers and shared strict primitives.
-- [x] Add client, business, location, entitlement, and commercial references.
-- [x] Add strict module, connector, infrastructure, and service unions.
-- [x] Add website runtime configuration and dependency resolution.
-- [x] Add deployment ownership and the handoff state machine.
-- [x] Add the aggregate contract bundle and cross-record validation.
-- [x] Add stable Zod-to-package validation issue translation.
-- [x] Add deliberate root exports.
+- [x] Verify, review, simplify, commit, and push `feat/m1-foundation`.
+- [x] Merge foundation with `--no-ff` into `integration/m1`.
+- [x] Re-run all checks and push `integration/m1`.
 
-## Verification
+## Worktrees
 
-- [x] Test valid standard configurations without optional infrastructure.
-- [x] Test strict unions, unknown fields, and dependency-set equality.
-- [x] Test handoff transitions, ownership, portability, and secret boundaries.
-- [x] Test independent capabilities and minimal service envelopes.
-- [x] Test stable issue translation and cross-client reference rejection.
-- [x] Run tests, type checking, build, ESM smoke import, frozen install, and
-      dependency-signature audit.
-- [x] Confirm `DOMAIN_RULES.md` is unchanged and unused.
-- [x] Complete API, security, and simplification review.
+- [x] Create the four feature branches/worktrees without overwriting paths.
+- [x] Install and check every worktree.
+- [x] Add local-only `.agent-worktree-info.md` files.
+- [x] Return the primary repository to `main` and report exact next steps.
