@@ -20,7 +20,7 @@ Authoritative sources:
 
 ## Tier Classification
 
-Classify each package by its highest applicable risk, state, or transaction dimension. Component-level evidence inside a higher-tier package may remain at a lower tier where appropriate.
+Classify each package by its highest applicable risk, state, or transaction dimension. Universal gates always apply; the assigned highest tier applies; lower-tier gates apply only when their underlying conditions remain applicable. Component-level evidence inside a higher-tier package may remain at a lower tier where appropriate.
 
 ### Tier A: Stateless Website Components
 
@@ -52,7 +52,9 @@ Classify each package by its highest applicable risk, state, or transaction dime
 - Refund, dispute, or chargeback handling
 - Financial reconciliation procedures
 - Transactional correctness requirements (ACID or compensating transactions)
-- Regulatory obligations explicitly contracted (PCI, SOC 2, specific data-residency requirements)
+- Applicable transactional or financial legal/regulatory duties and contractual assurance requirements assessed from authoritative contract terms and jurisdictional law
+
+Other applicable legal/regulatory duties (e.g., nonfinancial privacy obligations) require their relevant conditional gates or risk escalation but do not automatically classify a package as Tier C.
 
 **Examples:** Payment gateway integration, custom checkout flow, refund-processing module, invoicing system with payment reconciliation
 
@@ -71,9 +73,9 @@ These gates apply to all packages regardless of tier classification. Every omitt
 
 Apply where the package has user-facing UI or customer-visible behavior:
 
-- [ ] **Professional content and presentation**: Content is clear, correctly spelled, and appropriate for the target customer (contractors, restaurants)
+- [ ] **Professional content and presentation**: Content is clear, correctly spelled, and appropriate for the target customer (contractors, restaurants, retailers)
 - [ ] **Responsive behavior**: UI adapts to mobile, tablet, and desktop viewports
-- [ ] **Accessibility**: Semantic HTML, keyboard navigation, ARIA labels, color contrast meet WCAG 2.1 AA where feasible; automated checks pass; manual assistive-technology validation noted as limitation if not performed
+- [ ] **Accessibility**: Semantic HTML, keyboard navigation, ARIA labels, color contrast; proportionate automated checks and manual validation evidence; named conformance level applies only when linked to authoritative task, contract, or legal source; unresolved applicability escalated
 - [ ] **Conversion and contact journey**: Lead/booking/contact paths tested end-to-end; success and error states confirmed
 - [ ] **Trust signals**: Business identity, contact information, privacy/consent handling visible and correct
 - [ ] **Failure and fallback states**: Network errors, invalid input, unavailable integrations display helpful messages; no silent failures
@@ -97,7 +99,6 @@ Non-UI packages (internal libraries, deployment tooling, observability adapters)
 
 ### Export and Handoff Portability
 
-- [ ] **Portable dependencies**: Package dependencies are public npm packages with pinned versions; no private registries, workspace links, or agency credentials
 - [ ] **Module/connector transferability markers**: Website modules and connectors marked `TRANSFERABLE` or `CLIENT_OWNED` per contract schema
 - [ ] **No cross-client data in artifacts**: Handoff artifacts contain only this client's data; isolation tests pass
 - [ ] **Handoff documentation**: If `CLIENT_HANDOFF` delivery profile applies, handoff runbook, ownership checklist, and environment variable documentation exist
@@ -182,7 +183,7 @@ Workflow orchestration is package-local. Do not introduce shared approval queues
 
 ## Tier C Additions: Transactional and Financial Packages
 
-Apply these additional gates when the package processes payments, handles refunds/disputes, or requires financial reconciliation. Tier A universal gates and applicable Tier B gates remain in effect.
+Apply these additional gates when the package processes payments, handles refunds/disputes, or requires financial reconciliation. Universal gates and applicable Tier B state/reconciliation gates remain in effect; Tier A's no-infrastructure confirmation does not apply.
 
 ### Transactional Correctness
 
@@ -216,26 +217,29 @@ Do not invent regulatory obligations or declare them N/A without evidence. Do no
 
 All tiers require portability and exit-readiness evidence, but the depth differs by delivery profile.
 
+### Profile-Independent Portability and Exit Gates
+
+- [ ] **Interface and connector boundaries**: For each hosting, email, analytics, storage, monitoring, or workflow vendor: explicit interface/connector boundary documented; portable configuration and data format confirmed; transfer or recreation/migration path designed; credentials and account ownership documented; exit cost and support consequences assessed; operational responsibility documented
+- [ ] **No private factory dependencies in handoff artifacts**: Final handoff artifacts contain no private repository, registry, workspace link, credential, account, or runtime dependency; for managed packages, evidence that export pipeline vendors or transforms required runtime source into portable artifact without publishing agency background IP
+
 ### MANAGED_ISOLATED
 
 - [ ] **Client-specific deployment**: Package operates in an isolated agency-managed Vercel project for this client only
-- [ ] **Operational ownership**: Agency retains operational responsibility; client does not operate infrastructure
+- [ ] **Agency operational ownership**: Agency retains operational responsibility; client does not operate infrastructure
 - [ ] **Version and rollback**: Deployment versions recorded in `DeploymentManifest`; rollback procedure documented
 - [ ] **Monitoring and support**: Agency monitors and responds to incidents per contracted support terms
 - [ ] **Exit-readiness**: Source and data export mechanisms designed and documented even if handoff not yet initiated
 
 ### CLIENT_HANDOFF
 
-All MANAGED_ISOLATED gates plus:
-
 - [ ] **Source repository transfer**: Client-specific source repository created in client-owned GitHub/GitLab account per `docs/runbooks/client-source-handoff.md`
 - [ ] **Infrastructure ownership transfer**: Hosting (Vercel), domain/DNS, analytics (GA4), email (Resend or equivalent) accounts transferred to client ownership via provider-supported ownership transfer OR migrated/recreated in client-owned accounts; transfer mechanism documented
 - [ ] **Environment configuration**: Required environment variables documented with purpose, requirement status, and client ownership; no agency credentials remain
-- [ ] **Transferable dependencies**: All dependencies are public npm packages; no private registries, workspace links, or agency-specific tooling
+- [ ] **Transferable dependencies confirmed**: All dependencies are public npm packages; no private registries, workspace links, or agency-specific tooling
 - [ ] **Handoff verification**: `pnpm verify:handoff` passes in isolated environment without agency credentials
 - [ ] **Recovery runbooks transferred**: Client receives handoff checklist, deployment manifest, SHA-256 digest, and recovery procedures per `docs/runbooks/client-recovery-and-transfer.md`
 - [ ] **Agency background IP separated**: Reusable factory IP remains private; only client-specific source and configuration transferred
-- [ ] **Operational responsibility transferred**: Client owns and operates infrastructure; agency support is optional paid service post-handoff
+- [ ] **Client operational ownership**: Client owns and operates infrastructure; agency support is optional paid service post-handoff
 
 Do not falsely claim CLIENT_HANDOFF without actual completed source, account, and operational ownership transfer.
 
@@ -343,7 +347,7 @@ Use this template to document classification, gate completion, and acceptance fo
 
 ## Tier-Specific Gates
 
-[Include only applicable tier sections: Tier A, Tier B, or Tier C. Follow same checklist-with-evidence format as universal gates.]
+[Include applicable tier sections cumulatively: Universal gates always apply. Tier A packages include Tier A gates. Tier B packages include applicable Tier B gates. Tier C packages include applicable Tier B state/reconciliation gates and Tier C gates; Tier A's no-infrastructure confirmation does not apply. Follow same checklist-with-evidence format as universal gates.]
 
 ## Omitted and Substituted Gates
 
@@ -378,5 +382,6 @@ When those documents exist, this Definition of Done will reference them for deta
 
 - **Document version**: 1.0
 - **Effective date**: 2026-08-03
-- **Applies to**: All M1 and later package development
+- **Applies to**: All post-M1 package development and later work
+- **M1 baseline**: M1 is accepted baseline evidence and is not being reopened or rebuilt
 - **Supersedes**: None (initial version)
