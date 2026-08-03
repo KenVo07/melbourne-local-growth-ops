@@ -102,7 +102,6 @@ function renderNotice(inventory) {
     "contents, and bundle every required third-party licence and notice. Platform-",
     "specific optional packages and generated client artifacts can differ from this",
     "Linux CI inventory.",
-    "",
   );
 
   return `${lines.join("\n")}\n`;
