@@ -216,7 +216,7 @@ Do not invent regulatory obligations or declare them N/A without evidence. Do no
 
 ## Delivery Profile Distinctions
 
-All tiers require portability and exit-readiness evidence, but the depth differs by delivery profile.
+All tiers require portability and exit-readiness evidence, but the depth differs by delivery profile. Each package has exactly one delivery profile. MANAGED_ISOLATED and CLIENT_HANDOFF are mutually exclusive; complete only the subsection matching the package's current delivery profile.
 
 ### Profile-Independent Portability and Exit Gates
 
