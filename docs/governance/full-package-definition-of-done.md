@@ -68,6 +68,7 @@ These gates apply to all packages regardless of tier classification. Every omitt
 - [ ] **Acceptance criteria mapping**: Task-specific acceptance criteria satisfied with evidence
 - [ ] **Feature completeness**: Core functionality implemented per specification; known limitations documented
 - [ ] **Contract family alignment**: Package correctly implements website module, managed-service workflow, or connector contract
+- [ ] **Dependency-licence inventory**: Evidence-linked inventory of all runtime and build-time dependencies with licence information; separate open-source register/process governs licence review and approval
 
 ### User-Facing Product and UI Quality
 
@@ -219,8 +220,8 @@ All tiers require portability and exit-readiness evidence, but the depth differs
 
 ### Profile-Independent Portability and Exit Gates
 
-- [ ] **Interface and connector boundaries**: For each hosting, email, analytics, storage, monitoring, or workflow vendor: explicit interface/connector boundary documented; portable configuration and data format confirmed; transfer or recreation/migration path designed; credentials and account ownership documented; exit cost and support consequences assessed; operational responsibility documented
-- [ ] **No private factory dependencies in handoff artifacts**: Final handoff artifacts contain no private repository, registry, workspace link, credential, account, or runtime dependency; for managed packages, evidence that export pipeline vendors or transforms required runtime source into portable artifact without publishing agency background IP
+- [ ] **Hosted-vendor exit**: For each hosting, email, analytics, storage, monitoring, or workflow vendor: portable configuration and data format confirmed; transfer, migration, or recreation path designed; exit cost and support consequences assessed; credential and account ownership documented; operational responsibility documented; explicit interface or connector boundary documented
+- [ ] **No private factory dependencies in handoff artifacts**: Final handoff artifacts contain no private repository, registry, workspace link, credential, account, or agency-only runtime dependency; for managed packages, evidence that export pipeline transforms or vendors required reusable runtime source into portable artifact without publishing the private factory or transferring agency ownership of reusable background IP
 
 ### MANAGED_ISOLATED
 
@@ -283,7 +284,7 @@ Use this template to document classification, gate completion, and acceptance fo
 
 - **Package name**: `@melbourne-local-growth-ops/[name]`
 - **Contract family**: [Website Module | Managed-Service Workflow | Connector]
-- **Delivery profile**: [MANAGED_ISOLATED | CLIENT_HANDOFF]
+- **Delivery profile**: [MANAGED_ISOLATED | CLIENT_HANDOFF] — exactly one delivery profile subsection must be completed
 - **Notion task**: [Task ID and URL]
 - **Repository task spec**: `docs/tasks/[task-file].md`
 
@@ -307,6 +308,7 @@ Use this template to document classification, gate completion, and acceptance fo
 - [ ] Acceptance criteria mapping — [Evidence link]
 - [ ] Feature completeness — [Evidence link or known limitations]
 - [ ] Contract family alignment — [Evidence link]
+- [ ] Dependency-licence inventory — [Evidence link]
 
 ### User-Facing Product and UI Quality
 - [ ] Professional content and presentation — [Evidence link or N/A with rationale]
@@ -331,17 +333,27 @@ Use this template to document classification, gate completion, and acceptance fo
 
 ### Export and Handoff Portability
 
-- [ ] Interface and connector boundaries — [Evidence: vendor boundary documentation, transfer or migration path, credential and account ownership]
-- [ ] Final handoff artifact portability — [Evidence: export pipeline produces artifact without private runtime dependencies or agency background IP; private factory/workspace dependencies are permitted in managed implementation when the export pipeline transforms them into a portable final handoff artifact]
-- [ ] Module/connector transferability markers — [Evidence link]
-- [ ] No cross-client data in artifacts — [Evidence: isolation tests]
+- [ ] **Hosted-vendor exit**: [Evidence: portable configuration/data format, transfer/migration/recreation path, exit cost/support consequences, credential/account ownership, operational responsibility, explicit interface or connector boundary per Profile-Independent Portability and Exit Gates section]
+- [ ] **Final handoff artifact portability**: [Evidence: no private repository, registry, workspace link, credential, account, or agency-only runtime dependency; for managed packages, export pipeline transforms or vendors required reusable runtime source into portable artifact without publishing the private factory or transferring agency ownership of reusable background IP per Profile-Independent Portability and Exit Gates section]
+- [ ] **Module/connector transferability markers**: [Evidence link]
+- [ ] **No cross-client data in artifacts**: [Evidence: isolation tests]
 
 **MANAGED_ISOLATED:**
-- [ ] Exit-readiness — [Evidence: source and data export design documented]
+- [ ] **Client-specific deployment**: [Evidence: isolated agency-managed Vercel project for this client only]
+- [ ] **Agency operational ownership**: [Evidence: agency retains operational responsibility; client does not operate infrastructure]
+- [ ] **Version and rollback**: [Evidence: deployment versions recorded in DeploymentManifest; rollback procedure documented]
+- [ ] **Monitoring and support**: [Evidence: agency monitors and responds to incidents per contracted support terms]
+- [ ] **Exit-readiness**: [Evidence: source and data export design documented]
 
 **CLIENT_HANDOFF:**
-- [ ] Transferable dependencies — [Evidence: all dependencies are public npm packages; no private registries, workspace links, or agency-specific tooling]
-- [ ] Handoff documentation — [Evidence link]
+- [ ] **Source repository transfer**: [Evidence: client-owned repository per docs/runbooks/client-source-handoff.md]
+- [ ] **Infrastructure ownership transfer**: [Evidence: hosting, domain/DNS, analytics, email accounts transferred to client ownership or migrated/recreated in client-owned accounts]
+- [ ] **Environment configuration**: [Evidence: environment variables documented; no agency credentials remain]
+- [ ] **Transferable dependencies**: [Evidence: all dependencies are public npm packages; no private registries, workspace links, or agency-specific tooling]
+- [ ] **Handoff verification**: [Evidence: pnpm verify:handoff passes in isolated environment]
+- [ ] **Recovery runbooks transferred**: [Evidence: client receives handoff checklist, deployment manifest, SHA-256 digest, recovery procedures]
+- [ ] **Agency background IP separated**: [Evidence: reusable factory IP remains private; only client-specific source and configuration transferred]
+- [ ] **Client operational ownership**: [Evidence: client owns and operates infrastructure; agency support is optional paid service]
 
 ### Support Economics
 - [ ] Setup effort estimate — [Time/cost estimate or link]
