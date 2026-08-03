@@ -207,8 +207,8 @@ Apply these additional gates when the package processes payments, handles refund
 
 ### Regulatory and Legal Compliance
 
-- [ ] **Applicability assessment**: Regulatory obligations (PCI DSS, SOC 2, GDPR, data residency) assessed against authoritative contract terms and jurisdictional law; written assessment documented
-- [ ] **Compliance evidence**: Where obligations apply, compliance controls implemented and evidence collected (encrypted storage, audit logs, data-processing agreements, vendor attestations)
+- [ ] **Applicable legal and regulatory duties**: Duties derived from authoritative jurisdictional law assessed; written assessment documented; evidence collected for each duty that applies
+- [ ] **Contractual assurance and vendor obligations**: Obligations derived from authoritative contract terms and payment provider requirements assessed; written assessment documented; evidence collected for each obligation that applies
 - [ ] **Unresolved interpretation escalated**: Legal or regulatory questions escalated to qualified counsel rather than guessed
 
 Do not invent regulatory obligations or declare them N/A without evidence. Do not claim compliance without controls and evidence.
@@ -330,10 +330,18 @@ Use this template to document classification, gate completion, and acceptance fo
 - [ ] System-of-record authority respected — [Evidence link or N/A with rationale]
 
 ### Export and Handoff Portability
-- [ ] Portable dependencies — [Evidence: package.json]
+
+- [ ] Interface and connector boundaries — [Evidence: vendor boundary documentation, transfer or migration path, credential and account ownership]
+- [ ] Final handoff artifact portability — [Evidence: export pipeline produces artifact without private runtime dependencies or agency background IP; private factory/workspace dependencies are permitted in managed implementation when the export pipeline transforms them into a portable final handoff artifact]
 - [ ] Module/connector transferability markers — [Evidence link]
 - [ ] No cross-client data in artifacts — [Evidence: isolation tests]
-- [ ] Handoff documentation — [Evidence link or N/A if MANAGED_ISOLATED with exit-readiness plan]
+
+**MANAGED_ISOLATED:**
+- [ ] Exit-readiness — [Evidence: source and data export design documented]
+
+**CLIENT_HANDOFF:**
+- [ ] Transferable dependencies — [Evidence: all dependencies are public npm packages; no private registries, workspace links, or agency-specific tooling]
+- [ ] Handoff documentation — [Evidence link]
 
 ### Support Economics
 - [ ] Setup effort estimate — [Time/cost estimate or link]
