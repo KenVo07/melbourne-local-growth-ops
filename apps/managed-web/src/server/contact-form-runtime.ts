@@ -11,6 +11,9 @@ import {
   type ResendTransport,
 } from "@melbourne-local-growth-ops/resend";
 
+import { SameOriginGuard } from "./contact-guards";
+
+const guard = new SameOriginGuard();
 const MAXIMUM_REQUEST_BYTES = 16_384;
 
 export interface ContactSubmissionServiceOptions {
@@ -59,6 +62,11 @@ export async function handleContactFormRequest(
   request: Request,
   runtime: ManagedContactRuntime,
 ): Promise<Response> {
+  const guardDecision = guard.check(request);
+  if (!guardDecision.allowed) {
+    return safeJson(400, "SUBMISSION_REJECTED");
+  }
+
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     return safeJson(415, "INVALID_REQUEST");
   }
