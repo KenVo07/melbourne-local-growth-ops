@@ -81,6 +81,30 @@ Resend secrets use generated client-owned environment bindings such as
 `MLGO_RESEND_API_KEY_01`. Secret values never enter source, HTML, responses,
 analytics, or logs.
 
+### Production abuse hardening
+
+The contact route includes a same-origin guard that rejects requests with
+explicitly mismatched Origin or Referer headers. The guard is active by default
+and derives the expected origin from the request URL. Absent headers are allowed
+for M1 compatibility and non-browser clients.
+
+**IMPORTANT**: This guard is a defense-in-depth measure, not a primary
+production control. It mitigates cross-site browser abuse but does not
+constitute distributed rate limiting or global bot prevention. Absent headers
+and spoofed headers remain possible.
+
+**Production deployment gate**: A contact-enabled production package requires
+evidence of an active host-enforced path limiter before capability activation.
+For Vercel deployments, this means documented Vercel WAF rate limiting with
+package-specific threshold rationale, account ownership, safe verification
+result, and handoff documentation.
+
+If this evidence is absent, contact capability activation is blocked. Basic
+non-contact websites remain unaffected and database-free.
+
+See [contact-production-gate.md](../../docs/runbooks/contact-production-gate.md)
+for verification procedures and requirements.
+
 ## Analytics
 
 GA4 loads only for a validated `GOOGLE_ANALYTICS_4` connector marked
