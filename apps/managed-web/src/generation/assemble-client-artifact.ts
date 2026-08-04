@@ -52,6 +52,7 @@ const runtimeFiles = Object.freeze([
   "src/rendering/TrackedBookingLink.tsx",
   "src/runtime-types.ts",
   "src/server/contact-form-runtime.ts",
+  "src/server/contact-guards.ts",
   "src/server/managed-contact-runtime.ts",
 ]);
 
