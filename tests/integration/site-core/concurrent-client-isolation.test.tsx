@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import {
   composeManagedWebsite,
   createWebsiteModuleRegistry,
@@ -11,6 +13,7 @@ import {
   ManagedWebsiteShell,
   createManagedModuleRendererRegistry,
 } from "../../../apps/managed-web/src/rendering";
+import { analyticsRenderer } from "../../../apps/managed-web/src/rendering/analytics-renderer";
 import { bookingCtaRenderer } from "../../../apps/managed-web/src/rendering/booking-cta-renderer";
 import {
   analyticsContract,
@@ -33,29 +36,54 @@ describe("managed website client isolation", () => {
     };
     const renderers = createManagedModuleRendererRegistry([
       bookingCtaRenderer,
+      analyticsRenderer,
     ]);
 
+    const clientConfigs = [
+      {
+        clientId: "client-a",
+        measurementId: "G-CLIENTA123",
+        domain: "client-a.example.com.au",
+      },
+      {
+        clientId: "client-b",
+        measurementId: "G-CLIENTB456",
+        domain: "client-b.example.com.au",
+      },
+    ];
+
     const [clientA, clientB] = await Promise.all(
-      ["client-a", "client-b"].map(async (clientId) => {
-        const result = composeManagedWebsite(
-          managedWebsiteDefinition(clientId, {
-            clientId,
-            publicDirectory: managedWebPublicDirectory,
-            assets: [
-              {
-                assetId: "hero-primary",
-                kind: "IMAGE",
-                sourcePath: "assets/hero/primary.png",
-                mediaType: "image/png",
-                width: 1672,
-                height: 941,
-              },
-            ],
-          }),
-          registries,
+      clientConfigs.map(async (cfg) => {
+        const def = managedWebsiteDefinition(cfg.clientId, {
+          clientId: cfg.clientId,
+          publicDirectory: managedWebPublicDirectory,
+          assets: [
+            {
+              assetId: "hero-primary",
+              kind: "IMAGE",
+              sourcePath: "assets/hero/primary.png",
+              mediaType: "image/png",
+              width: 1672,
+              height: 941,
+            },
+          ],
+        });
+
+        const rawConfig = def.configuration as {
+          connectors: Array<Record<string, unknown>>;
+          domains: Array<Record<string, unknown>>;
+        };
+
+        rawConfig.connectors = rawConfig.connectors.map((conn) =>
+          conn.type === "GOOGLE_ANALYTICS_4"
+            ? { ...conn, measurementId: cfg.measurementId }
+            : conn,
         );
+        rawConfig.domains = [{ hostname: cfg.domain, canonical: true }];
+
+        const result = composeManagedWebsite(def, registries);
         if (!result.success) {
-          throw new Error(`Valid ${clientId} fixture must compose.`);
+          throw new Error(`Valid ${cfg.clientId} fixture must compose.`);
         }
 
         return renderToStaticMarkup(
@@ -69,16 +97,24 @@ describe("managed website client isolation", () => {
 
     expect(clientA).toContain("Business client-a");
     expect(clientA).toContain("booking-client-a");
+    expect(clientA).toContain("analytics-client-a");
+    expect(clientA).toContain("client-a.example.com.au");
     expect(clientA).toContain(
       "Business client-a electrician providing a local service",
     );
     expect(clientA).not.toContain("client-b");
+    expect(clientA).not.toContain("client-b.example.com.au");
+    expect(clientA).not.toContain("analytics-client-b");
+
     expect(clientB).toContain("Business client-b");
     expect(clientB).toContain("booking-client-b");
+    expect(clientB).toContain("analytics-client-b");
+    expect(clientB).toContain("client-b.example.com.au");
     expect(clientB).toContain(
       "Business client-b electrician providing a local service",
     );
     expect(clientB).not.toContain("client-a");
+    expect(clientB).not.toContain("client-a.example.com.au");
+    expect(clientB).not.toContain("analytics-client-a");
   });
 });
-import { fileURLToPath } from "node:url";
