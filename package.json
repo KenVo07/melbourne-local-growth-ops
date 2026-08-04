@@ -1,6 +1,7 @@
 {
   "name": "melbourne-local-growth-ops",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -10,6 +11,11 @@
   "scripts": {
     "build": "pnpm --recursive --if-present run build",
     "check": "pnpm build && pnpm test && pnpm typecheck",
+    "governance:audit": "node scripts/governance/check-audit.mjs",
+    "governance:audit:self-test": "node scripts/governance/check-audit.mjs --self-test",
+    "governance:licenses": "node scripts/governance/generate-notice.mjs --check",
+    "governance:notices": "node scripts/governance/generate-notice.mjs --write",
+    "governance:secrets": "node scripts/governance/check-secrets.mjs",
     "test": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run test",
     "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run typecheck"
   },

@@ -13,6 +13,18 @@ Website & Lead Systems is the primary engineering focus and preferred entry
 offer. Google Presence Operations and Reputation Operations can be sold and
 delivered without a website, including through manual-first workflows.
 
+### Delivery milestones
+
+- **M0 — complete.** The accepted baseline is recorded by the annotated
+  `m0-complete` tag.
+- **M1 — complete.** The operationally accepted integration reached `main` in
+  [pull request #1](https://github.com/KenVo07/melbourne-local-growth-ops/pull/1)
+  at commit `ae0d30ab38212bce76fc3a10bbb9c08c558f4f6a`.
+- **GOV-01 — complete.** Post-M1 package, OSS, ownership, isolation, handoff,
+  CI/security, and support-economics governance is integrated at commit
+  `49bd6b30cd5368aeb58508034deab29e586e1314`.
+- No later milestone has been started automatically.
+
 ## Customer and problem
 
 The initial customers are independent Melbourne contractors and restaurants

@@ -12,3 +12,4 @@ coverage/
 /apps/ops-console/test-results/
 
 /docs/learning
+/.mlgo-local/
