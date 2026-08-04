@@ -308,6 +308,86 @@ describe("client source artifact assembly", () => {
         .toBe(false);
     }
   });
+
+  it("rejects client handoff export if an assembled artifact contains a cross-client identifier", async () => {
+    const input = await createClientInput("client-a", "G-CLIENTA123");
+    const outputDirectory = await temporaryDirectory("handoff-cross-client-reject");
+    const assembled = await assembleClientSourceArtifact({
+      definition: input.definition,
+      publicDirectory: input.publicDirectory,
+      outputDirectory,
+      factoryRevision: "factory-revision",
+    });
+    const artifacts = await Promise.all(
+      assembled.descriptor.handoff.artifacts.map(async (artifact) => {
+        const isTarget = artifact.path.endsWith("package.json");
+        const baseContent = await readFile(
+          join(assembled.sourceDirectory, ...artifact.path.split("/")),
+          "utf8",
+        );
+        return {
+          path: artifact.path,
+          content: isTarget ? baseContent + "\n// reference: client-b" : baseContent,
+          category: artifact.category,
+          clientId: artifact.clientId,
+          provenance: artifact.provenance,
+        };
+      }),
+    );
+    const configuration = input.definition.configuration;
+    const deploymentManifest = {
+      schemaVersion: 1,
+      deploymentId: configuration.deploymentId,
+      clientId: configuration.clientId,
+      configurationId: configuration.configurationId,
+      configurationVersion: configuration.configurationVersion,
+      applicationVersion: "1.0.0",
+      deliveryMode: "CLIENT_HANDOFF",
+      infrastructureOwnership: [],
+      domains: configuration.domains,
+      buildProvenance: {
+        buildId: assembled.descriptor.artifactId,
+        sourceRevision: "0123456789abcdef0123456789abcdef",
+        generatedAt: "2026-07-29T08:00:00.000Z",
+      },
+      handoff: { status: "IN_PROGRESS", targetOwner: "CLIENT" },
+    } as unknown as DeploymentManifest;
+    const handoffInput: ClientHandoffExportInput = {
+      configuration,
+      deploymentManifest,
+      repositoryName: assembled.descriptor.repositoryName,
+      exportedAt: "2026-07-29T08:30:00.000Z",
+      ownership: {
+        sourceRepository: "CLIENT",
+        hosting: "CLIENT",
+        analytics: "CLIENT",
+        domains: "CLIENT",
+      },
+      artifacts,
+      artifactAllowlist: assembled.descriptor.handoff.artifactAllowlist,
+      moduleSelections: assembled.descriptor.handoff.moduleSelections,
+      connectorSelections: assembled.descriptor.handoff.connectorSelections,
+      publicDependencyAllowlist:
+        assembled.descriptor.handoff.publicDependencyAllowlist,
+      requiredEnvironmentVariables:
+        assembled.descriptor.handoff.requiredEnvironmentVariables,
+      otherClientIdentifiers: ["client-b", "G-CLIENTB456"],
+      optionalDataResources: [],
+    };
+
+    const result = createClientHandoffExport(handoffInput);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: "CLIENT_ISOLATION_VIOLATION",
+          }),
+        ]),
+      );
+    }
+  });
 });
 
 async function createClientInput(clientId: string, measurementId: string) {
