@@ -73,6 +73,28 @@ describe("managed website production runtime", () => {
     expect(html).not.toContain("G-MLGO123456");
   });
 
+  it("provides a skip link, section navigation, and footer with no invented content or analytics-region label", () => {
+    const composition = composeCurrentManagedWebsite();
+    const html = renderToStaticMarkup(
+      <ManagedWebsiteShell
+        composition={composition}
+        renderers={managedWebsiteRenderers}
+      />,
+    );
+
+    expect(html).toContain('class="skip-to-content"');
+    expect(html).toContain('href="#primary-content"');
+    expect(html).toContain('<nav aria-label="Section navigation"');
+    expect(html).toContain("<footer");
+    expect(html).toContain('class="site-footer-business"');
+    if (composition.profile !== undefined) {
+      for (const section of composition.profile.sections) {
+        expect(html).toContain(`href="#profile-section-${section.sectionId}"`);
+      }
+    }
+    expect(html).not.toContain('aria-label="analytics modules"');
+  });
+
   it("emits conversion names without form values or technical identifiers", () => {
     const calls: unknown[][] = [];
     vi.stubGlobal("window", {

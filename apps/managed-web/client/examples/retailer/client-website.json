@@ -100,78 +100,52 @@
             "name": "Hand-thrown ceramic vase, sage",
             "description": "Fictional demonstration product copy for a matte sage ceramic vase, wheel-thrown in small batches.",
             "price": "$68.00",
+            "assetId": "ceramic-vase",
             "purchaseActionId": "purchase"
           },
           {
             "name": "Linen table runner, natural",
             "description": "Fictional demonstration product copy for a stonewashed linen table runner in natural oat.",
             "price": "$45.00",
+            "assetId": "linen-table-runner",
             "purchaseActionId": "purchase"
           },
           {
             "name": "Recycled glass tumbler set (4pc)",
             "description": "Fictional demonstration product copy for a set of four hand-blown recycled glass tumblers.",
             "price": "$52.00",
+            "assetId": "glass-tumbler-set",
             "purchaseActionId": "purchase"
           },
           {
             "name": "Woven seagrass storage basket",
             "description": "Fictional demonstration product copy for a medium woven seagrass storage basket with cotton handles.",
             "price": "$38.50",
+            "assetId": "storage-basket",
             "purchaseActionId": "purchase"
-          }
-        ]
-      },
-      {
-        "type": "PRODUCTS",
-        "sectionId": "new-arrivals",
-        "heading": "New arrivals",
-        "items": [
+          },
           {
             "name": "Oat boucle cushion cover",
             "description": "Fictional demonstration product copy for a textured oat boucle cushion cover, 50 by 50 centimetres.",
             "price": "$34.00",
+            "assetId": "cushion-cover",
             "purchaseActionId": "purchase"
           },
           {
             "name": "Brass candle snuffer",
             "description": "Fictional demonstration product copy for a brushed brass candle snuffer with a walnut handle.",
             "price": "$24.00",
+            "assetId": "candle-snuffer",
             "purchaseActionId": "purchase"
           },
           {
             "name": "Terracotta plant pot, medium",
             "description": "Fictional demonstration product copy for a hand-finished terracotta plant pot with a drainage saucer.",
             "price": "$29.00",
+            "assetId": "plant-pot",
             "purchaseActionId": "purchase"
           }
         ]
-      },
-      {
-        "type": "EVENTS",
-        "sectionId": "promotions",
-        "heading": "Promotions & in-store events",
-        "items": [
-          {
-            "title": "Spring homewares refresh (fictional demonstration promotion)",
-            "description": "Fictional demonstration promotional copy describing a seasonal in-store display change. No discount, price claim, or real offer is implied."
-          },
-          {
-            "title": "Weekend workshop: simple flower arranging (fictional demonstration event)",
-            "description": "Fictional demonstration in-store event copy. Dates and bookings are illustrative only and are not a real event."
-          }
-        ]
-      },
-      {
-        "type": "TRUST_SIGNALS",
-        "sectionId": "trust",
-        "heading": "Why shop with us",
-        "items": [
-          "Locally packed orders (fictional demonstration claim)",
-          "Members-only newsletter for restock updates (fictional demonstration claim)",
-          "Friendly in-store gift wrapping (fictional demonstration claim)"
-        ],
-        "disclaimer": "Fernbank Trading Co. is a fictional demonstration retailer. No product, price, availability, or business claim is real."
       },
       {
         "type": "POLICIES",
@@ -195,6 +169,32 @@
             "body": "Fictional demonstration policy copy describing an illustrative 12-month manufacturing warranty on selected homewares."
           }
         ]
+      },
+      {
+        "type": "EVENTS",
+        "sectionId": "promotions",
+        "heading": "Promotions & in-store events",
+        "items": [
+          {
+            "title": "Spring homewares refresh (fictional demonstration promotion)",
+            "description": "Fictional demonstration promotional copy describing a seasonal in-store display change. No discount, price claim, or real offer is implied."
+          },
+          {
+            "title": "Weekend workshop: simple flower arranging (fictional demonstration event)",
+            "description": "Fictional demonstration in-store event copy. Dates and bookings are illustrative only and are not a real event."
+          }
+        ]
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "trust",
+        "heading": "Why shop with us",
+        "items": [
+          "Locally packed orders",
+          "Members-only newsletter for restock updates",
+          "Friendly in-store gift wrapping"
+        ],
+        "disclaimer": "Fernbank Trading Co. is a fictional demonstration retailer. No product, price, availability, or business claim is real."
       },
       {
         "type": "HOURS",
@@ -221,41 +221,23 @@
         }
       },
       {
+        "type": "TESTIMONIALS",
+        "sectionId": "testimonials",
+        "heading": "Illustrative Customer Voices",
+        "eyebrow": "Fictional Scenarios",
+        "items": [
+          {
+            "quote": "Finding a housewarming gift usually takes ages, but the staff pointed me straight to a vase that suited the room and had it wrapped while I kept browsing.",
+            "attribution": "Illustrative customer voice — Northcote scenario",
+            "disclosure": "Fictional demonstration testimonial for presentation only; it is not customer evidence or a sales-result claim."
+          }
+        ]
+      },
+      {
         "type": "STORY",
         "sectionId": "story",
         "heading": "Our story",
         "body": "Fictional demonstration story copy: Fernbank Trading Co. is presented here only to demonstrate the shared retailer template. Any product, price, promotion, testimonial, or location shown is fictional and not a real business."
-      },
-      {
-        "type": "FAQ",
-        "sectionId": "faq",
-        "heading": "Common questions",
-        "items": [
-          {
-            "question": "Can I buy products online right now?",
-            "answer": "Not yet. This fictional demonstration store shows the truthful not-configured purchase treatment; a real deployment would connect a client-owned commerce provider."
-          },
-          {
-            "question": "Do you offer click & collect?",
-            "answer": "In this fictional demonstration, pickup is described as a phone-arranged service rather than an automated online flow."
-          },
-          {
-            "question": "Is this a real shop?",
-            "answer": "No. Fernbank Trading Co. is a fictional demonstration retailer used to show the shared catalogue and trust website template."
-          }
-        ]
-      },
-      {
-        "type": "TESTIMONIALS",
-        "sectionId": "testimonials",
-        "heading": "Example customer evidence treatment",
-        "items": [
-          {
-            "quote": "This is placeholder demonstration copy, not a real customer testimonial.",
-            "attribution": "Fictional demonstration customer",
-            "disclosure": "Fictional evidence shown only to demonstrate the shared testimonial component."
-          }
-        ]
       },
       {
         "type": "CONTACT",
@@ -322,6 +304,62 @@
       "mediaType": "image/png",
       "width": 1600,
       "height": 900
+    },
+    {
+      "assetId": "ceramic-vase",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/ceramic-vase.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "linen-table-runner",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/linen-table-runner.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "glass-tumbler-set",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/glass-tumbler-set.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "storage-basket",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/storage-basket.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "cushion-cover",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/cushion-cover.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "candle-snuffer",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/candle-snuffer.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "assetId": "plant-pot",
+      "kind": "IMAGE",
+      "sourcePath": "assets/products/plant-pot.png",
+      "mediaType": "image/png",
+      "width": 1000,
+      "height": 1000
     }
   ]
 }

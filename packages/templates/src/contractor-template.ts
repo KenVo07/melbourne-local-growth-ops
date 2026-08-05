@@ -34,7 +34,7 @@ function composeContractorWebsite(
     slotId: "hero",
     assetId: "hero-primary",
     required: false,
-    alt: `${configuration.display.businessName} electrician providing a local service`,
+    alt: `${configuration.display.businessName} local electrical service illustration`,
     sizes: "(min-width: 48rem) 50vw, 100vw",
     priority: true,
   });
@@ -46,7 +46,7 @@ function composeContractorWebsite(
     slotId: "gallery-switchboard-detail",
     assetId: "gallery-switchboard-detail",
     required: false,
-    alt: "Illustrative close view of an electrician working at an open residential switchboard",
+    alt: "Illustrative close view of an open residential switchboard showing circuit protection devices and wiring",
     sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw",
     priority: false,
   });
@@ -61,7 +61,7 @@ function composeContractorWebsite(
     slotId: "gallery-work-context",
     assetId: "gallery-work-context",
     required: false,
-    alt: "Illustrative residential context view of an electrician beside an open switchboard",
+    alt: "Illustrative residential context view of an open switchboard, tool belt, and workspace",
     sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw",
     priority: false,
   });

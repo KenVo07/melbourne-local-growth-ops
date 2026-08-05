@@ -83,16 +83,45 @@ describe("retailer demo asset portability", () => {
     }
   });
 
-  it("declares exactly the single template-selected hero asset, with no gallery duplication risk", async () => {
+  it("declares the hero asset plus a distinct provenance-recorded image for every featured product (D-T1)", async () => {
     const definition = await loadDefinition();
     const declaredAssetIds = definition.assets.map(({ assetId }) => assetId);
 
-    expect(declaredAssetIds).toEqual(["hero-primary"]);
+    expect(declaredAssetIds[0]).toBe("hero-primary");
+    expect(declaredAssetIds.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(declaredAssetIds).size).toBe(declaredAssetIds.length);
 
-    const sectionAssetIds = definition.profile.sections
-      .flatMap((section) => section.items ?? [])
+    const productSection = definition.profile.sections.find(
+      (section) => section.type === "PRODUCTS",
+    );
+    const productAssetIds = (productSection?.items ?? [])
       .map((item) => item.assetId)
       .filter((assetId): assetId is string => assetId !== undefined);
-    expect(sectionAssetIds).toEqual([]);
+
+    expect(productAssetIds.length).toBeGreaterThan(0);
+    for (const assetId of productAssetIds) {
+      expect(declaredAssetIds).toContain(assetId);
+    }
+  });
+
+  it("records provenance for every non-hero (product) asset under the owned assets/ path", async () => {
+    const definition = await loadDefinition();
+    const productAssets = definition.assets.filter(
+      (asset) => asset.assetId !== "hero-primary",
+    );
+
+    expect(productAssets.length).toBeGreaterThan(0);
+    for (const asset of productAssets) {
+      expect(asset.sourcePath.startsWith("assets/products/")).toBe(true);
+    }
+
+    const provenanceDoc = await readFile(
+      join(publicDirectory, "assets", "PROVENANCE.md"),
+      "utf8",
+    );
+    for (const asset of productAssets) {
+      expect(provenanceDoc).toContain(asset.sourcePath.split("/").pop() ?? "");
+    }
+    expect(provenanceDoc.toLowerCase()).toContain("self-authored");
   });
 });

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -106,6 +106,29 @@ describe("restaurant demo client source artifact", () => {
       await expect(readFile(join(outputDirectory, "source", assetPath))).resolves.toBeInstanceOf(
         Buffer,
       );
+    }
+  });
+
+  it("keeps the provenance-recorded gallery and hero imagery portable and within the frozen per-asset source budget (P20, D-R5)", async () => {
+    const definition = restaurantClientWebsiteDefinitionInput();
+    const outputDirectory = await temporaryDirectory("restaurant-imagery-budget");
+
+    await assembleClientSourceArtifact({
+      definition,
+      publicDirectory: restaurantExamplePublicDirectory,
+      outputDirectory,
+      factoryRevision: "d6670376c81c48a3f1fcb5f64e4ce9fc511da50d",
+    });
+
+    for (const assetPath of [
+      "public/assets/hero/primary.png",
+      "public/assets/gallery/dining-room.png",
+      "public/assets/gallery/share-plate.png",
+      "public/assets/gallery/bar-service.png",
+    ]) {
+      const { size } = await stat(join(outputDirectory, "source", assetPath));
+      expect(size).toBeGreaterThan(0);
+      expect(size).toBeLessThanOrEqual(600_000);
     }
   });
 

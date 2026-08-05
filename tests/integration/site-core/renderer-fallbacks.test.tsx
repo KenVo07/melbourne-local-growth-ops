@@ -14,6 +14,11 @@ import {
   createManagedModuleRendererRegistry,
 } from "../../../apps/managed-web/src/rendering";
 import { bookingCtaRenderer } from "../../../apps/managed-web/src/rendering/booking-cta-renderer";
+import { ProfileSection } from "../../../apps/managed-web/src/rendering/sections/ProfileSection";
+import type {
+  RuntimeProfileSection,
+  RuntimeWebsiteImage,
+} from "../../../apps/managed-web/src/runtime-types";
 import {
   analyticsContract,
   bookingCtaContract,
@@ -134,5 +139,77 @@ describe("managed module renderer behavior", () => {
         moduleId: "booking-client-a",
       }),
     );
+  });
+});
+
+describe("profile section renderer behavior", () => {
+  it("renders a PRODUCTS item image through the existing safe asset lookup and keeps missing assets as a truthful text fallback", () => {
+    const section: RuntimeProfileSection = {
+      type: "PRODUCTS",
+      sectionId: "products",
+      heading: "Products",
+      items: [
+        {
+          name: "Widget",
+          description: "A fictional demonstration product.",
+          price: "$24.00",
+          assetId: "widget-photo",
+        },
+        {
+          name: "Gadget",
+          description: "A fictional demonstration product.",
+          price: "$30.00",
+          assetId: "unknown-asset",
+        },
+      ],
+    };
+    const assets: readonly RuntimeWebsiteImage[] = [
+      {
+        slotId: "products-widget-photo",
+        alt: "Illustrative photo of the fictional Widget product",
+        priority: false,
+        sizes: "(min-width: 64rem) 33vw, 100vw",
+        asset: {
+          assetId: "widget-photo",
+          mediaType: "image/png",
+          publicPath: "/assets/products/widget.png",
+          width: 400,
+          height: 300,
+        },
+      },
+    ];
+
+    const html = renderToStaticMarkup(
+      <ProfileSection assets={assets} section={section} />,
+    );
+
+    expect(html).toContain('data-asset-id="widget-photo"');
+    expect(html).toContain(
+      "Illustrative photo of the fictional Widget product",
+    );
+    expect(html).toContain('class="profile-image-unavailable"');
+  });
+
+  it("renders PRODUCTS items with no assetId exactly as before, without any image markup", () => {
+    const section: RuntimeProfileSection = {
+      type: "PRODUCTS",
+      sectionId: "products",
+      heading: "Products",
+      items: [
+        {
+          name: "Widget",
+          description: "A fictional demonstration product.",
+          price: "$24.00",
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(
+      <ProfileSection assets={[]} section={section} />,
+    );
+
+    expect(html).toContain("Widget");
+    expect(html).not.toContain("profile-image-unavailable");
+    expect(html).not.toContain("<img");
   });
 });

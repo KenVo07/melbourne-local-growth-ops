@@ -57,6 +57,35 @@ describe("configuration-to-rendering pipeline", () => {
     expect(html).not.toContain('aria-label="analytics modules"');
   });
 
+  it("derives navigation and footer anchors from validated profile sections with no invented content", () => {
+    const result = composeManagedWebsite(
+      managedWebsiteDefinition("client-a"),
+      realRegistries(),
+    );
+    if (!result.success) {
+      throw new Error("Valid integration fixture must compose.");
+    }
+    if (result.data.profile === undefined) {
+      throw new Error("Fixture requires profile content.");
+    }
+
+    const html = renderToStaticMarkup(
+      <ManagedWebsiteShell
+        composition={result.data}
+        renderers={createManagedModuleRendererRegistry([bookingCtaRenderer])}
+      />,
+    );
+
+    for (const section of result.data.profile.sections) {
+      expect(html).toContain(`href="#profile-section-${section.sectionId}"`);
+      expect(html).toContain(`>${section.heading}</a>`);
+    }
+    expect(html).toContain('class="skip-to-content"');
+    expect(html).toContain('href="#primary-content"');
+    expect(html).toContain("<footer");
+    expect(html).toContain("Business client-a");
+  });
+
   it("stops invalid configuration before template composition and rendering", () => {
     const compose = vi.fn();
     const result = composeManagedWebsite(

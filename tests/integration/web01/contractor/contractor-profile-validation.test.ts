@@ -73,4 +73,26 @@ describe("Contractor Profile Validation & Completeness (AC-002)", () => {
       expect(result.data.configuredInfrastructure).toEqual([]);
     }
   });
+
+  it("interleaves the conversion module region into the ACTIONS section via sectionId 'primary' (D-C1)", () => {
+    const actionsSection = defaultContractorProfileContent.sections.find(
+      (section) => section.type === "ACTIONS",
+    );
+    expect(actionsSection).toBeDefined();
+    expect(actionsSection?.sectionId).toBe("primary");
+  });
+
+  it("places the conversion block (CONTACT, ACTIONS) ahead of supporting sections so a primary action is reachable from the first screen (D-C1, D-C2)", () => {
+    const sectionTypes = defaultContractorProfileContent.sections.map(
+      (section) => section.type,
+    );
+    const contactIndex = sectionTypes.indexOf("CONTACT");
+    const actionsIndex = sectionTypes.indexOf("ACTIONS");
+    const servicesIndex = sectionTypes.indexOf("SERVICES");
+
+    expect(contactIndex).toBeGreaterThanOrEqual(0);
+    expect(actionsIndex).toBeGreaterThanOrEqual(0);
+    expect(actionsIndex).toBeLessThan(servicesIndex);
+    expect(contactIndex).toBeLessThan(servicesIndex);
+  });
 });

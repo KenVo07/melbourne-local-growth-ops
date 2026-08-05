@@ -1,3 +1,7 @@
+@import "./profiles/contractor.css";
+@import "./profiles/restaurant.css";
+@import "./profiles/retailer.css";
+
 :root {
   color-scheme: light;
   --ink: #18201d;
@@ -372,6 +376,9 @@ h2 {
 }
 
 .managed-site[data-profile] .profile-faq-list summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
   cursor: pointer;
   font-weight: 800;
 }
@@ -437,6 +444,9 @@ h2 {
 }
 
 .managed-site[data-profile] .profile-location a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   margin-top: 0.75rem;
   color: var(--profile-accent);
   font-weight: 750;
@@ -481,53 +491,77 @@ h2 {
   outline-offset: 4px;
 }
 
-.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-card-grid > li {
-  border-top: 0.35rem solid var(--profile-accent);
+.skip-to-content {
+  position: absolute;
+  top: -3rem;
+  left: 1rem;
+  z-index: 10;
+  border: 2px solid var(--focus);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.75rem 1.25rem;
+  font-weight: 750;
+  text-decoration: none;
 }
 
-.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-heading {
-  grid-template-columns: minmax(0, 1fr);
+.skip-to-content:focus {
+  top: 1rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] {
-  --content-width: 76rem;
+.site-nav {
+  margin-top: 1.5rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
-  background: var(--profile-text);
-  color: var(--profile-surface);
-  padding: clamp(2rem, 6vw, 5rem);
+.site-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow,
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline {
-  color: var(--profile-surface);
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-heading {
-  margin-inline: auto;
-  text-align: center;
+.site-nav a:hover {
+  text-decoration: underline;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu {
-  max-width: 52rem;
-  margin-inline: auto;
+.skip-to-content:focus-visible,
+.site-nav a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
-.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .site-hero {
-  border-bottom: 1px solid var(--profile-text);
-  padding-bottom: clamp(2rem, 5vw, 4rem);
+.site-footer {
+  margin-top: clamp(3.5rem, 9vw, 8rem);
+  border-top: 1px solid var(--line);
+  padding-top: 2rem;
+  color: var(--muted-ink);
 }
 
-.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid > li {
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  padding-inline: 0;
+.site-footer-business {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 750;
 }
 
-.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-price {
-  color: var(--profile-accent);
-  font-weight: 800;
+.lead-form-field-error {
+  margin: 0;
+  color: #a3271f;
+  font-size: 0.875rem;
+}
+
+.lead-form-field[data-invalid="true"] input,
+.lead-form-field[data-invalid="true"] textarea {
+  border-color: #a3271f;
 }
 
 @media (min-width: 48rem) {
@@ -558,10 +592,6 @@ h2 {
   .managed-site[data-profile] .profile-quote-list,
   .managed-site[data-profile] .profile-gallery {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

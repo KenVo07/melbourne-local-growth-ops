@@ -1,0 +1,78 @@
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .site-hero {
+  border-bottom: 1px solid var(--profile-text);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-price {
+  color: var(--profile-accent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid > li {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding-inline: 0;
+}
+
+/*
+ * D-T2: a fixed column count strands a lone card in the final row whenever
+ * the item count isn't a clean multiple of the column count (this recurs for
+ * many realistic catalogue sizes, not just today's 7 products). Growing the
+ * last row's items to fill the row (flex-grow + max-width) only avoids the
+ * strand for item counts that happen to leave more than one card in the
+ * final row; a genuinely lone last card still hits its max-width and leaves
+ * a large empty gap beside it.
+ *
+ * Fixed-size cards + `justify-content: center` sidesteps the problem instead
+ * of chasing it: every card stays the same, deliberate size regardless of
+ * how many share its row (no oversized imagery), and an incomplete last row
+ * centers symmetrically rather than hanging off one side — which reads as
+ * intentional at any product count, including a single leftover card.
+ */
+@media (min-width: 48rem) {
+  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid > li {
+    flex: 0 1 16rem;
+    width: 16rem;
+  }
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+/*
+ * D-T5: returns, click & collect and warranty are exactly what a local
+ * shopper checks before buying, so the policy list gets the same card
+ * treatment as the family's other card grids (border + surface + padding)
+ * instead of reading as plain grey definition rows.
+ */
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-policy-list > div {
+  border: 1px solid var(--line);
+  background: var(--profile-surface);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-policy-list dt {
+  color: var(--profile-accent);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+@media (min-width: 48rem) {
+  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-policy-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}

@@ -144,7 +144,9 @@ describe("retailerTemplateV1", () => {
     };
     const selectImage = vi
       .fn<WebsiteTemplateAssetContext["selectImage"]>()
-      .mockReturnValue(selectedHero);
+      .mockImplementation(({ slotId }) =>
+        slotId === "hero" ? selectedHero : undefined,
+      );
 
     const composition = retailerTemplateV1.compose(
       configurationFixture("client-a", []),
@@ -169,5 +171,133 @@ describe("retailerTemplateV1", () => {
     );
 
     expect(composition).not.toHaveProperty("assets");
+  });
+
+  const productAssetIds = [
+    "ceramic-vase",
+    "linen-table-runner",
+    "glass-tumbler-set",
+    "storage-basket",
+    "cushion-cover",
+    "candle-snuffer",
+    "plant-pot",
+  ] as const;
+
+  it("resolves hero and every product image under distinct, deterministic slot ids", () => {
+    const configuration = configurationFixture("client-a", []);
+    const selectImage = vi.fn(
+      ({ slotId, assetId }: { slotId: string; assetId: string }) => ({
+        slotId,
+        asset: {
+          assetId,
+          kind: "IMAGE" as const,
+          sourcePath: `assets/products/${assetId}.png`,
+          mediaType: "image/png" as const,
+          width: 1000,
+          height: 1000,
+          publicPath: `/assets/products/${assetId}.png`,
+        },
+        alt: `alt for ${assetId}`,
+        sizes: "100vw",
+        priority: false,
+      }),
+    );
+
+    const composition = retailerTemplateV1.compose(configuration, {
+      selectImage,
+    });
+
+    expect(selectImage).toHaveBeenCalledTimes(1 + productAssetIds.length);
+    for (const assetId of productAssetIds) {
+      expect(selectImage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slotId: `product-${assetId}`,
+          assetId,
+          required: false,
+        }),
+      );
+    }
+    expect(composition.assets?.map((image) => image.slotId)).toEqual([
+      "hero",
+      ...productAssetIds.map((assetId) => `product-${assetId}`),
+    ]);
+  });
+
+  it("drops individual product slots that the asset context cannot resolve, keeping the rest", () => {
+    const configuration = configurationFixture("client-a", []);
+    const selectImage = vi.fn(({ slotId, assetId }: { slotId: string; assetId: string }) =>
+      slotId === "product-cushion-cover"
+        ? undefined
+        : {
+            slotId,
+            asset: {
+              assetId,
+              kind: "IMAGE" as const,
+              sourcePath: `assets/products/${assetId}.png`,
+              mediaType: "image/png" as const,
+              width: 1000,
+              height: 1000,
+              publicPath: `/assets/products/${assetId}.png`,
+            },
+            alt: `alt for ${assetId}`,
+            sizes: "100vw",
+            priority: false,
+          },
+    );
+
+    const composition = retailerTemplateV1.compose(configuration, {
+      selectImage,
+    });
+
+    expect(composition.assets?.map((image) => image.slotId)).not.toContain(
+      "product-cushion-cover",
+    );
+    expect(composition.assets).toHaveLength(productAssetIds.length);
+  });
+
+  it("does not retain product image placements between clients", async () => {
+    const [clientA, clientB] = await Promise.all([
+      Promise.resolve().then(() =>
+        retailerTemplateV1.compose(configurationFixture("client-a", []), {
+          selectImage: ({ slotId, assetId }) => ({
+            slotId,
+            asset: {
+              assetId: `client-a-${assetId}`,
+              kind: "IMAGE" as const,
+              sourcePath: `assets/products/${assetId}.png`,
+              mediaType: "image/png" as const,
+              width: 1000,
+              height: 1000,
+              publicPath: `/assets/products/client-a-${assetId}.png`,
+            },
+            alt: "client-a product",
+            sizes: "100vw",
+            priority: false,
+          }),
+        }),
+      ),
+      Promise.resolve().then(() =>
+        retailerTemplateV1.compose(configurationFixture("client-b", []), {
+          selectImage: ({ slotId, assetId }) => ({
+            slotId,
+            asset: {
+              assetId: `client-b-${assetId}`,
+              kind: "IMAGE" as const,
+              sourcePath: `assets/products/${assetId}.png`,
+              mediaType: "image/png" as const,
+              width: 1000,
+              height: 1000,
+              publicPath: `/assets/products/client-b-${assetId}.png`,
+            },
+            alt: "client-b product",
+            sizes: "100vw",
+            priority: false,
+          }),
+        }),
+      ),
+    ]);
+
+    expect(JSON.stringify(clientA)).not.toContain("client-b");
+    expect(JSON.stringify(clientB)).not.toContain("client-a");
   });
 });

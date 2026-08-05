@@ -133,13 +133,29 @@ export function ProfileSection({
     case "PRODUCTS":
       return (
         <ul className="profile-product-grid">
-          {section.items.map((item) => (
-            <li key={item.name}>
-              <h3>{item.name}</h3>
-              <p>{item.description}</p>
-              {item.price === undefined ? null : <p className="profile-price">{item.price}</p>}
-            </li>
-          ))}
+          {section.items.map((item) => {
+            const image = item.assetId === undefined
+              ? undefined
+              : assets.find(({ asset }) => asset.assetId === item.assetId);
+            return (
+              <li data-asset-id={item.assetId} key={item.name}>
+                {item.assetId === undefined
+                  ? null
+                  : image === undefined
+                    ? <div className="profile-image-unavailable">{item.name}</div>
+                    : <Image
+                        alt={image.alt}
+                        height={image.asset.height}
+                        sizes="(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw"
+                        src={image.asset.publicPath}
+                        width={image.asset.width}
+                      />}
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+                {item.price === undefined ? null : <p className="profile-price">{item.price}</p>}
+              </li>
+            );
+          })}
         </ul>
       );
     case "POLICIES":

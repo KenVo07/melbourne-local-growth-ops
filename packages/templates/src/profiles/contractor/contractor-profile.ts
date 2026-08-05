@@ -16,6 +16,28 @@ const rawContractorProfile = {
   },
   sections: [
     {
+      type: "CONTACT",
+      sectionId: "contact",
+      heading: "Request a Contractor Enquiry",
+      eyebrow: "Get In Touch",
+      body: "Fill out the basic enquiry form with your contact details and a short description of your electrical or air conditioning job. Please do not submit credit card numbers, passwords, or confidential personal information.",
+    },
+    {
+      type: "ACTIONS",
+      sectionId: "primary",
+      heading: "Talk with the Service Team",
+      eyebrow: "Direct Contact",
+      actions: [
+        {
+          actionId: "call-primary",
+          kind: "PHONE",
+          state: "NOT_CONFIGURED",
+          label: "Phone contact unavailable in demo",
+          message: "No phone number is configured for this fictional demonstration. Add a client-verified business number before launch.",
+        },
+      ],
+    },
+    {
       type: "SERVICES",
       sectionId: "services",
       heading: "Illustrative Services & Proposed Coverage",
@@ -55,13 +77,13 @@ const rawContractorProfile = {
       items: [
         {
           assetId: "gallery-switchboard-detail",
-          alt: "Illustrative close view of an electrician working at an open residential switchboard",
-          caption: "Illustrative crop showing switchboard detail and insulated tools; not evidence of a completed client project.",
+          alt: "Illustrative close view of an open residential switchboard showing circuit protection devices and wiring",
+          caption: "Illustrative graphic showing switchboard detail; not evidence of a completed client project.",
         },
         {
           assetId: "gallery-work-context",
-          alt: "Illustrative residential context view of an electrician beside an open switchboard",
-          caption: "Illustrative crop showing the broader residential work context; not evidence of work performed by the fictional business.",
+          alt: "Illustrative residential context view of an open switchboard, tool belt, and workspace",
+          caption: "Illustrative graphic showing the broader residential work context; not evidence of work performed by the fictional business.",
         },
       ],
     },
@@ -72,19 +94,19 @@ const rawContractorProfile = {
       eyebrow: "Proposed Workflow",
       items: [
         {
-          title: "1. Enquiry & Initial Contact",
+          title: "Enquiry & Initial Contact",
           description: "Illustrative process step: submit a basic enquiry through the demonstration contact form. Confirm live contact channels during onboarding.",
         },
         {
-          title: "2. Site Assessment & Proposed Quote",
+          title: "Site Assessment & Proposed Quote",
           description: "Proposed process copy: a site assessment would inform a written scope and quote. Confirm the real client's quoting and pricing policy before publishing.",
         },
         {
-          title: "3. Trade Delivery Requirements",
+          title: "Trade Delivery Requirements",
           description: "Proposed process copy only. Verify the real client's trade qualifications and approve any safety or standards claims before publishing.",
         },
         {
-          title: "4. Testing & Customer Handover",
+          title: "Testing & Customer Handover",
           description: "Illustrative process copy for testing, clean-up, and handover. Confirm the real client's actual procedure and approved result wording before publishing.",
         },
       ],
@@ -128,28 +150,6 @@ const rawContractorProfile = {
         {
           question: "Are emergency call-outs available?",
           answer: "Emergency call-out availability is not configured in this fictional demo. Confirm availability and a client-verified contact method before publishing.",
-        },
-      ],
-    },
-    {
-      type: "CONTACT",
-      sectionId: "contact",
-      heading: "Request a Contractor Enquiry",
-      eyebrow: "Get In Touch",
-      body: "Fill out the basic enquiry form with your contact details and a short description of your electrical or air conditioning job. Please do not submit credit card numbers, passwords, or confidential personal information.",
-    },
-    {
-      type: "ACTIONS",
-      sectionId: "actions",
-      heading: "Talk with the Service Team",
-      eyebrow: "Direct Contact",
-      actions: [
-        {
-          actionId: "call-primary",
-          kind: "PHONE",
-          state: "NOT_CONFIGURED",
-          label: "Phone contact unavailable in demo",
-          message: "No phone number is configured for this fictional demonstration. Add a client-verified business number before launch.",
         },
       ],
     },

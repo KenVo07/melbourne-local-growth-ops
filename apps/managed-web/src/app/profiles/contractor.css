@@ -1,0 +1,137 @@
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-card-grid > li {
+  border-top: 0.35rem solid var(--profile-accent);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-heading {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* D-C3 — verification checklist reads as a labelled checklist, not sentence
+   pills, with its disclaimer visually attached directly beneath it (F7). An
+   empty outlined box (not a checkmark) is used deliberately: these items are
+   onboarding *requirements to verify*, not confirmations already met. */
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-trust-list {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  background: var(--profile-surface);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-trust-list li {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  align-items: start;
+  gap: 0.85rem;
+  border: none;
+  padding: 0;
+  font-weight: 600;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-trust-list li::before {
+  content: "";
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.15rem;
+  border: 2px solid var(--profile-accent);
+  border-radius: 3px;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-trust-signals .profile-disclaimer {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-top: 1px dashed var(--line);
+  background: var(--profile-surface);
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(1.25rem, 3vw, 2rem);
+}
+
+/* D-C4 — the four-step process becomes a visibly ordered sequence: a
+   single-column list with a numbered marker and a connecting line, instead
+   of an undifferentiated 2x2 grid of equal cards. The marker number is the
+   sole ordinal now (the duplicate "1. " prefix was removed from the item
+   titles in the profile content). */
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-process .profile-card-grid {
+  grid-template-columns: minmax(0, 1fr);
+  counter-reset: contractor-step;
+  gap: 0;
+  max-width: 42rem;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-process .profile-card-grid > li {
+  counter-increment: contractor-step;
+  position: relative;
+  border: none;
+  background: none;
+  margin-left: 1.25rem;
+  padding: 0 0 clamp(1.75rem, 4vw, 2.5rem) 2.25rem;
+  border-left: 2px solid var(--line);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-process .profile-card-grid > li:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-process .profile-card-grid > li::before {
+  content: counter(contractor-step);
+  position: absolute;
+  left: -1.25rem;
+  top: 0;
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--profile-accent);
+  color: var(--profile-accent-contrast);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+/* D-C5 / P17 — a distinct "site-record plate" gallery treatment: a bordered,
+   slightly matted frame with an accent foot instead of the plain figure the
+   rest of the family uses. Two defects combine to cause the inherited P17
+   upscale: the shared fixed-height clamp, and the shared `sizes` hint on
+   ProfileSection.tsx's GALLERY branch ("(min-width:64rem) 33vw, (min-width:
+   40rem) 50vw, 100vw") not matching the shared grid's actual 2-column width
+   at wide-but-capped viewports (1024-1654px), so next/image serves a
+   narrower variant than the box renders. `height: auto` fixes the first
+   cause; capping the image's own rendered width to the same breakpoints the
+   `sizes` hint promises fixes the second, without touching the prohibited
+   shared renderer. */
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery {
+  gap: 1.5rem;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery figure {
+  border: 1px solid var(--line);
+  border-bottom: 0.35rem solid var(--profile-accent);
+  padding: 0.75rem 0.75rem 0;
+  background: var(--profile-surface);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+@media (min-width: 40rem) {
+  .managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery img {
+    width: min(100%, 50vw);
+  }
+}
+
+@media (min-width: 64rem) {
+  .managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery img {
+    width: min(100%, 33vw);
+  }
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-gallery figcaption {
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}

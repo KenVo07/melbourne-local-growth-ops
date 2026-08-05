@@ -93,6 +93,67 @@ test("shows a safe failure and emits no lead conversion", async ({ page }) => {
   expect(JSON.stringify(analytics)).not.toContain("Private lead content");
 });
 
+test("shows accessible inline errors, announces them, and focuses the first invalid field on empty submit", async ({
+  page,
+}) => {
+  let contactRequestCount = 0;
+  await page.route("**/api/contact", async (route) => {
+    contactRequestCount += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+
+  const nameInput = page.getByLabel("Name");
+  await expect(nameInput).toHaveAttribute("aria-invalid", "true");
+  await expect(nameInput).toBeFocused();
+
+  const describedBy = await nameInput.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`#${describedBy}`)).toBeVisible();
+  await expect(page.locator(`#${describedBy}`)).not.toHaveText("");
+
+  const status = page.locator(".lead-form-status");
+  await expect(status).not.toHaveText("");
+  expect(contactRequestCount).toBe(0);
+});
+
+test("blocks malformed email with an accessible field error before contact submission", async ({
+  page,
+}) => {
+  let contactRequestCount = 0;
+  await page.route("**/api/contact", async (route) => {
+    contactRequestCount += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.goto("/");
+  await page.getByLabel("Name").fill("Dana Smith");
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByLabel("Phone").fill("+61 400 000 000");
+  await page.getByLabel("How can we help?").fill("Please call me.");
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+
+  const emailInput = page.getByLabel("Email");
+  await expect(emailInput).toHaveAttribute("aria-invalid", "true");
+  await expect(emailInput).toBeFocused();
+
+  const describedBy = await emailInput.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`#${describedBy}`)).toBeVisible();
+  await expect(page.locator(`#${describedBy}`)).not.toHaveText("");
+
+  await expect(page.locator(".lead-form-status")).not.toHaveText("");
+  expect(contactRequestCount).toBe(0);
+});
+
 async function analyticsCalls(page: Page) {
   return page.evaluate(() =>
     (window.dataLayer ?? []).map((entry) =>
