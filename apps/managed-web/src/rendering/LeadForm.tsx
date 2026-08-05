@@ -38,6 +38,8 @@ export function LeadForm({
       const value = stringValue(form, field.toLowerCase());
       if (value.trim() === "") {
         errors[field] = `${fieldLabel(field)} is required.`;
+      } else if (fieldElements.current[field]?.validity.typeMismatch === true) {
+        errors[field] = `${fieldLabel(field)} must be a valid email address.`;
       }
     }
     if (Object.keys(errors).length > 0) {
