@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
   composeManagedWebsite,
   createWebsiteModuleRegistry,
@@ -164,5 +168,85 @@ describe("profile content rendering", () => {
       path: ["injectedHtml"],
       message: "Unknown field: injectedHtml",
     });
+  });
+});
+
+interface ParsedCssRule {
+  selectors: string[];
+  declarations: Record<string, string>;
+}
+
+function parseCssRules(cssText: string): ParsedCssRule[] {
+  const rules: ParsedCssRule[] = [];
+  const ruleRegex = /([^{}]+)\{([^{}]*)\}/g;
+  let match: RegExpExecArray | null;
+  while ((match = ruleRegex.exec(cssText)) !== null) {
+    const selectorText = match[1] ?? "";
+    const body = match[2] ?? "";
+    if (selectorText.trim().startsWith("@")) continue;
+    const selectors = selectorText
+      .split(",")
+      .map((selector) => selector.trim().replace(/\s+/g, " "));
+    const declarations: Record<string, string> = {};
+    for (const declaration of body.split(";")) {
+      const separatorIndex = declaration.indexOf(":");
+      if (separatorIndex === -1) continue;
+      const property = declaration.slice(0, separatorIndex).trim();
+      const value = declaration.slice(separatorIndex + 1).trim();
+      if (!property || !value) continue;
+      declarations[property] = value;
+    }
+    rules.push({ selectors, declarations });
+  }
+  return rules;
+}
+
+function relativeLuminance(hexColor: string): number {
+  const toLinear = (component: string): number => {
+    const channel = Number.parseInt(component, 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  };
+  const r = toLinear(hexColor.slice(1, 3));
+  const g = toLinear(hexColor.slice(3, 5));
+  const b = toLinear(hexColor.slice(5, 7));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(left: string, right: string): number {
+  const lighter = Math.max(relativeLuminance(left), relativeLuminance(right));
+  const darker = Math.min(relativeLuminance(left), relativeLuminance(right));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+describe("restaurant hero accessible text overrides", () => {
+  const globalsCssPath = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../apps/managed-web/src/app/globals.css",
+  );
+  const cssRules = parseCssRules(readFileSync(globalsCssPath, "utf8"));
+
+  const restaurantHeroEyebrowSelector =
+    '.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow';
+  const restaurantHeroTaglineSelector =
+    '.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline';
+
+  it("overrides the generic profile eyebrow color with the hero surface color", () => {
+    const rule = cssRules.find((candidate) =>
+      candidate.selectors.includes(restaurantHeroEyebrowSelector),
+    );
+    expect(rule?.declarations.color).toBe("var(--profile-surface)");
+  });
+
+  it("overrides the base tagline color with the hero surface color", () => {
+    const rule = cssRules.find((candidate) =>
+      candidate.selectors.includes(restaurantHeroTaglineSelector),
+    );
+    expect(rule?.declarations.color).toBe("var(--profile-surface)");
+  });
+
+  it("keeps the representative hero surface text on the hero background at WCAG AA contrast", () => {
+    // Representative pairing: --profile-surface (#fff7ee) text on the
+    // --profile-text hero background (#241a15) used by the editorial hero.
+    expect(contrastRatio("#fff7ee", "#241a15")).toBeGreaterThanOrEqual(4.5);
   });
 });
