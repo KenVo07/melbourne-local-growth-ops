@@ -25,7 +25,7 @@ function contractorProfile(): unknown {
       { type: "TESTIMONIALS", sectionId: "testimonials", heading: "Feedback", items: [{ quote: "A fictional example testimonial.", attribution: "Demo customer", disclosure: "Fictional demonstration content." }] },
       { type: "FAQ", sectionId: "faq", heading: "Questions", items: [{ question: "Where do you work?", answer: "Across inner Melbourne." }] },
       { type: "CONTACT", sectionId: "contact", heading: "Contact", body: "Call or send a basic enquiry." },
-      { type: "ACTIONS", sectionId: "primary", heading: "Get started", actions: [{ actionId: "call", kind: "PHONE", state: "CONFIGURED", label: "Call us", href: "tel:+61390000000" }] },
+      { type: "ACTIONS", sectionId: "primary", heading: "Get started", actions: [{ actionId: "call", kind: "PHONE", state: "CONFIGURED", label: "Call us", href: "tel:+61355500001" }] },
     ],
   };
 }
