@@ -48,6 +48,82 @@ describe("profile content rendering", () => {
     expect(html).toContain("Services for client-a");
   });
 
+  it("renders only hero slots in the hero while preserving gallery assets for sections", () => {
+    const definition = managedWebsiteDefinition("client-a");
+    const result = composeManagedWebsite(definition, registries);
+    if (!result.success) throw new Error("Valid profile fixture must compose.");
+    if (result.data.profile === undefined) {
+      throw new Error("Profile fixture must retain profile content.");
+    }
+
+    const composition = {
+      ...result.data,
+      profile: {
+        ...result.data.profile,
+        sections: result.data.profile.sections.map((section) =>
+          section.type === "GALLERY"
+            ? {
+                ...section,
+                items: [
+                  {
+                    assetId: "gallery-project",
+                    alt: "Completed fictional electrical project",
+                  },
+                ],
+              }
+            : section,
+        ),
+      },
+      assets: [
+        {
+          slotId: "hero",
+          alt: "Business client-a electrician providing a local service",
+          sizes: "(min-width: 48rem) 50vw, 100vw",
+          priority: true,
+          asset: {
+            assetId: "hero-primary",
+            mediaType: "image/png",
+            publicPath: "/assets/hero/primary.png",
+            width: 1672,
+            height: 941,
+          },
+        },
+        {
+          slotId: "gallery-project",
+          alt: "Completed fictional electrical project",
+          sizes: "(min-width: 64rem) 33vw, 100vw",
+          priority: false,
+          asset: {
+            assetId: "gallery-project",
+            mediaType: "image/png",
+            publicPath: "/assets/gallery/project.png",
+            width: 1200,
+            height: 800,
+          },
+        },
+      ],
+    };
+    const html = renderToStaticMarkup(
+      <ManagedWebsiteShell
+        composition={composition}
+        renderers={createManagedModuleRendererRegistry([bookingCtaRenderer])}
+      />,
+    );
+    const heroMarkup = html.match(
+      /<header class="site-hero">[\s\S]*?<\/header>/,
+    )?.[0];
+    const galleryMarkup = html.match(
+      /<section[^>]+data-section-type="GALLERY"[^>]*>[\s\S]*?<\/section>/,
+    )?.[0];
+
+    expect(heroMarkup).toContain('data-asset-slot="hero"');
+    expect(heroMarkup).not.toContain('data-asset-slot="gallery-project"');
+    expect(galleryMarkup).toContain('data-asset-id="gallery-project"');
+    expect(
+      html.match(/<figure[^>]+data-asset-id="gallery-project"/g),
+    ).toHaveLength(1);
+  });
+
   it("renders not-configured external actions as status text without a link", () => {
     const profile = contractorProfileContent("client-a");
     const actions = profile.sections.find(({ type }) => type === "ACTIONS");

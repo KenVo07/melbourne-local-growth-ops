@@ -52,7 +52,9 @@ export function ManagedWebsiteShell({
               </p>}
         </div>
 
-        {composition.assets.map(renderImageSlot)}
+        {composition.assets
+          .filter(({ slotId }) => slotId === "hero")
+          .map(renderImageSlot)}
       </header>
 
       {profile === undefined
