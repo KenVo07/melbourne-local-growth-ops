@@ -120,6 +120,33 @@ export type {
   WebsiteModuleProvenance,
 } from "./managed-composition.js";
 export {
+  ContractorProfileContentSchema,
+  RestaurantProfileContentSchema,
+  RetailerProfileContentSchema,
+  WebsiteArchetypeSchema,
+  WebsiteBrandSchema,
+  WebsiteCatalogueItemSchema,
+  WebsiteExternalActionKindSchema,
+  WebsiteExternalActionSchema,
+  WebsiteLocationSchema,
+  WebsiteMenuCategorySchema,
+  WebsiteMenuItemSchema,
+  WebsitePolicySchema,
+  WebsiteProfileContentSchema,
+  WebsiteProfileSchema,
+  WebsiteProfileSectionSchema,
+  WebsiteTestimonialSchema,
+  validateWebsiteProfileContent,
+} from "./profile-content.js";
+export type {
+  WebsiteArchetype,
+  WebsiteBrand,
+  WebsiteExternalAction,
+  WebsiteProfile,
+  WebsiteProfileContent,
+  WebsiteProfileSection,
+} from "./profile-content.js";
+export {
   createWebsiteModuleRegistry,
   WebsiteModulePipelineError,
 } from "./module-registry.js";

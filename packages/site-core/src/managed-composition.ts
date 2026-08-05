@@ -33,10 +33,13 @@ import type {
   WebsiteTemplateReference,
   WebsiteTemplateRegistry,
 } from "./index.js";
+import type { WebsiteProfileContent } from "./profile-content.js";
+import { validateWebsiteProfileContent } from "./profile-content.js";
 import { validateWebsiteConfiguration } from "./index.js";
 
 export interface ManagedWebsiteDefinition {
   readonly configuration: unknown;
+  readonly profile?: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
   readonly assets?: AssetManifestSource;
@@ -73,6 +76,7 @@ export interface ManagedWebsiteCompositionProvenance {
 
 export interface ManagedWebsiteComposition {
   readonly configuration: ValidatedWebsiteConfiguration;
+  readonly profile?: WebsiteProfileContent;
   readonly assetManifest: AssetManifest;
   readonly assets: readonly ResolvedWebsiteImage[];
   readonly template: WebsiteComposition;
@@ -89,7 +93,15 @@ export function composeManagedWebsite(
     return validation;
   }
 
+  const profileValidation = definition.profile === undefined
+    ? undefined
+    : validateWebsiteProfileContent(definition.profile);
+  if (profileValidation !== undefined && !profileValidation.success) {
+    return profileValidation;
+  }
+
   const configuration = deepFreeze(validation.data);
+  const profile = profileValidation?.data;
   const assetManifest =
     definition.assets === undefined
       ? createEmptyAssetManifest(configuration.clientId)
@@ -119,6 +131,7 @@ export function composeManagedWebsite(
     success: true,
     data: Object.freeze({
       configuration,
+      ...(profile === undefined ? {} : { profile }),
       assetManifest,
       assets,
       template: templateComposition,

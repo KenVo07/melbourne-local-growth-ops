@@ -56,6 +56,7 @@ export function managedWebsiteDefinition(
       ],
       configuredInfrastructure: [],
     },
+    profile: contractorProfileContent(clientId),
     template: {
       templateId: "contractor",
       templateVersion: "1.0.0",
@@ -65,6 +66,31 @@ export function managedWebsiteDefinition(
       { type: "ANALYTICS", moduleVersion: "1.0.0" },
     ],
     ...(assets === undefined ? {} : { assets }),
+  };
+}
+
+export function contractorProfileContent(clientId: string) {
+  return {
+    schemaVersion: 1,
+    profile: "CONTRACTOR",
+    archetype: "SERVICE_LED",
+    brand: {
+      eyebrow: `Local service for ${clientId}`,
+      accentColor: "#b94c2f",
+      accentContrastColor: "#ffffff",
+      surfaceColor: "#fffdf8",
+      textColor: "#18201d",
+    },
+    sections: [
+      { type: "SERVICES", sectionId: "services", heading: `Services for ${clientId}`, items: [{ title: "Repairs", description: `Fictional service content for ${clientId}.` }] },
+      { type: "TRUST_SIGNALS", sectionId: "trust", heading: "Trust", items: ["Credentials confirmed before launch"], disclaimer: "Fictional demonstration content." },
+      { type: "GALLERY", sectionId: "gallery", heading: "Gallery", items: [{ assetId: "hero-primary", alt: `Business ${clientId} electrician providing a local service` }] },
+      { type: "PROCESS", sectionId: "process", heading: "Process", items: [{ title: "Talk", description: `Contact ${clientId} to discuss the work.` }] },
+      { type: "TESTIMONIALS", sectionId: "testimonials", heading: "Feedback", items: [{ quote: `Fictional testimonial for ${clientId}.`, attribution: "Demo customer", disclosure: "Fictional demonstration content." }] },
+      { type: "FAQ", sectionId: "faq", heading: "Questions", items: [{ question: "How do I start?", answer: `Use the basic contact path for ${clientId}.` }] },
+      { type: "CONTACT", sectionId: "contact", heading: "Contact", body: `Send a basic enquiry to ${clientId}.` },
+      { type: "ACTIONS", sectionId: "primary", heading: "Get started", actions: [{ actionId: "call", kind: "PHONE", state: "CONFIGURED", label: `Call ${clientId}`, href: "tel:+61390000000" }] },
+    ],
   };
 }
 

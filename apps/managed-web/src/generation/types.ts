@@ -7,12 +7,14 @@ import type {
   ManagedWebsiteCompositionRegion,
   ValidatedWebsiteConfiguration,
   WebsiteModuleReference,
+  WebsiteProfileContent,
   WebsiteTemplateReference,
 } from "@melbourne-local-growth-ops/site-core";
 
 export interface ClientWebsiteDefinitionInput {
   readonly schemaVersion: 1;
   readonly configuration: unknown;
+  readonly profile: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
   readonly assets: readonly PortableImageAssetReference[];
@@ -27,6 +29,7 @@ export interface ClientRuntimeSecretBinding {
 export interface ClientWebsiteSnapshot {
   readonly schemaVersion: 1;
   readonly configuration: ValidatedWebsiteConfiguration;
+  readonly profile: WebsiteProfileContent;
   readonly provenance: {
     readonly configurationId: string;
     readonly configurationVersion: number;
