@@ -156,6 +156,11 @@ export interface RuntimeWebsiteProfileContent {
   readonly sections: readonly RuntimeProfileSection[];
 }
 
+export interface RuntimeWebsiteDomain {
+  readonly hostname: string;
+  readonly canonical: boolean;
+}
+
 export interface RuntimeWebsiteConfiguration {
   readonly configurationId: string;
   readonly configurationVersion: number;
@@ -165,6 +170,7 @@ export interface RuntimeWebsiteConfiguration {
     readonly businessName: string;
     readonly tagline?: string | undefined;
   };
+  readonly domains: readonly RuntimeWebsiteDomain[];
 }
 
 export interface RuntimeModuleContract {
