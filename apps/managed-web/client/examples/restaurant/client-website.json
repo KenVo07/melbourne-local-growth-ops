@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "configuration": {
+    "schemaVersion": 1,
+    "configurationId": "configuration-lantern-and-vine",
+    "configurationVersion": 1,
+    "clientId": "lantern-and-vine",
+    "entitlementId": "entitlement-lantern-and-vine",
+    "deploymentId": "deployment-lantern-and-vine",
+    "display": {
+      "businessName": "Lantern & Vine",
+      "tagline": "A fictional demonstration share-plate restaurant in Melbourne.",
+      "locationIds": [
+        "location-lantern-and-vine"
+      ]
+    },
+    "domains": [
+      {
+        "hostname": "lantern-and-vine.example.com.au",
+        "canonical": true
+      }
+    ],
+    "modules": [
+      {
+        "schemaVersion": 1,
+        "moduleId": "lead-primary",
+        "connectorId": "email-primary",
+        "type": "LEAD_FORM",
+        "fields": [
+          "NAME",
+          "EMAIL",
+          "PHONE",
+          "MESSAGE"
+        ]
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "analytics-primary",
+        "connectorId": "analytics-primary",
+        "type": "ANALYTICS"
+      }
+    ],
+    "connectors": [
+      {
+        "schemaVersion": 1,
+        "connectorId": "email-primary",
+        "accountOwner": "CLIENT",
+        "portability": "TRANSFERABLE",
+        "type": "EMAIL_DELIVERY",
+        "provider": "RESEND",
+        "fromAddress": "website@lantern-and-vine.example.com.au",
+        "recipientAddresses": [
+          "owner@lantern-and-vine.example.com.au"
+        ],
+        "secretReferenceId": "resend-lantern-and-vine"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "analytics-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "GOOGLE_ANALYTICS_4",
+        "measurementId": "G-MLGOREST01"
+      }
+    ],
+    "configuredInfrastructure": []
+  },
+  "profile": {
+    "schemaVersion": 1,
+    "profile": "RESTAURANT",
+    "archetype": "HOSPITALITY_EDITORIAL",
+    "brand": {
+      "eyebrow": "Melbourne share-plate dining",
+      "accentColor": "#7a2e2b",
+      "accentContrastColor": "#ffffff",
+      "surfaceColor": "#fff7ee",
+      "textColor": "#241a15"
+    },
+    "sections": [
+      {
+        "type": "STORY",
+        "sectionId": "story",
+        "heading": "Our story",
+        "eyebrow": "About the fictional venue",
+        "body": "Lantern & Vine is a fictional neighbourhood share-plate restaurant created to demonstrate the restaurant website template. In the story, a small kitchen team cooks seasonal, produce-led share plates for long, unhurried tables. Lantern & Vine is a fictional demonstration restaurant created to show the shared restaurant template. No real menu, booking, order, or review is represented."
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "dining-choices",
+        "heading": "How to dine with us",
+        "eyebrow": "Dine-in, takeaway, and delivery",
+        "items": [
+          "Dine-in tables across the main room and a small bar counter",
+          "Takeaway packaging available for pickup orders placed in person or by phone",
+          "Delivery is not connected to a delivery partner on this demonstration site"
+        ],
+        "disclaimer": "Lantern & Vine is a fictional demonstration restaurant created to show the shared restaurant template. No real menu, booking, order, or review is represented."
+      },
+      {
+        "type": "MENU",
+        "sectionId": "menu",
+        "heading": "Menu",
+        "eyebrow": "Fictional demonstration menu",
+        "categories": [
+          {
+            "name": "Small plates",
+            "description": "Share two or three plates to start.",
+            "items": [
+              {
+                "name": "Charred flatbread, whipped cultured butter",
+                "description": "Wood-fired flatbread with a smoked butter, fictional demonstration dish.",
+                "price": "$14",
+                "dietary": [
+                  "Vegetarian"
+                ]
+              },
+              {
+                "name": "Heirloom tomato, stracciatella, basil oil",
+                "description": "Seasonal tomato salad, fictional demonstration dish.",
+                "price": "$18",
+                "dietary": [
+                  "Vegetarian",
+                  "Gluten friendly"
+                ]
+              },
+              {
+                "name": "Market mushrooms, garlic crumb",
+                "description": "Roasted mushrooms with a toasted garlic crumb, fictional demonstration dish.",
+                "price": "$17",
+                "dietary": [
+                  "Vegan",
+                  "Gluten friendly"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Mains",
+            "description": "Cooked over the open fire.",
+            "items": [
+              {
+                "name": "Slow-roast pumpkin, black barley, chilli caramel",
+                "description": "Whole roasted pumpkin over black barley, fictional demonstration dish.",
+                "price": "$32",
+                "dietary": [
+                  "Vegan",
+                  "Gluten friendly"
+                ]
+              },
+              {
+                "name": "Grilled market fish, salsa verde",
+                "description": "Fictional demonstration catch of the day with a herb salsa verde.",
+                "price": "$36",
+                "dietary": [
+                  "Gluten friendly",
+                  "Dairy free"
+                ]
+              },
+              {
+                "name": "Braised lamb shoulder, salsa rossa",
+                "description": "Slow braised lamb shoulder, fictional demonstration dish.",
+                "price": "$38",
+                "dietary": [
+                  "Gluten friendly"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Dessert",
+            "items": [
+              {
+                "name": "Burnt fig leaf custard",
+                "description": "Fictional demonstration dessert with brown butter crumb.",
+                "price": "$15",
+                "dietary": [
+                  "Vegetarian",
+                  "Gluten friendly"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Drinks",
+            "description": "A short, seasonal list.",
+            "items": [
+              {
+                "name": "House red blend, by the glass",
+                "price": "$14",
+                "dietary": [
+                  "Vegan"
+                ]
+              },
+              {
+                "name": "Non-alcoholic spritz",
+                "description": "Fictional demonstration house-made non-alcoholic spritz.",
+                "price": "$11",
+                "dietary": [
+                  "Vegan",
+                  "Gluten friendly",
+                  "Alcohol free"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "HOURS",
+        "sectionId": "hours",
+        "heading": "Opening hours",
+        "periods": [
+          {
+            "days": "Tuesday–Thursday",
+            "hours": "5:30pm–9:30pm"
+          },
+          {
+            "days": "Friday–Saturday",
+            "hours": "5:30pm–10:30pm"
+          },
+          {
+            "days": "Sunday",
+            "hours": "12:00pm–3:00pm, 5:30pm–9:00pm"
+          }
+        ],
+        "exceptions": [
+          "Closed Mondays",
+          "Closed on public holidays for this fictional demonstration"
+        ]
+      },
+      {
+        "type": "LOCATION",
+        "sectionId": "location",
+        "heading": "Find us",
+        "location": {
+          "name": "Lantern & Vine",
+          "addressLines": [
+            "12 Lantern Lane"
+          ],
+          "locality": "Melbourne",
+          "region": "VIC",
+          "postalCode": "3000",
+          "directionsUrl": "https://www.google.com/maps/search/?api=1&query=Lantern+Lane+Melbourne+VIC"
+        }
+      },
+      {
+        "type": "GALLERY",
+        "sectionId": "gallery",
+        "heading": "Gallery",
+        "eyebrow": "A look inside",
+        "items": [
+          {
+            "assetId": "dining-room",
+            "alt": "Illustration of restaurant tables set with candles and plates",
+            "caption": "Fictional demonstration table setting for Lantern & Vine."
+          },
+          {
+            "assetId": "share-plate",
+            "alt": "Illustration of a round share plate with roasted vegetables and herb garnish",
+            "caption": "Fictional demonstration share-plate dish."
+          },
+          {
+            "assetId": "bar-service",
+            "alt": "Illustration of a restaurant bar counter with shelved bottles and stemmed glasses",
+            "caption": "Fictional demonstration bar counter for Lantern & Vine."
+          }
+        ]
+      },
+      {
+        "type": "EVENTS",
+        "sectionId": "events",
+        "heading": "What's on",
+        "eyebrow": "Seasonal events and specials",
+        "items": [
+          {
+            "title": "Long Table Tuesdays",
+            "description": "Fictional demonstration weekly shared-table dinner with a set seasonal menu."
+          },
+          {
+            "title": "Winter tasting menu",
+            "description": "Fictional demonstration seasonal tasting menu, available Thursday to Saturday evenings."
+          },
+          {
+            "title": "Sunday live jazz",
+            "description": "Fictional demonstration acoustic jazz duo during Sunday lunch service."
+          }
+        ]
+      },
+      {
+        "type": "FAQ",
+        "sectionId": "faq",
+        "heading": "Common questions",
+        "items": [
+          {
+            "question": "Do you take dine-in bookings?",
+            "answer": "Reservations are not connected on this demonstration site. Call ahead and the fictional team will confirm a table."
+          },
+          {
+            "question": "Is takeaway available?",
+            "answer": "Yes, in this fictional scenario takeaway orders are placed by phone or in person and packaged at the counter."
+          },
+          {
+            "question": "Do you deliver?",
+            "answer": "Delivery is not connected to a delivery partner on this demonstration site."
+          },
+          {
+            "question": "Can you cater for dietary requirements?",
+            "answer": "Every menu item lists its dietary tags. Ask the fictional team about substitutions when you call."
+          }
+        ]
+      },
+      {
+        "type": "ACTIONS",
+        "sectionId": "primary",
+        "heading": "Plan a visit",
+        "actions": [
+          {
+            "actionId": "call-primary",
+            "kind": "PHONE",
+            "state": "CONFIGURED",
+            "label": "Call the fictional demo line",
+            "href": "tel:+61355500002"
+          },
+          {
+            "actionId": "directions-primary",
+            "kind": "DIRECTIONS",
+            "state": "CONFIGURED",
+            "label": "Get directions",
+            "href": "https://www.google.com/maps/search/?api=1&query=Lantern+Lane+Melbourne+VIC"
+          },
+          {
+            "actionId": "reserve-primary",
+            "kind": "RESERVATION",
+            "state": "NOT_CONFIGURED",
+            "label": "Reserve a table",
+            "message": "Online reservations are not configured on this demonstration site. Please call instead."
+          },
+          {
+            "actionId": "order-primary",
+            "kind": "ORDERING",
+            "state": "NOT_CONFIGURED",
+            "label": "Order takeaway online",
+            "message": "Online ordering is not configured on this demonstration site. Please call or visit in person."
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "templateId": "restaurant",
+    "templateVersion": "1.0.0"
+  },
+  "modules": [
+    {
+      "type": "LEAD_FORM",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "ANALYTICS",
+      "moduleVersion": "1.0.0"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "hero-primary",
+      "kind": "IMAGE",
+      "sourcePath": "assets/hero/primary.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "assetId": "dining-room",
+      "kind": "IMAGE",
+      "sourcePath": "assets/gallery/dining-room.png",
+      "mediaType": "image/png",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "assetId": "share-plate",
+      "kind": "IMAGE",
+      "sourcePath": "assets/gallery/share-plate.png",
+      "mediaType": "image/png",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "assetId": "bar-service",
+      "kind": "IMAGE",
+      "sourcePath": "assets/gallery/bar-service.png",
+      "mediaType": "image/png",
+      "width": 1200,
+      "height": 800
+    }
+  ]
+}
