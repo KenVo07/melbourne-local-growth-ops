@@ -71,6 +71,104 @@
     ],
     "configuredInfrastructure": []
   },
+  "profile": {
+    "schemaVersion": 1,
+    "profile": "CONTRACTOR",
+    "archetype": "SERVICE_LED",
+    "brand": {
+      "eyebrow": "Melbourne electrical service",
+      "accentColor": "#b94c2f",
+      "accentContrastColor": "#ffffff",
+      "surfaceColor": "#fffdf8",
+      "textColor": "#18201d"
+    },
+    "sections": [
+      {
+        "type": "SERVICES",
+        "sectionId": "services",
+        "heading": "Practical help for everyday electrical work",
+        "items": [
+          {
+            "title": "Electrical service",
+            "description": "Fictional demonstration copy for common residential electrical enquiries."
+          }
+        ]
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "trust",
+        "heading": "A clear, professional service experience",
+        "items": ["Client credentials are confirmed before a real launch"],
+        "disclaimer": "Harbour Electrical & Air is a fictional demonstration business. No licence or customer claim is asserted."
+      },
+      {
+        "type": "GALLERY",
+        "sectionId": "gallery",
+        "heading": "Service in context",
+        "items": [
+          {
+            "assetId": "hero-primary",
+            "alt": "Electrician reviewing a residential switchboard",
+            "caption": "Demonstration image for the fictional Harbour Electrical & Air profile."
+          }
+        ]
+      },
+      {
+        "type": "PROCESS",
+        "sectionId": "process",
+        "heading": "What happens next",
+        "items": [
+          {
+            "title": "Tell us what you need",
+            "description": "Use the basic enquiry form so the service team can follow up."
+          }
+        ]
+      },
+      {
+        "type": "TESTIMONIALS",
+        "sectionId": "testimonials",
+        "heading": "Example customer evidence treatment",
+        "items": [
+          {
+            "quote": "This is placeholder demonstration copy, not a real customer testimonial.",
+            "attribution": "Fictional demonstration customer",
+            "disclosure": "Fictional evidence shown only to demonstrate the shared testimonial component."
+          }
+        ]
+      },
+      {
+        "type": "FAQ",
+        "sectionId": "faq",
+        "heading": "Common questions",
+        "items": [
+          {
+            "question": "Can I request a service time online?",
+            "answer": "Yes. Use the configured request link or send a basic enquiry. The website does not own scheduling state."
+          }
+        ]
+      },
+      {
+        "type": "CONTACT",
+        "sectionId": "contact",
+        "heading": "Start with a straightforward enquiry",
+        "body": "Share your contact details and a short description of the work. Do not include sensitive information."
+      },
+      {
+        "type": "ACTIONS",
+        "sectionId": "primary",
+        "heading": "Talk with the service team",
+        "actions": [
+          {
+            "actionId": "call-primary",
+            "kind": "PHONE",
+            "state": "CONFIGURED",
+            "label": "Call the fictional demo number",
+            "href": "tel:+61390000000"
+          }
+        ]
+      }
+    ]
+  },
   "template": {
     "templateId": "contractor",
     "templateVersion": "1.0.0"
