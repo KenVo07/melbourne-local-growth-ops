@@ -89,7 +89,7 @@ export function contractorProfileContent(clientId: string) {
       { type: "TESTIMONIALS", sectionId: "testimonials", heading: "Feedback", items: [{ quote: `Fictional testimonial for ${clientId}.`, attribution: "Demo customer", disclosure: "Fictional demonstration content." }] },
       { type: "FAQ", sectionId: "faq", heading: "Questions", items: [{ question: "How do I start?", answer: `Use the basic contact path for ${clientId}.` }] },
       { type: "CONTACT", sectionId: "contact", heading: "Contact", body: `Send a basic enquiry to ${clientId}.` },
-      { type: "ACTIONS", sectionId: "primary", heading: "Get started", actions: [{ actionId: "call", kind: "PHONE", state: "CONFIGURED", label: `Call ${clientId}`, href: "tel:+61390000000" }] },
+      { type: "ACTIONS", sectionId: "primary", heading: "Get started", actions: [{ actionId: "call", kind: "PHONE", state: "CONFIGURED", label: `Call ${clientId}`, href: "tel:+61355500001" }] },
     ],
   };
 }

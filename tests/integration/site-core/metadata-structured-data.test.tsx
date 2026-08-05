@@ -67,7 +67,7 @@ describe("production default (CONTRACTOR) metadata and structured data", () => {
       url: "https://harbour-electrical.example.com.au",
       description:
         "Straightforward electrical and split-system service across Melbourne.",
-      telephone: "+61390000000",
+      telephone: "+61355500001",
       image: "https://harbour-electrical.example.com.au/assets/hero/primary.png",
     });
   });
