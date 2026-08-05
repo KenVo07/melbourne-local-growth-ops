@@ -1,3 +1,6 @@
+import { readFileSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import {
   composeManagedWebsite,
   createWebsiteModuleRegistry,
@@ -16,7 +19,9 @@ import {
 } from "../../../../apps/managed-web/src/rendering";
 import { managedWebsiteModuleContracts } from "../../../../apps/managed-web/src/module-contracts";
 import {
+  restaurantDemoAssets,
   restaurantDemoProfileContent,
+  restaurantExamplePublicDirectory,
   restaurantManagedWebsiteDefinition,
 } from "../../../fixtures/web01/restaurant/restaurant-fixture";
 
@@ -181,5 +186,93 @@ describe("restaurant profile composition", () => {
       path: ["injectedHtml"],
       message: "Unknown field: injectedHtml",
     });
+  });
+
+  it("renders the decision set (actions, menu, hours, location) immediately after the hero, before supporting sections (D-R1)", () => {
+    const { html } = renderRestaurant("client-a");
+    const order = [...html.matchAll(/data-section-id="([a-z-]+)"/g)].map(([, id]) => id);
+    expect(order).toEqual([
+      "primary",
+      "menu",
+      "hours",
+      "location",
+      "gallery",
+      "story",
+      "dining-choices",
+      "events",
+      "faq",
+    ]);
+  });
+});
+
+describe("restaurant profile-local direction CSS (D-R1..D-R5)", () => {
+  const cssPath = fileURLToPath(
+    new URL("../../../../apps/managed-web/src/app/profiles/restaurant.css", import.meta.url),
+  );
+  const css = readFileSync(cssPath, "utf8");
+
+  it("commits to a full-bleed dark editorial hero merged with the primary action instead of an inset panel (D-R2)", () => {
+    expect(css).toMatch(/\.site-hero\s*{[^}]*100vw/s);
+    expect(css).toMatch(/\.site-hero\s*\+\s*\.profile-section-actions/);
+  });
+
+  it("makes exactly one action visually primary in the hero-merged actions band, others subordinate (F5)", () => {
+    expect(css).toMatch(/\[data-action-kind="PHONE"\]/);
+    expect(css).toMatch(/\[data-action-kind="DIRECTIONS"\]/);
+  });
+
+  it("gives the primary and secondary hero actions a hover state with a smooth (150-300ms) transition (ui-ux-pro-max: hover feedback)", () => {
+    expect(css).toMatch(/\[data-action-kind="PHONE"\]:hover/);
+    expect(css).toMatch(/\[data-action-kind="DIRECTIONS"\]:hover/);
+    const transitionDurations = [...css.matchAll(/transition:[^;]*?(\d+)ms/g)].map(([, ms]) => Number(ms));
+    expect(transitionDurations.length).toBeGreaterThan(0);
+    for (const ms of transitionDurations) {
+      expect(ms).toBeGreaterThanOrEqual(150);
+      expect(ms).toBeLessThanOrEqual(300);
+    }
+  });
+
+  it("gives menu categories anchored headings and tabular-figure prices (D-R3)", () => {
+    expect(css).toMatch(/\.profile-menu[^{}]*h3[^{}]*{[^}]*sticky/s);
+    expect(css).toMatch(/tabular-nums/);
+  });
+
+  it("gives dietary tags a legible legend-style presentation without adding a new tag (D-R3, claims-ledger 4.3)", () => {
+    expect(css).toMatch(/\.profile-menu li\s*>\s*small/);
+    expect(css).not.toMatch(/allergen[- ]free/i);
+    expect(css).not.toMatch(/safe for/i);
+  });
+
+  it("gives hours and location a prominent card-level treatment instead of thin low-contrast rows (D-R4)", () => {
+    expect(css).toMatch(/\.profile-hours[^{}]*>[^{}]*div[^{}]*{[^}]*border/s);
+    expect(css).toMatch(/\.profile-location\s*{[^}]*border/s);
+  });
+
+  it("closes the gallery upscale defect locally without touching shared CSS (P17, D-R5)", () => {
+    expect(css).toMatch(/\.profile-gallery img\s*{[^}]*aspect-ratio/s);
+    expect(css).toMatch(/64rem[\s\S]*\.profile-gallery\s*{[^}]*repeat\(3,/);
+  });
+});
+
+describe("restaurant profile content synchronization and imagery budgets", () => {
+  it("keeps the rendered client example JSON and the TypeScript demo profile content structurally synchronized", () => {
+    const jsonPath = fileURLToPath(
+      new URL(
+        "../../../../apps/managed-web/client/examples/restaurant/client-website.json",
+        import.meta.url,
+      ),
+    );
+    const clientWebsite = JSON.parse(readFileSync(jsonPath, "utf8")) as { profile: unknown };
+    expect(clientWebsite.profile).toEqual(restaurantDemoProfileContent());
+  });
+
+  it("keeps every restaurant image asset within the frozen per-asset (P20) and profile-total (P21) source budgets", () => {
+    let total = 0;
+    for (const asset of restaurantDemoAssets) {
+      const { size } = statSync(`${restaurantExamplePublicDirectory}/${asset.sourcePath}`);
+      expect(size).toBeLessThanOrEqual(600_000);
+      total += size;
+    }
+    expect(total).toBeLessThanOrEqual(2_500_000);
   });
 });

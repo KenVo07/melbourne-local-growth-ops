@@ -42,26 +42,41 @@ export function restaurantDemoProfileContent() {
     },
     sections: [
       {
-        type: "STORY" as const,
-        sectionId: "story",
-        heading: "Our story",
-        eyebrow: "About the fictional venue",
-        body:
-          `${businessName} is a fictional neighbourhood share-plate restaurant created to demonstrate the ` +
-          "restaurant website template. In the story, a small kitchen team cooks seasonal, produce-led " +
-          `share plates for long, unhurried tables. ${disclosure}`,
-      },
-      {
-        type: "TRUST_SIGNALS" as const,
-        sectionId: "dining-choices",
-        heading: "How to dine with us",
-        eyebrow: "Dine-in, takeaway, and delivery",
-        items: [
-          "Dine-in tables across the main room and a small bar counter",
-          "Takeaway packaging available for pickup orders placed in person or by phone",
-          "Delivery is not connected to a delivery partner on this demonstration site",
+        type: "ACTIONS" as const,
+        sectionId: "primary",
+        heading: "Plan a visit",
+        actions: [
+          {
+            actionId: "call-primary",
+            kind: "PHONE" as const,
+            state: "CONFIGURED" as const,
+            label: "Call the fictional demo line",
+            href: "tel:+61355500002",
+          },
+          {
+            actionId: "directions-primary",
+            kind: "DIRECTIONS" as const,
+            state: "CONFIGURED" as const,
+            label: "Get directions",
+            href: "https://www.google.com/maps/search/?api=1&query=Lantern+Lane+Melbourne+VIC",
+          },
+          {
+            actionId: "reserve-primary",
+            kind: "RESERVATION" as const,
+            state: "NOT_CONFIGURED" as const,
+            label: "Reserve a table",
+            message:
+              "Online reservations are not configured on this demonstration site. Please call instead.",
+          },
+          {
+            actionId: "order-primary",
+            kind: "ORDERING" as const,
+            state: "NOT_CONFIGURED" as const,
+            label: "Order takeaway online",
+            message:
+              "Online ordering is not configured on this demonstration site. Please call or visit in person.",
+          },
         ],
-        disclaimer: disclosure,
       },
       {
         type: "MENU" as const,
@@ -199,6 +214,28 @@ export function restaurantDemoProfileContent() {
         ],
       },
       {
+        type: "STORY" as const,
+        sectionId: "story",
+        heading: "Our story",
+        eyebrow: "About the fictional venue",
+        body:
+          `${businessName} is a fictional neighbourhood share-plate restaurant created to demonstrate the ` +
+          "restaurant website template. In the story, a small kitchen team cooks seasonal, produce-led " +
+          `share plates for long, unhurried tables. ${disclosure}`,
+      },
+      {
+        type: "TRUST_SIGNALS" as const,
+        sectionId: "dining-choices",
+        heading: "How to dine with us",
+        eyebrow: "Dine-in, takeaway, and delivery",
+        items: [
+          "Dine-in tables across the main room and a small bar counter",
+          "Takeaway packaging available for pickup orders placed in person or by phone",
+          "Delivery is not connected to a delivery partner on this demonstration site",
+        ],
+        disclaimer: disclosure,
+      },
+      {
         type: "EVENTS" as const,
         sectionId: "events",
         heading: "What's on",
@@ -245,43 +282,6 @@ export function restaurantDemoProfileContent() {
             question: "Can you cater for dietary requirements?",
             answer:
               "Every menu item lists its dietary tags. Ask the fictional team about substitutions when you call.",
-          },
-        ],
-      },
-      {
-        type: "ACTIONS" as const,
-        sectionId: "primary",
-        heading: "Plan a visit",
-        actions: [
-          {
-            actionId: "call-primary",
-            kind: "PHONE" as const,
-            state: "CONFIGURED" as const,
-            label: "Call the fictional demo line",
-            href: "tel:+61355500002",
-          },
-          {
-            actionId: "directions-primary",
-            kind: "DIRECTIONS" as const,
-            state: "CONFIGURED" as const,
-            label: "Get directions",
-            href: "https://www.google.com/maps/search/?api=1&query=Lantern+Lane+Melbourne+VIC",
-          },
-          {
-            actionId: "reserve-primary",
-            kind: "RESERVATION" as const,
-            state: "NOT_CONFIGURED" as const,
-            label: "Reserve a table",
-            message:
-              "Online reservations are not configured on this demonstration site. Please call instead.",
-          },
-          {
-            actionId: "order-primary",
-            kind: "ORDERING" as const,
-            state: "NOT_CONFIGURED" as const,
-            label: "Order takeaway online",
-            message:
-              "Online ordering is not configured on this demonstration site. Please call or visit in person.",
           },
         ],
       },

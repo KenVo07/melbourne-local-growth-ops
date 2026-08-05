@@ -139,4 +139,20 @@ describe("restaurantDemoProfileContent", () => {
     expect(restaurantDemoClientId).toBe("lantern-and-vine");
     expect(restaurantDemoBusinessName).toBe("Lantern & Vine");
   });
+
+  it("orders the decision set — actions, menu, hours, location — immediately after the hero, ahead of supporting content (D-R1)", () => {
+    const content = restaurantDemoProfileContent();
+    expect(content.sections.map((section) => section.sectionId)).toEqual([
+      "primary",
+      "menu",
+      "hours",
+      "location",
+      "gallery",
+      "story",
+      "dining-choices",
+      "events",
+      "faq",
+    ]);
+  });
+
 });
