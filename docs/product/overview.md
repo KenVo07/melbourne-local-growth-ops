@@ -23,7 +23,10 @@ delivered without a website, including through manual-first workflows.
 - **GOV-01 — complete.** Post-M1 package, OSS, ownership, isolation, handoff,
   CI/security, and support-economics governance is integrated at commit
   `49bd6b30cd5368aeb58508034deab29e586e1314`.
-- No later milestone has been started automatically.
+- **WEB-01 — complete.** The shared professional website foundation now produces
+  client-delivery-ready contractor, restaurant, and retailer representative
+  sites with isolated portable handoff artifacts. First paid-client onboarding
+  and launch remain WEB-02 work.
 
 ## Customer and problem
 
