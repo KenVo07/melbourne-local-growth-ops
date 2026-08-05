@@ -58,6 +58,7 @@ const runtimeFiles = Object.freeze([
   "src/server/contact-form-runtime.ts",
   "src/server/contact-guards.ts",
   "src/server/managed-contact-runtime.ts",
+  "src/structured-data.ts",
 ]);
 
 const vendorPackages = Object.freeze([
