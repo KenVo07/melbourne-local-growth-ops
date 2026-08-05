@@ -81,7 +81,7 @@ describe("profile content rendering", () => {
       assets: [
         {
           slotId: "hero",
-          alt: "Business client-a electrician providing a local service",
+          alt: "Business client-a local electrical service illustration",
           sizes: "(min-width: 48rem) 50vw, 100vw",
           priority: true,
           asset: {
