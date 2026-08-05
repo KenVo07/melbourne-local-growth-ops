@@ -39,7 +39,17 @@ export function ManagedWebsiteShell({
       data-archetype={profile?.archetype}
       style={profile === undefined ? undefined : profileBrandStyle(profile.brand)}
     >
-      <header className="site-hero">
+      <a className="skip-to-content" href="#primary-content">
+        Skip to main content
+      </a>
+
+      {profile === undefined ? null : (
+        <nav aria-label="Section navigation" className="site-nav">
+          <ul>{renderSectionLinks(profile.sections)}</ul>
+        </nav>
+      )}
+
+      <header className="site-hero" id="primary-content" tabIndex={-1}>
         <div className="site-introduction">
           <p className="site-eyebrow">
             {profile?.brand.eyebrow ?? "Melbourne local service"}
@@ -60,8 +70,24 @@ export function ManagedWebsiteShell({
       {profile === undefined
         ? composition.regions.map((region) => renderFlatRegion(region, renderers))
         : renderProfileSections(composition, renderers, sectionRenderers)}
+
+      <footer className="site-footer">
+        <p className="site-footer-business">
+          {composition.configuration.display.businessName}
+        </p>
+      </footer>
     </main>
   );
+}
+
+function renderSectionLinks(
+  sections: NonNullable<ManagedWebsiteRuntime["profile"]>["sections"],
+): ReactNode {
+  return sections.map((section) => (
+    <li key={section.sectionId}>
+      <a href={`#profile-section-${section.sectionId}`}>{section.heading}</a>
+    </li>
+  ));
 }
 
 function renderProfileSections(
@@ -227,8 +253,8 @@ function renderFallback(module: RuntimeWebsiteModule): ReactNode {
   }
 }
 
-function regionLabel(regionId: string): string {
-  return regionId === "primary"
-    ? "Primary website content"
-    : `${regionId.replaceAll("-", " ")} modules`;
+function regionLabel(regionId: string): string | undefined {
+  if (regionId === "primary") return "Primary website content";
+  if (regionId === "analytics") return undefined;
+  return `${regionId.replaceAll("-", " ")} modules`;
 }

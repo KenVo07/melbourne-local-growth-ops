@@ -1,0 +1,24 @@
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] {
+  --content-width: 76rem;
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
+  background: var(--profile-text);
+  color: var(--profile-surface);
+  padding: clamp(2rem, 6vw, 5rem);
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow,
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline {
+  color: var(--profile-surface);
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-heading {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu {
+  max-width: 52rem;
+  margin-inline: auto;
+}

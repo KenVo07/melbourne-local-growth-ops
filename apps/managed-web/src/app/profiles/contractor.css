@@ -1,0 +1,7 @@
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-card-grid > li {
+  border-top: 0.35rem solid var(--profile-accent);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-heading {
+  grid-template-columns: minmax(0, 1fr);
+}

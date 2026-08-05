@@ -1,0 +1,21 @@
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .site-hero {
+  border-bottom: 1px solid var(--profile-text);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid > li {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding-inline: 0;
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-price {
+  color: var(--profile-accent);
+  font-weight: 800;
+}
+
+@media (min-width: 48rem) {
+  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

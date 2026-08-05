@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -116,5 +118,27 @@ describe("managed website client isolation", () => {
     expect(clientB).not.toContain("client-a");
     expect(clientB).not.toContain("client-a.example.com.au");
     expect(clientB).not.toContain("analytics-client-a");
+  });
+});
+
+describe("profile CSS ownership isolation", () => {
+  const profilesDirectory = fileURLToPath(
+    new URL("../../../apps/managed-web/src/app/profiles/", import.meta.url),
+  );
+  const profileFiles: Record<string, string> = {
+    CONTRACTOR: "contractor.css",
+    RESTAURANT: "restaurant.css",
+    RETAILER: "retailer.css",
+  };
+
+  it("keeps each profile-local stylesheet scoped to its own profile selector only", async () => {
+    for (const [profile, filename] of Object.entries(profileFiles)) {
+      const css = await readFile(join(profilesDirectory, filename), "utf8");
+      expect(css).toContain(`data-profile="${profile}"`);
+      for (const otherProfile of Object.keys(profileFiles)) {
+        if (otherProfile === profile) continue;
+        expect(css).not.toContain(`data-profile="${otherProfile}"`);
+      }
+    }
   });
 });

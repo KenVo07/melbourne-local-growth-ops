@@ -145,6 +145,34 @@ describe("client source artifact assembly", () => {
     await expect(readFile(join(outputDirectory, "build"))).rejects.toThrow();
   });
 
+  it("adds all three profile CSS files to the artifact allowlist and import closure", async () => {
+    const input = await createClientInput("client-a", "G-CLIENTA123");
+    const outputDirectory = await temporaryDirectory("profile-css-closure-artifact");
+    const artifact = await assembleClientSourceArtifact({
+      definition: input.definition,
+      publicDirectory: input.publicDirectory,
+      outputDirectory,
+      factoryRevision: "factory-revision",
+    });
+
+    const profileCssPaths = [
+      "src/app/profiles/contractor.css",
+      "src/app/profiles/restaurant.css",
+      "src/app/profiles/retailer.css",
+    ];
+    expect(artifact.descriptor.handoff.artifactAllowlist).toEqual(
+      expect.arrayContaining(profileCssPaths),
+    );
+
+    const globalsCss = await readFile(
+      join(artifact.sourceDirectory, "src", "app", "globals.css"),
+      "utf8",
+    );
+    expect(globalsCss).toContain('@import "./profiles/contractor.css";');
+    expect(globalsCss).toContain('@import "./profiles/restaurant.css";');
+    expect(globalsCss).toContain('@import "./profiles/retailer.css";');
+  });
+
   it("does not place another client's configuration, analytics, assets, or identity in an artifact", async () => {
     const clientA = await createClientInput("client-a", "G-CLIENTA123");
     const clientB = await createClientInput("client-b", "G-CLIENTB456");

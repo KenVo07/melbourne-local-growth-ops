@@ -114,7 +114,7 @@ describe("profile content rendering", () => {
       />,
     );
     const heroMarkup = html.match(
-      /<header class="site-hero">[\s\S]*?<\/header>/,
+      /<header class="site-hero"[^>]*>[\s\S]*?<\/header>/,
     )?.[0];
     const galleryMarkup = html.match(
       /<section[^>]+data-section-type="GALLERY"[^>]*>[\s\S]*?<\/section>/,
@@ -219,11 +219,11 @@ function contrastRatio(left: string, right: string): number {
 }
 
 describe("restaurant hero accessible text overrides", () => {
-  const globalsCssPath = join(
+  const restaurantProfileCssPath = join(
     dirname(fileURLToPath(import.meta.url)),
-    "../../../apps/managed-web/src/app/globals.css",
+    "../../../apps/managed-web/src/app/profiles/restaurant.css",
   );
-  const cssRules = parseCssRules(readFileSync(globalsCssPath, "utf8"));
+  const cssRules = parseCssRules(readFileSync(restaurantProfileCssPath, "utf8"));
 
   const restaurantHeroEyebrowSelector =
     '.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow';
