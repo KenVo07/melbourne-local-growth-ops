@@ -109,13 +109,30 @@ export function retailerProfileContent(clientId: string) {
             name: "Ceramic vase",
             description: `Fictional demonstration product copy for ${clientId}.`,
             price: "$68.00",
+            assetId: "ceramic-vase",
             purchaseActionId: "purchase",
           },
           {
             name: "Linen table runner",
             description: `Fictional demonstration product copy for ${clientId}.`,
             price: "$45.00",
+            assetId: "missing-product-asset",
             purchaseActionId: "purchase",
+          },
+        ],
+      },
+      {
+        type: "POLICIES",
+        sectionId: "policies",
+        heading: "Returns, pickup & other policies",
+        items: [
+          {
+            title: "Returns & exchanges",
+            body: `Fictional demonstration returns policy copy for ${clientId}.`,
+          },
+          {
+            title: "Click & collect",
+            body: `Fictional demonstration pickup policy copy for ${clientId}. Online ordering is not configured.`,
           },
         ],
       },
@@ -134,23 +151,8 @@ export function retailerProfileContent(clientId: string) {
         type: "TRUST_SIGNALS",
         sectionId: "trust",
         heading: "Why shop with us",
-        items: ["Locally packed orders (fictional demonstration claim)"],
+        items: ["Locally packed orders"],
         disclaimer: `${clientId} is a fictional demonstration retailer. No claim is real.`,
-      },
-      {
-        type: "POLICIES",
-        sectionId: "policies",
-        heading: "Returns, pickup & other policies",
-        items: [
-          {
-            title: "Returns & exchanges",
-            body: `Fictional demonstration returns policy copy for ${clientId}.`,
-          },
-          {
-            title: "Click & collect",
-            body: `Fictional demonstration pickup policy copy for ${clientId}. Online ordering is not configured.`,
-          },
-        ],
       },
       {
         type: "HOURS",
@@ -183,26 +185,15 @@ export function retailerProfileContent(clientId: string) {
         body: `A clearly fictional retailer story for ${clientId}. No real business is described.`,
       },
       {
-        type: "FAQ",
-        sectionId: "faq",
-        heading: "Common questions",
-        items: [
-          {
-            question: "Can I buy products online right now?",
-            answer:
-              "Not yet. This fictional demonstration store shows the truthful not-configured purchase treatment.",
-          },
-        ],
-      },
-      {
         type: "TESTIMONIALS",
         sectionId: "testimonials",
-        heading: "Example customer evidence treatment",
+        heading: "Illustrative Customer Voices",
+        eyebrow: "Fictional Scenarios",
         items: [
           {
-            quote: `Fictional testimonial for ${clientId}.`,
-            attribution: "Fictional demonstration customer",
-            disclosure: "Fictional evidence shown only to demonstrate the shared testimonial component.",
+            quote: `Illustrative scenario quote about shopping at ${clientId}.`,
+            attribution: "Illustrative customer voice — fictional scenario",
+            disclosure: "Fictional demonstration testimonial for presentation only; it is not customer evidence or a sales-result claim.",
           },
         ],
       },
