@@ -135,7 +135,7 @@ describe("contractorTemplateV1", () => {
         width: 1600,
         height: 900,
       },
-      alt: "Business client-a electrician providing a local service",
+      alt: "Business client-a local electrical service illustration",
       sizes: "(min-width: 48rem) 50vw, 100vw",
       priority: true,
     };
@@ -152,7 +152,7 @@ describe("contractorTemplateV1", () => {
       slotId: "hero",
       assetId: "hero-primary",
       required: false,
-      alt: "Business client-a electrician providing a local service",
+      alt: "Business client-a local electrical service illustration",
       sizes: "(min-width: 48rem) 50vw, 100vw",
       priority: true,
     });

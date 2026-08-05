@@ -63,7 +63,7 @@ describe("managed website asset rendering", () => {
 
     expect(imageMarkup).toBeDefined();
     expect(imageMarkup).toContain(
-      'alt="Business client-a electrician providing a local service"',
+      'alt="Business client-a local electrical service illustration"',
     );
     expect(imageMarkup).toContain('width="1672"');
     expect(imageMarkup).toContain('height="941"');

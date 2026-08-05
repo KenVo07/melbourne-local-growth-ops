@@ -72,6 +72,20 @@ describe("Contractor Content Truthfulness & Infrastructure Posture (AC-003, AC-0
     }
   });
 
+  it("does not describe the gallery assets as depicting a real or identifiable person (K1)", () => {
+    const gallerySection = defaultContractorProfileContent.sections.find(
+      (section) => section.type === "GALLERY",
+    );
+
+    expect(gallerySection).toBeDefined();
+    if (gallerySection?.type === "GALLERY") {
+      for (const item of gallerySection.items) {
+        expect(item.alt).not.toMatch(/electrician|tradesperson|worker|person|technician/i);
+        expect(item.caption).not.toMatch(/electrician|tradesperson|worker|person|technician/i);
+      }
+    }
+  });
+
   it("includes explicit fictional disclosures for all testimonials", () => {
     const testimonialSection = defaultContractorProfileContent.sections.find(
       (section) => section.type === "TESTIMONIALS",

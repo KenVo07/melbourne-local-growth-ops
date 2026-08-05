@@ -102,7 +102,7 @@ describe("managed website client isolation", () => {
     expect(clientA).toContain("analytics-client-a");
     expect(clientA).toContain("client-a.example.com.au");
     expect(clientA).toContain(
-      "Business client-a electrician providing a local service",
+      "Business client-a local electrical service illustration",
     );
     expect(clientA).not.toContain("client-b");
     expect(clientA).not.toContain("client-b.example.com.au");
@@ -113,7 +113,7 @@ describe("managed website client isolation", () => {
     expect(clientB).toContain("analytics-client-b");
     expect(clientB).toContain("client-b.example.com.au");
     expect(clientB).toContain(
-      "Business client-b electrician providing a local service",
+      "Business client-b local electrical service illustration",
     );
     expect(clientB).not.toContain("client-a");
     expect(clientB).not.toContain("client-a.example.com.au");

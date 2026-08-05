@@ -89,6 +89,27 @@ describe("Contractor Representative Demo Assembly & Handoff (AC-004, AC-006, AC-
     ).toEqual(["switchboard-detail.png", "work-context.png"]);
   });
 
+  it("keeps every source asset within the frozen P20/P21 handoff-weight budgets and records provenance (K1)", async () => {
+    const definition = JSON.parse(
+      await readFile(join(contractorExampleDir, "client-website.json"), "utf8"),
+    ) as ContractorExampleDefinition;
+
+    let total = 0;
+    for (const asset of definition.assets) {
+      const bytes = await readFile(join(contractorExampleDir, "public", asset.sourcePath));
+      expect(bytes.length).toBeLessThanOrEqual(600_000); // P20
+      total += bytes.length;
+    }
+    expect(total).toBeLessThanOrEqual(2_500_000); // P21
+
+    const [clientProvenance, publicProvenance] = await Promise.all([
+      readFile(join(contractorExampleDir, "public", "assets", "PROVENANCE.md"), "utf8"),
+      readFile(join(contractorPublicExampleDir, "assets", "PROVENANCE.md"), "utf8"),
+    ]);
+    expect(clientProvenance).toBe(publicProvenance);
+    expect(clientProvenance).toMatch(/identifiable person/i);
+  });
+
   it("keeps the portable demo aligned with canonical truthful content and empty infrastructure", async () => {
     const definition = JSON.parse(
       await readFile(join(contractorExampleDir, "client-website.json"), "utf8"),
