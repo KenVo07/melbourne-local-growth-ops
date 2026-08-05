@@ -20,6 +20,7 @@ import {
   generateClientWebsiteSnapshot,
   verifyClientSourceArtifact,
 } from "../../../apps/managed-web/src/generation";
+import { contractorProfileContent } from "./fixtures";
 
 const temporaryDirectories: string[] = [];
 
@@ -41,6 +42,7 @@ describe("client website generation", () => {
     expect(first).toEqual(second);
     expect(first.configuration.clientId).toBe("client-a");
     expect(first.assetManifest.clientId).toBe("client-a");
+    expect(first.profile.profile).toBe("CONTRACTOR");
     expect(first.analyticsMeasurementIds).toEqual(["G-CLIENTA123"]);
     expect(first.regions.flatMap((region) => region.modules.map(({ type }) => type)))
       .toEqual(["BOOKING_CTA", "LEAD_FORM", "ANALYTICS"]);
@@ -129,6 +131,8 @@ describe("client source artifact assembly", () => {
     expect(artifact.descriptor.handoff.publicDependencyAllowlist).toEqual(
       expect.arrayContaining(["next", "react", "react-dom", "resend", "zod"]),
     );
+    await expect(unresolvedRelativeRuntimeImports(artifact.sourceDirectory))
+      .resolves.toEqual([]);
 
     const sourcePackage = JSON.parse(
       await readFile(join(outputDirectory, "source", "package.json"), "utf8"),
@@ -469,6 +473,7 @@ async function createClientInput(clientId: string, measurementId: string) {
         ],
         configuredInfrastructure: [],
       },
+      profile: contractorProfileContent(clientId),
       template: { templateId: "contractor", templateVersion: "1.0.0" },
       modules: [
         { type: "BOOKING_CTA", moduleVersion: "1.0.0" },
@@ -487,6 +492,70 @@ async function createClientInput(clientId: string, measurementId: string) {
       ],
     },
   };
+}
+
+async function unresolvedRelativeRuntimeImports(
+  sourceDirectory: string,
+): Promise<string[]> {
+  const roots = [
+    "src/app/layout.tsx",
+    "src/app/page.tsx",
+    "src/app/api/contact/route.ts",
+  ];
+  const pending = [...roots];
+  const visited = new Set<string>();
+  const missing: string[] = [];
+
+  while (pending.length > 0) {
+    const relativePath = pending.shift();
+    if (relativePath === undefined || visited.has(relativePath)) continue;
+    visited.add(relativePath);
+    const content = await readFile(join(sourceDirectory, relativePath), "utf8");
+    const importSpecifiers = [...content.matchAll(
+      /(?:from\s+|import\s*)["'](\.{1,2}\/[^"']+)["']/g,
+    )].map((match) => match[1]).filter((value): value is string => value !== undefined);
+
+    for (const specifier of importSpecifiers) {
+      const resolved = await resolvePortableImport(sourceDirectory, relativePath, specifier);
+      if (resolved === undefined) {
+        missing.push(`${relativePath} -> ${specifier}`);
+      } else if (/\.(?:ts|tsx|js|mjs)$/.test(resolved)) {
+        pending.push(resolved);
+      }
+    }
+  }
+
+  return missing.sort();
+}
+
+async function resolvePortableImport(
+  sourceDirectory: string,
+  importer: string,
+  specifier: string,
+): Promise<string | undefined> {
+  const base = join(sourceDirectory, importer, "..", specifier);
+  const candidates = /\.[a-z]+$/i.test(specifier)
+    ? [base]
+    : [
+        `${base}.ts`,
+        `${base}.tsx`,
+        `${base}.js`,
+        `${base}.mjs`,
+        `${base}.json`,
+        `${base}.css`,
+        join(base, "index.ts"),
+        join(base, "index.tsx"),
+        join(base, "index.js"),
+      ];
+  for (const candidate of candidates) {
+    try {
+      await readFile(candidate);
+      return candidate.slice(sourceDirectory.length + 1).replaceAll("\\", "/");
+    } catch {
+      // Continue through the closed list of supported runtime extensions.
+    }
+  }
+  return undefined;
 }
 
 async function temporaryDirectory(label: string): Promise<string> {

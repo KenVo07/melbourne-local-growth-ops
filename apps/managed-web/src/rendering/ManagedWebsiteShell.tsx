@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import type {
   ManagedWebsiteRuntime,
@@ -10,16 +10,21 @@ import {
   ManagedWebsiteRenderError,
   type ManagedModuleRendererRegistry,
 } from "./module-renderer-registry";
+import type { ManagedSectionRendererRegistry } from "./section-renderer-registry";
+import { managedProfileSectionRenderers } from "./sections";
 
 export interface ManagedWebsiteShellProps {
   readonly composition: ManagedWebsiteRuntime;
   readonly renderers: ManagedModuleRendererRegistry;
+  readonly sectionRenderers?: ManagedSectionRendererRegistry;
 }
 
 export function ManagedWebsiteShell({
   composition,
   renderers,
+  sectionRenderers = managedProfileSectionRenderers,
 }: ManagedWebsiteShellProps) {
+  const profile = composition.profile;
   return (
     <main
       className="managed-site"
@@ -30,10 +35,15 @@ export function ManagedWebsiteShell({
       data-template-version={
         composition.provenance.template.templateVersion
       }
+      data-profile={profile?.profile}
+      data-archetype={profile?.archetype}
+      style={profile === undefined ? undefined : profileBrandStyle(profile.brand)}
     >
       <header className="site-hero">
         <div className="site-introduction">
-          <p className="site-eyebrow">Melbourne local service</p>
+          <p className="site-eyebrow">
+            {profile?.brand.eyebrow ?? "Melbourne local service"}
+          </p>
           <h1>{composition.configuration.display.businessName}</h1>
           {composition.configuration.display.tagline === undefined
             ? null
@@ -42,29 +52,98 @@ export function ManagedWebsiteShell({
               </p>}
         </div>
 
-        {composition.assets.map(renderImageSlot)}
+        {composition.assets
+          .filter(({ slotId }) => slotId === "hero")
+          .map(renderImageSlot)}
       </header>
 
-      {composition.regions.map((region) => {
-        const modules = region.modules.map((module) =>
-          renderModuleSlot(module, renderers),
-        );
-        if (modules.every((module) => module === null)) {
-          return null;
-        }
-
-        return (
-          <section
-            aria-label={regionLabel(region.regionId)}
-            className={`site-region site-region-${region.regionId}`}
-            key={region.regionId}
-          >
-            {modules}
-          </section>
-        );
-      })}
+      {profile === undefined
+        ? composition.regions.map((region) => renderFlatRegion(region, renderers))
+        : renderProfileSections(composition, renderers, sectionRenderers)}
     </main>
   );
+}
+
+function renderProfileSections(
+  composition: ManagedWebsiteRuntime,
+  moduleRenderers: ManagedModuleRendererRegistry,
+  sectionRenderers: ManagedSectionRendererRegistry,
+): ReactNode {
+  const profile = composition.profile;
+  if (profile === undefined) return null;
+  const regionsById = new Map(
+    composition.regions.map((region) => [region.regionId, region]),
+  );
+  const interleavedRegionIds = new Set<string>();
+  const sections = profile.sections.map((section) => {
+    const renderer = sectionRenderers.resolve(section.type);
+    if (renderer === undefined) {
+      throw new Error(`Profile section "${section.type}" has no renderer.`);
+    }
+    const region = regionsById.get(section.sectionId);
+    if (region !== undefined) interleavedRegionIds.add(region.regionId);
+    const modules = region?.modules.map((module) =>
+      renderModuleSlot(module, moduleRenderers),
+    ) ?? [];
+    const headingId = `profile-section-${section.sectionId}`;
+    return (
+      <section
+        aria-labelledby={headingId}
+        className={`profile-section profile-section-${section.type.toLowerCase().replaceAll("_", "-")}`}
+        data-section-id={section.sectionId}
+        data-section-type={section.type}
+        key={section.sectionId}
+      >
+        <header className="profile-section-heading">
+          {section.eyebrow === undefined ? null : <p>{section.eyebrow}</p>}
+          <h2 id={headingId}>{section.heading}</h2>
+        </header>
+        {renderer.render(section, { assets: composition.assets })}
+        {modules.length === 0 ? null : <div className="profile-section-modules">{modules}</div>}
+      </section>
+    );
+  });
+  const unmatchedRegions = composition.regions
+    .filter(({ regionId }) => !interleavedRegionIds.has(regionId))
+    .map((region) => renderFlatRegion(region, moduleRenderers));
+  return <>{sections}{unmatchedRegions}</>;
+}
+
+function renderFlatRegion(
+  region: ManagedWebsiteRuntime["regions"][number],
+  renderers: ManagedModuleRendererRegistry,
+): ReactNode {
+  const modules = region.modules.map((module) =>
+    renderModuleSlot(module, renderers),
+  );
+  if (modules.every((module) => module === null)) return null;
+  return (
+    <section
+      aria-label={regionLabel(region.regionId)}
+      className={`site-region site-region-${region.regionId}`}
+      key={region.regionId}
+    >
+      {modules}
+    </section>
+  );
+}
+
+type ProfileBrandStyle = CSSProperties & {
+  readonly "--profile-accent": string;
+  readonly "--profile-accent-contrast": string;
+  readonly "--profile-surface": string;
+  readonly "--profile-text": string;
+};
+
+function profileBrandStyle(
+  brand: NonNullable<ManagedWebsiteRuntime["profile"]>["brand"],
+): ProfileBrandStyle {
+  return {
+    "--profile-accent": brand.accentColor,
+    "--profile-accent-contrast": brand.accentContrastColor,
+    "--profile-surface": brand.surfaceColor,
+    "--profile-text": brand.textColor,
+  };
 }
 
 function renderImageSlot(image: RuntimeWebsiteImage): ReactNode {

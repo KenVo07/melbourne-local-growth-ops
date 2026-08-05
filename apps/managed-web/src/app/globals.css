@@ -33,6 +33,10 @@ a {
 }
 
 .managed-site {
+  --profile-accent: var(--accent);
+  --profile-accent-contrast: #fff;
+  --profile-surface: var(--surface);
+  --profile-text: var(--ink);
   width: min(100% - 2rem, var(--content-width));
   margin-inline: auto;
   padding-block: clamp(3rem, 8vw, 7rem);
@@ -214,6 +218,318 @@ h2 {
   color: var(--muted-ink);
 }
 
+.managed-site[data-profile] {
+  color: var(--profile-text);
+}
+
+.managed-site[data-profile] .site-eyebrow,
+.managed-site[data-profile] .profile-section-heading > p {
+  color: var(--profile-accent);
+}
+
+.managed-site[data-profile] .profile-section {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  margin-top: clamp(3.5rem, 9vw, 8rem);
+  scroll-margin-top: 2rem;
+}
+
+.managed-site[data-profile] .profile-section-heading {
+  display: grid;
+  max-width: 48rem;
+  gap: 0.65rem;
+}
+
+.managed-site[data-profile] .profile-section-heading > p,
+.managed-site[data-profile] .profile-section-heading > h2 {
+  margin: 0;
+}
+
+.managed-site[data-profile] .profile-section-heading > p {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.managed-site[data-profile] .profile-card-grid,
+.managed-site[data-profile] .profile-product-grid,
+.managed-site[data-profile] .profile-quote-list,
+.managed-site[data-profile] .profile-trust-list,
+.managed-site[data-profile] .profile-menu ul,
+.managed-site[data-profile] .profile-exceptions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.managed-site[data-profile] .profile-card-grid,
+.managed-site[data-profile] .profile-product-grid,
+.managed-site[data-profile] .profile-quote-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.managed-site[data-profile] .profile-card-grid > li,
+.managed-site[data-profile] .profile-product-grid > li,
+.managed-site[data-profile] .profile-quote-list > li,
+.managed-site[data-profile] .profile-policy-list > div,
+.managed-site[data-profile] .profile-faq-list details {
+  border: 1px solid var(--line);
+  background: var(--profile-surface);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.managed-site[data-profile] .profile-card-grid h3,
+.managed-site[data-profile] .profile-product-grid h3,
+.managed-site[data-profile] .profile-card-grid p,
+.managed-site[data-profile] .profile-product-grid p,
+.managed-site[data-profile] blockquote,
+.managed-site[data-profile] blockquote p,
+.managed-site[data-profile] .profile-attribution,
+.managed-site[data-profile] .profile-disclaimer {
+  margin: 0;
+}
+
+.managed-site[data-profile] .profile-card-grid p,
+.managed-site[data-profile] .profile-product-grid p,
+.managed-site[data-profile] .profile-prose,
+.managed-site[data-profile] .profile-policy-list dd,
+.managed-site[data-profile] .profile-faq-list p {
+  color: var(--muted-ink);
+  line-height: 1.65;
+}
+
+.managed-site[data-profile] .profile-card-grid h3 + p,
+.managed-site[data-profile] .profile-product-grid h3 + p {
+  margin-top: 0.75rem;
+}
+
+.managed-site[data-profile] .profile-trust-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.managed-site[data-profile] .profile-trust-list li {
+  border: 1px solid currentColor;
+  padding: 0.75rem 1rem;
+  font-weight: 750;
+}
+
+.managed-site[data-profile] .profile-disclaimer {
+  color: var(--muted-ink);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.managed-site[data-profile] .profile-gallery {
+  display: grid;
+  gap: 1rem;
+}
+
+.managed-site[data-profile] .profile-gallery figure {
+  margin: 0;
+  overflow: hidden;
+  background: var(--profile-surface);
+}
+
+.managed-site[data-profile] .profile-gallery img {
+  display: block;
+  width: 100%;
+  height: clamp(15rem, 50vw, 32rem);
+  object-fit: cover;
+}
+
+.managed-site[data-profile] .profile-gallery figcaption,
+.managed-site[data-profile] .profile-image-unavailable {
+  padding: 0.875rem 1rem;
+  color: var(--muted-ink);
+  font-size: 0.875rem;
+}
+
+.managed-site[data-profile] .profile-image-unavailable {
+  min-height: 12rem;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+}
+
+.managed-site[data-profile] .profile-quote-list blockquote {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  line-height: 1.35;
+}
+
+.managed-site[data-profile] .profile-attribution {
+  margin-top: 1rem;
+  font-weight: 750;
+}
+
+.managed-site[data-profile] .profile-faq-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.managed-site[data-profile] .profile-faq-list summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.managed-site[data-profile] .profile-menu {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.managed-site[data-profile] .profile-menu h3,
+.managed-site[data-profile] .profile-menu p {
+  margin-top: 0;
+}
+
+.managed-site[data-profile] .profile-menu li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-block: 1rem;
+}
+
+.managed-site[data-profile] .profile-menu li > span:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.managed-site[data-profile] .profile-menu li > small {
+  grid-column: 1 / -1;
+  color: var(--muted-ink);
+}
+
+.managed-site[data-profile] .profile-hours,
+.managed-site[data-profile] .profile-policy-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.managed-site[data-profile] .profile-hours > div,
+.managed-site[data-profile] .profile-policy-list > div {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.managed-site[data-profile] .profile-hours > div {
+  grid-template-columns: minmax(8rem, 1fr) 1fr;
+  border-bottom: 1px solid var(--line);
+  padding-block: 0.875rem;
+}
+
+.managed-site[data-profile] .profile-hours dd,
+.managed-site[data-profile] .profile-policy-list dd {
+  margin: 0;
+}
+
+.managed-site[data-profile] .profile-location {
+  display: grid;
+  width: fit-content;
+  gap: 0.35rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.managed-site[data-profile] .profile-location a {
+  margin-top: 0.75rem;
+  color: var(--profile-accent);
+  font-weight: 750;
+}
+
+.managed-site[data-profile] .profile-actions,
+.managed-site[data-profile] .profile-section-modules {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.managed-site[data-profile] .profile-action {
+  min-height: 3.25rem;
+  border: 2px solid var(--profile-accent);
+  padding: 0.8rem 1.25rem;
+}
+
+.managed-site[data-profile] .profile-action-configured {
+  display: inline-flex;
+  align-items: center;
+  background: var(--profile-accent);
+  color: var(--profile-accent-contrast);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.managed-site[data-profile] .profile-action-not-configured {
+  display: grid;
+  max-width: 32rem;
+  gap: 0.35rem;
+  background: var(--profile-surface);
+}
+
+.managed-site[data-profile] .profile-action-not-configured span {
+  color: var(--muted-ink);
+}
+
+.managed-site[data-profile] :is(a, button, summary, input, textarea):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-card-grid > li {
+  border-top: 0.35rem solid var(--profile-accent);
+}
+
+.managed-site[data-profile="CONTRACTOR"][data-archetype="SERVICE_LED"] .profile-section-heading {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] {
+  --content-width: 76rem;
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
+  background: var(--profile-text);
+  color: var(--profile-surface);
+  padding: clamp(2rem, 6vw, 5rem);
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow,
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline {
+  color: var(--profile-surface);
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-heading {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu {
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .site-hero {
+  border-bottom: 1px solid var(--profile-text);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid > li {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding-inline: 0;
+}
+
+.managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-price {
+  color: var(--profile-accent);
+  font-weight: 800;
+}
+
 @media (min-width: 48rem) {
   .managed-site {
     width: min(100% - 5rem, var(--content-width));
@@ -236,10 +552,30 @@ h2 {
     grid-template-columns: minmax(0, 0.9fr) minmax(24rem, 1.1fr);
     align-items: center;
   }
+
+  .managed-site[data-profile] .profile-card-grid,
+  .managed-site[data-profile] .profile-product-grid,
+  .managed-site[data-profile] .profile-quote-list,
+  .managed-site[data-profile] .profile-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .managed-site[data-profile="RETAILER"][data-archetype="CATALOGUE_LED"] .profile-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .booking-cta {
     transition: none;
+  }
+
+  .managed-site[data-profile] *,
+  .managed-site[data-profile] *::before,
+  .managed-site[data-profile] *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

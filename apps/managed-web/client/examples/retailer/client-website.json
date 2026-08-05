@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "configuration": {
+    "schemaVersion": 1,
+    "configurationId": "configuration-fernbank-trading-co",
+    "configurationVersion": 1,
+    "clientId": "fernbank-trading-co",
+    "entitlementId": "entitlement-fernbank-trading-co",
+    "deploymentId": "deployment-fernbank-trading-co",
+    "display": {
+      "businessName": "Fernbank Trading Co.",
+      "tagline": "Thoughtful homewares and everyday goods for Melbourne homes. A fictional demonstration retailer.",
+      "locationIds": ["location-fernbank-trading-co"]
+    },
+    "domains": [
+      {
+        "hostname": "fernbank-trading.example.com.au",
+        "canonical": true
+      }
+    ],
+    "modules": [
+      {
+        "schemaVersion": 1,
+        "moduleId": "lead-primary",
+        "connectorId": "lead-primary",
+        "type": "LEAD_FORM",
+        "fields": ["NAME", "EMAIL", "PHONE", "MESSAGE"]
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "analytics-primary",
+        "connectorId": "analytics-primary",
+        "type": "ANALYTICS"
+      }
+    ],
+    "connectors": [
+      {
+        "schemaVersion": 1,
+        "connectorId": "lead-primary",
+        "accountOwner": "CLIENT",
+        "portability": "TRANSFERABLE",
+        "type": "EMAIL_DELIVERY",
+        "provider": "RESEND",
+        "fromAddress": "website@fernbank-trading.example.com.au",
+        "recipientAddresses": ["owner@fernbank-trading.example.com.au"],
+        "secretReferenceId": "resend-fernbank-trading-co"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "analytics-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "GOOGLE_ANALYTICS_4",
+        "measurementId": "G-MLGO654321"
+      }
+    ],
+    "configuredInfrastructure": []
+  },
+  "profile": {
+    "schemaVersion": 1,
+    "profile": "RETAILER",
+    "archetype": "CATALOGUE_LED",
+    "brand": {
+      "eyebrow": "Melbourne homewares & lifestyle retailer",
+      "accentColor": "#1f6f5c",
+      "accentContrastColor": "#ffffff",
+      "surfaceColor": "#fbf7f0",
+      "textColor": "#1c2321"
+    },
+    "sections": [
+      {
+        "type": "COLLECTIONS",
+        "sectionId": "collections",
+        "heading": "Shop by category",
+        "items": [
+          {
+            "title": "Kitchen & dining",
+            "description": "Fictional demonstration category covering everyday servingware, glassware, and table linen."
+          },
+          {
+            "title": "Home textiles",
+            "description": "Fictional demonstration category covering cushions, throws, and table runners."
+          },
+          {
+            "title": "Garden & plant care",
+            "description": "Fictional demonstration category covering planters, pots, and simple garden tools."
+          },
+          {
+            "title": "Gifts & stationery",
+            "description": "Fictional demonstration category covering cards, wrap, and small gift objects."
+          }
+        ]
+      },
+      {
+        "type": "PRODUCTS",
+        "sectionId": "featured-products",
+        "heading": "Featured products",
+        "items": [
+          {
+            "name": "Hand-thrown ceramic vase, sage",
+            "description": "Fictional demonstration product copy for a matte sage ceramic vase, wheel-thrown in small batches.",
+            "price": "$68.00",
+            "purchaseActionId": "purchase"
+          },
+          {
+            "name": "Linen table runner, natural",
+            "description": "Fictional demonstration product copy for a stonewashed linen table runner in natural oat.",
+            "price": "$45.00",
+            "purchaseActionId": "purchase"
+          },
+          {
+            "name": "Recycled glass tumbler set (4pc)",
+            "description": "Fictional demonstration product copy for a set of four hand-blown recycled glass tumblers.",
+            "price": "$52.00",
+            "purchaseActionId": "purchase"
+          },
+          {
+            "name": "Woven seagrass storage basket",
+            "description": "Fictional demonstration product copy for a medium woven seagrass storage basket with cotton handles.",
+            "price": "$38.50",
+            "purchaseActionId": "purchase"
+          }
+        ]
+      },
+      {
+        "type": "PRODUCTS",
+        "sectionId": "new-arrivals",
+        "heading": "New arrivals",
+        "items": [
+          {
+            "name": "Oat boucle cushion cover",
+            "description": "Fictional demonstration product copy for a textured oat boucle cushion cover, 50 by 50 centimetres.",
+            "price": "$34.00",
+            "purchaseActionId": "purchase"
+          },
+          {
+            "name": "Brass candle snuffer",
+            "description": "Fictional demonstration product copy for a brushed brass candle snuffer with a walnut handle.",
+            "price": "$24.00",
+            "purchaseActionId": "purchase"
+          },
+          {
+            "name": "Terracotta plant pot, medium",
+            "description": "Fictional demonstration product copy for a hand-finished terracotta plant pot with a drainage saucer.",
+            "price": "$29.00",
+            "purchaseActionId": "purchase"
+          }
+        ]
+      },
+      {
+        "type": "EVENTS",
+        "sectionId": "promotions",
+        "heading": "Promotions & in-store events",
+        "items": [
+          {
+            "title": "Spring homewares refresh (fictional demonstration promotion)",
+            "description": "Fictional demonstration promotional copy describing a seasonal in-store display change. No discount, price claim, or real offer is implied."
+          },
+          {
+            "title": "Weekend workshop: simple flower arranging (fictional demonstration event)",
+            "description": "Fictional demonstration in-store event copy. Dates and bookings are illustrative only and are not a real event."
+          }
+        ]
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "trust",
+        "heading": "Why shop with us",
+        "items": [
+          "Locally packed orders (fictional demonstration claim)",
+          "Members-only newsletter for restock updates (fictional demonstration claim)",
+          "Friendly in-store gift wrapping (fictional demonstration claim)"
+        ],
+        "disclaimer": "Fernbank Trading Co. is a fictional demonstration retailer. No product, price, availability, or business claim is real."
+      },
+      {
+        "type": "POLICIES",
+        "sectionId": "policies",
+        "heading": "Returns, pickup & other policies",
+        "items": [
+          {
+            "title": "Returns & exchanges",
+            "body": "Fictional demonstration policy copy: items may be returned within 30 days in original condition. This is illustrative content only and not a real policy."
+          },
+          {
+            "title": "Click & collect",
+            "body": "Fictional demonstration policy copy describing in-store pickup after a phone order is confirmed. Online ordering is not configured for this demonstration."
+          },
+          {
+            "title": "Shipping",
+            "body": "Fictional demonstration policy copy: this demonstration store does not process real shipments. A production deployment would connect a real, client-owned fulfilment process."
+          },
+          {
+            "title": "Warranty",
+            "body": "Fictional demonstration policy copy describing an illustrative 12-month manufacturing warranty on selected homewares."
+          }
+        ]
+      },
+      {
+        "type": "HOURS",
+        "sectionId": "hours",
+        "heading": "Store hours",
+        "periods": [
+          { "days": "Monday-Friday", "hours": "9:00am-5:30pm" },
+          { "days": "Saturday", "hours": "9:00am-4:00pm" },
+          { "days": "Sunday", "hours": "10:00am-3:00pm" }
+        ],
+        "exceptions": ["Closed on public holidays (fictional demonstration hours)."]
+      },
+      {
+        "type": "LOCATION",
+        "sectionId": "location",
+        "heading": "Visit the store",
+        "location": {
+          "name": "Fernbank Trading Co., demonstration store",
+          "addressLines": ["12 Wattle Lane"],
+          "locality": "Wattlebrook",
+          "region": "VIC",
+          "postalCode": "3999",
+          "directionsUrl": "https://www.google.com/maps/search/?api=1&query=12+Wattle+Lane%2C+Wattlebrook+VIC+3999"
+        }
+      },
+      {
+        "type": "STORY",
+        "sectionId": "story",
+        "heading": "Our story",
+        "body": "Fictional demonstration story copy: Fernbank Trading Co. is presented here only to demonstrate the shared retailer template. Any product, price, promotion, testimonial, or location shown is fictional and not a real business."
+      },
+      {
+        "type": "FAQ",
+        "sectionId": "faq",
+        "heading": "Common questions",
+        "items": [
+          {
+            "question": "Can I buy products online right now?",
+            "answer": "Not yet. This fictional demonstration store shows the truthful not-configured purchase treatment; a real deployment would connect a client-owned commerce provider."
+          },
+          {
+            "question": "Do you offer click & collect?",
+            "answer": "In this fictional demonstration, pickup is described as a phone-arranged service rather than an automated online flow."
+          },
+          {
+            "question": "Is this a real shop?",
+            "answer": "No. Fernbank Trading Co. is a fictional demonstration retailer used to show the shared catalogue and trust website template."
+          }
+        ]
+      },
+      {
+        "type": "TESTIMONIALS",
+        "sectionId": "testimonials",
+        "heading": "Example customer evidence treatment",
+        "items": [
+          {
+            "quote": "This is placeholder demonstration copy, not a real customer testimonial.",
+            "attribution": "Fictional demonstration customer",
+            "disclosure": "Fictional evidence shown only to demonstrate the shared testimonial component."
+          }
+        ]
+      },
+      {
+        "type": "CONTACT",
+        "sectionId": "contact",
+        "heading": "Get in touch",
+        "body": "Send a basic enquiry using the contact form, or call the fictional demonstration number below. Do not include payment details or sensitive information."
+      },
+      {
+        "type": "ACTIONS",
+        "sectionId": "primary",
+        "heading": "Visit or contact the store",
+        "actions": [
+          {
+            "actionId": "call",
+            "kind": "PHONE",
+            "state": "CONFIGURED",
+            "label": "Call the fictional demo store",
+            "href": "tel:+61355500200"
+          },
+          {
+            "actionId": "directions",
+            "kind": "DIRECTIONS",
+            "state": "CONFIGURED",
+            "label": "Get directions to the fictional demo store",
+            "href": "https://www.google.com/maps/search/?api=1&query=12+Wattle+Lane%2C+Wattlebrook+VIC+3999"
+          },
+          {
+            "actionId": "purchase",
+            "kind": "PURCHASE",
+            "state": "NOT_CONFIGURED",
+            "label": "Buy online",
+            "message": "Online purchase is not yet configured for this fictional demonstration store. Visit in-store or call to buy products."
+          },
+          {
+            "actionId": "pickup-order",
+            "kind": "ORDERING",
+            "state": "NOT_CONFIGURED",
+            "label": "Order for pickup",
+            "message": "Online pickup ordering is not yet configured for this fictional demonstration store. Call ahead to arrange in-store pickup."
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "templateId": "retailer",
+    "templateVersion": "1.0.0"
+  },
+  "modules": [
+    {
+      "type": "LEAD_FORM",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "ANALYTICS",
+      "moduleVersion": "1.0.0"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "hero-primary",
+      "kind": "IMAGE",
+      "sourcePath": "assets/hero/primary.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 900
+    }
+  ]
+}

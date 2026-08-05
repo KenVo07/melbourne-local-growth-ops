@@ -1,5 +1,165 @@
 export type RuntimeModuleType = "LEAD_FORM" | "BOOKING_CTA" | "ANALYTICS";
 export type RuntimeLeadField = "NAME" | "EMAIL" | "PHONE" | "MESSAGE";
+export type RuntimeWebsiteProfile = "CONTRACTOR" | "RESTAURANT" | "RETAILER";
+export type RuntimeWebsiteArchetype =
+  | "SERVICE_LED"
+  | "HOSPITALITY_EDITORIAL"
+  | "CATALOGUE_LED";
+
+export interface RuntimeWebsiteBrand {
+  readonly eyebrow: string;
+  readonly accentColor: string;
+  readonly accentContrastColor: string;
+  readonly surfaceColor: string;
+  readonly textColor: string;
+}
+
+export interface RuntimeExternalAction {
+  readonly actionId: string;
+  readonly kind:
+    | "PHONE"
+    | "RESERVATION"
+    | "ORDERING"
+    | "PURCHASE"
+    | "DIRECTIONS";
+  readonly label: string;
+  readonly state: "CONFIGURED" | "NOT_CONFIGURED";
+  readonly href?: string | undefined;
+  readonly message?: string | undefined;
+}
+
+interface RuntimeProfileSectionBase {
+  readonly sectionId: string;
+  readonly heading: string;
+  readonly eyebrow?: string | undefined;
+}
+
+interface RuntimeTitledItem {
+  readonly title: string;
+  readonly description: string;
+}
+
+interface RuntimeGalleryItem {
+  readonly assetId: string;
+  readonly alt: string;
+  readonly caption?: string | undefined;
+}
+
+interface RuntimeTestimonial {
+  readonly quote: string;
+  readonly attribution: string;
+  readonly disclosure?: string | undefined;
+}
+
+interface RuntimeFaqItem {
+  readonly question: string;
+  readonly answer: string;
+}
+
+interface RuntimeMenuItem {
+  readonly name: string;
+  readonly description?: string | undefined;
+  readonly price: string;
+  readonly dietary: readonly string[];
+}
+
+interface RuntimeMenuCategory {
+  readonly name: string;
+  readonly description?: string | undefined;
+  readonly items: readonly RuntimeMenuItem[];
+}
+
+interface RuntimeCatalogueItem {
+  readonly name: string;
+  readonly description: string;
+  readonly price?: string | undefined;
+  readonly assetId?: string | undefined;
+  readonly purchaseActionId?: string | undefined;
+}
+
+interface RuntimePolicy {
+  readonly title: string;
+  readonly body: string;
+}
+
+interface RuntimeLocation {
+  readonly name: string;
+  readonly addressLines: readonly string[];
+  readonly locality: string;
+  readonly region: string;
+  readonly postalCode: string;
+  readonly directionsUrl?: string | undefined;
+}
+
+type RuntimeTitledListSection = RuntimeProfileSectionBase & {
+  readonly type: "SERVICES" | "PROCESS" | "EVENTS" | "COLLECTIONS";
+  readonly items: readonly RuntimeTitledItem[];
+};
+
+export type RuntimeProfileSection =
+  | RuntimeTitledListSection
+  | (RuntimeProfileSectionBase & {
+      readonly type: "TRUST_SIGNALS";
+      readonly items: readonly string[];
+      readonly disclaimer?: string | undefined;
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "GALLERY";
+      readonly items: readonly RuntimeGalleryItem[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "TESTIMONIALS";
+      readonly items: readonly RuntimeTestimonial[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "FAQ";
+      readonly items: readonly RuntimeFaqItem[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "MENU";
+      readonly categories: readonly RuntimeMenuCategory[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "HOURS";
+      readonly periods: readonly {
+        readonly days: string;
+        readonly hours: string;
+      }[];
+      readonly exceptions: readonly string[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "LOCATION";
+      readonly location: RuntimeLocation;
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "STORY" | "CONTACT";
+      readonly body: string;
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "PRODUCTS";
+      readonly items: readonly RuntimeCatalogueItem[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "POLICIES";
+      readonly items: readonly RuntimePolicy[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "ACTIONS";
+      readonly actions: readonly RuntimeExternalAction[];
+    });
+
+export interface RuntimeWebsiteProfileContent {
+  readonly schemaVersion: 1;
+  readonly profile: RuntimeWebsiteProfile;
+  readonly archetype: RuntimeWebsiteArchetype;
+  readonly brand: RuntimeWebsiteBrand;
+  readonly sections: readonly RuntimeProfileSection[];
+}
+
+export interface RuntimeWebsiteDomain {
+  readonly hostname: string;
+  readonly canonical: boolean;
+}
 
 export interface RuntimeWebsiteConfiguration {
   readonly configurationId: string;
@@ -10,6 +170,7 @@ export interface RuntimeWebsiteConfiguration {
     readonly businessName: string;
     readonly tagline?: string | undefined;
   };
+  readonly domains: readonly RuntimeWebsiteDomain[];
 }
 
 export interface RuntimeModuleContract {
@@ -99,6 +260,7 @@ export interface RuntimeWebsiteImage {
 
 export interface ManagedWebsiteRuntime {
   readonly configuration: RuntimeWebsiteConfiguration;
+  readonly profile?: RuntimeWebsiteProfileContent | undefined;
   readonly provenance: {
     readonly configurationId: string;
     readonly configurationVersion: number;

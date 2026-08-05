@@ -49,11 +49,16 @@ const runtimeFiles = Object.freeze([
   "src/rendering/lead-form-renderer.tsx",
   "src/rendering/ManagedWebsiteShell.tsx",
   "src/rendering/module-renderer-registry.ts",
+  "src/rendering/section-renderer-registry.ts",
+  "src/rendering/sections/ExternalAction.tsx",
+  "src/rendering/sections/ProfileSection.tsx",
+  "src/rendering/sections/index.ts",
   "src/rendering/TrackedBookingLink.tsx",
   "src/runtime-types.ts",
   "src/server/contact-form-runtime.ts",
   "src/server/contact-guards.ts",
   "src/server/managed-contact-runtime.ts",
+  "src/structured-data.ts",
 ]);
 
 const vendorPackages = Object.freeze([

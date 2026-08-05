@@ -3,9 +3,15 @@ import {
   createWebsiteModuleRegistry,
   createWebsiteTemplateRegistry,
   validateWebsiteConfiguration,
+  validateWebsiteProfileContent,
   type ManagedWebsiteDefinition,
 } from "@melbourne-local-growth-ops/site-core";
-import { contractorTemplateV1 } from "@melbourne-local-growth-ops/templates";
+import {
+  assertWebsiteProfileTemplateConsistency,
+  contractorTemplateV1,
+  restaurantTemplateV1,
+  retailerTemplateV1,
+} from "@melbourne-local-growth-ops/templates";
 
 import { managedWebsiteModuleContracts } from "../module-contracts";
 import type {
@@ -15,7 +21,11 @@ import type {
 } from "./types";
 
 const registries = Object.freeze({
-  templates: createWebsiteTemplateRegistry([contractorTemplateV1]),
+  templates: createWebsiteTemplateRegistry([
+    contractorTemplateV1,
+    restaurantTemplateV1,
+    retailerTemplateV1,
+  ]),
   modules: createWebsiteModuleRegistry(managedWebsiteModuleContracts),
 });
 
@@ -30,6 +40,9 @@ export function generateClientWebsiteSnapshot(
   const composition = composeManagedWebsite(managedDefinition, registries);
   if (!composition.success) {
     throw new Error(formatValidationFailure(composition.issues));
+  }
+  if (composition.data.profile === undefined) {
+    throw new Error("Managed website composition requires validated profile content.");
   }
 
   const analyticsMeasurementIds = Object.freeze(
@@ -51,6 +64,7 @@ export function generateClientWebsiteSnapshot(
   return deepFreeze({
     schemaVersion: 1,
     configuration: composition.data.configuration,
+    profile: composition.data.profile,
     provenance: composition.data.provenance,
     assetManifest: composition.data.assetManifest,
     assets: composition.data.assets,
@@ -69,9 +83,15 @@ export function createManagedWebsiteDefinition(
   if (!configuration.success) {
     throw new Error(formatValidationFailure(configuration.issues));
   }
+  const profile = validateWebsiteProfileContent(definition.profile);
+  if (!profile.success) {
+    throw new Error(formatValidationFailure(profile.issues));
+  }
+  assertWebsiteProfileTemplateConsistency(profile.data, definition.template);
 
   return {
     configuration: configuration.data,
+    profile: profile.data,
     template: definition.template,
     modules: definition.modules,
     assets: {
@@ -91,16 +111,18 @@ export function parseDefinitionInput(
     !isRecord(input.template) ||
     !Array.isArray(input.modules) ||
     !Array.isArray(input.assets) ||
-    !("configuration" in input)
+    !("configuration" in input) ||
+    !("profile" in input)
   ) {
     throw new TypeError(
-      "Client website input must include schemaVersion 1, configuration, template, modules, and assets.",
+      "Client website input must include schemaVersion 1, configuration, profile, template, modules, and assets.",
     );
   }
 
   return {
     schemaVersion: 1,
     configuration: input.configuration,
+    profile: input.profile,
     template: input.template as unknown as ClientWebsiteDefinitionInput["template"],
     modules: input.modules as unknown as ClientWebsiteDefinitionInput["modules"],
     assets: input.assets as unknown as ClientWebsiteDefinitionInput["assets"],
