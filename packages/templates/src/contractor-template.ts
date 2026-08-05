@@ -1,4 +1,5 @@
 import type {
+  ResolvedWebsiteImage,
   ValidatedWebsiteConfiguration,
   WebsiteComposition,
   WebsiteTemplate,
@@ -26,6 +27,9 @@ function composeContractorWebsite(
     ...sortedModuleIds(configuration, "LEAD_FORM"),
   ]);
   const analyticsModuleIds = sortedModuleIds(configuration, "ANALYTICS");
+
+  const resolvedAssets: ResolvedWebsiteImage[] = [];
+
   const hero = assets?.selectImage({
     slotId: "hero",
     assetId: "hero-primary",
@@ -34,6 +38,39 @@ function composeContractorWebsite(
     sizes: "(min-width: 48rem) 50vw, 100vw",
     priority: true,
   });
+  if (hero !== undefined) {
+    resolvedAssets.push(hero);
+  }
+
+  const gallerySwitchboardDetail = assets?.selectImage({
+    slotId: "gallery-switchboard-detail",
+    assetId: "gallery-switchboard-detail",
+    required: false,
+    alt: "Illustrative close view of an electrician working at an open residential switchboard",
+    sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw",
+    priority: false,
+  });
+  if (
+    gallerySwitchboardDetail !== undefined &&
+    gallerySwitchboardDetail.asset.assetId === "gallery-switchboard-detail"
+  ) {
+    resolvedAssets.push(gallerySwitchboardDetail);
+  }
+
+  const galleryWorkContext = assets?.selectImage({
+    slotId: "gallery-work-context",
+    assetId: "gallery-work-context",
+    required: false,
+    alt: "Illustrative residential context view of an electrician beside an open switchboard",
+    sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw",
+    priority: false,
+  });
+  if (
+    galleryWorkContext !== undefined &&
+    galleryWorkContext.asset.assetId === "gallery-work-context"
+  ) {
+    resolvedAssets.push(galleryWorkContext);
+  }
 
   return Object.freeze({
     templateId: "contractor",
@@ -48,9 +85,9 @@ function composeContractorWebsite(
         moduleIds: analyticsModuleIds,
       }),
     ]),
-    ...(hero === undefined
+    ...(resolvedAssets.length === 0
       ? {}
-      : { assets: Object.freeze([hero]) }),
+      : { assets: Object.freeze(resolvedAssets) }),
   });
 }
 
