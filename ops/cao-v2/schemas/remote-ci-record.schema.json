@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/remote-ci-record.schema.json",
+  "title": "MLGO CAO v2.1 Exact Required CI Record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "candidate_sha", "required_checks", "observed_check_names", "satisfied_checks", "missing_checks", "pending_checks", "failed_checks", "unexpected_checks", "status", "observed_at"],
+  "properties": {
+    "schema_version": {"const": "2.1"},
+    "run_id": {"type": ["string", "null"]},
+    "candidate_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "provider": {"type": "string"},
+    "repository": {"type": "string"},
+    "required_checks": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["name", "allowed_conclusions"]}},
+    "observed_check_names": {"type": "array", "items": {"type": "string"}},
+    "satisfied_checks": {"type": "array"},
+    "missing_checks": {"type": "array", "maxItems": 0},
+    "pending_checks": {"type": "array", "maxItems": 0},
+    "failed_checks": {"type": "array", "maxItems": 0},
+    "unexpected_checks": {"type": "array"},
+    "status": {"const": "PASS"},
+    "observed_at": {"type": "string"}
+  }
+}

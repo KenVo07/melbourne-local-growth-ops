@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOF'
+usage: mlgo-supervise --profile PROFILE [--mode v2_shadow|v2_enforced] MILESTONE-ID OBJECTIVE...
+
+The operator explicitly chooses the authoritative supervisor profile. No route,
+capacity condition, or recovery path may change that choice.
+EOF
+  exit 2
+}
+
+profile=""
+mode="v2_shadow"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile) [[ $# -ge 2 ]] || usage; profile="$2"; shift 2 ;;
+    --mode) [[ $# -ge 2 ]] || usage; mode="$2"; shift 2 ;;
+    --help|-h) usage ;;
+    --) shift; break ;;
+    -*) echo "unknown option: $1" >&2; usage ;;
+    *) break ;;
+  esac
+done
+[[ -n "$profile" ]] || { echo "--profile is required; the operator must explicitly select the authoritative supervisor" >&2; usage; }
+[[ $# -ge 2 ]] || usage
+milestone="$1"; shift
+objective="$*"
+[[ "$milestone" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || { echo "invalid milestone ID" >&2; exit 2; }
+[[ "$mode" == "v2_shadow" || "$mode" == "v2_enforced" ]] || { echo "invalid mode: $mode" >&2; exit 2; }
+
+registry=${MLGO_CAO_PROVIDER_REGISTRY:-"$HOME/.local/share/mlgo-cao-v2/registry/provider-registry.json"}
+[[ -f "$registry" ]] || { echo "canonical provider registry is missing: $registry" >&2; exit 2; }
+provider=$(python3 - "$registry" "$profile" <<'PYREG'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+profile_name = sys.argv[2]
+try:
+    registry = json.loads(path.read_text(encoding="utf-8"))
+    profile = registry["profiles"][profile_name]
+    if profile.get("role_id") != "supervisor":
+        raise KeyError(profile_name)
+    provider_id = str(profile["provider_id"])
+    runtime_provider = str(registry["providers"][provider_id]["runtime_provider"])
+except (OSError, ValueError, KeyError, TypeError) as exc:
+    print(f"profile is not an approved authoritative supervisor in canonical registry: {profile_name}: {exc}", file=sys.stderr)
+    raise SystemExit(2)
+print(runtime_provider)
+PYREG
+) || exit $?
+
+repo=$(git rev-parse --show-toplevel)
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+run_id=$(printf '%s-%s' "${milestone,,}" "$stamp" | tr -cs 'a-z0-9._-' '-')
+run_id=${run_id%-}
+
+mlgo-v2 init-run --run-id "$run_id" --mode "$mode" --supervisor-profile "$profile" >/dev/null
+
+full_prompt=$(cat <<EOF
+Start the operator-selected MLGO authoritative supervisor for milestone $milestone.
+
+Run ID: $run_id
+Repository: $repo
+V2 state: $HOME/.local/state/mlgo-cao/runs/$run_id/v2/state.json
+Orchestration mode: $mode
+Selected supervisor profile: $profile
+
+Read the canonical milestone packet and existing authoritative project context.
+Preserve frozen acceptance and the distinction between local implementation and
+final milestone completion. Use the v2 host control plane for routing,
+worktrees, phase dispatch, state, Git, validation, publication facts and
+recovery. For a large mixed-difficulty task, approve a Big Task Charter and
+start a Claude or Codex Frontier Task Lead. Do not perform routine callbacks,
+leases, polling, Git metadata operations or state-file editing in this model
+conversation.
+
+Milestone objective:
+$objective
+EOF
+)
+
+if ! cao launch \
+  "$full_prompt" \
+  --agents "$profile" \
+  --provider "$provider" \
+  --session-name "$run_id" \
+  --working-directory "$repo" \
+  --headless \
+  --async \
+  --auto-approve; then
+  mlgo-v2 set-run-status --run-id "$run_id" --status FAILED \
+    --reason "authoritative supervisor terminal launch failed" >/dev/null || true
+  exit 1
+fi
+mlgo-v2 set-run-status --run-id "$run_id" --status ACTIVE \
+  --reason "operator-selected authoritative supervisor terminal launched" >/dev/null
+
+cat <<EOF
+Run:       $run_id
+Profile:   $profile
+Mode:      $mode
+Herdr:     herdr --session mlgo-cao
+V2 state:  $HOME/.local/state/mlgo-cao/runs/$run_id/v2/state.json
+EOF

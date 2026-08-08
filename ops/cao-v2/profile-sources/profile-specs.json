@@ -1,0 +1,109 @@
+{
+  "profiles": {
+    "mlgo-agy-sidecar-pro-reviewer": {
+      "body": "independent-reviewer",
+      "frontmatter": "name: mlgo-agy-sidecar-pro-reviewer\ndescription: Gemini 3.1 Pro High deep read, acceptance and test-strategy reviewer.\nprovider: antigravity_cli\nrole: reviewer\nmodel: Gemini 3.1 Pro (High)\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - agy\n  - pro\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-agy-sidecar-pro-worker": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-agy-sidecar-pro-worker\ndescription: Gemini 3.1 Pro High context-heavy bounded builder and analyst.\nprovider: antigravity_cli\nrole: developer\nmodel: Gemini 3.1 Pro (High)\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - agy\n  - pro\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-agy-sidecar-reviewer": {
+      "body": "independent-reviewer",
+      "frontmatter": "name: mlgo-agy-sidecar-reviewer\ndescription: Gemini 3.6 Flash High mechanical and browser/evidence reviewer.\nprovider: antigravity_cli\nrole: reviewer\nmodel: Gemini 3.6 Flash (High)\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - agy\n  - flash\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-agy-sidecar-worker": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-agy-sidecar-worker\ndescription: Gemini 3.6 Flash High ordinary bounded MLGO implementation builder.\nprovider: antigravity_cli\nrole: developer\nmodel: Gemini 3.6 Flash (High)\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - agy\n  - flash\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-gateway-architect": {
+      "body": "architecture-adjudicator",
+      "frontmatter": "name: mlgo-claude-gateway-architect\ndescription: Explicitly authorized PAYG Claude Opus high-effort critical reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - architect\n  - claude\n  - opus\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-gateway-builder": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-claude-gateway-builder\ndescription: Explicitly authorized PAYG Claude Sonnet high-effort builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-gateway-opus-builder": {
+      "body": "critical-bounded-builder",
+      "frontmatter": "name: mlgo-claude-gateway-opus-builder\ndescription: Claude Opus high-effort critical bounded implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - critical bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - opus\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-gateway-reviewer": {
+      "body": "independent-reviewer",
+      "frontmatter": "name: mlgo-claude-gateway-reviewer\ndescription: Explicitly authorized PAYG Claude Sonnet medium-effort reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - claude\n  - sonnet\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-gateway-supervisor": {
+      "body": "authoritative-supervisor",
+      "frontmatter": "name: mlgo-claude-gateway-supervisor\ndescription: Explicit-operator-selected Claude gateway authoritative supervisor; Sonnet medium effort; PAYG never auto-selected.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-claude-gateway-task-lead-opus": {
+      "body": "frontier-task-lead",
+      "frontmatter": "name: mlgo-claude-gateway-task-lead-opus\ndescription: Operator-authorized PAYG Claude Opus high-effort Frontier Task Lead for critical work.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-claude-gateway-task-lead-sonnet": {
+      "body": "frontier-task-lead",
+      "frontmatter": "name: mlgo-claude-gateway-task-lead-sonnet\ndescription: Operator-authorized PAYG Claude Sonnet high-effort Frontier Task Lead.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: sonnet\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-claude-subscription-architect": {
+      "body": "architecture-adjudicator",
+      "frontmatter": "name: mlgo-claude-subscription-architect\ndescription: Claude Opus high-effort critical architecture and adjudication reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - architect\n  - claude\n  - opus\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-subscription-builder": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-claude-subscription-builder\ndescription: Claude Sonnet high-effort difficult contextual implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-subscription-opus-builder": {
+      "body": "critical-bounded-builder",
+      "frontmatter": "name: mlgo-claude-subscription-opus-builder\ndescription: Claude Opus high-effort critical bounded implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - critical bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - opus\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-subscription-reviewer": {
+      "body": "independent-reviewer",
+      "frontmatter": "name: mlgo-claude-subscription-reviewer\ndescription: Claude Sonnet medium-effort independent contextual reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-claude-subscription-supervisor": {
+      "body": "authoritative-supervisor",
+      "frontmatter": "name: mlgo-claude-subscription-supervisor\ndescription: MLGO Claude subscription authoritative supervisor; Sonnet, medium effort, semantic-only v2 authority.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - subscription\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-claude-subscription-task-lead-opus": {
+      "body": "frontier-task-lead",
+      "frontmatter": "name: mlgo-claude-subscription-task-lead-opus\ndescription: Claude Opus high-effort Frontier Task Lead for critical ambiguous big tasks.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-claude-subscription-task-lead-sonnet": {
+      "body": "frontier-task-lead",
+      "frontmatter": "name: mlgo-claude-subscription-task-lead-sonnet\ndescription: Claude Sonnet high-effort Frontier Task Lead for difficult contextual big tasks.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-codex-business-2": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-codex-business-2\ndescription: Operator-authorized or reserve-gated GPT-5.6 Sol Business 2 builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - business-2\n  - reserve-gated\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-codex-business-2-supervisor": {
+      "body": "authoritative-supervisor",
+      "frontmatter": "name: mlgo-codex-business-2-supervisor\ndescription: Explicit-operator-only Codex Business 2 authoritative supervisor; never an automatic worker or replacement.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business-2\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-codex-business-overflow-builder": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-codex-business-overflow-builder\ndescription: Reserve-gated GPT-5.6 Sol emergency builder; never a reviewer.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - business\n  - reserve-gated\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-codex-plus-builder": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-codex-plus-builder\ndescription: GPT-5.6 Sol high-effort difficult code, debugging and integration builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-codex-plus-reviewer": {
+      "body": "independent-reviewer",
+      "frontmatter": "name: mlgo-codex-plus-reviewer\ndescription: GPT-5.6 Sol high-effort independent code/integration reviewer.\nprovider: codex\nrole: reviewer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-codex-plus-supervisor": {
+      "body": "authoritative-supervisor",
+      "frontmatter": "name: mlgo-codex-plus-supervisor\ndescription: MLGO Codex Plus authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - plus\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-codex-plus-task-lead": {
+      "body": "frontier-task-lead",
+      "frontmatter": "name: mlgo-codex-plus-task-lead\ndescription: GPT-5.6 Sol high-effort Frontier Task Lead for code-heavy big tasks.\nprovider: codex\nrole: reviewer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    },
+    "mlgo-supervisor": {
+      "body": "authoritative-supervisor",
+      "frontmatter": "name: mlgo-supervisor\ndescription: MLGO Codex Business authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []"
+    }
+  },
+  "schema_version": "1.0"
+}

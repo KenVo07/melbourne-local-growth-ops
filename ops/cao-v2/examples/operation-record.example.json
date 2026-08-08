@@ -1,0 +1,20 @@
+{
+  "attempts": 1,
+  "created_at": "2099-01-01T00:00:00Z",
+  "external_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "inputs": {
+    "candidate": "x"
+  },
+  "operation_id": "operation-example-1",
+  "operation_type": "COMMIT",
+  "result": {
+    "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "schema_version": "1.0",
+  "status": "VERIFIED",
+  "updated_at": "2099-01-01T00:00:01Z",
+  "verification": {
+    "source": "post_apply_verifier"
+  }
+}

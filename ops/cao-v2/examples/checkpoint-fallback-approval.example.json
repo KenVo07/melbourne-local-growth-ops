@@ -1,0 +1,10 @@
+{
+  "action": "CHECKPOINT_FALLBACK_NEW_GENERATION",
+  "approved": true,
+  "approved_by": "operator",
+  "expires_at": "2099-01-01T00:30:00Z",
+  "issued_at": "2099-01-01T00:00:00Z",
+  "reason": "Allow one truthful fallback attempt after session loss.",
+  "run_id": "example-run",
+  "schema_version": "1.0"
+}

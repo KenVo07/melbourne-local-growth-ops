@@ -1,0 +1,1701 @@
+{
+  "accounts": {
+    "agy": {
+      "billing_mode": "bundled",
+      "capacity_source": {
+        "kind": "provider_health_manual_hint",
+        "probe_provider": "antigravity"
+      },
+      "percentage_meter": false,
+      "provider_id": "agy"
+    },
+    "claude_gateway_payg": {
+      "billing_mode": "gateway",
+      "capacity_source": {
+        "kind": "gateway_authorization"
+      },
+      "percentage_meter": false,
+      "provider_id": "claude_code"
+    },
+    "claude_subscription": {
+      "billing_mode": "subscription",
+      "capacity_source": {
+        "kind": "provider_health_manual_hint",
+        "probe_provider": "claude"
+      },
+      "percentage_meter": false,
+      "provider_id": "claude_code"
+    },
+    "codex_business": {
+      "billing_mode": "subscription",
+      "capacity_source": {
+        "kind": "percent_account",
+        "probe_account": "business"
+      },
+      "percentage_meter": true,
+      "provider_id": "codex"
+    },
+    "codex_business_2": {
+      "billing_mode": "subscription",
+      "capacity_source": {
+        "kind": "percent_account",
+        "probe_account": "business_2"
+      },
+      "percentage_meter": true,
+      "provider_id": "codex"
+    },
+    "codex_plus": {
+      "billing_mode": "subscription",
+      "capacity_source": {
+        "kind": "percent_account",
+        "probe_account": "plus"
+      },
+      "percentage_meter": true,
+      "provider_id": "codex"
+    }
+  },
+  "capability_declarations": [
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-agy-sidecar-pro-reviewer-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-pro-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-agy-sidecar-pro-reviewer-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-pro-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-agy-sidecar-pro-worker-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-pro-worker",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-agy-sidecar-pro-worker-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-pro-worker",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-agy-sidecar-reviewer-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-agy-sidecar-reviewer-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-agy-sidecar-worker-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-worker",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-agy-sidecar-worker-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-agy-sidecar-worker",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-architect-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-claude-gateway-architect-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-architect-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-architect-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-gateway-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-gateway-opus-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-opus-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-opus-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-opus-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-reviewer-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-claude-gateway-reviewer-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-reviewer-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-reviewer-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-gateway-supervisor-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-supervisor-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-gateway-supervisor-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-supervisor-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-supervisor-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-opus-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-gateway-task-lead-sonnet-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-architect-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-claude-subscription-architect-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-architect-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-architect-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-architect",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-subscription-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-subscription-opus-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-opus-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-opus-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-opus-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-opus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-reviewer-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-claude-subscription-reviewer-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-reviewer-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-reviewer-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-subscription-supervisor-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-supervisor-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-subscription-supervisor-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-supervisor-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-supervisor-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-opus-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-claude-subscription-task-lead-sonnet-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-codex-business-2-supervisor-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-business-2-supervisor-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-codex-business-2-supervisor-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-business-2-supervisor-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-business-2-supervisor-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-codex-business-2-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-business-2-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-business-2-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-business-2-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-2",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-codex-business-overflow-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-overflow-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-business-overflow-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-overflow-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-business-overflow-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-overflow-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-business-overflow-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-business-overflow-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-codex-plus-builder-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-plus-builder-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-plus-builder-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-plus-builder-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-builder",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-plus-reviewer-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_tool",
+      "declaration_id": "decl-mlgo-codex-plus-reviewer-reasoning_tool",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-plus-reviewer-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-plus-reviewer-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-reviewer",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-codex-plus-supervisor-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-plus-supervisor-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-codex-plus-supervisor-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-plus-supervisor-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-plus-supervisor-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "execution_agent",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-execution_agent",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-codex-plus-task-lead-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-codex-plus-task-lead",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "native_resume",
+      "declaration_id": "decl-mlgo-supervisor-native_resume",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "persistent_conversation",
+      "declaration_id": "decl-mlgo-supervisor-persistent_conversation",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "reasoning_authority",
+      "declaration_id": "decl-mlgo-supervisor-reasoning_authority",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "structured_result",
+      "declaration_id": "decl-mlgo-supervisor-structured_result",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-supervisor",
+      "schema_version": "1.0"
+    },
+    {
+      "capability": "usage_telemetry",
+      "declaration_id": "decl-mlgo-supervisor-usage_telemetry",
+      "maturity": "DECLARED",
+      "provider_profile_id": "mlgo-supervisor",
+      "schema_version": "1.0"
+    }
+  ],
+  "compatibility": {
+    "policy_route_projection_version": "1.0",
+    "profile_specs_projection_version": "1.0"
+  },
+  "profiles": {
+    "mlgo-agy-sidecar-pro-reviewer": {
+      "account_profile_id": "agy",
+      "body": "independent-reviewer",
+      "compatibility_aliases": [
+        "mlgo-agy-sidecar-pro-reviewer"
+      ],
+      "declared_capabilities": [
+        "reasoning_tool",
+        "structured_result"
+      ],
+      "frontmatter": "name: mlgo-agy-sidecar-pro-reviewer\ndescription: Gemini 3.1 Pro High deep read, acceptance and test-strategy reviewer.\nprovider: antigravity_cli\nrole: reviewer\nmodel: Gemini 3.1 Pro (High)\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - agy\n  - pro\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "Gemini 3.1 Pro (High)",
+      "profile_id": "mlgo-agy-sidecar-pro-reviewer",
+      "provider_id": "agy",
+      "role_id": "reviewer",
+      "store": "sidecar",
+      "transport_id": "cao-sidecar"
+    },
+    "mlgo-agy-sidecar-pro-worker": {
+      "account_profile_id": "agy",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-agy-sidecar-pro-worker"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "structured_result"
+      ],
+      "frontmatter": "name: mlgo-agy-sidecar-pro-worker\ndescription: Gemini 3.1 Pro High context-heavy bounded builder and analyst.\nprovider: antigravity_cli\nrole: developer\nmodel: Gemini 3.1 Pro (High)\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - agy\n  - pro\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "Gemini 3.1 Pro (High)",
+      "profile_id": "mlgo-agy-sidecar-pro-worker",
+      "provider_id": "agy",
+      "role_id": "builder",
+      "store": "sidecar",
+      "transport_id": "cao-sidecar"
+    },
+    "mlgo-agy-sidecar-reviewer": {
+      "account_profile_id": "agy",
+      "body": "independent-reviewer",
+      "compatibility_aliases": [
+        "mlgo-agy-sidecar-reviewer"
+      ],
+      "declared_capabilities": [
+        "reasoning_tool",
+        "structured_result"
+      ],
+      "frontmatter": "name: mlgo-agy-sidecar-reviewer\ndescription: Gemini 3.6 Flash High mechanical and browser/evidence reviewer.\nprovider: antigravity_cli\nrole: reviewer\nmodel: Gemini 3.6 Flash (High)\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - agy\n  - flash\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "Gemini 3.6 Flash (High)",
+      "profile_id": "mlgo-agy-sidecar-reviewer",
+      "provider_id": "agy",
+      "role_id": "reviewer",
+      "store": "sidecar",
+      "transport_id": "cao-sidecar"
+    },
+    "mlgo-agy-sidecar-worker": {
+      "account_profile_id": "agy",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-agy-sidecar-worker"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "structured_result"
+      ],
+      "frontmatter": "name: mlgo-agy-sidecar-worker\ndescription: Gemini 3.6 Flash High ordinary bounded MLGO implementation builder.\nprovider: antigravity_cli\nrole: developer\nmodel: Gemini 3.6 Flash (High)\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - agy\n  - flash\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "Gemini 3.6 Flash (High)",
+      "profile_id": "mlgo-agy-sidecar-worker",
+      "provider_id": "agy",
+      "role_id": "builder",
+      "store": "sidecar",
+      "transport_id": "cao-sidecar"
+    },
+    "mlgo-claude-gateway-architect": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "architecture-adjudicator",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-architect"
+      ],
+      "declared_capabilities": [
+        "persistent_conversation",
+        "reasoning_tool",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-architect\ndescription: Explicitly authorized PAYG Claude Opus high-effort critical reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - architect\n  - claude\n  - opus\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": true,
+      "model": "opus",
+      "profile_id": "mlgo-claude-gateway-architect",
+      "provider_id": "claude_code",
+      "role_id": "reviewer",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-builder": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-builder\ndescription: Explicitly authorized PAYG Claude Sonnet high-effort builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": true,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-gateway-builder",
+      "provider_id": "claude_code",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-opus-builder": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "critical-bounded-builder",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-opus-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-opus-builder\ndescription: Claude Opus high-effort critical bounded implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - critical bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - opus\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": true,
+      "model": "opus",
+      "profile_id": "mlgo-claude-gateway-opus-builder",
+      "provider_id": "claude_code",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-reviewer": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "independent-reviewer",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-reviewer"
+      ],
+      "declared_capabilities": [
+        "persistent_conversation",
+        "reasoning_tool",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-reviewer\ndescription: Explicitly authorized PAYG Claude Sonnet medium-effort reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - claude\n  - sonnet\n  - gateway\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": true,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-gateway-reviewer",
+      "provider_id": "claude_code",
+      "role_id": "reviewer",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-supervisor": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "authoritative-supervisor",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-supervisor"
+      ],
+      "declared_capabilities": [
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-supervisor\ndescription: Explicit-operator-selected Claude gateway authoritative supervisor; Sonnet medium effort; PAYG never auto-selected.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": true,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-gateway-supervisor",
+      "provider_id": "claude_code",
+      "role_id": "supervisor",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-task-lead-opus": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "frontier-task-lead",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-task-lead-opus"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-task-lead-opus\ndescription: Operator-authorized PAYG Claude Opus high-effort Frontier Task Lead for critical work.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: opus\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": true,
+      "model": "opus",
+      "profile_id": "mlgo-claude-gateway-task-lead-opus",
+      "provider_id": "claude_code",
+      "role_id": "tech_lead",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-gateway-task-lead-sonnet": {
+      "account_profile_id": "claude_gateway_payg",
+      "body": "frontier-task-lead",
+      "compatibility_aliases": [
+        "mlgo-claude-gateway-task-lead-sonnet"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-gateway-task-lead-sonnet\ndescription: Operator-authorized PAYG Claude Sonnet high-effort Frontier Task Lead.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-gateway-high\nmodel: sonnet\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": true,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-gateway-task-lead-sonnet",
+      "provider_id": "claude_code",
+      "role_id": "tech_lead",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-architect": {
+      "account_profile_id": "claude_subscription",
+      "body": "architecture-adjudicator",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-architect"
+      ],
+      "declared_capabilities": [
+        "persistent_conversation",
+        "reasoning_tool",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-architect\ndescription: Claude Opus high-effort critical architecture and adjudication reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - architect\n  - claude\n  - opus\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "opus",
+      "profile_id": "mlgo-claude-subscription-architect",
+      "provider_id": "claude_code",
+      "role_id": "reviewer",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-builder": {
+      "account_profile_id": "claude_subscription",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-builder\ndescription: Claude Sonnet high-effort difficult contextual implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-subscription-builder",
+      "provider_id": "claude_code",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-opus-builder": {
+      "account_profile_id": "claude_subscription",
+      "body": "critical-bounded-builder",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-opus-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-opus-builder\ndescription: Claude Opus high-effort critical bounded implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - critical bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - opus\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "opus",
+      "profile_id": "mlgo-claude-subscription-opus-builder",
+      "provider_id": "claude_code",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-reviewer": {
+      "account_profile_id": "claude_subscription",
+      "body": "independent-reviewer",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-reviewer"
+      ],
+      "declared_capabilities": [
+        "persistent_conversation",
+        "reasoning_tool",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-reviewer\ndescription: Claude Sonnet medium-effort independent contextual reviewer.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-subscription-reviewer",
+      "provider_id": "claude_code",
+      "role_id": "reviewer",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-supervisor": {
+      "account_profile_id": "claude_subscription",
+      "body": "authoritative-supervisor",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-supervisor"
+      ],
+      "declared_capabilities": [
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-supervisor\ndescription: MLGO Claude subscription authoritative supervisor; Sonnet, medium effort, semantic-only v2 authority.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - subscription\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-subscription-supervisor",
+      "provider_id": "claude_code",
+      "role_id": "supervisor",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-task-lead-opus": {
+      "account_profile_id": "claude_subscription",
+      "body": "frontier-task-lead",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-task-lead-opus"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-task-lead-opus\ndescription: Claude Opus high-effort Frontier Task Lead for critical ambiguous big tasks.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "opus",
+      "profile_id": "mlgo-claude-subscription-task-lead-opus",
+      "provider_id": "claude_code",
+      "role_id": "tech_lead",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-claude-subscription-task-lead-sonnet": {
+      "account_profile_id": "claude_subscription",
+      "body": "frontier-task-lead",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-task-lead-sonnet"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-task-lead-sonnet\ndescription: Claude Sonnet high-effort Frontier Task Lead for difficult contextual big tasks.\nprovider: claude_code\nrole: reviewer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-subscription-task-lead-sonnet",
+      "provider_id": "claude_code",
+      "role_id": "tech_lead",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-business-2": {
+      "account_profile_id": "codex_business_2",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-codex-business-2"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-business-2\ndescription: Operator-authorized or reserve-gated GPT-5.6 Sol Business 2 builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - business-2\n  - reserve-gated\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-business-2",
+      "provider_id": "codex",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-business-2-supervisor": {
+      "account_profile_id": "codex_business_2",
+      "body": "authoritative-supervisor",
+      "compatibility_aliases": [
+        "mlgo-codex-business-2-supervisor"
+      ],
+      "declared_capabilities": [
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-business-2-supervisor\ndescription: Explicit-operator-only Codex Business 2 authoritative supervisor; never an automatic worker or replacement.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business-2\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-business-2-supervisor",
+      "provider_id": "codex",
+      "role_id": "supervisor",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-business-overflow-builder": {
+      "account_profile_id": "codex_business",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-codex-business-overflow-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-business-overflow-builder\ndescription: Reserve-gated GPT-5.6 Sol emergency builder; never a reviewer.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - business\n  - reserve-gated\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-business-overflow-builder",
+      "provider_id": "codex",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-plus-builder": {
+      "account_profile_id": "codex_plus",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-codex-plus-builder"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "persistent_conversation",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-plus-builder\ndescription: GPT-5.6 Sol high-effort difficult code, debugging and integration builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-plus-builder",
+      "provider_id": "codex",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-plus-reviewer": {
+      "account_profile_id": "codex_plus",
+      "body": "independent-reviewer",
+      "compatibility_aliases": [
+        "mlgo-codex-plus-reviewer"
+      ],
+      "declared_capabilities": [
+        "persistent_conversation",
+        "reasoning_tool",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-plus-reviewer\ndescription: GPT-5.6 Sol high-effort independent code/integration reviewer.\nprovider: codex\nrole: reviewer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - independent acceptance and regression review\n  - structured read-only review result\ntags:\n  - mlgo\n  - reviewer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-plus-reviewer",
+      "provider_id": "codex",
+      "role_id": "reviewer",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-plus-supervisor": {
+      "account_profile_id": "codex_plus",
+      "body": "authoritative-supervisor",
+      "compatibility_aliases": [
+        "mlgo-codex-plus-supervisor"
+      ],
+      "declared_capabilities": [
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-plus-supervisor\ndescription: MLGO Codex Plus authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - plus\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-plus-supervisor",
+      "provider_id": "codex",
+      "role_id": "supervisor",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-codex-plus-task-lead": {
+      "account_profile_id": "codex_plus",
+      "body": "frontier-task-lead",
+      "compatibility_aliases": [
+        "mlgo-codex-plus-task-lead"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-plus-task-lead\ndescription: GPT-5.6 Sol high-effort Frontier Task Lead for code-heavy big tasks.\nprovider: codex\nrole: reviewer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - plan and phase a large bounded MLGO task\n  - assign capability floors with Gemini-first semantic routing\n  - preserve task context through durable checkpoints\ntags:\n  - mlgo\n  - task-lead\n  - frontier\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-agent-routing\n  - cao-worker-protocols\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-plus-task-lead",
+      "provider_id": "codex",
+      "role_id": "tech_lead",
+      "store": "main",
+      "transport_id": "cao-main"
+    },
+    "mlgo-supervisor": {
+      "account_profile_id": "codex_business",
+      "body": "authoritative-supervisor",
+      "compatibility_aliases": [
+        "mlgo-supervisor"
+      ],
+      "declared_capabilities": [
+        "native_resume",
+        "persistent_conversation",
+        "reasoning_authority",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-supervisor\ndescription: MLGO Codex Business authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-supervisor",
+      "provider_id": "codex",
+      "role_id": "supervisor",
+      "store": "main",
+      "transport_id": "cao-main"
+    }
+  },
+  "providers": {
+    "agy": {
+      "description": "AGY/Antigravity CLI lane",
+      "family": "gemini",
+      "native_usage_parser": "agy",
+      "runtime_provider": "antigravity_cli",
+      "usage_mode": "unavailable"
+    },
+    "claude_code": {
+      "description": "Claude Code lane",
+      "family": "claude",
+      "native_usage_parser": "claude",
+      "runtime_provider": "claude_code",
+      "usage_mode": "session_correlated_placeholder"
+    },
+    "codex": {
+      "description": "Codex CLI lane",
+      "family": "codex",
+      "native_usage_parser": "codex",
+      "runtime_provider": "codex",
+      "usage_mode": "session_correlated_placeholder"
+    }
+  },
+  "registry_version": "2026-08-slice1-v1",
+  "roles": {
+    "builder": {
+      "kind": "execution_agent"
+    },
+    "reviewer": {
+      "kind": "reasoning_tool"
+    },
+    "specialist": {
+      "kind": "execution_agent"
+    },
+    "supervisor": {
+      "kind": "reasoning_authority"
+    },
+    "tech_lead": {
+      "kind": "execution_agent_reasoning_authority"
+    },
+    "verifier": {
+      "kind": "reasoning_tool"
+    }
+  },
+  "routes": {
+    "agy_flash_high": {
+      "account_pool": "agy",
+      "billing_mode": "bundled",
+      "concurrency_group": "agy_write",
+      "execution_profile_id": "mlgo-agy-sidecar-worker",
+      "family": "gemini",
+      "gateway": false,
+      "intended_for": [
+        "ordinary_bounded_implementation",
+        "established_pattern",
+        "repetitive_expansion",
+        "straightforward_fix",
+        "test_mechanics",
+        "browser_execution",
+        "evidence_generation"
+      ],
+      "model": "Gemini 3.6 Flash (High)",
+      "profile": "mlgo-agy-sidecar-worker",
+      "provider": "agy",
+      "provider_api": "sidecar",
+      "provider_id": "agy",
+      "reviewer_profile": "mlgo-agy-sidecar-reviewer",
+      "route_id": "agy_flash_high",
+      "tier": 1,
+      "transport_id": "cao-sidecar",
+      "write_capable": true
+    },
+    "agy_pro_high": {
+      "account_pool": "agy",
+      "billing_mode": "bundled",
+      "concurrency_group": "agy_write",
+      "execution_profile_id": "mlgo-agy-sidecar-pro-worker",
+      "family": "gemini",
+      "gateway": false,
+      "intended_for": [
+        "deep_repository_read",
+        "context_heavy_bounded_analysis",
+        "review",
+        "acceptance_audit",
+        "test_strategy",
+        "bounded_ambiguous_implementation"
+      ],
+      "model": "Gemini 3.1 Pro (High)",
+      "profile": "mlgo-agy-sidecar-pro-worker",
+      "provider": "agy",
+      "provider_api": "sidecar",
+      "provider_id": "agy",
+      "reviewer_profile": "mlgo-agy-sidecar-pro-reviewer",
+      "route_id": "agy_pro_high",
+      "tier": 2,
+      "transport_id": "cao-sidecar",
+      "write_capable": true
+    },
+    "claude_gateway_opus": {
+      "account_pool": "claude_gateway_payg",
+      "billing_mode": "gateway",
+      "display_model": "claude-opus-5",
+      "execution_profile_id": "mlgo-claude-gateway-opus-builder",
+      "family": "claude",
+      "gateway": true,
+      "intended_for": [
+        "authorized_gateway_critical_work"
+      ],
+      "model": "opus",
+      "profile": "mlgo-claude-gateway-opus-builder",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "provider_id": "claude_code",
+      "reviewer_profile": "mlgo-claude-gateway-architect",
+      "route_id": "claude_gateway_opus",
+      "tier": 5,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "claude_gateway_sonnet": {
+      "account_pool": "claude_gateway_payg",
+      "billing_mode": "gateway",
+      "display_model": "claude-sonnet-5",
+      "execution_profile_id": "mlgo-claude-gateway-builder",
+      "family": "claude",
+      "gateway": true,
+      "intended_for": [
+        "authorized_gateway_frontier_execution"
+      ],
+      "model": "sonnet",
+      "profile": "mlgo-claude-gateway-builder",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "provider_id": "claude_code",
+      "reviewer_profile": "mlgo-claude-gateway-reviewer",
+      "route_id": "claude_gateway_sonnet",
+      "tier": 3,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "claude_subscription_opus": {
+      "account_pool": "claude_subscription",
+      "billing_mode": "subscription",
+      "display_model": "claude-opus-5",
+      "execution_profile_id": "mlgo-claude-subscription-opus-builder",
+      "family": "claude",
+      "gateway": false,
+      "intended_for": [
+        "high_importance_high_ambiguity_architecture",
+        "difficult_to_reverse_decision",
+        "highest_blast_radius_task",
+        "critical_adjudication",
+        "critical_task_lead"
+      ],
+      "model": "opus",
+      "profile": "mlgo-claude-subscription-opus-builder",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "provider_id": "claude_code",
+      "reviewer_profile": "mlgo-claude-subscription-architect",
+      "route_id": "claude_subscription_opus",
+      "tier": 5,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "claude_subscription_sonnet": {
+      "account_pool": "claude_subscription",
+      "billing_mode": "subscription",
+      "display_model": "claude-sonnet-5",
+      "execution_profile_id": "mlgo-claude-subscription-builder",
+      "family": "claude",
+      "gateway": false,
+      "intended_for": [
+        "difficult_contextual_implementation",
+        "stable_complex_design",
+        "ux_judgement",
+        "cross_file_feature",
+        "medium_integration"
+      ],
+      "model": "sonnet",
+      "profile": "mlgo-claude-subscription-builder",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "provider_id": "claude_code",
+      "reviewer_profile": "mlgo-claude-subscription-reviewer",
+      "route_id": "claude_subscription_sonnet",
+      "tier": 3,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "codex_business_2_sol": {
+      "account_pool": "codex_business_2",
+      "billing_mode": "subscription",
+      "execution_profile_id": "mlgo-codex-business-2",
+      "family": "codex",
+      "gateway": false,
+      "intended_for": [
+        "operator_authorized_frontier_execution"
+      ],
+      "model": "gpt-5.6-sol",
+      "profile": "mlgo-codex-business-2",
+      "provider": "codex",
+      "provider_api": "main",
+      "provider_id": "codex",
+      "reserve_gated": true,
+      "reviewer_profile": null,
+      "route_id": "codex_business_2_sol",
+      "tier": 4,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "codex_business_sol": {
+      "account_pool": "codex_business",
+      "billing_mode": "subscription",
+      "execution_profile_id": "mlgo-codex-business-overflow-builder",
+      "family": "codex",
+      "gateway": false,
+      "intended_for": [
+        "emergency_frontier_execution"
+      ],
+      "model": "gpt-5.6-sol",
+      "profile": "mlgo-codex-business-overflow-builder",
+      "provider": "codex",
+      "provider_api": "main",
+      "provider_id": "codex",
+      "reserve_gated": true,
+      "reviewer_profile": null,
+      "route_id": "codex_business_sol",
+      "tier": 4,
+      "transport_id": "cao-main",
+      "write_capable": true
+    },
+    "codex_plus_sol": {
+      "account_pool": "codex_plus",
+      "billing_mode": "subscription",
+      "execution_profile_id": "mlgo-codex-plus-builder",
+      "family": "codex",
+      "gateway": false,
+      "intended_for": [
+        "very_difficult_code_implementation",
+        "difficult_debugging",
+        "tool_heavy_engineering",
+        "recovery",
+        "cross_package_change",
+        "difficult_integration"
+      ],
+      "model": "gpt-5.6-sol",
+      "profile": "mlgo-codex-plus-builder",
+      "provider": "codex",
+      "provider_api": "main",
+      "provider_id": "codex",
+      "reviewer_profile": "mlgo-codex-plus-reviewer",
+      "route_id": "codex_plus_sol",
+      "tier": 4,
+      "transport_id": "cao-main",
+      "write_capable": true
+    }
+  },
+  "schema_version": "1.0",
+  "supervisor_profiles": {
+    "mlgo-claude-gateway-supervisor": {
+      "account_pool": "claude_gateway_payg",
+      "default_reasoning_effort": "medium",
+      "provider": "claude_code"
+    },
+    "mlgo-claude-subscription-supervisor": {
+      "account_pool": "claude_subscription",
+      "default_reasoning_effort": "medium",
+      "provider": "claude_code"
+    },
+    "mlgo-codex-business-2-supervisor": {
+      "account_pool": "codex_business_2",
+      "default_reasoning_effort": "medium",
+      "provider": "codex"
+    },
+    "mlgo-codex-plus-supervisor": {
+      "account_pool": "codex_plus",
+      "default_reasoning_effort": "medium",
+      "provider": "codex"
+    },
+    "mlgo-supervisor": {
+      "account_pool": "codex_business",
+      "default_reasoning_effort": "medium",
+      "provider": "codex"
+    }
+  },
+  "transports": {
+    "cao-main": {
+      "adapter_id": "cao-run-step",
+      "endpoint_policy_key": "main_cao_api",
+      "include_model": true,
+      "legacy_provider_api": "main",
+      "provider_side_idempotency": false,
+      "requires_herdr_preflight": true,
+      "transport_kind": "cli_orchestrator"
+    },
+    "cao-sidecar": {
+      "adapter_id": "cao-run-step",
+      "endpoint_policy_key": "agy_sidecar_api",
+      "include_model": false,
+      "legacy_provider_api": "sidecar",
+      "provider_side_idempotency": false,
+      "requires_herdr_preflight": false,
+      "transport_kind": "sidecar_http"
+    }
+  }
+}

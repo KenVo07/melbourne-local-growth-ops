@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/result-packet.schema.json",
+  "title": "MLGO CAO v2 Result Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "big_task_id",
+    "phase_id",
+    "status",
+    "changed_files",
+    "verification",
+    "assumptions_confirmed",
+    "assumptions_invalidated",
+    "risks",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "big_task_id": {
+      "type": "string"
+    },
+    "phase_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "READY_FOR_COMMIT",
+        "NO_CHANGE",
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "PLAN_CONFLICT",
+        "CAPABILITY_ESCALATION_REQUIRED",
+        "ENVIRONMENT_BLOCKED",
+        "MISSING_REQUIRED_CONTEXT"
+      ]
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions_confirmed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions_invalidated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "commit_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reviewed_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provider_session_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cao_terminal_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

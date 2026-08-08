@@ -1,0 +1,19 @@
+{
+  "schema_version": "2.0",
+  "run_id": "example-run-001",
+  "big_task_id": "TASK-A",
+  "task_lead_id": "TASK-A-LEAD",
+  "generation": 1,
+  "completed_phase": "TASK-A-P01",
+  "accepted_result_packets": [],
+  "verified_architecture": [],
+  "frozen_interfaces": [],
+  "assumptions_confirmed": [],
+  "assumptions_invalidated": [],
+  "unresolved_risks": [],
+  "remaining_phase_map": ["TASK-A-P02", "TASK-A-P03"],
+  "next_phase_recommendation": {
+    "preferred_route": "agy_flash_high",
+    "minimum_tier": 1
+  }
+}

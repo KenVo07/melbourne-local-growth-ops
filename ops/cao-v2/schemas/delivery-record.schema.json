@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/delivery-record.schema.json",
+  "title": "Truthful Model Delivery Record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "delivery_id", "run_id", "recipient_role", "terminal_id", "profile", "generation", "provider", "payload_sha256", "framed_message_sha256", "nonce", "expected_ack", "status", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["QUEUED", "TERMINAL_ACCEPTED", "MODEL_ACKNOWLEDGED", "MODEL_RESPONSE_OBSERVED", "FAILED", "UNKNOWN"]},
+    "observation_trust": {"type": ["string", "null"], "enum": ["HOST_PARSED_PROVIDER_ARTIFACT", "UNTRUSTED_MANUAL", null]},
+    "artifact_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "artifact_record_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "ack_observation": {"type": ["object", "null"]},
+    "response_observation": {"type": ["object", "null"]}
+  }
+}

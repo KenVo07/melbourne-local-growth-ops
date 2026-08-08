@@ -1,0 +1,57 @@
+{
+  "$id": "mlgo://cao-v2/command.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "model": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "phase_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "status": {
+      "enum": [
+        "PREPARED",
+        "DISPATCHING",
+        "NOT_SENT_CONFIRMED",
+        "UNKNOWN_AFTER_SUBMIT",
+        "ACCEPTED",
+        "OBSERVED_IN_PROGRESS",
+        "COMPLETED",
+        "RECONCILIATION_REQUIRED",
+        "BLOCKED_MANUAL",
+        "FAILED",
+        "CANCELLED"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "command_id",
+    "run_id",
+    "task_id",
+    "phase_id",
+    "attempt_id",
+    "command_type",
+    "idempotency_key",
+    "request_fingerprint",
+    "expected_pre_state",
+    "registry_digest",
+    "policy_digest",
+    "runtime_version",
+    "build_manifest_sha256",
+    "provider_profile_id",
+    "provider_id",
+    "account_profile_id",
+    "transport_id",
+    "model",
+    "executor_lease"
+  ],
+  "title": "Durable Command",
+  "type": "object"
+}

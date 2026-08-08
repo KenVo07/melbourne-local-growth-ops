@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/task-lead-checkpoint.schema.json",
+  "title": "MLGO CAO v2 Task Lead Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "big_task_id", "task_lead_id", "generation", "accepted_result_packets", "verified_architecture", "frozen_interfaces", "assumptions_confirmed", "assumptions_invalidated", "unresolved_risks", "remaining_phase_map", "next_phase_recommendation"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "run_id": {"type": "string"},
+    "big_task_id": {"type": "string"},
+    "task_lead_id": {"type": "string"},
+    "generation": {"type": "integer", "minimum": 1},
+    "completed_phase": {"type": ["string", "null"]},
+    "accepted_result_packets": {"type": "array", "items": {"type": "object", "required": ["path", "sha256"], "properties": {"path": {"type": "string"}, "sha256": {"type": "string"}}}},
+    "verified_architecture": {"type": "array", "items": {"type": "string"}},
+    "frozen_interfaces": {"type": "array", "items": {"type": "string"}},
+    "assumptions_confirmed": {"type": "array", "items": {"type": "string"}},
+    "assumptions_invalidated": {"type": "array", "items": {"type": "string"}},
+    "unresolved_risks": {"type": "array", "items": {"type": "string"}},
+    "remaining_phase_map": {"type": "array", "items": {"type": "string"}},
+    "next_phase_recommendation": {"type": "object"},
+    "updated_at": {"type": ["string", "null"]}
+  }
+}

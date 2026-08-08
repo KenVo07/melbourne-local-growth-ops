@@ -1,0 +1,23 @@
+MLGO_DELIVERY_ACK:dlv-c7f14bd54abeab4c3ecbf963:b4DZnYhE_KC5TnToo6GCfYPgLZsh3RmH
+
+MLGO_RESULT_PACKET
+{
+  "schema_version": "2.0",
+  "run_id": "runtime-profile-canary-20260807t060849z",
+  "big_task_id": "PROFILE-CANARY",
+  "phase_id": "PROFILE-CANARY-P1",
+  "status": "PASS",
+  "changed_files": [],
+  "verification": [],
+  "assumptions_confirmed": [],
+  "assumptions_invalidated": [],
+  "risks": [],
+  "next_action": "",
+  "commit_sha": null,
+  "reviewed_sha": null,
+  "evidence": [],
+  "provider_session_id": null,
+  "cao_terminal_id": null,
+  "model": "claude-sonnet-5"
+}
+END_MLGO_RESULT_PACKET

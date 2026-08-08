@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/host-routing-decision.schema.json",
+  "title": "MLGO CAO v2 Host Routing Decision",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "decision",
+    "run_id",
+    "big_task_id",
+    "phase_id",
+    "proposal_preferred_route",
+    "rejected_routes",
+    "capacity_snapshot_id",
+    "policy_sha256",
+    "decided_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "decision": {
+      "enum": [
+        "ROUTE_SELECTED",
+        "BLOCKED_BY_PROVIDER_CAPACITY_OR_POLICY"
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "big_task_id": {
+      "type": "string"
+    },
+    "phase_id": {
+      "type": "string"
+    },
+    "proposal_preferred_route": {
+      "type": "string"
+    },
+    "selected_route": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_profile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_provider": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_account_pool": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "preferred_route_honored": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "rejected_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "route_id",
+          "reason"
+        ]
+      }
+    },
+    "capacity_snapshot_id": {
+      "type": "string"
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "decided_at": {
+      "type": "string"
+    },
+    "selected_reviewer_profile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_execution_role": {
+      "enum": [
+        "builder",
+        "reviewer"
+      ]
+    },
+    "selected_provider_api": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_family": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selected_tier": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "selected_billing_mode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

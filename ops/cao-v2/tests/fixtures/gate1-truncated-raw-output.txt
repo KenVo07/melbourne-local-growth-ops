@@ -1,0 +1,12 @@
+File created as instructed.
+
+MLGO_RESULT_PACKET
+{
+"schema_version": "2.0",
+"run_id":
+"runtime-write-canary-20260806t124519z",
+"big_task_id": "WRITE-CANARY",
+"phase_id": "WRITE-CANARY-P01",
+"status": "READY_FOR_COMMIT",
+"changed_files": ["canary.txt"],
+"verification": ["Wrote canary.txt with

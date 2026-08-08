@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/session-continuity-record.schema.json",
+  "title": "Supervisor Session Continuity Registry",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "run_id", "role", "profile", "generation", "terminal_id", "provider", "process_identity", "launch_identity", "continuity_status", "cache_continuity_claim", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "role": {"const": "authoritative_supervisor"},
+    "cache_continuity_claim": {"const": "NOT_GUARANTEED"}
+  }
+}
