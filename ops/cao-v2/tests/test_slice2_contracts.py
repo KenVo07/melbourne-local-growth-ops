@@ -61,7 +61,7 @@ class Slice2ContractTests(unittest.TestCase):
             task_id="task-schema", provider_profile_id="fake-builder", account_profile_id="fake-account",
             provider_id="fake", model="fake-model", reasoning_effort="medium", transport_id="fake-transport",
             registry_digest=SHA_REGISTRY, policy_digest=SHA_POLICY, contract_bundle_digest=SHA_SCHEMAS,
-            runtime_version="0.4.0-slice2-vnext", build_manifest_sha256=SHA_BUILD, generation=1,
+            runtime_version="0.5.0-slice3-5-vnext", build_manifest_sha256=SHA_BUILD, generation=1,
         )
         self.validate("conversation-handle.schema.json", handle)
 
@@ -155,7 +155,7 @@ class Slice2ContractTests(unittest.TestCase):
         files = [{"name": "command.schema.json", "sha256": SHA_SCHEMAS},
                  {"name": "conversation-handle.schema.json", "sha256": SHA_SCHEMAS}]
         partial = create_run_contract_binding(
-            runtime_version="0.4.0-slice2-vnext", build_id="build-partial",
+            runtime_version="0.5.0-slice3-5-vnext", build_id="build-partial",
             build_manifest_sha256=SHA_BUILD, registry_digest=SHA_REGISTRY, policy_digest=SHA_POLICY,
             schema_bundle_record={"files": files, "digest": sha256_json(files)},
             enabled_writers=["run_state", "conversation_handles"], minimum_reader_version="0.4.0",
@@ -192,7 +192,7 @@ class Slice2ContractTests(unittest.TestCase):
         projection = project_legacy_session_record(
             copy.deepcopy(legacy), handle_id="ch-legacy", policy_digest=SHA_POLICY,
             registry_digest=SHA_REGISTRY, contract_bundle_digest=SHA_SCHEMAS,
-            runtime_version="0.4.0-slice2-vnext", build_manifest_sha256=SHA_BUILD,
+            runtime_version="0.5.0-slice3-5-vnext", build_manifest_sha256=SHA_BUILD,
             account_profile_id="codex-business", transport_id="cao-main", model="gpt-5.6-sol",
         )
         self.assertFalse(projection["source_record_rewritten"])
@@ -210,9 +210,9 @@ class Slice2ContractTests(unittest.TestCase):
     def test_runtime_version_is_the_slice2_version(self):
         from mlgo_cao_v2 import __version__
 
-        self.assertEqual(__version__, "0.4.0-slice2-vnext")
+        self.assertEqual(__version__, "0.5.0-slice3-5-vnext")
         verify = (ROOT / "verify.sh").read_text(encoding="utf-8")
-        self.assertIn('expected = "0.4.0-slice2-vnext"', verify)
+        self.assertIn('expected = "0.5.0-slice3-5-vnext"', verify)
 
 
 if __name__ == "__main__":
@@ -230,7 +230,7 @@ class Slice2IndependentReviewFindingTests(unittest.TestCase):
             task_id="task-r1", provider_profile_id="fake-builder", account_profile_id="fake-account",
             provider_id="fake", model="fake-model", reasoning_effort="medium", transport_id="fake-transport",
             registry_digest=SHA_REGISTRY, policy_digest=SHA_POLICY, contract_bundle_digest=SHA_SCHEMAS,
-            runtime_version="0.4.0-slice2-vnext", build_manifest_sha256=SHA_BUILD, generation=1,
+            runtime_version="0.5.0-slice3-5-vnext", build_manifest_sha256=SHA_BUILD, generation=1,
         )
         with self.assertRaises(ContractError) as ctx:
             assert_handle_authorizes_send(handle, expected={"run_id": "run-r1"})

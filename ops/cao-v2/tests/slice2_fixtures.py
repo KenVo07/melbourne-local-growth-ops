@@ -29,7 +29,7 @@ POLICY = ROOT / "config" / "cao-policy.json"
 REGISTRY = ROOT / "registry" / "provider-registry.json"
 SCHEMAS = ROOT / "schemas"
 
-RUNTIME_VERSION = "0.4.0-slice2-vnext"
+RUNTIME_VERSION = "0.5.0-slice3-5-vnext"
 SHA_REGISTRY = "a" * 64
 SHA_POLICY = "b" * 64
 SHA_SCHEMAS = "c" * 64

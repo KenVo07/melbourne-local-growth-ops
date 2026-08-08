@@ -2,11 +2,11 @@
   "authority_retained_by": null,
   "authority_role": "authoritative_supervisor",
   "big_task_id": "bt-example",
-  "binding_digest": "f99c2050c6615e58e3ea19b50c06ae2c806aa7508567e6932340f3a09ab7a703",
+  "binding_digest": "8e80e0d4ccdfd60aebd1247a9c764b1d8e4593c7ef53700ffd13a6bcdd6a4d2f",
   "charter_revision": "charter-2",
-  "checkpoint_digest": "83b70b9c692667f90c3eea07a34e058ca806d55827d64b35fe434cfee7cdeaca",
+  "checkpoint_digest": "5288eab83134dbcd3b0657ba9daeffea87955d2c283d3f1ec423cb0ead9f06fc",
   "context_manifest_digest": "d79ce80badfc22014b4c3cc42c20d13fc7d2ac2a97f5da6d6b8b3b78c7cc5681",
-  "conversation_handle_digest": "3a81515c5f2c6ae7f303b38926f9ec33737b5e5e9a773360e444d37338824d6e",
+  "conversation_handle_digest": "623e39b857cc555b858b81d07577801482ce836a935c3135809e95209e3373d5",
   "created_at": "2026-08-08T00:00:00Z",
   "delegated_scope": [
     "phase_sequencing",
@@ -23,7 +23,7 @@
   "execution_state_digest": "1219496b6fe0ac2380a53d010dbf7276e5516cf67dcbea4d3ae25af5866e9e5e",
   "mode": "ADJUDICATE",
   "question": "Is the bounded phase resequencing acceptable inside the delegated scope?",
-  "request_digest": "ae2ef9785151c3e33b614d05af27e35b188771f12dc78ff4ec3e8d6b0b100060",
+  "request_digest": "d25f826bc2cafb24e479d4c78c76b7716a0c7e0daee1d411ced070557136852b",
   "request_id": "areq-example-1",
   "requested_scope": [
     "phase_sequencing"

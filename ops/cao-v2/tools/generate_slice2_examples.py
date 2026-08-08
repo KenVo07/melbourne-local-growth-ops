@@ -42,7 +42,7 @@ def build() -> dict[str, dict]:
         account_profile_id="claude-subscription", provider_id="claude_code",
         model="sonnet", reasoning_effort="medium", transport_id="cao-main",
         registry_digest=SHA_A, policy_digest=SHA_B, contract_bundle_digest=SHA_C,
-        runtime_version="0.4.0-slice2-vnext", build_manifest_sha256=SHA_D, generation=1,
+        runtime_version="0.5.0-slice3-5-vnext", build_manifest_sha256=SHA_D, generation=1,
     )
     out["conversation-handle"] = _freeze(handle, digest_field="handle_digest", time_fields=("created_at",))
 

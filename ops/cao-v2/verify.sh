@@ -20,7 +20,7 @@ export MLGO_CAO_V2_REGISTRY="$registry"
 
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$lib" python3 - <<'PYVER'
 from mlgo_cao_v2 import __version__
-expected = "0.4.0-slice2-vnext"
+expected = "0.5.0-slice3-5-vnext"
 assert __version__ == expected, f"runtime version mismatch: {__version__} != {expected}"
 print(f"runtime_version={__version__}")
 PYVER
