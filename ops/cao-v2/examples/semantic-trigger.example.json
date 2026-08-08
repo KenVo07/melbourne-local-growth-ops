@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-08T00:00:00Z",
+  "classified_by": "host_deterministic_classifier",
+  "decision_scope": "milestone",
+  "dedupe_key": "80ba7e20dc0005f886c9725e18be0a45b9a77a732c984715889411ee40954c5a",
+  "enforcement_mode": "shadow_only",
+  "evidence_ids": [
+    "ev-arch-1"
+  ],
+  "initiator": "host",
+  "run_id": "run-example",
+  "schema_version": "1.0",
+  "semantic_authority_required": true,
+  "subject_id": "milestone-1",
+  "task_id": "task-example",
+  "trigger_class": "PROJECT_OR_MILESTONE_ARCHITECTURE",
+  "trigger_digest": "08ba77545b07775e6d98ebd328226042ff34471674e45e98351ee3261b194b21"
+}

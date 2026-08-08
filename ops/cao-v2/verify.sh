@@ -20,7 +20,7 @@ export MLGO_CAO_V2_REGISTRY="$registry"
 
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$lib" python3 - <<'PYVER'
 from mlgo_cao_v2 import __version__
-expected = "0.3.0-slice1-vnext"
+expected = "0.4.0-slice2-vnext"
 assert __version__ == expected, f"runtime version mismatch: {__version__} != {expected}"
 print(f"runtime_version={__version__}")
 PYVER
@@ -71,6 +71,18 @@ PY
 # The authoritative supervisor must remain an explicit operator choice.
 grep -q '^profile=""$' "$src/legacy-replacements/mlgo-supervise"
 ! grep -q '^profile="mlgo-supervisor"$' "$src/legacy-replacements/mlgo-supervise"
+
+# Slice 2 core modules must stay provider-neutral: continuity, authority,
+# episode and envelope semantics may never branch on a concrete provider,
+# vendor or web-adapter name.
+for f in authority.py checkpoints.py context_envelope.py decisions.py episodes.py; do
+ if grep -Eqi '\b(chatgpt|openai|anthropic|claude_code|codex|gemini|kimi|deepseek|agy_sidecar|web_bridge|browser_bridge)\b' "$src/lib/mlgo_cao_v2/$f"; then
+  echo "provider-specific identifier leaked into Slice 2 core module: $f" >&2; exit 1
+ fi
+done
+
+# Slice 2 schema examples are generated from the real constructors.
+if [[ "$mode" == source ]]; then PYTHONDONTWRITEBYTECODE=1 python3 "$src/tools/generate_slice2_examples.py" --check; fi
 
 tmp_pycache=$(mktemp -d); trap 'rm -rf "$tmp_pycache"' EXIT
 PYTHONPYCACHEPREFIX="$tmp_pycache" PYTHONPATH="$lib" python3 -m compileall -q "$lib/mlgo_cao_v2"

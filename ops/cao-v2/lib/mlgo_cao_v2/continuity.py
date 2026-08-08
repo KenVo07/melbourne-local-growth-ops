@@ -260,3 +260,264 @@ def begin_checkpoint_fallback(
         "checkpoint_path": str(path), "cache_continuity_claim": "NOT_GUARANTEED",
         "authorized_at": iso_now(),
     }
+
+
+# --------------------------------------------------------------------------
+# Slice 2: logical replay is the correctness path
+# --------------------------------------------------------------------------
+
+#: Command states whose provider work is finished.  Recovery never repeats these.
+COMPLETED_COMMAND_STATES = {"COMPLETED", "CANCELLED", "FAILED"}
+#: Command states that confirm nothing crossed the transport boundary.
+NOT_SENT_COMMAND_STATES = {"NOT_SENT_CONFIRMED"}
+
+
+def durable_cursors(*, store: RunStore, command_ledger: Any = None, operation_ledger: Any = None) -> dict[str, Any]:
+    """Report the cursors that are actually available for replay right now."""
+
+    state = store.load()
+    def _cursor(root: Path | None) -> dict[str, Any]:
+        if root is None or not root.exists():
+            return {"count": 0, "last_id": None, "available": False}
+        ids = sorted(path.stem for path in root.glob("*.json"))
+        return {"count": len(ids), "last_id": ids[-1] if ids else None, "available": True}
+
+    return {
+        "state_version": int(state.get("state_version", 0)),
+        "command_cursor": _cursor(getattr(command_ledger, "root", None)),
+        "operation_cursor": _cursor(getattr(operation_ledger, "root", None)),
+        "event_cursor": {"count": 0, "last_id": None, "available": False},
+    }
+
+
+def logical_replay_plan(*, store: RunStore, command_ledger: Any, operation_ledger: Any = None) -> dict[str, Any]:
+    """Classify every durable Command/Operation fact for a recovering controller.
+
+    The plan is derived only from durable authoritative facts.  Completed
+    provider work is never scheduled for repetition; incomplete work is
+    scheduled for reconciliation, which observes external truth rather than
+    resubmitting.
+    """
+
+    state = store.load()
+    commands: list[dict[str, Any]] = []
+    root = getattr(command_ledger, "root", None)
+    if root is not None and Path(root).exists():
+        for path in sorted(Path(root).glob("*.json")):
+            commands.append(load_json(path))
+
+    completed: list[str] = []
+    reconcile: list[str] = []
+    resumable: list[str] = []
+    blocked: list[str] = []
+    for record in commands:
+        command_id = str(record.get("command_id"))
+        status = str(record.get("status"))
+        if status in COMPLETED_COMMAND_STATES:
+            completed.append(command_id)
+        elif status in NOT_SENT_COMMAND_STATES:
+            resumable.append(command_id)
+        elif status == "BLOCKED_MANUAL":
+            blocked.append(command_id)
+        else:
+            reconcile.append(command_id)
+
+    operations: list[dict[str, Any]] = []
+    op_root = getattr(operation_ledger, "root", None)
+    if op_root is not None and Path(op_root).exists():
+        for path in sorted(Path(op_root).glob("*.json")):
+            operations.append(load_json(path))
+    verified_ops = [str(o.get("operation_id")) for o in operations if o.get("status") == "VERIFIED"]
+    unresolved_ops = [
+        str(o.get("operation_id"))
+        for o in operations
+        if o.get("status") in {"PREPARED", "APPLYING", "APPLIED", "UNKNOWN_AFTER_APPLY"}
+    ]
+
+    return {
+        "schema_version": "1.0",
+        "run_id": store.run_id,
+        "state_version": int(state.get("state_version", 0)),
+        "authoritative_source": "durable_state_journal_plus_command_and_operation_facts",
+        "completed_command_ids": sorted(completed),
+        "reconcile_command_ids": sorted(reconcile),
+        "resubmittable_command_ids": sorted(resumable),
+        "blocked_command_ids": sorted(blocked),
+        "verified_operation_ids": sorted(verified_ops),
+        "unresolved_operation_ids": sorted(unresolved_ops),
+        "replay_command_ids": [],
+        "completed_provider_work_replay_forbidden": True,
+        "native_resume_required": False,
+        "cursors": durable_cursors(store=store, command_ledger=command_ledger, operation_ledger=operation_ledger),
+        "planned_at": iso_now(),
+    }
+
+
+def reconcile_logical_state(
+    *,
+    store: RunStore,
+    coordinator: Any,
+    command_ledger: Any,
+    adapter: Any,
+    capabilities: dict[str, Any] | None = None,
+    operation_ledger: Any = None,
+    executor_lease: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Drive incomplete Commands to a durable outcome without repeating work.
+
+    Only observation/reconciliation is performed.  This function never submits
+    a Command that already crossed the transport boundary, and never re-runs a
+    Command whose provider work is durably complete.
+    """
+
+    plan = logical_replay_plan(store=store, command_ledger=command_ledger, operation_ledger=operation_ledger)
+    outcomes: dict[str, str] = {}
+    for command_id in plan["reconcile_command_ids"]:
+        if executor_lease is not None:
+            record = command_ledger.load(command_id)
+            active = (record or {}).get("active_executor_lease") or {}
+            if any(active.get(field) != executor_lease.get(field) for field in ("owner_id", "epoch", "token")):
+                coordinator.claim_reconciliation(command_id, executor_lease=executor_lease)
+        outcome = coordinator.reconcile(command_id, adapter=adapter, capabilities=capabilities or {})
+        outcomes[command_id] = str(outcome.get("status"))
+    return {
+        **plan,
+        "reconciled": outcomes,
+        "resubmitted_command_ids": [],
+        "completed_work_repeated": 0,
+        "reconciled_at": iso_now(),
+    }
+
+
+def build_successor_after_loss(
+    *,
+    predecessor_handle: dict[str, Any],
+    handle_id: str,
+    policy: dict[str, Any],
+    native_session_evidence: dict[str, Any] | None = None,
+    native_capability: dict[str, Any] | None = None,
+    reason: str = "process or host loss",
+) -> dict[str, Any]:
+    """Select the truthful successor conversation for a recovering role.
+
+    Native provider resume is taken only when an effective, qualified capability
+    *and* an exact provider conversation handshake are both present.  Otherwise
+    the successor is a new generation that makes no session-continuity claim at
+    all, and the checkpoint fallback path carries correctness.
+    """
+
+    from .checkpoints import (  # local import keeps module import order simple
+        CLAIM_NATIVE_SESSION_RESUME,
+        CLAIM_NEW_GENERATION,
+        successor_handle,
+    )
+
+    capability = native_capability or {}
+    provider = predecessor_handle["provider_id"]
+    policy_capability = provider_capability(policy, provider, PATH_NATIVE)
+    native_effective = bool(capability.get("enabled")) and bool(policy_capability["enabled"])
+
+    handshake_exact = False
+    handshake_reason = "no provider conversation handshake was observed"
+    if native_session_evidence:
+        expected = {
+            field: predecessor_handle.get(field)
+            for field in ("provider_id", "provider_profile_id", "account_profile_id", "model", "transport_id",
+                          "provider_conversation_id", "provider_session_id")
+        }
+        mismatches = [
+            field
+            for field, want in expected.items()
+            if want is not None and native_session_evidence.get(field) != want
+        ]
+        handshake_exact = not mismatches
+        handshake_reason = "exact handshake" if handshake_exact else f"handshake mismatch: {sorted(mismatches)}"
+
+    if native_effective and handshake_exact:
+        record = successor_handle(
+            predecessor_handle,
+            handle_id=handle_id,
+            reason=reason,
+            session_continuity_claim=CLAIM_NATIVE_SESSION_RESUME,
+            provider_conversation_id=predecessor_handle.get("provider_conversation_id"),
+            provider_session_id=predecessor_handle.get("provider_session_id"),
+            terminal_id=native_session_evidence.get("terminal_id"),
+            host_observation=dict(native_session_evidence),
+            resume_qualification=capability,
+        )
+        selected_path = PATH_NATIVE
+    else:
+        record = successor_handle(
+            predecessor_handle,
+            handle_id=handle_id,
+            reason=reason,
+            session_continuity_claim=CLAIM_NEW_GENERATION,
+        )
+        selected_path = PATH_CHECKPOINT
+
+    return {
+        "selected_path": selected_path,
+        "handle": record,
+        "native_resume_capability_effective": native_effective,
+        "native_handshake_exact": handshake_exact,
+        "native_handshake_reason": handshake_reason,
+        "session_continuity_claim": record["session_continuity_claim"],
+        "provider_resubmission_required": False,
+        "cache_continuity_claim": "NOT_GUARANTEED",
+        "selected_at": iso_now(),
+    }
+
+
+def project_legacy_session_record(record: dict[str, Any], *, handle_id: str, policy_digest: str,
+                                  registry_digest: str, contract_bundle_digest: str,
+                                  runtime_version: str, build_manifest_sha256: str,
+                                  account_profile_id: str, transport_id: str, model: str,
+                                  reasoning_effort: str = "medium",
+                                  work_package_id: str = "legacy", task_id: str = "legacy") -> dict[str, Any]:
+    """Read a historical supervisor continuity record as a ConversationHandle view.
+
+    The stored record is left byte-for-byte untouched.  The projection makes no
+    continuity claim the legacy record did not already prove, and it never
+    claims a resume capability.
+    """
+
+    from .checkpoints import CLAIM_LIVE_PROCESS_REATTACH, CLAIM_NEW_GENERATION, create_conversation_handle
+
+    if not isinstance(record, dict) or record.get("schema_version") != "1.0":
+        raise ContractError("unsupported legacy supervisor continuity record schema")
+    status = str(record.get("continuity_status") or "")
+    claim = CLAIM_LIVE_PROCESS_REATTACH if status == "LIVE_PROCESS_REATTACH_VERIFIED" else CLAIM_NEW_GENERATION
+    handle = create_conversation_handle(
+        handle_id=handle_id,
+        run_id=str(record["run_id"]),
+        role_id=str(record.get("role") or "authoritative_supervisor"),
+        work_package_id=work_package_id,
+        task_id=task_id,
+        provider_profile_id=str(record["profile"]),
+        account_profile_id=account_profile_id,
+        provider_id=str(record["provider"]),
+        model=model,
+        reasoning_effort=reasoning_effort,
+        transport_id=transport_id,
+        registry_digest=registry_digest,
+        policy_digest=policy_digest,
+        contract_bundle_digest=contract_bundle_digest,
+        runtime_version=runtime_version,
+        build_manifest_sha256=build_manifest_sha256,
+        generation=1,
+        provider_conversation_id=None if claim == CLAIM_NEW_GENERATION else record.get("provider_session_id"),
+        provider_session_id=None if claim == CLAIM_NEW_GENERATION else record.get("provider_session_id"),
+        terminal_id=None if claim == CLAIM_NEW_GENERATION else record.get("terminal_id"),
+        host_observation={"process_identity": record.get("process_identity") or {},
+                          "launch_identity": record.get("launch_identity") or {}},
+        session_continuity_claim=claim,
+    )
+    return {
+        "projection_schema_version": "1.0",
+        "source_schema_version": record["schema_version"],
+        "source_digest": sha256_json(record),
+        "source_record_rewritten": False,
+        "conversation_handle": handle,
+        "native_resume_claimed": False,
+        "projected_at": iso_now(),
+    }

@@ -1,0 +1,118 @@
+{
+  "block_reason": null,
+  "components": [
+    {
+      "bytes": 17,
+      "component_id": "sys-1",
+      "items": 1,
+      "kind": "system_control_text",
+      "reducible": false,
+      "retention_rank": 0,
+      "sha256": "aa64172e2e014ba74d37062d5689e6b5f0ddae11c59dacac4b5b0877a0bc8c9b"
+    },
+    {
+      "bytes": 12,
+      "component_id": "prof-1",
+      "items": 1,
+      "kind": "profile_text",
+      "reducible": false,
+      "retention_rank": 0,
+      "sha256": "aa8c942593b95650c183f9525350b715079cc305eb4b9b327c46d17635a55bb9"
+    },
+    {
+      "bytes": 17,
+      "component_id": "obj-1",
+      "items": 1,
+      "kind": "objective_task",
+      "reducible": false,
+      "retention_rank": 0,
+      "sha256": "6ca1d09066b93ce358a53644fd3effd4d88fd5142c548eabb70f3cf7bd79efb3"
+    },
+    {
+      "bytes": 13,
+      "component_id": "state-1",
+      "items": 1,
+      "kind": "durable_state_summary",
+      "reducible": true,
+      "retention_rank": 0,
+      "sha256": "809edccce21489257f19ec93dee14d6c1bbfbb7a5194e450335e734547890f0c"
+    },
+    {
+      "bytes": 19,
+      "component_id": "hist-1",
+      "items": 2,
+      "kind": "selected_history",
+      "reducible": true,
+      "retention_rank": 0,
+      "sha256": "7c2a55d69df3c7af4c97760eedf9ce077dccdd7bcacfa0e8381f6e146a0c0a08"
+    },
+    {
+      "bytes": 17,
+      "component_id": "tools-1",
+      "items": 1,
+      "kind": "tool_schemas",
+      "reducible": true,
+      "retention_rank": 0,
+      "sha256": "ed946e00d82719d1d4d4c3fdcb9f7aeedff8ae809034109018c3af899dc81039"
+    },
+    {
+      "bytes": 13,
+      "component_id": "results-1",
+      "items": 1,
+      "kind": "tool_results",
+      "reducible": true,
+      "retention_rank": 0,
+      "sha256": "e18bfe6707d979ac0efa651ae9559756ab781e4355560127c4f717271ceef2b2"
+    },
+    {
+      "bytes": 11,
+      "component_id": "att-1",
+      "items": 1,
+      "kind": "attachment_excerpts",
+      "reducible": true,
+      "retention_rank": 0,
+      "sha256": "0af75722fa124676a3f15a781f30f9dc84b1e6f011463dbff25c0b4f868b7aa1"
+    },
+    {
+      "bytes": 16,
+      "component_id": "wrap-1",
+      "items": 1,
+      "kind": "adapter_wrapper",
+      "reducible": false,
+      "retention_rank": 0,
+      "sha256": "1b26832dfae67354e6c29297bcfed9298aa88e2bba14c94b307eb273219bef13"
+    }
+  ],
+  "deterministic_reduction_only": true,
+  "hard_cap_bytes": 262144,
+  "hard_cap_items": null,
+  "manifest_digest": "d79ce80badfc22014b4c3cc42c20d13fc7d2ac2a97f5da6d6b8b3b78c7cc5681",
+  "manifest_id": "ctx-example-1",
+  "measured_at": "2026-08-08T00:00:00Z",
+  "measured_component_kinds": [
+    "adapter_wrapper",
+    "attachment_excerpts",
+    "durable_state_summary",
+    "objective_task",
+    "profile_text",
+    "selected_history",
+    "system_control_text",
+    "tool_results",
+    "tool_schemas"
+  ],
+  "provider_internal_prompt_overhead": "UNAVAILABLE",
+  "provider_internal_transforms": "UNAVAILABLE",
+  "provider_native_token_counts": "UNAVAILABLE",
+  "reductions": [],
+  "role_id": "tech_lead",
+  "run_id": "run-example",
+  "schema_version": "1.0",
+  "semantic_compression_used": false,
+  "serialized_request_bytes": 792,
+  "serialized_request_sha256": "44122c640884c1b087d180cfce340ebbc38107fcd6137d081e69a6352f756b2e",
+  "status": "WITHIN_CAP",
+  "task_id": "task-example",
+  "token_estimation_method": "none; host measures bytes and items only",
+  "total_items": 10,
+  "unmeasured_component_kinds": []
+}

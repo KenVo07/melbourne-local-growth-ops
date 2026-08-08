@@ -1,0 +1,24 @@
+{
+  "authority_mode": "CONSULT",
+  "authority_role": "authoritative_supervisor",
+  "budget_decision": null,
+  "coalesced_event_count": 0,
+  "coalesced_evidence_ids": [],
+  "created_at": "2026-08-08T00:00:00Z",
+  "dedupe_key": "80ba7e20dc0005f886c9725e18be0a45b9a77a732c984715889411ee40954c5a",
+  "enforcement_mode": "shadow_only",
+  "episode_digest": "dec3565f1efe89585da0ffbdb617d9a59877a136beef555ecdacfd248486475a",
+  "episode_id": "epi-example-1",
+  "evidence_ids": [
+    "ev-arch-1"
+  ],
+  "initiator": "host",
+  "outcome": null,
+  "run_id": "run-example",
+  "schema_version": "1.0",
+  "status": "OPEN",
+  "task_id": "task-example",
+  "trigger_class": "PROJECT_OR_MILESTONE_ARCHITECTURE",
+  "trigger_digest": "08ba77545b07775e6d98ebd328226042ff34471674e45e98351ee3261b194b21",
+  "updated_at": "2026-08-08T00:00:00Z"
+}

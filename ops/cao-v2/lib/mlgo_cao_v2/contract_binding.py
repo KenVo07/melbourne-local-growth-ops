@@ -98,3 +98,67 @@ def assert_reader_compatible(binding: dict[str, Any], *, reader_version: str) ->
     validate_run_contract_binding(binding)
     if _version_tuple(reader_version) < _version_tuple(binding["minimum_reader_version"]):
         raise PolicyError("reader version is below RunContractBinding minimum")
+
+
+# --------------------------------------------------------------------------
+# Slice 2 schema / writer compatibility
+# --------------------------------------------------------------------------
+
+#: Versioned schemas introduced by Slice 2.
+SLICE2_SCHEMA_NAMES = (
+    "conversation-handle.schema.json",
+    "checkpoint-vnext.schema.json",
+    "authority-episode.schema.json",
+    "semantic-trigger.schema.json",
+    "context-manifest.schema.json",
+    "tech-lead-execution-state.schema.json",
+    "tech-lead-consult-request.schema.json",
+    "tech-lead-decision.schema.json",
+)
+
+#: Durable writer features introduced by Slice 2.  A run only gains them when a
+#: RunContractBinding explicitly enables them, so existing live runs keep their
+#: current writer surface until they are deliberately rebound.
+SLICE2_WRITER_FEATURES = (
+    "conversation_handles",
+    "checkpoints_vnext",
+    "authority_episodes",
+    "authority_decisions",
+    "context_manifests",
+    "tech_lead_state",
+)
+
+
+def slice2_compatibility(binding: dict[str, Any]) -> dict[str, Any]:
+    """Report exactly which Slice 2 schemas and writers a run is bound to."""
+
+    validate_run_contract_binding(binding)
+    present = {item["name"] for item in binding["schema_bundle"]["files"]}
+    schemas_present = sorted(name for name in SLICE2_SCHEMA_NAMES if name in present)
+    writers_enabled = sorted(set(binding["enabled_writers"]) & set(SLICE2_WRITER_FEATURES))
+    return {
+        "slice2_schemas_present": schemas_present,
+        "slice2_schemas_missing": sorted(set(SLICE2_SCHEMA_NAMES) - set(schemas_present)),
+        "slice2_schema_bundle_complete": len(schemas_present) == len(SLICE2_SCHEMA_NAMES),
+        "slice2_writers_enabled": writers_enabled,
+        "slice2_durable_writers_active": bool(writers_enabled),
+        "schema_bundle_digest": binding["schema_bundle_digest"],
+    }
+
+
+def assert_slice2_writer_allowed(binding: dict[str, Any], feature: str) -> dict[str, Any]:
+    """Fail closed when a Slice 2 durable writer is not bound for this run."""
+
+    if feature not in SLICE2_WRITER_FEATURES:
+        raise ContractError(f"unknown Slice 2 writer feature: {feature!r}")
+    compatibility = slice2_compatibility(binding)
+    if feature not in compatibility["slice2_writers_enabled"]:
+        raise PolicyError(
+            f"Slice 2 durable writer {feature!r} is not enabled by this run's RunContractBinding"
+        )
+    if not compatibility["slice2_schema_bundle_complete"]:
+        raise PolicyError(
+            "Slice 2 durable writers require the complete Slice 2 schema bundle: "
+            f"missing {compatibility['slice2_schemas_missing']}"
+        )
+    return compatibility
