@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export CLAUDE_CODE_EFFORT_LEVEL=medium
+exec /home/khoa/.local/bin/mlgo-claude-gateway "$@"

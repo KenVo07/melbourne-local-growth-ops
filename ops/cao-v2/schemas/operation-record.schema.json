@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/operation-record.schema.json",
+  "title": "Idempotent Side-Effect Operation",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "operation_id", "operation_type", "input_digest", "inputs", "status", "attempts", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["PREPARED", "APPLYING", "APPLIED", "VERIFIED", "UNKNOWN_AFTER_APPLY", "FAILED"]}
+  }
+}

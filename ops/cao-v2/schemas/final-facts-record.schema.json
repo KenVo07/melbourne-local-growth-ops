@@ -1,0 +1,116 @@
+{
+  "$id": "mlgo://cao-v2/final-facts-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "ci_required": {
+      "type": "boolean"
+    },
+    "facts_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "final_validation_record": {
+      "type": "string"
+    },
+    "final_validation_satisfied": {
+      "const": true
+    },
+    "prepared_at": {
+      "type": "string"
+    },
+    "publication_authorization": {
+      "type": "string"
+    },
+    "publication_record": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "publication_required": {
+      "type": "boolean"
+    },
+    "publication_satisfied": {
+      "type": "boolean"
+    },
+    "record_type": {
+      "const": "FINAL_FACTS_PACKET"
+    },
+    "remote": {
+      "type": "string"
+    },
+    "remote_ci_record": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "remote_ci_satisfied": {
+      "type": "boolean"
+    },
+    "remote_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "required_ci_checks": {
+      "items": {
+        "required": [
+          "name",
+          "allowed_conclusions"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "required_review_satisfied": {
+      "const": true
+    },
+    "review_record": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "2.1"
+    },
+    "target_branch": {
+      "type": "string"
+    },
+    "target_reachable": {
+      "const": true
+    },
+    "unresolved_blockers": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 0,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "run_id",
+    "candidate_sha",
+    "remote",
+    "target_branch",
+    "remote_sha",
+    "target_reachable",
+    "required_review_satisfied",
+    "final_validation_satisfied",
+    "publication_satisfied",
+    "remote_ci_satisfied",
+    "unresolved_blockers",
+    "prepared_at",
+    "facts_digest",
+    "required_ci_checks"
+  ],
+  "title": "MLGO CAO v2.1 Final Facts Packet",
+  "type": "object"
+}

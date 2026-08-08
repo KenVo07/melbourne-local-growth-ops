@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/usage-event.schema.json",
+  "title": "MLGO CAO v2 Usage Event",
+  "type": "object",
+  "required": ["schema_version", "provider", "role", "observed_at", "telemetry_confidence"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "provider": {"enum": ["codex", "claude", "agy"]},
+    "run_id": {"type": ["string", "null"]},
+    "task_id": {"type": ["string", "null"]},
+    "phase_id": {"type": ["string", "null"]},
+    "role": {"type": "string"},
+    "terminal_id": {"type": ["string", "null"]},
+    "input_tokens": {"type": ["integer", "null"]},
+    "cached_input_tokens": {"type": ["integer", "null"]},
+    "cache_read_input_tokens": {"type": ["integer", "null"]},
+    "cache_creation_input_tokens": {"type": ["integer", "null"]},
+    "output_tokens": {"type": ["integer", "null"]},
+    "reasoning_tokens": {"type": ["integer", "null"]},
+    "observed_at": {"type": "string"},
+    "telemetry_confidence": {"enum": ["high", "medium", "low", "unavailable"]}
+  }
+}

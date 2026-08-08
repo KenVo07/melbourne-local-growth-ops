@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/routing-proposal.schema.json",
+  "title": "MLGO CAO v2 Routing Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "run_id", "big_task_id", "phase_id",
+    "phase_characteristics", "preferred_route", "minimum_tier",
+    "acceptable_routes", "routing_reason", "escalation_conditions",
+    "review_class", "capacity_snapshot_id"
+  ],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "big_task_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "phase_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "phase_characteristics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["difficulty", "importance", "ambiguity", "reversibility", "phase_maturity"],
+      "properties": {
+        "difficulty": {"enum": ["low", "ordinary", "difficult", "very_difficult", "critical"]},
+        "importance": {"enum": ["low", "medium", "high", "critical"]},
+        "ambiguity": {"enum": ["low", "medium", "high", "critical"]},
+        "reversibility": {"enum": ["easy", "moderate", "hard", "irreversible"]},
+        "phase_maturity": {"enum": ["exploratory", "foundation", "stable_foundation", "repetitive", "integration", "final_validation"]}
+      }
+    },
+    "preferred_route": {"type": "string"},
+    "minimum_tier": {"type": "integer", "minimum": 1, "maximum": 5},
+    "acceptable_routes": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "unacceptable_routes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "required_families": {"type": "array", "uniqueItems": true, "items": {"enum": ["gemini", "claude", "codex"]}},
+    "routing_reason": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "maxLength": 512}},
+    "frontier_justification": {"type": ["string", "null"], "maxLength": 1024},
+    "escalation_conditions": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 512}},
+    "deescalation_conditions": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 512}},
+    "review_class": {"enum": ["none", "routine_independent", "cross_provider", "critical_frontier"]},
+    "expected_budget_class": {"enum": ["tiny", "small", "medium", "large", "critical"]},
+    "capacity_snapshot_id": {"type": "string"}
+  }
+}

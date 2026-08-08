@@ -1,0 +1,20 @@
+{
+  "authority_basis": "operator-selected authoritative supervisor",
+  "big_task_id": null,
+  "candidate_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "conditions": [
+    "publish exact candidate SHA"
+  ],
+  "decided_at": "2099-01-01T00:00:00Z",
+  "decision": "AUTHORIZE_PUBLICATION",
+  "decision_id": "decision-publication-1",
+  "decision_type": "PUBLICATION_AUTHORIZATION",
+  "facts": [
+    "review and full integrated validation passed"
+  ],
+  "facts_digest": null,
+  "remaining_risk": [],
+  "run_id": "example-run",
+  "schema_version": "2.1",
+  "supervisor_profile": "mlgo-supervisor"
+}

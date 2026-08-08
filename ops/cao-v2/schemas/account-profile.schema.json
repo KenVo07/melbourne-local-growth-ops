@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"mlgo://cao-v2/account-profile.schema.json","title":"Account Profile","type":"object","additionalProperties":true,"required":["provider_id","billing_mode"],"properties":{"provider_id":{"type":"string"},"billing_mode":{"type":"string"}}}

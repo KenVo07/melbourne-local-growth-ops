@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/final-validation-record.schema.json",
+  "title": "MLGO CAO v2 Final Integrated Validation Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "candidate_sha", "scope", "status", "commands", "evidence", "recorded_at"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "run_id": {"type": "string"},
+    "candidate_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "scope": {"const": "full_integrated"},
+    "status": {"enum": ["PASS", "FAIL", "BLOCKED"]},
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["command", "status"],
+        "properties": {
+          "command": {"type": "string"},
+          "status": {"enum": ["PASS", "FAIL", "SKIPPED"]},
+          "evidence": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      }
+    },
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "recorded_at": {"type": "string"}
+  }
+}

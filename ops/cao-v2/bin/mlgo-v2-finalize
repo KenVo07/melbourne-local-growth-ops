@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PYTHONPATH="${MLGO_CAO_V2_LIB:-$HOME/.local/lib/mlgo-cao-v2}:${PYTHONPATH:-}"
+exec python3 -m mlgo_cao_v2.cli finalize "$@"

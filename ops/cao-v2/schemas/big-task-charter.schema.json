@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/big-task-charter.schema.json",
+  "title": "MLGO CAO v2 Big Task Charter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "big_task_id",
+    "outcome",
+    "acceptance",
+    "in_scope",
+    "out_of_scope",
+    "risk_class",
+    "delegation_envelope",
+    "review_policy",
+    "completion_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "big_task_id": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "in_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "out_of_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_class": {
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ]
+    },
+    "delegation_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_routes",
+        "maximum_tier",
+        "gateway_allowed",
+        "max_phases",
+        "max_parallel_writers",
+        "supervisor_approval_triggers"
+      ],
+      "properties": {
+        "allowed_routes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "maximum_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "gateway_allowed": {
+          "type": "boolean"
+        },
+        "protected_supervisor_pool_use_allowed": {
+          "type": "boolean"
+        },
+        "max_phases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "max_parallel_writers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "supervisor_approval_triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "review_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default_class",
+        "critical_requires_cross_provider"
+      ],
+      "properties": {
+        "default_class": {
+          "enum": [
+            "none",
+            "routine_independent",
+            "cross_provider",
+            "critical_frontier"
+          ]
+        },
+        "critical_requires_cross_provider": {
+          "type": "boolean"
+        }
+      }
+    },
+    "completion_boundary": {
+      "type": "string"
+    },
+    "rollback_boundary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "budget_class": {
+      "enum": [
+        "small",
+        "medium",
+        "large",
+        "critical"
+      ]
+    }
+  }
+}
