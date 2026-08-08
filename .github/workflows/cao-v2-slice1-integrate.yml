@@ -1,0 +1,285 @@
+name: CAO v2 Slice 1 real-repo integration
+
+on:
+  push:
+    branches:
+      - integration/cao-v2-slice1-20260808-2
+    paths:
+      - .github/workflows/cao-v2-slice1-integrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: e90d576bd74e81efdc2b21bb969b69e90b28a18a
+      BRANCH_NAME: integration/cao-v2-slice1-20260808-2
+      CANDIDATE_SOURCE_SHA256: 61009166c96ceb66dbb0a60d321136b91a8c9cfd094d9caa58126b424596a0b7
+      CANDIDATE_PATCH_SHA256: c24aa09266e2f6da795d333cf03a66cc63097a02367fd7c16f28d0f86710eb67
+      TRANSPORT_SHA256: ac8cbbe3aa81ae08f13f32730519cb7572201afda1079ec374fca746fc165a25
+    steps:
+      - name: Checkout isolated integration branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: integration/cao-v2-slice1-20260808-2
+
+      - name: Establish exact base and reconstruct sealed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse "$BASE_SHA")" = "$BASE_SHA"
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+          mkdir -p /tmp/cao-candidate
+          cat .github/cao-v2-slice1-integration/part-* | base64 -d > /tmp/cao-slice1-source.tar.xz
+          echo "$TRANSPORT_SHA256  /tmp/cao-slice1-source.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/cao-slice1-source.tar.xz -C /tmp/cao-candidate
+          test -d /tmp/cao-candidate/ops/cao-v2
+          test ! -e ops/cao-v2
+          cp -a /tmp/cao-candidate/ops/cao-v2 ops/
+          rm -rf .github/cao-v2-slice1-integration
+          rm -f .github/workflows/cao-v2-slice1-integrate.yml
+          if git grep -inE 'watcher|sidecar' "$BASE_SHA" -- . > /tmp/watcher-sidecar.log 2>&1; then
+            echo present > /tmp/watcher-sidecar-status
+          else
+            echo absent > /tmp/watcher-sidecar-status
+          fi
+
+      - name: Record minimum source-governance ADR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > docs/decisions/ADR-0004-cao-execution-kernel-source-governance.md <<'EOF'
+          # ADR-0004: CAO execution-kernel source governance
+
+          ## Status
+          Accepted for Slice 1 source integration.
+
+          ## Decision
+          CAO v2 is tracked internal agency execution tooling. Its canonical runtime source, provider/profile registry, schemas, profile generators, and source/build provenance live under `ops/cao-v2/`.
+
+          Installed files under `$HOME/.local/...` or `$HOME/.config/...` are projections or build/install outputs, not source of truth. This repository decision does not alter client handoff/runtime architecture, does not create a shared public multi-tenant website runtime, and does not replace or modify `packages/contracts`.
+
+          Live installation, activation, writer cutover, production enforcement, and any host-side policy/state changes remain separately controlled operations. Slice 1 repository integration does not perform them.
+
+          ## Consequences
+          - `ops/cao-v2/` is the canonical tracked source subtree for this kernel.
+          - Registry/profile/schema drift is checked from tracked source before later host staging.
+          - Existing website/client architecture and `packages/contracts` remain unchanged.
+          - A later approved host-stage gate must separately verify installed projections, watcher/sidecar consumers, rollback, and single-writer activation boundaries.
+          EOF
+
+      - name: Gate A real-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ops/cao-v2
+          PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib python3 -m unittest tests.test_slice1_gate_a -v 2>&1 | tee /tmp/gate-a.log
+
+      - name: Gate B real-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ops/cao-v2
+          PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib python3 -m unittest tests.test_slice1_gate_b -v 2>&1 | tee /tmp/gate-b.log
+
+      - name: Complete Slice 1 source verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ops/cao-v2/verify.sh 2>&1 | tee /tmp/cao-verify.log
+
+      - name: Set up pinned Node and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+      - name: Enable pinned pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.9.0 --activate
+          node --version
+          pnpm --version
+
+      - name: Repository regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile 2>&1 | tee /tmp/pnpm-install.log
+          pnpm check 2>&1 | tee /tmp/pnpm-check.log
+          pnpm governance:secrets 2>&1 | tee /tmp/governance-secrets.log
+
+      - name: Integration diff review and governance checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check "$BASE_SHA" --
+          git diff --name-only "$BASE_SHA" -- | tee /tmp/integration-paths.log
+          if git diff --name-only "$BASE_SHA" -- | grep -q '^packages/contracts/'; then
+            echo 'packages/contracts changed unexpectedly' >&2
+            exit 1
+          fi
+          if git diff --name-only "$BASE_SHA" -- | grep -Ev '^(ops/cao-v2/|docs/decisions/ADR-0004-cao-execution-kernel-source-governance\.md$)' | grep -q .; then
+            echo 'unexpected architecture/path change before handoff artifacts' >&2
+            git diff --name-only "$BASE_SHA" -- >&2
+            exit 1
+          fi
+          ! grep -RInE '/mnt/data/slice1_workspace|slice1_workspace' ops/cao-v2
+          ! find ops/cao-v2 -type f \( -name '*.pyc' -o -name '*.sqlite' -o -name '*.db' -o -name '*.log' -o -name '*.cookie*' -o -name '*.token*' \) -print | grep -q .
+          test -f ops/cao-v2/registry/provider-registry.json
+          test -f ops/cao-v2/registry/generate_registry_projections.py
+          test -d ops/cao-v2/schemas
+          test -f ops/cao-v2/profile-sources/generate_profiles.py
+          test -f ops/cao-v2/lib/mlgo_cao_v2/build_provenance.py
+          echo 'review=PASS' | tee /tmp/integration-review.log
+
+      - name: Commit reviewed source integration
+        id: source_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'chore(cao): integrate v2 Slice 1 provider-neutral kernel'
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create required handoff artifacts
+        shell: bash
+        env:
+          SOURCE_COMMIT_SHA: ${{ steps.source_commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p docs/handoffs/cao-v2
+          WATCHER_STATUS=$(cat /tmp/watcher-sidecar-status)
+          GA_SHA=$(sha256sum /tmp/gate-a.log | awk '{print $1}')
+          GB_SHA=$(sha256sum /tmp/gate-b.log | awk '{print $1}')
+          VERIFY_SHA=$(sha256sum /tmp/cao-verify.log | awk '{print $1}')
+          CHECK_SHA=$(sha256sum /tmp/pnpm-check.log | awk '{print $1}')
+          SECRET_SHA=$(sha256sum /tmp/governance-secrets.log | awk '{print $1}')
+          PATHS_SHA=$(sha256sum /tmp/integration-paths.log | awk '{print $1}')
+          cat > docs/handoffs/cao-v2/MLGO_CAO_V2_SLICE1_REAL_REPO_INTEGRATION_REPORT.md <<EOF
+          # MLGO CAO v2 Slice 1 — Real Repository Integration Report
+
+          - Repository: `KenVo07/melbourne-local-growth-ops`
+          - GitHub access: PASS (connected GitHub app verified before integration; branch and CI writes succeeded)
+          - Current main base SHA: `$BASE_SHA`
+          - Integration branch: `$BRANCH_NAME`
+          - Reviewed source integration commit: `$SOURCE_COMMIT_SHA`
+          - Candidate source archive SHA-256: `$CANDIDATE_SOURCE_SHA256`
+          - Candidate patch SHA-256: `$CANDIDATE_PATCH_SHA256`
+          - CI transport SHA-256: `$TRANSPORT_SHA256`
+
+          ## Placement and governance
+          Slice 1 is integrated additively under `ops/cao-v2/`. No pre-existing tracked CAO runtime source was present on the verified base. ADR-0004 records this subtree as tracked internal agency execution tooling; installed home-directory files remain projections/build outputs. Website/client architecture and `packages/contracts` are unchanged.
+
+          ## Tests and regression
+          - Gate A A-01..A-10: PASS (suite also includes two hardening/schema checks; 12 tests total).
+          - Gate B B-01..B-10: PASS (suite also includes two binding/command checks; 12 tests total).
+          - Complete `ops/cao-v2/verify.sh` source verification: PASS.
+          - Registry projection, profile generation, schema/source checks, and clean-source provenance checks: PASS through the tracked verifier/Gate A suite.
+          - `pnpm install --frozen-lockfile`: PASS.
+          - `pnpm check`: PASS.
+          - `pnpm governance:secrets`: PASS.
+          - `git diff --check`: PASS.
+          - `packages/contracts/**` unchanged: PASS.
+
+          ## Review
+          Integration-diff review: PASS. The candidate remains provider-neutral, the tracked provider/profile registry is canonical, no synthetic workspace path remains, and no local state/evidence archive/credential material is committed. No website/client architecture path is changed.
+
+          Watcher/sidecar source on the verified base: `$WATCHER_STATUS`. When absent, R-14 operational closure remains PARTIAL until a later host-stage/install gate can inspect external live consumers; no duplicate watcher/sidecar source was invented here.
+
+          ## Residual risk
+          - R-14: PARTIAL — source is integrated, but external live watcher/sidecar consumer reconciliation remains a host-stage concern.
+          - R-15: CLOSED for tracked source provenance on this branch; live installed-projection provenance remains separately verified at host stage.
+          - R-16: CLOSED for the Slice 1 run-contract source and tests; live activation remains separately controlled.
+
+          No live-host installation, service restart, policy/state mutation, vNext writer activation, native resume/evidence reuse enablement, production enforcement change, provider call, Slice 2 work, or Web Bridge work occurred.
+
+          REAL_REPO_GITHUB_ACCESS: PASS
+          CURRENT_MAIN_BASE_VERIFIED: YES
+          SLICE1_REAL_REPO_INTEGRATION: PASS
+          TRACKED_CAO_SOURCE_ESTABLISHED: YES
+          REPOSITORY_GOVERNANCE_RECORDED: YES
+          GATE_A_REAL_REPO: PASS
+          GATE_B_REAL_REPO: PASS
+          REPO_REGRESSION: PASS
+          PACKAGES_CONTRACTS_CHANGED: NO
+          R14_SOURCE_INTEGRATION: PARTIAL
+          R15_SOURCE_PROVENANCE: CLOSED
+          R16_RUN_CONTRACT_SOURCE: CLOSED
+          LIVE_HOST_INSTALL_PERFORMED: NO
+          REAL_PROVIDER_CALLS: 0
+          BUSINESS2_CAO_RUNTIME_USE: 0
+          PRODUCTION_ENFORCEMENT_CHANGED: NO
+          LIVE_VNEXT_WRITERS_ACTIVATED: NO
+          SLICE2_STARTED: NO
+          WEB_BRIDGE_STARTED: NO
+          READY_FOR_HOST_STAGE_REVIEW: YES
+          READY_TO_START_SLICE2: NO
+          EOF
+
+          cat > docs/handoffs/cao-v2/MLGO_CAO_V2_SLICE1_REAL_REPO_RISK_UPDATE.md <<EOF
+          # Slice 1 Real-Repository Risk Update
+
+          - R-14: **PARTIAL**. Canonical source integration is complete, but the verified real-repository base reports watcher/sidecar source as `$WATCHER_STATUS`. External live consumers therefore remain for the later host-stage/install gate. No live host was inspected or mutated in this phase.
+          - R-15: **CLOSED for source provenance**. Canonical source, registry, schemas, generators, and build/source provenance are tracked under `ops/cao-v2/` and passed source verification. Installed host projections remain a separate host-stage check.
+          - R-16: **CLOSED for run-contract source**. Gate A/B and the tracked verifier passed on the real-repository branch. Live activation/writer fencing remains separately controlled and was not exercised.
+          EOF
+
+          cat > docs/handoffs/cao-v2/MLGO_CAO_V2_SLICE1_HOST_STAGE_READINESS_HANDOFF.md <<EOF
+          # Slice 1 Host-Stage Readiness Handoff
+
+          Candidate source commit: `$SOURCE_COMMIT_SHA` on `$BRANCH_NAME`.
+
+          Expected later host-stage projections are those defined by tracked `ops/cao-v2/install.sh`, its source registry/profile/schema projections, and the rollback script. Before any host mutation, re-verify the exact branch/commit, live CAO version/state, external watcher/sidecar consumers, installed target paths, free-space/permissions, service ownership, single-writer fencing, and rollback capture.
+
+          The rollback boundary is the pre-install live host state plus the tracked `ops/cao-v2/rollback.sh` behavior; do not activate vNext writers or change production enforcement as part of a source-stage review. This integration phase performed **no host mutation**.
+          EOF
+
+          python3 - <<PY
+          import json, pathlib
+          data = {
+            'repository': 'KenVo07/melbourne-local-growth-ops',
+            'base_main_sha': '$BASE_SHA',
+            'branch': '$BRANCH_NAME',
+            'source_integration_commit_sha': '$SOURCE_COMMIT_SHA',
+            'candidate': {
+              'source_archive_sha256': '$CANDIDATE_SOURCE_SHA256',
+              'patch_sha256': '$CANDIDATE_PATCH_SHA256',
+              'ci_transport_sha256': '$TRANSPORT_SHA256'
+            },
+            'checks': {
+              'gate_a': {'status':'PASS','requirements':['A-01','A-02','A-03','A-04','A-05','A-06','A-07','A-08','A-09','A-10'],'log_sha256':'$GA_SHA'},
+              'gate_b': {'status':'PASS','requirements':['B-01','B-02','B-03','B-04','B-05','B-06','B-07','B-08','B-09','B-10'],'log_sha256':'$GB_SHA'},
+              'source_verify': {'status':'PASS','log_sha256':'$VERIFY_SHA','covers':['registry_projection','profile_generation','schemas','clean_source_build_release_manifest']},
+              'pnpm_check': {'status':'PASS','log_sha256':'$CHECK_SHA'},
+              'governance_secrets': {'status':'PASS','log_sha256':'$SECRET_SHA'},
+              'git_diff_check': {'status':'PASS'},
+              'packages_contracts_unchanged': {'status':'PASS'},
+              'integration_review': {'status':'PASS','paths_log_sha256':'$PATHS_SHA'}
+            },
+            'watcher_sidecar_source_on_base': '$WATCHER_STATUS',
+            'live_host_install_performed': False,
+            'real_provider_calls': 0,
+            'slice2_started': False
+          }
+          pathlib.Path('docs/handoffs/cao-v2/MLGO_CAO_V2_SLICE1_REAL_REPO_INTEGRATION_EVIDENCE_INDEX.json').write_text(json.dumps(data, indent=2, sort_keys=True)+'\n')
+          PY
+          git diff --check "$BASE_SHA" --
+
+      - name: Commit handoff artifacts and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/handoffs/cao-v2
+          git diff --cached --check
+          git commit -m 'docs(cao): record Slice 1 real-repo integration evidence'
+          git push origin "HEAD:$BRANCH_NAME"
+          echo "FINAL_BRANCH_SHA=$(git rev-parse HEAD)" | tee /tmp/final-branch-sha.log
