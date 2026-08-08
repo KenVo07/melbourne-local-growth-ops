@@ -1,0 +1,87 @@
+{
+  "$id": "https://mlgo.local/cao-v2/artifact-deletion-tombstone.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Audit record of an operator-approved artifact deletion. Bytes may be removed; reference truth is not. There is no autonomous garbage collection: deletion always requires an explicit approval record.",
+  "properties": {
+    "approval_digest": {
+      "type": "string"
+    },
+    "approval_id": {
+      "type": "string"
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "byte_size": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "bytes_removed": {
+      "type": "boolean"
+    },
+    "classification": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string"
+    },
+    "deleted_at": {
+      "type": "string"
+    },
+    "kind": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "object_shared_with": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "operator_identity": {
+      "type": "string"
+    },
+    "original_ref_digest": {
+      "type": "string"
+    },
+    "original_stored_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "retention_class": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "security_domain_id": {
+      "type": "string"
+    },
+    "tombstone_digest": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "security_domain_id",
+    "content_hash",
+    "approval_id",
+    "operator_identity",
+    "reason",
+    "deleted_at",
+    "tombstone_digest"
+  ],
+  "title": "CAO v2 Artifact Deletion Tombstone",
+  "type": "object"
+}

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .contract_binding import assert_writer_compatible, validate_run_contract_binding
+from .events import SOURCE_RUN_STORE, make_event_intent
 from .leases import ExecutorLeaseStore
 
 from .common import (
@@ -177,12 +178,53 @@ class RunStore:
             raise PolicyError("vNext durable mutation requires executor lease/epoch fencing")
         self.lease_store.require(owner_id=fence["owner_id"], epoch=int(fence["epoch"]), token=fence["token"])
 
+    def _default_event_intents(
+        self,
+        event: dict[str, Any],
+        *,
+        cursor_token: str,
+        causation_id: str | None,
+        correlation_id: str | None,
+        artifact_refs: list[dict[str, Any]] | None,
+    ) -> list[dict[str, Any]]:
+        """Derive the standard single Event intent for a state commit."""
+
+        raw_type = str(event.get("type") or "STATE_COMMIT")
+        mapped = {
+            "PHASE_TRANSITION": "run.phase_transition",
+            "PHASE_REFRESH": "run.phase_refresh",
+            "PHASE_REGISTERED": "run.phase_registered",
+            "RUN_TRANSITION": "run.status_transition",
+        }.get(raw_type, f"run.{raw_type.lower()}")
+        discriminator = raw_type
+        for key in ("phase_id", "big_task_id", "task_lead_id", "exception_id"):
+            if event.get(key):
+                discriminator = f"{raw_type}:{event[key]}"
+                break
+        return [
+            make_event_intent(
+                source=SOURCE_RUN_STORE,
+                run_id=self.run_id,
+                cursor_token=cursor_token,
+                event_type=mapped,
+                discriminator=discriminator,
+                payload=dict(event),
+                causation_id=causation_id,
+                correlation_id=correlation_id,
+                artifact_refs=artifact_refs,
+            )
+        ]
+
     def _commit_unlocked(
         self,
         state: dict[str, Any],
         event: dict[str, Any],
         *,
         fault_after_journal: bool = False,
+        event_facts: list[dict[str, Any]] | None = None,
+        causation_id: str | None = None,
+        correlation_id: str | None = None,
+        artifact_refs: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         self._require_vnext_writer(state)
         previous_digest: str | None = None
@@ -193,6 +235,43 @@ class RunStore:
         state = copy.deepcopy(state)
         state["state_version"] = int(state.get("state_version", 0)) + 1
         state["updated_at"] = iso_now()
+        cursor_token = str(state["state_version"])
+
+        # Event intent is built *here*, inside the same commit that produces the
+        # state snapshot, and is written by the same append_jsonl/fsync below.
+        # There is no separate event write that could succeed or fail
+        # independently of the fact it describes.
+        if event_facts is None:
+            event_outbox = self._default_event_intents(
+                event, cursor_token=cursor_token, causation_id=causation_id,
+                correlation_id=correlation_id, artifact_refs=artifact_refs,
+            )
+        else:
+            event_outbox = []
+            seen_discriminators: set[str] = set()
+            for fact in event_facts:
+                discriminator = str(fact["discriminator"])
+                if discriminator in seen_discriminators:
+                    raise ContractError(
+                        "duplicate Event discriminator within one commit: "
+                        f"{discriminator!r}; multi-event Commands need distinct transition "
+                        "discriminators so Event identity cannot collide"
+                    )
+                seen_discriminators.add(discriminator)
+                event_outbox.append(
+                    make_event_intent(
+                        source=SOURCE_RUN_STORE,
+                        run_id=self.run_id,
+                        cursor_token=cursor_token,
+                        event_type=str(fact["event_type"]),
+                        discriminator=discriminator,
+                        payload=dict(fact.get("payload") or {}),
+                        causation_id=fact.get("causation_id", causation_id),
+                        correlation_id=fact.get("correlation_id", correlation_id),
+                        artifact_refs=fact.get("artifact_refs") or [],
+                    )
+                )
+
         record = {
             "journal_schema_version": JOURNAL_SCHEMA_VERSION,
             "transaction_id": f"stx-{state['state_version']}-{secrets.token_hex(6)}",
@@ -200,6 +279,7 @@ class RunStore:
             "state_version": state["state_version"],
             "at": state["updated_at"],
             "event": event,
+            "event_outbox": event_outbox,
             "previous_state_digest": previous_digest,
             "state_digest": sha256_json(state),
             "state": state,
@@ -414,6 +494,55 @@ class RunStore:
                 big_task = state["big_tasks"][record["big_task_id"]]
                 if phase_id not in big_task["completed_phases"]: big_task["completed_phases"].append(phase_id)
             return self._commit_unlocked(state, {"type": "PHASE_TRANSITION", "phase_id": phase_id, "from": current, "to": target, "reason": reason})
+
+    def record_command_facts(
+        self,
+        command_id: str,
+        facts: list[dict[str, Any]],
+        *,
+        correlation_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Commit several domain facts produced by one Command atomically.
+
+        One Command frequently changes more than one thing.  All of those facts
+        and all of their Event intents land in a single write-ahead journal
+        record, so a reader can never observe half of a Command's effect, and
+        each Event carries the Command as its causation ID while remaining
+        individually addressable through its own transition discriminator.
+        """
+
+        validate_id(command_id, "command_id")
+        if not facts:
+            raise ContractError("record_command_facts requires at least one fact")
+        with file_lock(self.lock_path):
+            state = self._load_unlocked()
+            commands = state.setdefault("commands", {})
+            entry = commands.setdefault(command_id, {"facts": [], "created_at": iso_now()})
+            prepared: list[dict[str, Any]] = []
+            for fact in facts:
+                prepared.append({
+                    "event_type": str(fact["event_type"]),
+                    "discriminator": str(fact["discriminator"]),
+                    "payload": {**dict(fact.get("payload") or {}), "command_id": command_id},
+                    "causation_id": command_id,
+                    "correlation_id": fact.get("correlation_id", correlation_id),
+                    "artifact_refs": fact.get("artifact_refs") or [],
+                })
+            recorded = list(entry.get("facts") or [])
+            for fact in prepared:
+                if fact["discriminator"] not in recorded:
+                    recorded.append(fact["discriminator"])
+            entry["facts"] = recorded
+            entry["status"] = str(facts[-1].get("status") or entry.get("status") or "RECORDED")
+            entry["updated_at"] = iso_now()
+            return self._commit_unlocked(
+                state,
+                {"type": "COMMAND_FACTS_RECORDED", "command_id": command_id,
+                 "fact_count": len(prepared)},
+                event_facts=prepared,
+                causation_id=command_id,
+                correlation_id=correlation_id,
+            )
 
     def add_semantic_exception(self, record: dict[str, Any]) -> dict[str, Any]:
         exception_id = validate_id(record["exception_id"], "exception_id")

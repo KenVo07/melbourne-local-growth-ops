@@ -16,7 +16,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .common import PolicyError, atomic_write_json, file_lock, iso_now, load_json, sha256_json, validate_id
+from .events import SOURCE_OPERATION_LEDGER, make_event_intent
 from .leases import ExecutorLeaseStore
+
+#: Operation statuses that assert a proven external effect.  Everything else is
+#: either in-flight or explicitly ambiguous, and must never be projected as a
+#: success.
+_PROVEN_STATUSES = frozenset({"VERIFIED"})
+_AMBIGUOUS_STATUSES = frozenset({"UNKNOWN_AFTER_APPLY", "APPLIED"})
 
 Verifier = Callable[[dict[str, Any]], dict[str, Any] | None]
 Applier = Callable[[], dict[str, Any]]
@@ -24,7 +31,8 @@ FaultHook = Callable[[str, dict[str, Any]], None]
 
 
 class OperationLedger:
-    def __init__(self, run_v2_dir: str | Path, *, lease_store: ExecutorLeaseStore | None = None):
+    def __init__(self, run_v2_dir: str | Path, *, lease_store: ExecutorLeaseStore | None = None, run_id: str | None = None):
+        self.run_id = run_id or Path(run_v2_dir).parent.name
         self.root = Path(run_v2_dir) / "operations"
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.lock = self.root / ".operations.lock"
@@ -58,17 +66,73 @@ class OperationLedger:
                 "operation_type": operation_type, "input_digest": digest,
                 "inputs": inputs, "status": "PREPARED", "attempts": 0,
                 "external_identity": None, "result": None, "verification": None,
+                "event_outbox": [],
                 "created_at": iso_now(), "updated_at": iso_now(),
             }
+            record["event_outbox"] = [
+                self._event_intent(record, sequence=0, status="PREPARED")
+            ]
             atomic_write_json(path, record)
             return record
+
+    def _event_intent(self, record: dict[str, Any], *, sequence: int, status: str) -> dict[str, Any]:
+        """Build the Event intent for one durable Operation transition.
+
+        Effect truth belongs to this ledger, so the Event describing an outcome
+        is created here and persisted by the same atomic record write that makes
+        the outcome durable.  Ambiguity is carried explicitly: an operation that
+        was applied but never proven projects as ambiguous, never as success.
+        """
+
+        operation_id = str(record["operation_id"])
+        if status in _PROVEN_STATUSES:
+            certainty = "PROVEN"
+        elif status in _AMBIGUOUS_STATUSES:
+            certainty = "AMBIGUOUS"
+        elif status == "FAILED":
+            certainty = "PROVEN_FAILED"
+        else:
+            certainty = "IN_FLIGHT"
+        payload = {
+            "operation_id": operation_id,
+            "operation_type": record.get("operation_type"),
+            "status": status,
+            "outcome_certainty": certainty,
+            "success_asserted": status in _PROVEN_STATUSES,
+            "requires_reconciliation": status == "UNKNOWN_AFTER_APPLY",
+            "input_digest": record.get("input_digest"),
+            "external_identity": record.get("external_identity"),
+            "attempts": record.get("attempts"),
+        }
+        if status == "FAILED":
+            payload["error"] = record.get("error")
+        return make_event_intent(
+            source=SOURCE_OPERATION_LEDGER,
+            run_id=self.run_id,
+            cursor_token=f"{operation_id}:{sequence}",
+            event_type=f"operation.{status.lower()}",
+            discriminator=status,
+            payload=payload,
+            causation_id=(record.get("inputs") or {}).get("command_id"),
+            correlation_id=operation_id,
+        )
 
     def _update(self, operation_id: str, **updates: Any) -> dict[str, Any]:
         path = self.path(operation_id)
         with file_lock(self.lock):
             record = load_json(path)
+            previous_status = record.get("status")
             record.update(updates)
             record["updated_at"] = iso_now()
+            new_status = record.get("status")
+            if new_status != previous_status:
+                outbox = list(record.get("event_outbox") or [])
+                outbox.append(
+                    self._event_intent(record, sequence=len(outbox), status=str(new_status))
+                )
+                record["event_outbox"] = outbox
+            # One atomic write publishes the transition and its Event intent
+            # together.  A crash either loses both or durably keeps both.
             atomic_write_json(path, record)
             return record
 

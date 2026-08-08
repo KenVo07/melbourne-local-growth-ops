@@ -1,0 +1,111 @@
+{
+  "$id": "https://mlgo.local/cao-v2/budget-reservation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "An atomic claim on native budget units taken before a governed Command. One Command holds at most one reservation, so retries are idempotent. Confirmed completion settles it, confirmed NOT_SENT releases it exactly once, and an ambiguous send holds it until reconciliation.",
+  "properties": {
+    "actor_role": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "command_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "object"
+    },
+    "history": {
+      "items": {
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "at",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "request_digest": {
+      "type": "string"
+    },
+    "requests": {
+      "items": {
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "native_unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "native_unit",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "requires_reconciliation": {
+      "type": "boolean"
+    },
+    "reservation_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "scopes": {
+      "type": "object"
+    },
+    "settlement": {
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "ACTIVE",
+        "HELD",
+        "SETTLED",
+        "RELEASED"
+      ]
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "reservation_id",
+    "command_id",
+    "run_id",
+    "requests",
+    "request_digest",
+    "status",
+    "created_at"
+  ],
+  "title": "CAO v2 Budget Reservation",
+  "type": "object"
+}

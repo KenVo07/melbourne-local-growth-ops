@@ -1,0 +1,109 @@
+{
+  "$id": "https://mlgo.local/cao-v2/budget-policy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Hierarchical budget limits in provider-native units. The strictest applicable action wins. enforcement_mode describes what the live system does with a decision; decisions are always computed with full hard semantics regardless.",
+  "properties": {
+    "enforcement_mode": {
+      "enum": [
+        "warning_only",
+        "hard"
+      ]
+    },
+    "limits": {
+      "items": {
+        "properties": {
+          "action": {
+            "enum": [
+              "allow",
+              "warn",
+              "pause",
+              "require_approval",
+              "prohibit"
+            ]
+          },
+          "limit_id": {
+            "type": "string"
+          },
+          "limit_value": {
+            "type": "number"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "native_unit": {
+            "description": "Matched exactly; never converted.",
+            "type": "string"
+          },
+          "protected_reserve": {
+            "description": "Generic protected capacity. Protection is policy data, never a special code path.",
+            "properties": {
+              "amount": {
+                "type": "number"
+              },
+              "reserved_for_roles": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "amount",
+              "reserved_for_roles"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "scope_id": {
+            "type": "string"
+          },
+          "scope_kind": {
+            "enum": [
+              "run",
+              "milestone",
+              "work_package",
+              "task",
+              "role",
+              "provider",
+              "account",
+              "profile",
+              "project"
+            ]
+          }
+        },
+        "required": [
+          "limit_id",
+          "scope_kind",
+          "scope_id",
+          "metric",
+          "native_unit",
+          "limit_value",
+          "action"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "policy_digest": {
+      "type": "string"
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    }
+  },
+  "required": [
+    "schema_version",
+    "policy_id",
+    "enforcement_mode",
+    "limits",
+    "policy_digest"
+  ],
+  "title": "CAO v2 Budget Policy",
+  "type": "object"
+}

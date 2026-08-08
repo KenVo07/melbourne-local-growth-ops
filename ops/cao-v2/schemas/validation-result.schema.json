@@ -1,0 +1,110 @@
+{
+  "$id": "https://mlgo.local/cao-v2/validation-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "The recorded outcome of executing a validation plan, including any evidence-reuse observation. While reuse is disabled or observation-only the real command always reruns, so no time is reported as saved and a would-have-reused candidate is recorded only to measure agreement.",
+  "properties": {
+    "check_id": {
+      "type": "string"
+    },
+    "command": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "elapsed_seconds": {
+      "type": "number"
+    },
+    "executed": {
+      "const": true
+    },
+    "kind": {
+      "type": "string"
+    },
+    "mandatory": {
+      "type": "boolean"
+    },
+    "plan_digest": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "recorded_at": {
+      "type": "string"
+    },
+    "result_id": {
+      "type": "string"
+    },
+    "returncode": {
+      "type": "integer"
+    },
+    "reuse_mode": {
+      "enum": [
+        "disabled",
+        "observation_only",
+        "enforced"
+      ]
+    },
+    "reuse_observation": {
+      "properties": {
+        "agreement": {
+          "enum": [
+            "AGREED",
+            "FALSE_HIT",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "false_hit": {
+          "type": "boolean"
+        },
+        "fingerprint_digest": {
+          "type": "string"
+        },
+        "fingerprint_version": {
+          "type": "string"
+        },
+        "observation_id": {
+          "type": "string"
+        },
+        "seconds_saved": {
+          "type": "number"
+        },
+        "validation_avoided": {
+          "type": "boolean"
+        },
+        "would_have_reused": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "observation_id",
+        "would_have_reused",
+        "agreement",
+        "false_hit"
+      ],
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": "1.0"
+    }
+  },
+  "required": [
+    "schema_version",
+    "result_id",
+    "plan_id",
+    "check_id",
+    "kind",
+    "returncode",
+    "recorded_at"
+  ],
+  "title": "CAO v2 Validation Result",
+  "type": "object"
+}

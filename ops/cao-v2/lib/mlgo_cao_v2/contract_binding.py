@@ -146,6 +146,71 @@ def slice2_compatibility(binding: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+#: Versioned schemas introduced by Slice 3.
+SLICE3_SCHEMA_NAMES = (
+    "event.schema.json",
+    "event-outbox-intent.schema.json",
+    "event-projection-checkpoint.schema.json",
+    "artifact-ref.schema.json",
+    "artifact-deletion-tombstone.schema.json",
+    "usage-record-v2.schema.json",
+    "budget-policy.schema.json",
+    "budget-reservation.schema.json",
+    "budget-decision.schema.json",
+    "validation-plan.schema.json",
+    "validation-result.schema.json",
+)
+
+#: Durable writer features introduced by Slice 3.  As with Slice 2, a run only
+#: gains them when a RunContractBinding explicitly enables them, so existing
+#: runs keep their current writer surface until deliberately rebound.  The
+#: Event projection is deliberately absent: it is a derived read model, not a
+#: durable writer, and rebuilding it is always safe.
+SLICE3_WRITER_FEATURES = (
+    "event_outbox",
+    "artifact_refs",
+    "artifact_retention",
+    "usage_records_v2",
+    "budget_reservations",
+    "validation_plans",
+)
+
+
+def slice3_compatibility(binding: dict[str, Any]) -> dict[str, Any]:
+    """Report exactly which Slice 3 schemas and writers a run is bound to."""
+
+    validate_run_contract_binding(binding)
+    present = {item["name"] for item in binding["schema_bundle"]["files"]}
+    schemas_present = sorted(name for name in SLICE3_SCHEMA_NAMES if name in present)
+    writers_enabled = sorted(set(binding["enabled_writers"]) & set(SLICE3_WRITER_FEATURES))
+    return {
+        "slice3_schemas_present": schemas_present,
+        "slice3_schemas_missing": sorted(set(SLICE3_SCHEMA_NAMES) - set(schemas_present)),
+        "slice3_schema_bundle_complete": len(schemas_present) == len(SLICE3_SCHEMA_NAMES),
+        "slice3_writers_enabled": writers_enabled,
+        "slice3_durable_writers_active": bool(writers_enabled),
+        "schema_bundle_digest": binding["schema_bundle_digest"],
+    }
+
+
+def assert_slice3_writer_allowed(binding: dict[str, Any], feature: str) -> dict[str, Any]:
+    """Fail closed when a Slice 3 durable writer is not bound for this run."""
+
+    if feature not in SLICE3_WRITER_FEATURES:
+        raise ContractError(f"unknown Slice 3 writer feature: {feature!r}")
+    compatibility = slice3_compatibility(binding)
+    if feature not in compatibility["slice3_writers_enabled"]:
+        raise PolicyError(
+            f"Slice 3 durable writer {feature!r} is not enabled by this run's RunContractBinding"
+        )
+    if not compatibility["slice3_schema_bundle_complete"]:
+        raise PolicyError(
+            "Slice 3 durable writers require the complete Slice 3 schema bundle: "
+            f"missing {compatibility['slice3_schemas_missing']}"
+        )
+    return compatibility
+
+
 def assert_slice2_writer_allowed(binding: dict[str, Any], feature: str) -> dict[str, Any]:
     """Fail closed when a Slice 2 durable writer is not bound for this run."""
 

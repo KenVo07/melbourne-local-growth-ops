@@ -444,14 +444,44 @@ class Slice2GateETests(unittest.TestCase):
                     command_runner=runner, evidence_refs=[{"kind": "usage_event", "id": "usage-1"}],
                 )
 
-    def test_E11_no_slice3_systems_were_introduced(self):
+    def test_E11_slice3_machinery_stays_inside_its_own_modules(self):
+        """Slice 3 is now implemented, so this fence moved forward rather than away.
+
+        Slice 2 asserted that no Slice 3 system existed yet.  Slice 3 owns those
+        systems, so the surviving obligation is containment: the economics and
+        evidence kernel lives in its designated modules, and the Slice 2
+        semantic core stays free of it.
+        """
+
         lib = ROOT / "lib" / "mlgo_cao_v2"
-        forbidden = ("ArtifactRef", "content_addressed_store", "cas_store", "budget_governor", "event_bus",
-                     "retention_policy")
+        slice3_modules = {"events.py", "artifacts.py", "retention.py", "budgets.py", "validation_policy.py"}
+        self.assertTrue(
+            slice3_modules.issubset({p.name for p in lib.glob("*.py")}),
+            "Slice 3 modules are missing",
+        )
+
+        # The Slice 2 semantic core must not acquire artifact/budget machinery.
+        slice2_core = ("authority.py", "checkpoints.py", "context_envelope.py", "decisions.py", "episodes.py")
+        contained = ("ArtifactRef", "ArtifactStore", "BudgetStore", "dedup_scope", "reserve_budget")
+        for name in slice2_core:
+            text = (lib / name).read_text(encoding="utf-8")
+            for token in contained:
+                self.assertNotIn(token, text, f"Slice 3 machinery leaked into Slice 2 core module {name}: {token}")
+
+    def test_E11b_no_slice4_or_web_bridge_or_broker_was_introduced(self):
+        """Slice 3 must not start Slice 4, the Web Bridge, or a distributed broker."""
+
+        lib = ROOT / "lib" / "mlgo_cao_v2"
+        forbidden = (
+            "web_bridge", "WebBridge", "browser_bridge", "BrowserBridge",
+            "migration_campaign", "rollback_campaign", "MigrationCampaign",
+            "event_broker", "EventBroker", "event_bus", "EventBus",
+            "kafka", "Kafka", "rabbitmq", "RabbitMQ", "redis_stream", "nats_", "zeromq",
+        )
         for path in sorted(lib.glob("*.py")):
             text = path.read_text(encoding="utf-8")
             for token in forbidden:
-                self.assertNotIn(token, text, f"Slice 3 machinery leaked into {path.name}: {token}")
+                self.assertNotIn(token, text, f"out-of-scope machinery leaked into {path.name}: {token}")
 
     # -- E-12 ------------------------------------------------------------
     def test_E12_over_cap_payload_blocks_before_submission_with_a_durable_exact_reason(self):

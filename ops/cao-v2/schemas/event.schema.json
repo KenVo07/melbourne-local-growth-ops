@@ -1,0 +1,129 @@
+{
+  "$id": "https://mlgo.local/cao-v2/event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "A normalized Event in the derived, rebuildable projection. Events are never a source of truth: each one is projected from an owner-ledger intent and can be discarded and rebuilt at any time. Raw chain-of-thought is never present in a payload.",
+  "properties": {
+    "artifact_refs": {
+      "items": {
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "byte_size": {
+            "type": "integer"
+          },
+          "classification": {
+            "type": "string"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "ref_digest": {
+            "type": "string"
+          },
+          "security_domain_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact_id",
+          "security_domain_id",
+          "content_hash",
+          "ref_digest"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "chain_digest": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "discriminator": {
+      "type": "string"
+    },
+    "event_digest": {
+      "type": "string"
+    },
+    "event_id": {
+      "pattern": "^ev-[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "intent_digest": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "previous_chain_digest": {
+      "type": "string"
+    },
+    "projected_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "source": {
+      "enum": [
+        "run_store",
+        "operation_ledger"
+      ]
+    },
+    "source_cursor": {
+      "description": "Authoritative owner-ledger coordinates this Event was derived from.",
+      "properties": {
+        "operation_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "state_version": {
+          "type": "integer"
+        },
+        "transaction_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "source",
+    "source_cursor",
+    "run_id",
+    "event_type",
+    "discriminator",
+    "payload",
+    "event_digest"
+  ],
+  "title": "CAO v2 Projected Event",
+  "type": "object"
+}
