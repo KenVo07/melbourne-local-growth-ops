@@ -1,0 +1,37 @@
+{
+  "authority_retained_by": null,
+  "authority_role": "authoritative_supervisor",
+  "big_task_id": "bt-example",
+  "binding_digest": "f99c2050c6615e58e3ea19b50c06ae2c806aa7508567e6932340f3a09ab7a703",
+  "charter_revision": "charter-2",
+  "checkpoint_digest": "83b70b9c692667f90c3eea07a34e058ca806d55827d64b35fe434cfee7cdeaca",
+  "context_manifest_digest": "d79ce80badfc22014b4c3cc42c20d13fc7d2ac2a97f5da6d6b8b3b78c7cc5681",
+  "conversation_handle_digest": "3a81515c5f2c6ae7f303b38926f9ec33737b5e5e9a773360e444d37338824d6e",
+  "created_at": "2026-08-08T00:00:00Z",
+  "delegated_scope": [
+    "phase_sequencing",
+    "route_selection"
+  ],
+  "delegation_revision": "deleg-3",
+  "episode_id": null,
+  "evidence_refs": [
+    {
+      "id": "ev-arch-1",
+      "kind": "analysis"
+    }
+  ],
+  "execution_state_digest": "1219496b6fe0ac2380a53d010dbf7276e5516cf67dcbea4d3ae25af5866e9e5e",
+  "mode": "ADJUDICATE",
+  "question": "Is the bounded phase resequencing acceptable inside the delegated scope?",
+  "request_digest": "ae2ef9785151c3e33b614d05af27e35b188771f12dc78ff4ec3e8d6b0b100060",
+  "request_id": "areq-example-1",
+  "requested_scope": [
+    "phase_sequencing"
+  ],
+  "requester_role": "tech_lead",
+  "run_id": "run-example",
+  "schema_version": "1.0",
+  "state_revision": 12,
+  "supersedes_request_id": null,
+  "task_id": "task-example"
+}

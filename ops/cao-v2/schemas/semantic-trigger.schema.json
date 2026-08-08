@@ -1,0 +1,92 @@
+{
+  "$id": "https://mlgo.local/schemas/semantic-trigger.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Host-owned deterministic classification that a genuine semantic decision is required.",
+  "properties": {
+    "classified_at": {
+      "type": "string"
+    },
+    "classified_by": {
+      "const": "host_deterministic_classifier"
+    },
+    "decision_scope": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dedupe_key": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "enforcement_mode": {
+      "enum": [
+        "shadow_only",
+        "live"
+      ]
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "initiator": {
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "semantic_authority_required": {
+      "const": true
+    },
+    "subject_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "trigger_class": {
+      "enum": [
+        "PROJECT_OR_MILESTONE_ARCHITECTURE",
+        "MATERIAL_DECOMPOSITION",
+        "EXPLICIT_DIFFICULT_OR_AMBIGUOUS_PLANNING",
+        "UNUSUAL_ERROR_AFTER_BOUNDED_ATTEMPTS",
+        "AUTHORITY_SCOPE_RISK_OR_BUDGET_EXCEPTION",
+        "END_OF_TASK_SEMANTIC_CHALLENGE"
+      ]
+    },
+    "trigger_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "trigger_class",
+    "run_id",
+    "task_id",
+    "initiator",
+    "evidence_ids",
+    "dedupe_key",
+    "enforcement_mode",
+    "semantic_authority_required",
+    "classified_by",
+    "classified_at",
+    "trigger_digest"
+  ],
+  "title": "SemanticTrigger",
+  "type": "object"
+}

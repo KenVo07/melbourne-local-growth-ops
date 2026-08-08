@@ -1,5 +1,17 @@
 {
   "agy_sidecar_api": "http://127.0.0.1:9890",
+  "authority": {
+    "adjudicate_requires_state_compare_and_set": true,
+    "consult_is_advisory_only": true,
+    "escalate_local_conversion_forbidden": true,
+    "modes": [
+      "CONSULT",
+      "ADJUDICATE",
+      "ESCALATE"
+    ],
+    "semantic_authority_is_not_execution_capability": true,
+    "stale_decision_requires_fresh_request_id": true
+  },
   "capability_activation": {
     "ambiguous_outcome_lookup": {
       "enabled": false,
@@ -46,10 +58,28 @@
     "required_checks_by_target": {},
     "required_checks_must_be_explicit": true
   },
+  "context_envelope": {
+    "block_before_send_on_overflow": true,
+    "common_token_estimate_forbidden": true,
+    "hard_cap_bytes": 262144,
+    "hard_cap_items": null,
+    "measure_complete_serialized_request": true,
+    "minimum_component_bytes": 256,
+    "provider_internal_overhead": "UNAVAILABLE",
+    "semantic_compression": {
+      "command_type": "context.semantic_compression",
+      "enabled": false,
+      "max_depth": 1,
+      "reason": "bounded semantic compression stays disabled until its evidence contract is proven without Slice 3 systems"
+    }
+  },
   "continuity": {
     "cache_continuity_guaranteed": false,
     "checkpoint_fallback_max_attempts": 1,
+    "checkpoint_fallback_must_be_validated": true,
     "checkpoint_fallback_requires_operator_authorization": true,
+    "logical_replay_is_the_correctness_path": true,
+    "native_resume_is_optimization_only": true,
     "native_resume_required_for_first_safe_release": false,
     "provider_capabilities": {
       "agy": {
@@ -396,6 +426,32 @@
     "unused_frontier_capacity_never_forces_frontier_use": true
   },
   "schema_version": "2.0",
+  "semantic_triggers": {
+    "allowed_trigger_classes": [
+      "PROJECT_OR_MILESTONE_ARCHITECTURE",
+      "MATERIAL_DECOMPOSITION",
+      "EXPLICIT_DIFFICULT_OR_AMBIGUOUS_PLANNING",
+      "UNUSUAL_ERROR_AFTER_BOUNDED_ATTEMPTS",
+      "AUTHORITY_SCOPE_RISK_OR_BUDGET_EXCEPTION",
+      "END_OF_TASK_SEMANTIC_CHALLENGE"
+    ],
+    "bounded_attempt_floor": 3,
+    "end_of_task_challenge_required_risk_tiers": [
+      "HIGH",
+      "CRITICAL"
+    ],
+    "enforcement_mode": "shadow_only",
+    "live_enforcement_requires_proven_host_enforcement": true,
+    "max_episodes_per_task": 6,
+    "max_open_episodes_per_task": 3,
+    "profile_language_remains_compatibility_guidance": true
+  },
+  "slice2": {
+    "compatibility_projection_only": true,
+    "durable_writers_default": "off",
+    "historical_records_remain_immutable": true,
+    "run_contract_binding_identifies_slice2": true
+  },
   "state_root": "/home/khoa/.local/state/mlgo-cao",
   "supervisor_profiles": {
     "mlgo-claude-gateway-supervisor": {

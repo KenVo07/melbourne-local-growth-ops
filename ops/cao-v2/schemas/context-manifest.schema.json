@@ -1,0 +1,196 @@
+{
+  "$id": "https://mlgo.local/schemas/context-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact accounting of every CAO-controlled component of the final serialized request. Provider-internal overhead is UNAVAILABLE and never estimated.",
+  "properties": {
+    "block_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "components": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "component_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "system_control_text",
+              "profile_text",
+              "objective_task",
+              "durable_state_summary",
+              "selected_history",
+              "tool_schemas",
+              "tool_results",
+              "attachment_excerpts",
+              "adapter_wrapper"
+            ]
+          },
+          "reducible": {
+            "type": "boolean"
+          },
+          "retention_rank": {
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "component_id",
+          "bytes",
+          "items",
+          "sha256",
+          "reducible",
+          "retention_rank"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "deterministic_reduction_only": {
+      "type": "boolean"
+    },
+    "hard_cap_bytes": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "hard_cap_items": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "manifest_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "manifest_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "measured_at": {
+      "type": "string"
+    },
+    "measured_component_kinds": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "provider_internal_prompt_overhead": {
+      "const": "UNAVAILABLE"
+    },
+    "provider_internal_transforms": {
+      "const": "UNAVAILABLE"
+    },
+    "provider_native_token_counts": {
+      "oneOf": [
+        {
+          "const": "UNAVAILABLE"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "reductions": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "role_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "semantic_compression_used": {
+      "type": "boolean"
+    },
+    "serialized_request_bytes": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "serialized_request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "WITHIN_CAP",
+        "BLOCKED_OVER_CAP"
+      ]
+    },
+    "task_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "token_estimation_method": {
+      "const": "none; host measures bytes and items only"
+    },
+    "total_items": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "unmeasured_component_kinds": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "run_id",
+    "task_id",
+    "role_id",
+    "status",
+    "hard_cap_bytes",
+    "serialized_request_bytes",
+    "serialized_request_sha256",
+    "total_items",
+    "components",
+    "measured_component_kinds",
+    "unmeasured_component_kinds",
+    "reductions",
+    "deterministic_reduction_only",
+    "semantic_compression_used",
+    "provider_native_token_counts",
+    "provider_internal_prompt_overhead",
+    "provider_internal_transforms",
+    "token_estimation_method",
+    "block_reason",
+    "measured_at",
+    "manifest_digest"
+  ],
+  "title": "ContextManifest",
+  "type": "object"
+}
