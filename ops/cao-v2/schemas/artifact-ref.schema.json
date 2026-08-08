@@ -1,0 +1,161 @@
+{
+  "$id": "https://mlgo.local/cao-v2/artifact-ref.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "An immutable reference to durable, hash-verified bytes in a security-domain-scoped content store. A reference is only committed after the object is written, fsynced, classified and hash-verified. Deduplication is confined to one security domain, classification, retention class and storage class.",
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "byte_size": {
+      "type": "integer"
+    },
+    "classification": {
+      "enum": [
+        "NORMAL",
+        "SENSITIVE",
+        "RESTRICTED",
+        "QUARANTINED"
+      ]
+    },
+    "classification_findings": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "classification_reason": {
+      "type": "string"
+    },
+    "commit_state": {
+      "type": "string"
+    },
+    "compatibility_wrapper": {
+      "type": "boolean"
+    },
+    "content_hash": {
+      "type": "string"
+    },
+    "content_hash_algorithm": {
+      "const": "sha256"
+    },
+    "context_manifest_eligible": {
+      "type": "boolean"
+    },
+    "declared_classification": {
+      "type": "string"
+    },
+    "dedup_scope_digest": {
+      "type": "string"
+    },
+    "deduplicated": {
+      "type": "boolean"
+    },
+    "deletion_state": {
+      "enum": [
+        "ACTIVE",
+        "DELETION_APPROVED",
+        "TOMBSTONED"
+      ]
+    },
+    "export_eligible": {
+      "type": "boolean"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "original_record": {
+      "type": "object"
+    },
+    "producer_command_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "producer_event_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "producer_operation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "quarantined": {
+      "type": "boolean"
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "ref_digest": {
+      "type": "string"
+    },
+    "retention_class": {
+      "enum": [
+        "TRANSIENT",
+        "STANDARD",
+        "AUDIT",
+        "LEGAL_HOLD"
+      ]
+    },
+    "role": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "security_domain_id": {
+      "description": "Isolation domain; dedup and resolution never cross it.",
+      "type": "string"
+    },
+    "storage_class": {
+      "type": "string"
+    },
+    "storage_hash": {
+      "description": "Hash re-read from durable storage after fsync.",
+      "type": "string"
+    },
+    "storage_hash_verified_at": {
+      "type": "string"
+    },
+    "storage_locator": {
+      "type": "object"
+    },
+    "stored_at": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "security_domain_id",
+    "run_id",
+    "kind",
+    "content_hash",
+    "classification",
+    "retention_class",
+    "deletion_state",
+    "ref_digest"
+  ],
+  "title": "CAO v2 ArtifactRef",
+  "type": "object"
+}

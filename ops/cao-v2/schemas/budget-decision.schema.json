@@ -1,0 +1,161 @@
+{
+  "$id": "https://mlgo.local/cao-v2/budget-decision.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "The recorded outcome of an atomic evaluation of settled usage plus active reservations against every applicable scope. Each evaluated limit carries its own deterministic reason.",
+  "properties": {
+    "action": {
+      "enum": [
+        "allow",
+        "warn",
+        "pause",
+        "require_approval",
+        "prohibit"
+      ]
+    },
+    "actor_role": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "allowed": {
+      "type": "boolean"
+    },
+    "breached_limits": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "command_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "decided_at": {
+      "type": "string"
+    },
+    "decision_digest": {
+      "type": "string"
+    },
+    "enforcement_mode": {
+      "type": "string"
+    },
+    "evaluations": {
+      "items": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "already_consumed": {
+            "type": "number"
+          },
+          "effective_capacity": {
+            "type": "number"
+          },
+          "exceeded": {
+            "type": "boolean"
+          },
+          "limit_id": {
+            "type": "string"
+          },
+          "limit_value": {
+            "type": "number"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "native_unit": {
+            "type": "string"
+          },
+          "projected": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "requested": {
+            "type": "number"
+          },
+          "scope_id": {
+            "type": "string"
+          },
+          "scope_kind": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "limit_id",
+          "scope_kind",
+          "scope_id",
+          "metric",
+          "native_unit",
+          "exceeded",
+          "action",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "policy_digest": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "protected_reserves": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "requests": {
+      "items": {
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "native_unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "native_unit",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "scopes": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "action",
+    "allowed",
+    "evaluations",
+    "reason",
+    "decision_digest"
+  ],
+  "title": "CAO v2 Budget Decision",
+  "type": "object"
+}

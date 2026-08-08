@@ -1,0 +1,59 @@
+{
+  "$id": "https://mlgo.local/cao-v2/event-projection-checkpoint.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Records how far the projector consumed each authoritative owner ledger. The checkpoint tracks owner-ledger cursors, never a private event-log offset, so a projection can always be rebuilt and a truncated owner ledger is detectable.",
+  "properties": {
+    "canonical_stream_digest": {
+      "type": "string"
+    },
+    "cursors": {
+      "properties": {
+        "operation_ledger": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "run_store": {
+          "properties": {
+            "state_version": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "event_count": {
+      "type": "integer"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "stream_chain_digests": {
+      "type": "object"
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "cursors",
+    "event_count",
+    "canonical_stream_digest"
+  ],
+  "title": "CAO v2 Event Projection Checkpoint",
+  "type": "object"
+}

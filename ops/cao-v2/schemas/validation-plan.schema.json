@@ -1,0 +1,164 @@
+{
+  "$id": "https://mlgo.local/cao-v2/validation-plan.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "A risk-proportional selection of validation checks. Every selected and omitted check carries a deterministic reason. Required CI and reachability are always selected, and full final integrated validation is always selected for an integration candidate; no optimisation may omit them.",
+  "properties": {
+    "classification": {
+      "properties": {
+        "areas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "changed_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "classifier_version": {
+          "type": "string"
+        },
+        "is_integration_candidate": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "risk_tier": {
+          "type": "string"
+        },
+        "shared_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "risk_tier",
+        "reason",
+        "changed_paths",
+        "is_integration_candidate"
+      ],
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "omitted": {
+      "items": {
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "check_id": {
+            "type": "string"
+          },
+          "command": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "focused_leaf",
+              "broad_task",
+              "required_independent_review",
+              "full_final_integrated",
+              "required_ci",
+              "reachability"
+            ]
+          },
+          "reason": {
+            "description": "Deterministic reason this check was selected or omitted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "check_id",
+          "kind",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "plan_digest": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "risk_tier": {
+      "enum": [
+        "LOCALIZED_LOW",
+        "TASK_BROAD",
+        "SHARED_ARCHITECTURE",
+        "INTEGRATED_FINAL"
+      ]
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "selected": {
+      "items": {
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "check_id": {
+            "type": "string"
+          },
+          "command": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "focused_leaf",
+              "broad_task",
+              "required_independent_review",
+              "full_final_integrated",
+              "required_ci",
+              "reachability"
+            ]
+          },
+          "reason": {
+            "description": "Deterministic reason this check was selected or omitted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "check_id",
+          "kind",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "risk_tier",
+    "classification",
+    "selected",
+    "omitted",
+    "plan_digest"
+  ],
+  "title": "CAO v2 Validation Plan",
+  "type": "object"
+}
