@@ -94,7 +94,22 @@ done
 if [[ "$mode" == source ]]; then
  (cd "$src" && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib MLGO_CAO_V2_REGISTRY="$registry" python3 -m unittest discover -s tests -v)
 else
- for cmd in mlgo-v2 mlgo-v2-capacity mlgo-v2-route mlgo-v2-dispatch mlgo-v2-controller mlgo-v2-state mlgo-v2-task-lead mlgo-v2-git mlgo-v2-finalize mlgo-v2-usage mlgo-v2-safe-restart mlgo-v2-herdr-preflight; do [[ -x "$HOME/.local/bin/$cmd" ]] || { echo "missing staged command: $cmd" >&2; exit 1; }; done
+ # Every staged CAO CLI entrypoint must resolve its own package from its own
+ # default path alone. A command that only imports because PYTHONPATH/
+ # MLGO_CAO_V2_LIB happen to already be set in the caller's shell is exactly
+ # the bug class that let a broken launcher pass every unit test (which always
+ # sets PYTHONPATH itself) and only fail at a real host-stage run. Stripping
+ # both here means this loop cannot pass on borrowed environment.
+ for cmd in mlgo-v2 mlgo-v2-capacity mlgo-v2-route mlgo-v2-dispatch mlgo-v2-controller mlgo-v2-state mlgo-v2-task-lead mlgo-v2-git mlgo-v2-finalize mlgo-v2-usage mlgo-v2-safe-restart mlgo-v2-herdr-preflight mlgo-v2-skill-cache; do
+  [[ -x "$HOME/.local/bin/$cmd" ]] || { echo "missing staged command: $cmd" >&2; exit 1; }
+  out=$(env -u PYTHONPATH -u MLGO_CAO_V2_LIB "$HOME/.local/bin/$cmd" --help 2>&1) && rc=0 || rc=$?
+  if [[ "$rc" -eq 127 ]]; then echo "staged command not executable: $cmd" >&2; exit 1; fi
+  if grep -q 'ModuleNotFoundError\|ImportError: \|Traceback (most recent call last)' <<<"$out"; then
+   echo "staged command $cmd cannot resolve its own package without a caller-supplied PYTHONPATH/MLGO_CAO_V2_LIB:" >&2
+   echo "$out" >&2
+   exit 1
+  fi
+ done
  systemd-analyze --user verify "$HOME/.config/systemd/user/mlgo-cao-v2-controller.service" >/dev/null
  if [[ "$activation" == activate-profiles ]]; then "$HOME/.local/bin/mlgo-sync-cao-profiles" --verify; fi
 fi
