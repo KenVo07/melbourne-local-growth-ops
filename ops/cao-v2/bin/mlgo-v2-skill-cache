@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Operator tool: populate and verify the CAO-owned sealed skill cache.
+
+This tool acquires only the exact pinned bytes named by the tracked canonical
+bundle lock, proves every digest before sealing anything, and activates
+nothing.  It never executes upstream code, and it never writes to the native
+``~/.agents/skills`` mirror - the mirror can only be *read* and compared.
+
+    mlgo-v2-skill-cache plan
+    mlgo-v2-skill-cache populate --cache-root DIR [--project P --security-domain D]
+    mlgo-v2-skill-cache verify-mirror --cache-root DIR [--mirror-root ~/.agents/skills]
+
+Exit status is non-zero on any missing or mismatched file, or on any mirror
+drift, so the tool is usable directly as a gate.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(
+    0,
+    os.environ.get(
+        "MLGO_CAO_V2_LIB",
+        str(Path(__file__).resolve().parents[1] / "lib"),
+    ),
+)
+
+from mlgo_cao_v2.canonical_lock import (  # noqa: E402
+    CanonicalLockError,
+    load_lock,
+    population_plan,
+)
+from mlgo_cao_v2.common import ContractError, PolicyError  # noqa: E402
+from mlgo_cao_v2.skill_cache import SealedSkillCache  # noqa: E402
+from mlgo_cao_v2.skill_population import (  # noqa: E402
+    bind_namespace,
+    populate_cache,
+    verify_native_mirror,
+)
+
+DEFAULT_MIRROR_ROOT = "~/.agents/skills"
+
+
+def _emit(payload: object) -> None:
+    json.dump(payload, sys.stdout, indent=2, sort_keys=True)
+    sys.stdout.write("\n")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="mlgo-v2-skill-cache", description=__doc__)
+    parser.add_argument("--lock", default=None, help="path to the canonical bundle lock")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("plan", help="print the fully determined acquisition plan")
+
+    populate = sub.add_parser("populate", help="acquire, verify and seal pinned bundles")
+    populate.add_argument("--cache-root", required=True)
+    populate.add_argument("--project", default=None)
+    populate.add_argument("--security-domain", default=None)
+
+    mirror = sub.add_parser(
+        "verify-mirror", help="compare a native mirror against sealed content (read-only)"
+    )
+    mirror.add_argument("--cache-root", required=True)
+    mirror.add_argument("--mirror-root", default=DEFAULT_MIRROR_ROOT)
+    mirror.add_argument("--project", required=True)
+    mirror.add_argument("--security-domain", required=True)
+
+    args = parser.parse_args(argv)
+
+    try:
+        lock = load_lock(args.lock)
+
+        if args.command == "plan":
+            _emit(
+                {
+                    "lock_digest": lock["lock_digest"],
+                    "requires_semantic_choice_at_staging_time": False,
+                    "acquisitions": population_plan(lock),
+                }
+            )
+            return 0
+
+        cache = SealedSkillCache(args.cache_root)
+
+        if args.command == "populate":
+            report = populate_cache(cache=cache, lock=lock)
+            if args.project and args.security_domain:
+                report["bindings"] = bind_namespace(
+                    cache=cache,
+                    lock=lock,
+                    project_id=args.project,
+                    security_domain_id=args.security_domain,
+                )
+            _emit(report)
+            return 0
+
+        if args.command == "verify-mirror":
+            report = verify_native_mirror(
+                cache=cache,
+                lock=lock,
+                mirror_root=args.mirror_root,
+                project_id=args.project,
+                security_domain_id=args.security_domain,
+            )
+            _emit(report)
+            return 0 if report["accepted"] else 1
+
+    except (CanonicalLockError, ContractError, PolicyError) as exc:
+        _emit({"error": type(exc).__name__, "detail": str(exc)})
+        return 1
+
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

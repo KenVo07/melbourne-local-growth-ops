@@ -284,6 +284,218 @@ def build_registry(manifests: Mapping[str, Mapping[str, Any]]) -> CanonicalSkill
     return registry
 
 
+# --------------------------------------------------------------------------
+# Synthetic canonical-lock fixtures
+# --------------------------------------------------------------------------
+#
+# The tracked lock at ops/cao-v2/skills/canonical-skill-bundles.lock.json pins
+# real upstream bytes, which the gates deliberately do not fetch.  So the
+# fault-injection cases below build a lock with the *same shape*, the same
+# approved bundle ids, repositories and real pinned revisions, but synthetic
+# file content whose digests we can therefore both seal and corrupt offline.
+#
+# Structural facts (which sources are admissible, that pins must be immutable,
+# that exactly one Security Pack exists) are asserted against the real tracked
+# lock; only byte-level drift injection uses these.
+
+SYNTHETIC_LOCK_ACQUIRED_AT = "2026-08-10T00:00:00Z"
+
+_SYNTHETIC_BUNDLE_SPECS = (
+    (
+        "bundle-addy-osmani-agent-skills",
+        "EXTERNAL_ENGINEERING",
+        "addyosmani",
+        "https://github.com/addyosmani/agent-skills",
+        "bdf76c7c6b7b3b3e01bb15c9fdc42ac5351855c1",
+        "0.6.6",
+        TIER_ENGINEERING,
+        (("addy-incremental-implementation", "skills/incremental-implementation/SKILL.md"),
+         ("addy-code-review-and-quality", "skills/code-review-and-quality/SKILL.md")),
+    ),
+    (
+        "bundle-matt-pocock-skills",
+        "EXTERNAL_ENGINEERING",
+        "mattpocock",
+        "https://github.com/mattpocock/skills",
+        "6acc160e4e0cd062dbbbd7a1b26ae92855edf07e",
+        "v1.2.3",
+        TIER_ENGINEERING,
+        (("matt-implement", "skills/engineering/implement/SKILL.md"),
+         ("matt-code-review", "skills/engineering/code-review/SKILL.md")),
+    ),
+    (
+        "bundle-ui-ux-pro-max",
+        "EXTERNAL_ENGINEERING",
+        "nextlevelbuilder",
+        "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+        "abb7f2fd5a083fa1ff55c326a963ff0d95c33f99",
+        "v2.14.1",
+        TIER_ENGINEERING,
+        (("uiux-ui-ux-pro-max", ".claude/skills/ui-ux-pro-max/SKILL.md"),),
+    ),
+    (
+        "bundle-unitoneai-security-skills",
+        "SECURITY_PACK",
+        "UnitOneAI",
+        "https://github.com/UnitOneAI/SecuritySkills",
+        "70bc259bb01abb3015ad2ad859ad5253cbf0bcab",
+        "UNVERSIONED_AT_PIN",
+        TIER_SECURITY_PACK,
+        (("sec-threat-modeling", "skills/appsec/threat-modeling/SKILL.md"),
+         ("sec-secure-code-review", "skills/appsec/secure-code-review/SKILL.md")),
+    ),
+)
+
+_SYNTHETIC_LOCK_RECIPES = (
+    {
+        "recipe_id": "recipe-implementation-backend",
+        "recipe_version": "1.0.0",
+        "role": "developer",
+        "family": FAMILY_IMPLEMENTATION_BACKEND,
+        "task_classes": ["implementation"],
+        "risk_classes": ["standard", "elevated"],
+        "required_skill_ids": ["addy-incremental-implementation", "matt-implement"],
+        "optional_skill_ids": ["addy-code-review-and-quality"],
+        "selection_conditions": {"addy-code-review-and-quality": ["review"]},
+        "maximum_skill_count": 4,
+        "maximum_skill_bytes": 65536,
+    },
+    {
+        "recipe_id": "recipe-security-sensitive-change",
+        "recipe_version": "1.0.0",
+        "role": "developer",
+        "family": FAMILY_SECURITY_SENSITIVE_CHANGE,
+        "task_classes": ["security"],
+        "risk_classes": ["elevated", "critical"],
+        "required_skill_ids": ["sec-threat-modeling", "sec-secure-code-review"],
+        "optional_skill_ids": [],
+        "selection_conditions": {},
+        "maximum_skill_count": 4,
+        "maximum_skill_bytes": 65536,
+    },
+)
+
+
+def synthetic_lock_contents() -> dict[str, dict[str, bytes]]:
+    """The synthetic bytes each synthetic bundle pins, keyed by bundle id."""
+
+    return {
+        bundle_id: {
+            path: skill_bytes(skill_id, f"synthetic canonical content for {skill_id}")
+            for skill_id, path in skills
+        }
+        for bundle_id, _, _, _, _, _, _, skills in _SYNTHETIC_BUNDLE_SPECS
+    }
+
+
+def synthetic_lock() -> dict[str, Any]:
+    """A structurally real, byte-synthetic canonical bundle lock."""
+
+    contents = synthetic_lock_contents()
+    bundles = []
+    for (
+        bundle_id, kind, owner, repository, revision, version, tier, skills
+    ) in _SYNTHETIC_BUNDLE_SPECS:
+        files = contents[bundle_id]
+        file_manifest = sorted(
+            (
+                {
+                    "relative_path": path,
+                    "content_digest": sha256_bytes(data),
+                    "byte_count": len(data),
+                }
+                for path, data in files.items()
+            ),
+            key=lambda e: e["relative_path"],
+        )
+        selected = sorted(
+            (
+                {
+                    "skill_id": skill_id,
+                    "relative_path": path,
+                    "content_digest": sha256_bytes(files[path]),
+                    "byte_count": len(files[path]),
+                    "precedence_tier": tier,
+                    "disciplines": ["synthetic"],
+                    "task_classes": ["implementation"],
+                    "constraints": {},
+                    "native_mirror_name": path.rsplit("/", 2)[-2],
+                }
+                for skill_id, path in skills
+            ),
+            key=lambda s: s["skill_id"],
+        )
+        bundles.append(
+            {
+                "bundle_id": bundle_id,
+                "bundle_kind": kind,
+                "display_name": bundle_id,
+                "source_owner": owner,
+                "source_repository_or_distribution": repository,
+                "source_revision": revision,
+                "source_revision_kind": "git_commit_sha1",
+                "version": version,
+                "version_ref": "UNVERSIONED_AT_PIN",
+                "license_id": "MIT",
+                "license_relative_path": "LICENSE",
+                "license_text_digest": sha256_bytes(b"MIT synthetic license text"),
+                "license_byte_count": 26,
+                "acquired_at": SYNTHETIC_LOCK_ACQUIRED_AT,
+                "provenance_record": {"acquired_by": "synthetic_fixture", "verified": True},
+                "compatibility": {
+                    "min_cao_contract_version": "0.4.0",
+                    "supported_roles": ["developer", "reviewer", "architect"],
+                },
+                "qualification_state": "QUALIFIED",
+                "native_mirror_root": "~/.agents/skills",
+                "skill_ids": sorted(s["skill_id"] for s in selected),
+                "selected_skills": selected,
+                "file_manifest": file_manifest,
+                "total_byte_count": sum(e["byte_count"] for e in file_manifest),
+                "aggregate_content_digest": sha256_json(file_manifest),
+            }
+        )
+
+    bundles.sort(key=lambda b: b["bundle_id"])
+    lock = {
+        "lock_schema_version": "1.0",
+        "lock_id": "mlgo-cao-v2-canonical-skill-bundles",
+        "description": "synthetic fixture lock",
+        "generated_at": SYNTHETIC_LOCK_ACQUIRED_AT,
+        "approved_source_repositories": sorted(
+            b["source_repository_or_distribution"] for b in bundles
+        ),
+        "approved_bundle_ids": sorted(b["bundle_id"] for b in bundles),
+        "security_pack_bundle_id": "bundle-unitoneai-security-skills",
+        "security_pack_required_coverage": ["threat_modeling"],
+        "bundles": bundles,
+        "recipes": [dict(r) for r in _SYNTHETIC_LOCK_RECIPES],
+    }
+    return reseal_lock(lock)
+
+
+def reseal_lock(lock: Mapping[str, Any]) -> dict[str, Any]:
+    """Recompute a lock's self-digest after a fixture mutated it.
+
+    Fault-injection tests use this to prove that drift is caught by *content*
+    checks rather than only by the self-digest: a mutation that is resealed
+    still has to be rejected somewhere else.
+    """
+
+    body = {k: v for k, v in lock.items() if k != "lock_digest"}
+    return {**body, "lock_digest": sha256_json(body)}
+
+
+def seal_synthetic_lock(cache: SealedSkillCache, lock: Mapping[str, Any]) -> None:
+    """Seal and bind every synthetic-lock bundle into one namespace."""
+
+    from mlgo_cao_v2.canonical_lock import bundle_manifests
+
+    contents = synthetic_lock_contents()
+    for bundle_id, manifest in bundle_manifests(lock).items():
+        cache.seal_bundle(manifest, contents[bundle_id])
+
+
 def implementation_recipe(**overrides: Any) -> dict[str, Any]:
     kwargs: dict[str, Any] = dict(
         recipe_id="recipe-implementation-backend",
