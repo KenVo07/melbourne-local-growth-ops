@@ -308,6 +308,23 @@
       "tier": 3,
       "write_capable": true
     },
+    "claude_subscription_child_direct": {
+      "account_pool": "claude_subscription",
+      "billing_mode": "subscription",
+      "display_model": "claude-sonnet-5",
+      "family": "claude",
+      "gateway": false,
+      "intended_for": [
+        "slice4_governed_non_bypassed_child_dispatch_proof"
+      ],
+      "model": "sonnet",
+      "profile": "mlgo-claude-subscription-child-direct",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "reviewer_profile": "mlgo-claude-subscription-reviewer",
+      "tier": 3,
+      "write_capable": true
+    },
     "claude_subscription_opus": {
       "account_pool": "claude_subscription",
       "billing_mode": "subscription",
@@ -381,6 +398,22 @@
       "provider_api": "main",
       "reserve_gated": true,
       "reviewer_profile": null,
+      "tier": 4,
+      "write_capable": true
+    },
+    "codex_plus_child_direct": {
+      "account_pool": "codex_plus",
+      "billing_mode": "subscription",
+      "family": "codex",
+      "gateway": false,
+      "intended_for": [
+        "slice4_governed_non_bypassed_child_dispatch_proof"
+      ],
+      "model": "gpt-5.6-sol",
+      "profile": "mlgo-codex-plus-child-direct",
+      "provider": "codex",
+      "provider_api": "main",
+      "reviewer_profile": "mlgo-codex-plus-reviewer",
       "tier": 4,
       "write_capable": true
     },

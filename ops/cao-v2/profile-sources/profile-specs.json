@@ -52,6 +52,10 @@
       "body": "bounded-phase-builder",
       "frontmatter": "name: mlgo-claude-subscription-builder\ndescription: Claude Sonnet high-effort difficult contextual implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
     },
+    "mlgo-claude-subscription-child-direct": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-claude-subscription-child-direct\ndescription: Slice 4 governed, non-bypassed, direct child-process Claude dispatch proof.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
     "mlgo-claude-subscription-opus-builder": {
       "body": "critical-bounded-builder",
       "frontmatter": "name: mlgo-claude-subscription-opus-builder\ndescription: Claude Opus high-effort critical bounded implementation builder.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: opus\ncapabilities:\n  - critical bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - opus\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols"
@@ -87,6 +91,10 @@
     "mlgo-codex-plus-builder": {
       "body": "bounded-phase-builder",
       "frontmatter": "name: mlgo-codex-plus-builder\ndescription: GPT-5.6 Sol high-effort difficult code, debugging and integration builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols"
+    },
+    "mlgo-codex-plus-child-direct": {
+      "body": "bounded-phase-builder",
+      "frontmatter": "name: mlgo-codex-plus-child-direct\ndescription: GPT-5.6 Sol high-effort difficult code, debugging and integration builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols"
     },
     "mlgo-codex-plus-reviewer": {
       "body": "independent-reviewer",

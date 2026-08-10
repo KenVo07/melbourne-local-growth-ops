@@ -17,6 +17,7 @@ from . import canary_scope
 from .capacity import load_snapshot
 from .dispatch_governance import (
     GovernanceBlocked,
+    dispatch_via_child_transport,
     govern_before_send,
     hold_after_ambiguous,
     release_after_not_sent,
@@ -505,6 +506,109 @@ def _terminal_id_from_http_error(exc: HTTPError) -> str | None:
     return None
 
 
+def _run_job_via_child_transport(
+    *,
+    phase: dict[str, Any],
+    decision: dict[str, Any],
+    job: dict[str, Any],
+    job_path: Path,
+    job_dir: Path,
+    policy: dict[str, Any],
+    store: "RunStore",
+    prompt_text: str,
+    v2_dir: Path,
+    pre_state_facts: dict[str, Any],
+) -> dict[str, Any]:
+    """The synchronous_child_process leg of run_job: governs, dispatches
+    through the real non-bypassed child transport, and settles - entirely
+    replacing the HTTP-terminal-polling flow, which does not apply to a call
+    that never opened an HTTP terminal."""
+
+    try:
+        outcome = dispatch_via_child_transport(
+            phase=phase, decision=decision, job=job, policy=policy,
+            prompt_text=prompt_text, v2_dir=v2_dir, job_dir=job_dir,
+            pre_state_facts=pre_state_facts,
+            provider=str(decision.get("selected_provider") or ""),
+            registry=policy["_registry"],
+        )
+    except GovernanceBlocked as exc:
+        job.update({
+            "status": "FAILED", "completion_state": "GOVERNANCE_BLOCKED",
+            "governance_block_reason": exc.reason, "governance_block_detail": exc.detail,
+            "updated_at": iso_now(),
+        })
+        atomic_write_json(job_path, job)
+        store.transition_phase(
+            phase["phase_id"], "BLOCKED", reason=f"GOVERNANCE_BLOCKED: {exc.reason}",
+            updates={"last_error": exc.reason},
+        )
+        return {"ok": False, "decision": "GOVERNANCE_BLOCKED", "reason": exc.reason, "detail": exc.detail}
+
+    governance_record = outcome["governance_record"]
+    submit_result = outcome["submit_result"]
+    command_id = job["job_id"]
+    run_id = phase["run_id"]
+
+    if submit_result.response.get("denied"):
+        # A real call happened and the provider genuinely refused - capacity
+        # was spent even though the phase did not produce a result.
+        settle_after_send(v2_dir=v2_dir, run_id=run_id, command_id=command_id, native_units=[])
+        job.update({
+            "status": "FAILED", "completion_state": "PERMISSION_DENIED",
+            "child_transport_observation": submit_result.response["observation"],
+            "updated_at": iso_now(),
+        })
+        atomic_write_json(job_path, job)
+        store.transition_phase(
+            phase["phase_id"], "FAILED", reason="child transport: provider denied the operation",
+            updates={"last_error": "PERMISSION_DENIED"},
+        )
+        return job
+
+    model_text = submit_result.response["result"].get("model_text", "")
+    atomic_write_text(job_dir / "raw-output.txt", model_text)
+
+    try:
+        packet = extract_result_packet(model_text, phase, provider=str(decision.get("selected_provider") or ""))
+        validate_result_packet(packet, phase)
+    except Exception as exc:
+        settle_after_send(v2_dir=v2_dir, run_id=run_id, command_id=command_id, native_units=[])
+        job.update({
+            "status": "FAILED", "completion_state": "POST_MODEL_CONTRACT_FAILURE",
+            "last_error": str(exc), "updated_at": iso_now(),
+        })
+        atomic_write_json(job_path, job)
+        store.transition_phase(
+            phase["phase_id"], "FAILED", reason=f"child transport: result packet invalid: {exc}",
+            updates={"last_error": str(exc)},
+        )
+        return job
+
+    packet["model"] = decision["selected_model"]
+    packet["cao_terminal_id"] = f"child-direct-{command_id}"
+    packet["governance_record"] = governance_record
+    packet["permission_observation"] = submit_result.response["observation"]
+    result_path = job_dir / "result.json"
+    atomic_write_json(result_path, packet)
+
+    event = {
+        "schema_version": "2.1", "event_id": f"result-{command_id}", "event_type": "PHASE_RESULT",
+        "run_id": run_id, "big_task_id": phase["big_task_id"], "phase_id": phase["phase_id"],
+        "job_id": command_id, "result_path": str(result_path), "created_at": iso_now(),
+    }
+    atomic_write_json(v2_dir / "events" / "incoming" / f"{event['event_id']}.json", event)
+
+    settle_after_send(v2_dir=v2_dir, run_id=run_id, command_id=command_id, native_units=[])
+    job.update({
+        "status": "RESULT_WRITTEN", "completion_state": "RESULT_PACKET_STABLE",
+        "result_path": str(result_path), "terminal_id": f"child-direct-{command_id}",
+        "actual_call_consumed": True, "updated_at": iso_now(),
+    })
+    atomic_write_json(job_path, job)
+    return job
+
+
 def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict[str, Any]:
     policy = load_policy(policy_path)
     job_path = Path(job_file).resolve()
@@ -575,13 +679,31 @@ def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict
         # run-step boundary for main-CAO/Herdr providers.
         route_cfg = route(policy, decision["selected_route"])
         transport_cfg = policy["_registry"]["transports"][route_cfg["transport_id"]]
+
+        v2_dir = _v2_dir(policy, phase["run_id"])
+        pre_state_facts = read_only_before if read_only_before is not None else git_snapshot(read_only_workspace)
+
+        # The governed, non-bypassed child-process transport (Slice 4): a
+        # transport-kind check, not a provider-brand special case (both
+        # Claude and Codex routes can use this transport_id; the distinction
+        # is *how* the call crosses the boundary - a synchronous local
+        # process vs. an HTTP-polled remote terminal - not which vendor it
+        # is). This branch owns its own governance-through-settlement
+        # lifecycle and returns directly; none of the HTTP-terminal-polling
+        # code below it applies to a call that never opened one.
+        if transport_cfg.get("transport_kind") == "synchronous_child_process":
+            pre_provider_failure = False
+            return _run_job_via_child_transport(
+                phase=phase, decision=decision, job=job, job_path=job_path, job_dir=job_dir,
+                policy=policy, store=store, prompt_text=prompt_text, v2_dir=v2_dir,
+                pre_state_facts=pre_state_facts,
+            )
+
         if transport_cfg.get("requires_herdr_preflight", False):
             preflight_record = preflight_herdr_boundary(policy)
             atomic_write_json(job_dir / "herdr-preflight.json", preflight_record)
         pre_provider_failure = False
 
-        v2_dir = _v2_dir(policy, phase["run_id"])
-        pre_state_facts = read_only_before if read_only_before is not None else git_snapshot(read_only_workspace)
         try:
             governance_record = govern_before_send(
                 phase=phase, decision=decision, job=job, policy=policy,

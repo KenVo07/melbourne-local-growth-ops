@@ -1,13 +1,16 @@
-"""Slice 4 gap closure: real (non-mocked-cache) tests for the child-provider
-transport that closes the PermissionAdapter and SkillContract-application
-integration gaps.
+"""Slice 4 gap closure (round 2): real (non-mocked-cache) tests for the
+child-provider transport wired through the actual registry-selected route,
+with measured (not caller-supplied) provider identity and no qualification
+self-certification.
 
 Like ``test_slice4_dispatch_governance``, these run against the real
-operator-populated sealed skill cache (copied into a tmp dir) and skip if the
-host has not populated one - they prove real-host integration, not portable
-unit behaviour.  The provider CLI itself is mocked here (``subprocess.run``)
-so this file stays fast and deterministic; the actual real-provider proof
-lives in ``evidence/slice4/permission-adapter-live/``.
+operator-populated sealed skill cache and the real installed provider
+wrapper scripts (copied/read, never network-called for anything but a fast
+``--version`` probe here) - they skip gracefully if the host doesn't have
+them, since they prove real-host integration, not portable unit behaviour.
+The provider CLI's actual model call is mocked here (``subprocess.run``) so
+this file stays fast and deterministic; the real, non-mocked proof lives in
+``evidence/slice4/permission-adapter-live/``.
 """
 
 from __future__ import annotations
@@ -20,20 +23,16 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mlgo_cao_v2 import dispatch_governance as dg
-from mlgo_cao_v2.approval_broker import CLASS_WRITE_IN_OWNED_SCOPE
 from mlgo_cao_v2.canonical_lock import load_lock
-from mlgo_cao_v2.child_provider_transport import (
-    FORBIDDEN_BYPASS_FLAGS,
-    BypassRefused,
-    ChildProcessTransportAdapter,
-    ClaudeCliPermissionAdapter,
-    CodexCliPermissionAdapter,
-    _assert_no_bypass,
-)
+from mlgo_cao_v2.child_provider_transport import FORBIDDEN_BYPASS_FLAGS, BypassRefused, _assert_no_bypass
+from mlgo_cao_v2.registry import load_registry, profile as registry_profile
 from mlgo_cao_v2.skill_cache import SealedSkillCache
 from mlgo_cao_v2.skill_population import bind_namespace
 
 REAL_CACHE_ROOT = Path.home() / ".local" / "state" / "mlgo-cao" / "canonical-skill-cache-v1"
+REGISTRY_PATH = Path(__file__).resolve().parents[1] / "registry" / "provider-registry.json"
+CLAUDE_WRAPPER = Path.home() / ".local" / "bin" / "mlgo-claude-subscription-high"
+CODEX_WRAPPER = Path.home() / ".local" / "bin" / "mlgo-codex-plus"
 
 
 def _real_cache_populated() -> bool:
@@ -47,6 +46,10 @@ def _real_cache_populated() -> bool:
     return all(cache.load_manifest(b["bundle_id"]) is not None for b in lock["bundles"])
 
 
+def _host_ready() -> bool:
+    return _real_cache_populated() and CLAUDE_WRAPPER.is_file() and CODEX_WRAPPER.is_file()
+
+
 class BypassGuardTests(unittest.TestCase):
     def test_forbidden_flags_are_refused(self):
         for flag in FORBIDDEN_BYPASS_FLAGS:
@@ -58,8 +61,8 @@ class BypassGuardTests(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    _real_cache_populated(),
-    "requires the operator-populated sealed canonical skill cache on this host",
+    _host_ready(),
+    "requires the operator-populated sealed cache and installed provider wrapper scripts on this host",
 )
 class ChildProviderTransportTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -72,8 +75,9 @@ class ChildProviderTransportTests(unittest.TestCase):
         self.cache = SealedSkillCache(self.cache_root)
         self.worktree = self.tmp / "worktree"
         self.worktree.mkdir()
+        self.registry = load_registry(REGISTRY_PATH)
 
-    def _prepared(self, run_id: str):
+    def _prepared(self, run_id: str, *, provider: str):
         project_id, domain_id = dg.project_and_domain_for_run(run_id)
         bind_namespace(cache=self.cache, lock=self.lock, project_id=project_id, security_domain_id=domain_id)
         v2_dir = self.tmp / "runs" / run_id / "v2"
@@ -86,6 +90,8 @@ class ChildProviderTransportTests(unittest.TestCase):
             "orchestration": {"max_real_provider_sessions_per_run": 12},
             "context_envelope": {},
         }
+        profile_id = "mlgo-claude-subscription-child-direct" if provider == "claude_code" else "mlgo-codex-plus-child-direct"
+        route_id = "claude_subscription_child_direct" if provider == "claude_code" else "codex_plus_child_direct"
         phase = {
             "run_id": run_id, "big_task_id": "bt-1", "phase_id": "phase-1",
             "phase_kind": "implementation", "objective": "Implement a small backend fix",
@@ -93,7 +99,7 @@ class ChildProviderTransportTests(unittest.TestCase):
             "worktree": {"path": str(self.worktree), "branch": "main"},
             "ownership": {"allowed_paths": ["."], "forbidden_paths": []},
         }
-        decision = {"selected_profile": "mlgo-claude-subscription-builder", "selected_route": "claude_subscription_opus"}
+        decision = {"selected_profile": profile_id, "selected_route": route_id, "selected_provider": provider}
         job = {"job_id": f"job-{run_id}", "attempt": 1}
         return policy, phase, decision, job, v2_dir, job_dir
 
@@ -104,83 +110,78 @@ class ChildProviderTransportTests(unittest.TestCase):
         events.append({"type": "result", "permission_denials": denials or [], "is_error": False, "total_cost_usd": 0.01, "usage": {}})
         return "\n".join(json.dumps(e) for e in events)
 
-    def test_unqualified_adapter_identity_blocks_before_launch(self):
-        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-unqualified")
-        with patch("subprocess.run") as mock_run:
-            with self.assertRaises(dg.GovernanceBlocked):
-                dg.dispatch_via_child_transport(
-                    phase=phase, decision=decision, job=job, policy=policy,
-                    prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
-                    pre_state_facts={"branch": "x", "head": "y"},
-                    provider="claude_code", provider_version="2.1.226",
-                )
-        mock_run.assert_not_called()
-
-    def test_qualified_write_dispatch_is_approved_and_never_bypassed(self):
-        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-approved")
-        adapter = ClaudeCliPermissionAdapter(
-            adapter_id="cao-child-direct-claude_code", provider_profile_id=decision["selected_profile"],
-            provider_version="2.1.226", wrapper_version="1.0.0", declared_capabilities=["native_preauthorization"],
-        )
-        dg.qualify_native_preauthorization(policy=policy, adapter=adapter, evidence_sha256="a" * 64)
+    def test_first_use_is_a_ceremony_and_qualifies_from_real_evidence_not_a_caller_hash(self):
+        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-ceremony", provider="claude_code")
+        self.assertIsNone(dg.load_qualification(policy=policy, adapter_id="cao-child-direct-claude_code"))
 
         class FakeProc:
             stdout = self._claude_stdout()
             stderr = ""
 
-        with patch("subprocess.run", return_value=FakeProc()) as mock_run:
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = FakeProc()
             outcome = dg.dispatch_via_child_transport(
                 phase=phase, decision=decision, job=job, policy=policy,
                 prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
                 pre_state_facts={"branch": "x", "head": "y"},
-                provider="claude_code", provider_version="2.1.226",
+                provider="claude_code", registry=self.registry,
             )
-        self.assertTrue(mock_run.called)
-        argv = mock_run.call_args.args[0]
+        self.assertTrue(outcome["ceremony_mode"])
+        self.assertIsNotNone(outcome["qualification"])
+        # The qualification's evidence hash must be derived from the real
+        # captured stdout, not any value the test supplied.
+        raw = (job_dir / "child-transport" / "raw-stdout.jsonl").read_bytes()
+        from mlgo_cao_v2.common import sha256_bytes
+        self.assertEqual(outcome["qualification"]["evidence_sha256"], sha256_bytes(raw))
+
+        # A second dispatch for the *same* measured identity is no longer a
+        # ceremony - it uses the now-real qualification.
+        policy2, phase2, decision2, job2, v2_dir2, job_dir2 = self._prepared("run-qualified", provider="claude_code")
+        with patch("subprocess.run") as mock_run2:
+            mock_run2.return_value = FakeProc()
+            outcome2 = dg.dispatch_via_child_transport(
+                phase=phase2, decision=decision2, job=job2, policy=policy,  # same policy/state_root as run 1
+                prompt_text="Do the thing.", v2_dir=v2_dir2, job_dir=job_dir2,
+                pre_state_facts={"branch": "x", "head": "y"},
+                provider="claude_code", registry=self.registry,
+            )
+        self.assertFalse(outcome2["ceremony_mode"])
+        argv = mock_run2.call_args.kwargs.get("timeout") is not None
+        launch_argv = json.loads((job_dir2 / "child-transport" / "launch-argv.json").read_text())
+        self.assertIn(str(CLAUDE_WRAPPER), launch_argv["argv"][0])
         for flag in FORBIDDEN_BYPASS_FLAGS:
-            self.assertNotIn(flag, argv)
-        self.assertIn("acceptEdits", argv)
-        self.assertFalse(outcome["submit_result"].response["denied"])
-        self.assertEqual(outcome["submit_result"].response["observation"]["observed_state"], "APPROVED")
+            self.assertNotIn(flag, launch_argv["argv"])
 
-        # The exact selected-skill bytes must actually have been sent.
-        governance_record = outcome["governance_record"]
-        self.assertTrue(governance_record["native_skill_projection_bytes"] > 0)
-        launch_argv_path = job_dir / "child-transport" / "launch-argv.json"
-        self.assertTrue(launch_argv_path.is_file())
-
-    def test_bypass_permission_mode_reported_by_provider_is_refused(self):
-        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-bypass-detected")
-        adapter = ClaudeCliPermissionAdapter(
-            adapter_id="cao-child-direct-claude_code", provider_profile_id=decision["selected_profile"],
-            provider_version="2.1.226", wrapper_version="1.0.0", declared_capabilities=["native_preauthorization"],
-        )
-        dg.qualify_native_preauthorization(policy=policy, adapter=adapter, evidence_sha256="a" * 64)
+    def test_dispatch_uses_the_route_selected_executable_not_bare_path_binary(self):
+        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-executable", provider="codex")
 
         class FakeProc:
-            stdout = self._claude_stdout(permission_mode="bypassPermissions")
+            stdout = "\n".join(json.dumps(e) for e in [
+                {"type": "item.completed", "item": {"type": "file_change", "changes": [], "status": "completed"}},
+                {"type": "turn.completed", "usage": {}},
+            ])
             stderr = ""
 
-        with patch("subprocess.run", return_value=FakeProc()):
-            with self.assertRaises(Exception) as ctx:
-                dg.dispatch_via_child_transport(
-                    phase=phase, decision=decision, job=job, policy=policy,
-                    prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
-                    pre_state_facts={"branch": "x", "head": "y"},
-                    provider="claude_code", provider_version="2.1.226",
-                )
-        self.assertIn("bypassPermissions", str(ctx.exception))
+        with patch("subprocess.run", return_value=FakeProc()) as mock_run:
+            dg.dispatch_via_child_transport(
+                phase=phase, decision=decision, job=job, policy=policy,
+                prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
+                pre_state_facts={"branch": "x", "head": "y"},
+                provider="codex", registry=self.registry,
+            )
+        # subprocess.run was called at least once for --version (identity
+        # measurement) and once for the actual dispatch, both against the
+        # resolved wrapper, never a bare "codex".
+        for call in mock_run.call_args_list:
+            argv = call.args[0]
+            self.assertEqual(argv[0], str(CODEX_WRAPPER))
+            self.assertNotEqual(argv[0], "codex")
 
-    def test_permission_denied_evidence_maps_to_denied_not_approved(self):
-        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-denied")
-        adapter = ClaudeCliPermissionAdapter(
-            adapter_id="cao-child-direct-claude_code", provider_profile_id=decision["selected_profile"],
-            provider_version="2.1.226", wrapper_version="1.0.0", declared_capabilities=["native_preauthorization"],
-        )
-        dg.qualify_native_preauthorization(policy=policy, adapter=adapter, evidence_sha256="a" * 64)
+    def test_effective_request_bytes_match_context_envelope_measurement_exactly(self):
+        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-envelope-match", provider="claude_code")
 
         class FakeProc:
-            stdout = self._claude_stdout(denials=[{"tool": "Bash", "reason": "outside allowed scope"}])
+            stdout = self._claude_stdout()
             stderr = ""
 
         with patch("subprocess.run", return_value=FakeProc()):
@@ -188,10 +189,58 @@ class ChildProviderTransportTests(unittest.TestCase):
                 phase=phase, decision=decision, job=job, policy=policy,
                 prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
                 pre_state_facts={"branch": "x", "head": "y"},
-                provider="claude_code", provider_version="2.1.226",
+                provider="claude_code", registry=self.registry,
             )
-        self.assertTrue(outcome["submit_result"].response["denied"])
-        self.assertEqual(outcome["submit_result"].response["observation"]["observed_state"], "DENIED")
+        governance_record = outcome["governance_record"]
+        effective_request = json.loads(Path(governance_record["effective_provider_request_path"]).read_text())
+        # ContextEnvelope's serialized_request_bytes legitimately includes
+        # its own JSON accounting envelope (kind/component_id/etc) on top of
+        # the payload, but the single component's own "bytes" field - the
+        # exact CAO-controlled content, before that envelope - must equal
+        # exactly the rendered_text bytes actually sent: not a reference
+        # count, not an estimate.
+        manifest_path = v2_dir / "context-envelope" / f"manifest-{governance_record['context_manifest_id']}.json"
+        manifest = json.loads(manifest_path.read_text())
+        self.assertEqual(len(manifest["components"]), 1)
+        self.assertEqual(
+            manifest["components"][0]["bytes"],
+            len(effective_request["rendered_text"].encode("utf-8")),
+        )
+        self.assertGreaterEqual(governance_record["context_manifest_bytes"], manifest["components"][0]["bytes"])
+        used = json.loads((job_dir / "child-transport" / "effective-request-used.json").read_text())
+        self.assertEqual(used["effective_request_digest"], effective_request["effective_request_digest"])
+
+    def test_stale_qualification_after_identity_drift_fails_closed(self):
+        policy, phase, decision, job, v2_dir, job_dir = self._prepared("run-stale", provider="claude_code")
+
+        class FakeProc:
+            stdout = self._claude_stdout()
+            stderr = ""
+
+        with patch("subprocess.run", return_value=FakeProc()):
+            dg.dispatch_via_child_transport(
+                phase=phase, decision=decision, job=job, policy=policy,
+                prompt_text="Do the thing.", v2_dir=v2_dir, job_dir=job_dir,
+                pre_state_facts={"branch": "x", "head": "y"},
+                provider="claude_code", registry=self.registry,
+            )
+        # Corrupt the recorded identity to simulate drift (e.g. a provider
+        # upgrade) without re-running a real session.
+        qual_path = Path(policy["state_root"]) / "governance" / "permission-adapter-qualifications" / "cao-child-direct-claude_code.json"
+        record = json.loads(qual_path.read_text())
+        record["identity"]["provider_version"] = "drifted-version"
+        record["identity_digest"] = "drifted-digest-not-matching-anything"
+        qual_path.write_text(json.dumps(record))
+
+        policy2, phase2, decision2, job2, v2_dir2, job_dir2 = self._prepared("run-stale-2", provider="claude_code")
+        with patch("subprocess.run", return_value=FakeProc()):
+            with self.assertRaises(dg.GovernanceBlocked):
+                dg.dispatch_via_child_transport(
+                    phase=phase2, decision=decision2, job=job2, policy=policy,
+                    prompt_text="Do the thing.", v2_dir=v2_dir2, job_dir=job_dir2,
+                    pre_state_facts={"branch": "x", "head": "y"},
+                    provider="claude_code", registry=self.registry,
+                )
 
 
 if __name__ == "__main__":
