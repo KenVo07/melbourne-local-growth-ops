@@ -1,0 +1,84 @@
+
+== 1. Safety preflight ==
+[]
+{
+  "active_runs": [],
+  "agy_bridge_units": {
+    "reason": null,
+    "status": "KNOWN",
+    "units": []
+  },
+  "main_cao_terminals": {
+    "active": [],
+    "all_records": [],
+    "reason": null,
+    "session": "mlgo-cao",
+    "status": "KNOWN"
+  },
+  "restart_blocked": false,
+  "unknown_checks": []
+}
+Main CAO health: PASS
+
+== 2. Select existing Claude subscription profile ==
+Active profile store: /home/khoa/.aws/cli-agent-orchestrator/agent-store
+Profile: mlgo-claude-subscription-supervisor
+Profile SHA-256: 59d13ab96ed143a7ac2102594142cd8f78b66a9422c59dd31bd4523beae8f7ac
+Provider: claude_code
+Model intent: sonnet
+
+== 3. Prepare disposable run and result contract ==
+
+== 4. Verify live CAO session-create route ==
+Session-create route: POST /sessions
+Required canary parameters present: agent_profile, provider, session_name, working_directory
+
+== 5. Create one bounded Claude subscription session ==
+{
+  "agent_profile": "mlgo-claude-subscription-supervisor",
+  "allowed_tools": [
+    "fs_*",
+    "execute_bash",
+    "@cao-mcp-server"
+  ],
+  "caller_id": null,
+  "engine": null,
+  "id": "f1c73e92",
+  "last_active": "2026-08-10T14:06:50.640936",
+  "name": "mlgo-claude-subscription-supervisor-76de",
+  "provider": "claude_code",
+  "session_name": "cao-mlgo-v2-canary-20260810T040638Z",
+  "shell_command": null,
+  "status": "idle"
+}
+CAO session: cao-mlgo-v2-canary-20260810T040638Z
+Terminal ID: f1c73e92
+Provider session ID from CAO: unavailable
+
+== 6. Create delivery and send through the CAO terminal input API ==
+{
+  "created_at": "2026-08-10T04:06:50Z",
+  "delivery_id": "dlv-provider-canary-20260810T040638Z",
+  "expected_ack": "MLGO_DELIVERY_ACK:dlv-provider-canary-20260810T040638Z:9RoozE0kKcSED1kh9voOnyiJxkDDVDcA",
+  "framed_message": "MLGO read-only provider health and structured-result canary.\nDo not use tools, shell commands, network access, or file operations.\nAfter acknowledging the nonce exactly, return this block in the same response, with no prose after it:\n\nMLGO_RESULT_PACKET\n{\n  \"schema_version\": \"2.0\",\n  \"run_id\": \"v2-provider-canary-20260810T040638Z\",\n  \"big_task_id\": \"PROVIDER-CANARY\",\n  \"phase_id\": \"PROVIDER-CANARY-P01\",\n  \"status\": \"PASS\",\n  \"changed_files\": [],\n  \"verification\": [\"Read-only Claude subscription model response observed through CAO terminal output\"],\n  \"assumptions_confirmed\": [\"No repository or file mutation was requested\"],\n  \"assumptions_invalidated\": [],\n  \"risks\": [],\n  \"next_action\": \"Host validates the packet and closes the canary session\"\n}\nEND_MLGO_RESULT_PACKET\n\nMLGO_DELIVERY_CHALLENGE:dlv-provider-canary-20260810T040638Z:9RoozE0kKcSED1kh9voOnyiJxkDDVDcA\nRespond exactly with MLGO_DELIVERY_ACK:dlv-provider-canary-20260810T040638Z:9RoozE0kKcSED1kh9voOnyiJxkDDVDcA before taking any requested semantic action.",
+  "framed_message_sha256": "9fa9cc6d80fabbc3797dd9f0befa04369f872d26009d0f0cab6a79ef21b03360",
+  "generation": 1,
+  "nonce": "9RoozE0kKcSED1kh9voOnyiJxkDDVDcA",
+  "observation_trust": null,
+  "path": "/home/khoa/.local/state/mlgo-cao/canaries/v2-provider-canary-20260810T040638Z/state/runs/v2-provider-canary-20260810T040638Z/v2/deliveries/dlv-provider-canary-20260810T040638Z.json",
+  "payload_sha256": "83c2f685bcca7b7046e6c1054d3874c5b463acfeac6314f6d36fda065d5279bf",
+  "profile": "mlgo-claude-subscription-supervisor",
+  "provider": "claude_code",
+  "provider_session_id": null,
+  "recipient_role": "authoritative_supervisor",
+  "run_id": "v2-provider-canary-20260810T040638Z",
+  "schema_version": "1.0",
+  "status": "QUEUED",
+  "terminal_id": "f1c73e92",
+  "transport_response": null,
+  "updated_at": "2026-08-10T04:06:50Z"
+}
+Terminal input/status/output routes: PASS
+{"success":true}
+
+== 7. Observe exact nonce ACK and result packet through CAO output ==

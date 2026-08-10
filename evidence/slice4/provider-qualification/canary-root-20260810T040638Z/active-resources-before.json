@@ -1,0 +1,17 @@
+{
+  "active_runs": [],
+  "agy_bridge_units": {
+    "reason": null,
+    "status": "KNOWN",
+    "units": []
+  },
+  "main_cao_terminals": {
+    "active": [],
+    "all_records": [],
+    "reason": null,
+    "session": "mlgo-cao",
+    "status": "KNOWN"
+  },
+  "restart_blocked": false,
+  "unknown_checks": []
+}

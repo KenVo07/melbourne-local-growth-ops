@@ -1,0 +1,17 @@
+{
+  "command_id": "crash-drill-cmd-1",
+  "run_id": "crash-drill-20260810-1",
+  "schema_version": "1.0",
+  "scopes": {
+    "run": "crash-drill-20260810-1"
+  },
+  "settled": [
+    {
+      "amount": 1.0,
+      "metric": "provider_sessions",
+      "native_unit": "sessions"
+    }
+  ],
+  "settled_at": "2026-08-10T04:22:39Z",
+  "usage_record_id": null
+}

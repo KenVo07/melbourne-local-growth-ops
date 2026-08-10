@@ -1,0 +1,48 @@
+{
+  "big_task_id": "PROVIDER-CANARY",
+  "evidence_directory": "/home/khoa/.local/state/mlgo-cao/canaries/v2-provider-canary-20260810T040638Z/evidence",
+  "integration": {
+    "enabled": false,
+    "integration_branch": null,
+    "integration_worktree": null
+  },
+  "objective": "Prove a bounded read-only Claude subscription response path.",
+  "ownership": {
+    "allowed_paths": [],
+    "forbidden_paths": [
+      "**"
+    ]
+  },
+  "parent_phase_id": null,
+  "phase_id": "PROVIDER-CANARY-P01",
+  "phase_kind": "analysis",
+  "prompt_file": "/home/khoa/.local/state/mlgo-cao/canaries/v2-provider-canary-20260810T040638Z/result-request.txt",
+  "result_contract": {
+    "allowed_statuses": [
+      "PASS"
+    ]
+  },
+  "review": {
+    "phase_packet_file": null,
+    "required": false
+  },
+  "rollback_boundary": "No repository mutation is permitted.",
+  "routing_proposal_file": "/home/khoa/.local/state/mlgo-cao/canaries/v2-provider-canary-20260810T040638Z/unused-routing.json",
+  "run_id": "v2-provider-canary-20260810T040638Z",
+  "schema_version": "2.0",
+  "stop_conditions": [
+    "Do not use tools or modify any file.",
+    "Return only the requested packet."
+  ],
+  "task_lead": {
+    "task_lead_id": "CANARY",
+    "terminal_id": null
+  },
+  "validation": {
+    "commands": [],
+    "reuse_evidence_for_sha": false,
+    "timeout_seconds": 300
+  },
+  "worktree": null,
+  "write_capable": false
+}
