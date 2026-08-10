@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "slice": "4",
+  "branch": "integration/cao-v2-slice4-20260810-local-1",
+  "base_sha": "d6f90ef9babdc7ba641499bec2c02509e623a2b5",
+  "generated_at": "2026-08-10T05:30:00Z",
+  "gates": {
+    "S4-A_live_dispatch_integration": {
+      "code": [
+        "ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py",
+        "ops/cao-v2/lib/mlgo_cao_v2/dispatch.py",
+        "ops/cao-v2/lib/mlgo_cao_v2/canary_scope.py"
+      ],
+      "tests": ["ops/cao-v2/tests/test_slice4_dispatch_governance.py"],
+      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_IMPLEMENTATION_AND_CANARY_REPORT.md"]
+    },
+    "S4-B_three_project_concurrency": {
+      "evidence": [
+        "evidence/slice4/MLGO_CAO_V2_SLICE4_THREE_PROJECT_ISOLATION_REPORT.md",
+        "evidence/slice4/three-project-canary/proj-a-transcript.txt",
+        "evidence/slice4/three-project-canary/proj-b-transcript.txt",
+        "evidence/slice4/three-project-canary/proj-c-transcript.txt",
+        "evidence/slice4/three-project-canary/canary-projects-snapshot"
+      ]
+    },
+    "S4-C_S4-D_permission_and_forbidden_routing": {
+      "evidence": [
+        "evidence/slice4/MLGO_CAO_V2_SLICE4_PERMISSION_ADAPTER_REPORT.md",
+        "evidence/slice4/permission-scenarios"
+      ],
+      "tests": [
+        "ops/cao-v2/tests/test_slice4_zero_cost_soak.py::ZeroCostSoakTests::test_D3_approval_broker_operator_only_and_cross_scope"
+      ]
+    },
+    "S4-E_crash_restart_recovery": {
+      "evidence": [
+        "evidence/slice4/MLGO_CAO_V2_SLICE4_RESTART_RECOVERY_REPORT.md",
+        "evidence/slice4/restart-recovery"
+      ]
+    },
+    "S4-F_native_skill_path": {
+      "code": ["ops/cao-v2/lib/mlgo_cao_v2/skill_population.py"],
+      "tests": [
+        "ops/cao-v2/tests/test_slice35_canonical_lock.py::CachePopulationToolTests::test_S4_01_projection_writes_an_absent_mirror_to_byte_equivalence",
+        "ops/cao-v2/tests/test_slice35_canonical_lock.py::CachePopulationToolTests::test_S4_02_projection_is_idempotent_and_skips_already_equivalent_files",
+        "ops/cao-v2/tests/test_slice35_canonical_lock.py::CachePopulationToolTests::test_S4_03_projection_backs_up_pre_existing_drifted_bytes_before_overwrite"
+      ],
+      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_NATIVE_SKILL_REPORT.md"]
+    },
+    "S4-G_security_adversarial_canary": {
+      "fixture": "evidence/slice4/three-project-canary/canary-projects-snapshot/project-c-security/app/server.py",
+      "findings": "evidence/slice4/three-project-canary/canary-projects-snapshot/project-c-security/findings.md",
+      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_SECURITY_CANARY_REPORT.md"],
+      "seeded_flaw_count": 7,
+      "detected_count": 7
+    },
+    "S4-H_cost_and_quality": {
+      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_COST_QUALITY_REPORT.md"],
+      "real_provider_sessions": 6
+    },
+    "S4-I_zero_cost_soak": {
+      "tests": ["ops/cao-v2/tests/test_slice4_zero_cost_soak.py"],
+      "case_count": 104
+    },
+    "S4-J_final_safe_posture": {
+      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_FINAL_HANDOFF.md"]
+    }
+  },
+  "deterministic_regression": {
+    "ops_cao_v2_verify_sh": "PASS",
+    "root_pnpm_check": "PASS",
+    "git_diff_check": "clean",
+    "total_python_tests": 386
+  },
+  "real_provider_sessions": [
+    {"n": 1, "provider": "claude_code", "account_pool": "claude_subscription", "purpose": "read-only round-trip qualification", "outcome": "PASS"},
+    {"n": 2, "provider": "codex", "account_pool": "codex_plus", "purpose": "read-only round-trip qualification", "outcome": "PASS"},
+    {"n": 3, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "S4-C permission scenarios", "outcome": "PASS"},
+    {"n": 4, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project A canary (frontend)", "outcome": "PASS"},
+    {"n": 5, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project B canary (backend/debug)", "outcome": "PASS"},
+    {"n": 6, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "Project C canary (security review)", "outcome": "PASS"}
+  ],
+  "payg_used": false,
+  "business_2_used": false,
+  "production_systems_touched": false
+}
