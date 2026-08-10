@@ -15,6 +15,13 @@ from typing import Any
 
 from . import canary_scope
 from .capacity import load_snapshot
+from .dispatch_governance import (
+    GovernanceBlocked,
+    govern_before_send,
+    hold_after_ambiguous,
+    release_after_not_sent,
+    settle_after_send,
+)
 from .common import (
     ContractError,
     PolicyError,
@@ -524,6 +531,7 @@ def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict
     provider_metadata: dict[str, Any] = {}
     model_observed = False
     pre_provider_failure = True
+    governance_applied = False
 
     try:
         current = store.load()["phases"][phase["phase_id"]]["state"]
@@ -571,6 +579,33 @@ def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict
             preflight_record = preflight_herdr_boundary(policy)
             atomic_write_json(job_dir / "herdr-preflight.json", preflight_record)
         pre_provider_failure = False
+
+        v2_dir = _v2_dir(policy, phase["run_id"])
+        pre_state_facts = read_only_before if read_only_before is not None else git_snapshot(read_only_workspace)
+        try:
+            governance_record = govern_before_send(
+                phase=phase, decision=decision, job=job, policy=policy,
+                prompt_text=prompt_text, v2_dir=v2_dir, job_dir=job_dir,
+                pre_state_facts=pre_state_facts,
+            )
+        except GovernanceBlocked as exc:
+            # Blocked before any provider byte was sent: no reservation to
+            # release, nothing ambiguous, no provider call was ever attempted.
+            job.update({
+                "status": "FAILED", "completion_state": "GOVERNANCE_BLOCKED",
+                "governance_block_reason": exc.reason, "governance_block_detail": exc.detail,
+                "updated_at": iso_now(),
+            })
+            atomic_write_json(job_path, job)
+            store.transition_phase(
+                phase["phase_id"], "BLOCKED",
+                reason=f"GOVERNANCE_BLOCKED: {exc.reason}",
+                updates={"last_error": exc.reason},
+            )
+            return {"ok": False, "decision": "GOVERNANCE_BLOCKED", "reason": exc.reason, "detail": exc.detail}
+        governance_applied = True
+        job["governance_record"] = governance_record
+        atomic_write_json(job_path, job)
 
         execution_started = time.monotonic()
         run_step_response, endpoint, provider_metadata = _execute_provider(
@@ -728,6 +763,10 @@ def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict
             / f"{event['event_id']}.json"
         )
         atomic_write_json(event_path, event)
+        if governance_applied:
+            settle_after_send(
+                v2_dir=v2_dir, run_id=phase["run_id"], command_id=job["job_id"], native_units=[],
+            )
         job.update(
             {
                 "status": "RESULT_WRITTEN",
@@ -763,6 +802,28 @@ def run_job(job_file: str | Path, policy_path: str | Path | None = None) -> dict
             contract_outcome = "PROVIDER_START_UNCERTAIN"
             status = "FAILED"
         actual_consumed = bool(model_observed or job.get("usage_event_observed"))
+        if governance_applied:
+            # Mirrors the certainty-first budget semantics exactly: a
+            # confirmed pre-send/never-started failure releases; a genuinely
+            # uncertain start is held for reconciliation, never released,
+            # because releasing an ambiguous send could double-spend; a
+            # failure the host knows reached the provider settles (the
+            # capacity was spent even though the phase failed).
+            v2_dir_for_release = _v2_dir(policy, phase["run_id"])
+            if outcome == "START_RECONCILIATION_REQUIRED":
+                hold_after_ambiguous(
+                    v2_dir=v2_dir_for_release, run_id=phase["run_id"],
+                    command_id=job["job_id"], reason=contract_outcome,
+                )
+            elif actual_consumed:
+                settle_after_send(
+                    v2_dir=v2_dir_for_release, run_id=phase["run_id"],
+                    command_id=job["job_id"], native_units=[],
+                )
+            else:
+                release_after_not_sent(
+                    v2_dir=v2_dir_for_release, run_id=phase["run_id"], command_id=job["job_id"],
+                )
         error_path = job_dir / "error.json"
         error_record = {
             "error": str(exc),
