@@ -1,4 +1,4 @@
-"""CLI bootstrap consistency: the installed mlgo-v2-skill-cache launcher.
+"""CLI bootstrap consistency for every staged mlgo-v2-* launcher.
 
 The Slice 3.5 canonical-bundle lock work shipped a Python entrypoint that
 guessed its own PYTHONPATH from `__file__`, one directory too shallow. Every
@@ -14,12 +14,22 @@ other staged CAO command (`mlgo-v2-capacity`, `mlgo-v2-route`, ...): it sets
 environment the test does not pre-seed with PYTHONPATH, so a regression of the
 same shape (an entrypoint that only works because something upstream already
 set the path) fails here instead of at the next host-stage gate.
+
+The same host-stage run that motivated this file also found a second,
+unrelated launcher (`mlgo-v2-herdr-preflight`, Slice 1 vintage) with the
+identical defect in a different shape: it never set PYTHONPATH at all, and
+was never caught because the old installed-verification loop only checked
+the executable bit. `AllLaunchersSetTheirOwnPythonPathTest` below is the
+generic regression for that class of bug across the *whole* launcher
+surface, not just skill-cache - see its docstring for why it is a static
+source check rather than one dynamic subprocess test per command name.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -27,7 +37,8 @@ import unittest
 from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
-LAUNCHER = SOURCE_ROOT / "bin" / "mlgo-v2-skill-cache"
+LAUNCHER_DIR = SOURCE_ROOT / "bin"
+LAUNCHER = LAUNCHER_DIR / "mlgo-v2-skill-cache"
 LOCK_PATH = SOURCE_ROOT / "skills" / "canonical-skill-bundles.lock.json"
 
 
@@ -169,6 +180,92 @@ class TopLevelPassthroughTest(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("Traceback", result.stderr)
+
+
+def _all_launchers() -> list[Path]:
+    return sorted(p for p in LAUNCHER_DIR.glob("mlgo-v2-*") if p.is_file())
+
+
+class AllLaunchersSetTheirOwnPythonPathTest(unittest.TestCase):
+    """No staged CAO CLI launcher may depend on an ambient PYTHONPATH.
+
+    This is a single generic check over every `mlgo-v2-*` launcher rather
+    than one dynamic subprocess test per command name, and it is a *static*
+    source check rather than an executed one: several launchers gate their
+    first argument before ever reaching Python (`mlgo-v2-git` only execs for
+    a handful of known subcommands; `--help` never leaves bash), so a purely
+    dynamic "run it and see" probe cannot prove resolution for every launcher
+    shape without hard-coding each one's private argument vocabulary - which
+    is exactly the per-command duplication this test avoids. Asserting every
+    launcher's source unconditionally sets PYTHONPATH *before* its first
+    `exec python3` covers every dispatch shape uniformly.
+    """
+
+    PYTHONPATH_LINE = re.compile(
+        r'PYTHONPATH="\$\{MLGO_CAO_V2_LIB:-\$HOME/\.local/lib/mlgo-cao-v2\}:\$\{PYTHONPATH:-\}"'
+    )
+
+    def test_every_launcher_exports_the_canonical_pythonpath_before_any_exec(self) -> None:
+        launchers = _all_launchers()
+        self.assertTrue(launchers, "expected at least one mlgo-v2-* launcher")
+        for launcher in launchers:
+            with self.subTest(launcher=launcher.name):
+                text = launcher.read_text(encoding="utf-8")
+                match = self.PYTHONPATH_LINE.search(text)
+                self.assertIsNotNone(
+                    match,
+                    f"{launcher.name} does not set the canonical PYTHONPATH fallback "
+                    "(${MLGO_CAO_V2_LIB:-$HOME/.local/lib/mlgo-cao-v2}) before exec'ing "
+                    "into mlgo_cao_v2.cli - this is the exact defect shape that shipped "
+                    "in both mlgo-v2-skill-cache and mlgo-v2-herdr-preflight.",
+                )
+                first_exec = text.find("exec python3")
+                self.assertNotEqual(first_exec, -1, f"{launcher.name} never execs into python3")
+                self.assertLess(
+                    match.start(), first_exec,
+                    f"{launcher.name} sets PYTHONPATH after its first exec, not before",
+                )
+
+
+class UnconditionalLaunchersResolveWithoutBorrowedEnvironmentTest(unittest.TestCase):
+    """Dynamic companion, scoped to launchers that reach Python unconditionally.
+
+    A launcher with no argv[1] gate (no `case` statement) execs into
+    `mlgo_cao_v2.cli` for *any* input, including `--help` - exactly the shape
+    `mlgo-v2-herdr-preflight` has. For that subset, actually run the staged
+    binary with PYTHONPATH/MLGO_CAO_V2_LIB stripped and prove it truly
+    resolves, not just that its source looks right.
+    """
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        home = Path(self.tmp.name) / "home"
+        staged_lib = home / ".local" / "lib" / "mlgo-cao-v2" / "mlgo_cao_v2"
+        staged_bin = home / ".local" / "bin"
+        staged_lib.parent.mkdir(parents=True)
+        staged_bin.mkdir(parents=True)
+        shutil.copytree(SOURCE_ROOT / "lib" / "mlgo_cao_v2", staged_lib)
+        for launcher in _all_launchers():
+            dest = staged_bin / launcher.name
+            shutil.copy2(launcher, dest)
+            dest.chmod(0o755)
+        self.staged_bin = staged_bin
+        self.home = home
+
+    def test_unconditional_launchers_reach_the_shared_cli_with_no_borrowed_path(self) -> None:
+        unconditional = [p for p in _all_launchers() if "case " not in p.read_text(encoding="utf-8")]
+        self.assertTrue(unconditional, "expected at least one unconditional launcher")
+        for launcher in unconditional:
+            with self.subTest(launcher=launcher.name):
+                result = subprocess.run(
+                    [str(self.staged_bin / launcher.name), "--help"],
+                    env=_bare_env(HOME=str(self.home)),
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertNotIn("ModuleNotFoundError", result.stderr, result.stderr)
+                self.assertNotIn("Traceback (most recent call last)", result.stderr, result.stderr)
 
 
 if __name__ == "__main__":
