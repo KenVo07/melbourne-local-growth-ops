@@ -3,15 +3,16 @@
   "slice": "4",
   "branch": "integration/cao-v2-slice4-20260810-local-1",
   "base_sha": "d6f90ef9babdc7ba641499bec2c02509e623a2b5",
-  "generated_at": "2026-08-10T06:10:00Z",
-  "revision": "post-review-gap-closure",
+  "generated_at": "2026-08-10T07:00:00Z",
+  "revision": "round-3-canonical-dispatch-and-identity-fidelity",
   "gates": {
     "S4-A_live_dispatch_integration": {
       "code": [
         "ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py",
         "ops/cao-v2/lib/mlgo_cao_v2/dispatch.py",
         "ops/cao-v2/lib/mlgo_cao_v2/canary_scope.py",
-        "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py"
+        "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py",
+        "ops/cao-v2/registry/provider-registry.json"
       ],
       "tests": [
         "ops/cao-v2/tests/test_slice4_dispatch_governance.py",
@@ -19,8 +20,10 @@
       ],
       "evidence": [
         "evidence/slice4/MLGO_CAO_V2_SLICE4_IMPLEMENTATION_AND_CANARY_REPORT.md",
-        "evidence/slice4/permission-adapter-live"
-      ]
+        "evidence/slice4/permission-adapter-live",
+        "evidence/slice4/canonical-dispatch-proof"
+      ],
+      "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary (not a proof-only helper)"
     },
     "S4-B_three_project_concurrency": {
       "evidence": [
@@ -35,13 +38,15 @@
       "evidence": [
         "evidence/slice4/MLGO_CAO_V2_SLICE4_PERMISSION_ADAPTER_REPORT.md",
         "evidence/slice4/permission-scenarios",
-        "evidence/slice4/permission-adapter-live"
+        "evidence/slice4/permission-adapter-live",
+        "evidence/slice4/canonical-dispatch-proof"
       ],
       "tests": [
         "ops/cao-v2/tests/test_slice4_zero_cost_soak.py::ZeroCostSoakTests::test_D3_approval_broker_operator_only_and_cross_scope",
         "ops/cao-v2/tests/test_slice4_child_provider_transport.py"
       ],
-      "permission_adapter_qualified_paths": 2
+      "permission_adapter_qualified_paths": 2,
+      "qualification_self_certification_paths": 0
     },
     "S4-E_crash_restart_recovery": {
       "evidence": [
@@ -67,7 +72,7 @@
     },
     "S4-H_cost_and_quality": {
       "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_COST_QUALITY_REPORT.md"],
-      "real_provider_sessions": 8
+      "real_provider_sessions": 10
     },
     "S4-I_zero_cost_soak": {
       "tests": ["ops/cao-v2/tests/test_slice4_zero_cost_soak.py"],
@@ -90,8 +95,10 @@
     {"n": 4, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project A canary (frontend)", "outcome": "PASS"},
     {"n": 5, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project B canary (backend/debug)", "outcome": "PASS"},
     {"n": 6, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "Project C canary (security review)", "outcome": "PASS"},
-    {"n": 7, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "live dispatch_via_child_transport proof (post-review gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false},
-    {"n": 8, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "live dispatch_via_child_transport proof (post-review gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false}
+    {"n": 7, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "live dispatch_via_child_transport proof (round 2 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "standalone evidence script"},
+    {"n": 8, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "live dispatch_via_child_transport proof (round 2 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "standalone evidence script"},
+    {"n": 9, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "canonical dispatch.run_job proof (round 3 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "ceremony (first use for this measured identity)"},
+    {"n": 10, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "canonical dispatch.run_job proof (round 3 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "ceremony (first use for this measured identity)"}
   ],
   "payg_used": false,
   "business_2_used": false,

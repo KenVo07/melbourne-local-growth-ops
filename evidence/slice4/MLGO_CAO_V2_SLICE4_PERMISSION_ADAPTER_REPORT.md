@@ -1,6 +1,45 @@
 # Slice 4 — Permission Autonomy and Forbidden Routing Report (S4-C / S4-D)
 
-## Revision note (post-review correction)
+## Revision note (round 3): qualification is no longer self-certifiable
+
+Round 2's `dispatch_via_child_transport` bootstrapped a `QUALIFIED`
+`PermissionAdapter` record from a hash of a hard-coded documentation
+string, before any real call. That is exactly the self-certification a
+second review pass correctly rejected: nothing forced the qualifying
+evidence to come from a real observation.
+
+Closed by removing every code path that accepts a caller-supplied evidence
+hash. `dispatch_governance` now has no `evidence_sha256` parameter anywhere.
+Instead:
+
+- `measure_provider_identity()` runs the resolved real executable with
+  `--version` and hashes the real installed wrapper script file - identity
+  is measured, never asserted.
+- The first dispatch for an identity with no existing qualification runs as
+  an explicit **ceremony**: `capability_state["enabled"]` is `False`, so
+  `child_provider_transport` does not call
+  `permission_adapter.prepare_native_preauthorization()` (that pre-existing
+  Slice 3.5 method itself refuses to run without an enabled capability -
+  this was not weakened). The ceremony instead launches with the same real,
+  ApprovalBroker-derived native flags directly, and non-bypass is enforced
+  exactly as unconditionally as any other call. Only *after* the real
+  process returns is `evidence_sha256` computed - from the actual raw
+  stdout bytes the ceremony captured - and a `QUALIFIED` record written.
+- Every subsequent dispatch for that same measured identity uses the real
+  `prepare_native_preauthorization()` authority-bearing path.
+- If a qualification exists but the *measured* identity has since drifted
+  (a provider or wrapper upgrade), the dispatch fails closed
+  (`GovernanceBlocked`) rather than silently re-ceremonying.
+
+Both real Round 3 sessions (`evidence/slice4/canonical-dispatch-proof/`)
+were first-ever dispatches for their exact measured identity and therefore
+ran as ceremonies; both are recorded as such in their `governance_record`
+(`ceremony_mode: true`), and both produced real `QUALIFIED` records whose
+`evidence_sha256` is verified (in
+`test_slice4_child_provider_transport.py`) to equal the SHA-256 of the
+actual captured `raw-stdout.jsonl` bytes, not any value a caller supplied.
+
+## Revision note (round 2)
 
 The first pass of this report described permission evidence gathered by
 *manually* controlling `herdr` outside `cao-server` — real, non-bypassed,
@@ -164,3 +203,9 @@ host action was executed against any real system at any point in Slice 4.
 - Blind auto-clicker: not built; every approval was a deliberate,
   evidence-logged one-shot decision made by inspecting the real dialog
   state first
+- Qualification self-certification paths: **0** (removed entirely in
+  round 3; every `QUALIFIED` record traces to real captured provider
+  evidence)
+- PERMISSION_ADAPTER_QUALIFIED_PATHS: **2** (Claude Pro, Codex Plus - both
+  now qualified from real ceremony evidence produced through canonical
+  `dispatch.run_job`, not asserted)

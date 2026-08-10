@@ -68,6 +68,25 @@ selected. Closed structurally:
 - Normal execution never calls `cao-mcp-server.load_skill`: the projection
   is assembled and sent once, before dispatch, not fetched at runtime.
 
+## Revision note (round 3): the sent bytes and the measured bytes are now
+provably identical, not merely close
+
+Round 2's Codex path prepended a CAO-authored skill-introduction/separator
+string to the projection *after* ContextEnvelope had already measured a
+smaller, separately-assembled component - the cap was bounding something
+slightly different from what was actually sent. Closed by
+`build_effective_provider_request()`: the skill-introduction wrapper is now
+part of constructing the one canonical `rendered_text`, computed *before*
+ContextEnvelope measures anything, and both Claude and Codex send that
+exact `rendered_text` verbatim with no further concatenation of their own.
+`test_effective_request_bytes_match_context_envelope_measurement_exactly`
+asserts the manifest's component byte count equals
+`len(rendered_text.encode("utf-8"))` exactly, and the real Round 3 evidence
+(`evidence/slice4/canonical-dispatch-proof/`) shows the same
+`effective_request_digest` recorded in the governance record, written to
+`effective-provider-request.json`, and independently re-hashed in
+`child-transport/effective-request-used.json` immediately before send.
+
 ## Compiled recipes
 
 Per S4-F, at least one frontend (UIUX/Matt), one backend/debug (Addy/Matt),

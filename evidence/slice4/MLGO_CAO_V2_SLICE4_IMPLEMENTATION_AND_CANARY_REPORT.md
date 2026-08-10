@@ -187,6 +187,63 @@ the 12-session cap). 6 new regression tests added
 operator-populated sealed cache. Full suite: 392 tests, green;
 `verify.sh` green.
 
+## Round 3: canonical dispatch, route fidelity, no qualification self-cert
+
+A second review pass found the round-2 fix, while real, was only reachable
+from a standalone evidence script (`dispatch_via_child_transport` called
+directly), ignored the selected route's actual profile/account identity
+(launching bare `claude`/`codex` off PATH), and let a caller self-certify
+`MATURITY_QUALIFIED` by supplying an arbitrary evidence hash. All three
+closed structurally, on this branch:
+
+1. **Canonical dispatch.run_job() now reaches the corrected path itself.**
+   Two new registry routes (`claude_subscription_child_direct`,
+   `codex_plus_child_direct`, each with their own profile) carry a
+   `transport_kind: "synchronous_child_process"` transport. `run_job()`
+   branches on that registry field - not a provider name - to call
+   `dispatch_via_child_transport` instead of the legacy HTTP
+   `_execute_provider`/`capture_stable_result` flow. Existing routes and
+   profiles are completely untouched.
+2. **Route/profile/account fidelity.** `resolve_provider_executable()`
+   reads `claudeExecutable`/`codexExecutable` straight from the selected
+   route's own profile frontmatter and resolves the real installed
+   `mlgo-claude-*`/`mlgo-codex-*` lane wrapper - never a bare binary off
+   PATH - so the actual account/config used always corresponds to the
+   route CAO selected.
+3. **No qualification self-certification.** There is no function left
+   anywhere in the codebase that accepts a caller-supplied evidence hash.
+   `measure_provider_identity()` determines `provider_version` (real
+   `--version` output) and `wrapper_version` (SHA-256 of the actual
+   installed wrapper file) from the resolved executable. A never-qualified
+   identity runs as an explicit "ceremony" - still fully bypass-refused,
+   still governed by the real `ApprovalBroker` decision - whose own real
+   raw output is what produces the `QUALIFIED` record. A qualification
+   that no longer matches the measured identity (drift) fails closed.
+4. **ContextEnvelope measures exactly what is sent.**
+   `build_effective_provider_request()` is now the one canonical
+   CAO-controlled request object; its `rendered_text` is what
+   ContextEnvelope measures and exactly what the transport sends verbatim -
+   no separately-invented `--append-system-prompt` call, no independently
+   assembled Codex wrapper text that could drift from the measurement.
+
+Proven with 2 additional real sessions (1 Claude Pro, 1 Codex Plus)
+entering through the **actual installed `mlgo-v2-dispatch run-job` CLI
+binary**, exit 0 both times, `RESULT_WRITTEN`, real result packets
+extracted and validated via the production contract
+(`extract_result_packet`/`validate_result_packet`), real files matching the
+exact requested bug, zero bypass flags, real lane-specific executables
+resolved from the route. Total real provider sessions across all of Slice
+4: **10** (cap 12). See
+`MLGO_CAO_V2_SLICE4_PERMISSION_ADAPTER_REPORT.md` for the qualification
+detail and `evidence/slice4/canonical-dispatch-proof/` for full raw
+evidence.
+
+Did not rerun the 104-case soak, security canary, restart drill, or
+three-project canary - none are invalidated by this round (independent
+code paths; the soak's `ApprovalBroker`/budget/skill-cache invariants and
+the security/restart/three-project evidence do not depend on which
+transport a route uses).
+
 ## Final verdict
 
 See `MLGO_CAO_V2_SLICE4_FINAL_HANDOFF.md` for the complete verdict block.

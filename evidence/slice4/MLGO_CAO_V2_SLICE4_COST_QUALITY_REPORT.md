@@ -1,6 +1,6 @@
 # Slice 4 — Cost and Quality Report (S4-H)
 
-## Real provider sessions: 8 total (target 6–9, cap 12)
+## Real provider sessions: 10 total (target 6–9, cap 12)
 
 All subscription-backed (Claude Pro via OAuth, Codex Plus via ChatGPT
 tokens). No API key was used anywhere in this work; `ANTHROPIC_API_KEY` /
@@ -16,7 +16,9 @@ Business 2.**
 | 5 | Claude Pro | Project B canary (backend/debug) | not captured | ~1–2 min | 1 host-side delivery retry |
 | 6 | Codex Plus | Project C canary (security review) | not captured | ~1–2 min | 1 host-side delivery retry |
 | 7 | Claude Pro | **Live `dispatch_via_child_transport` proof** (post-review gap closure) | input 4 (+20,608 cache-write, 55,284 cache-read), output 303 tokens; `total_cost_usd: 0.1455` (subscription-covered, not billed separately) | 9.8s (`duration_ms`) | 0 |
-| 8 | Codex Plus | **Live `dispatch_via_child_transport` proof** (post-review gap closure) | input 48,030 (34,304 cached), output 203 (49 reasoning) tokens | not separately timed (single `exec` call) | 0 |
+| 8 | Codex Plus | **Live `dispatch_via_child_transport` proof** (round 2 gap closure) | input 48,030 (34,304 cached), output 203 (49 reasoning) tokens | not separately timed (single `exec` call) | 0 |
+| 9 | Claude Pro | **Canonical `dispatch.run_job` proof** (round 3 gap closure; via real `mlgo-v2-dispatch run-job` CLI) | input 6 (+21,612 cache-write, 95,090 cache-read), output 889 tokens; `total_cost_usd: 0.1804` | 12.9s (`duration_ms`) | 0 |
+| 10 | Codex Plus | **Canonical `dispatch.run_job` proof** (round 3 gap closure; via real `mlgo-v2-dispatch run-job` CLI) | input 97,669 (68,608 cached), output 953 (277 reasoning) tokens | not separately timed (single `exec` call) | 0 |
 
 Sessions 7–8 are the corrected live integration path
 (`dispatch_governance.dispatch_via_child_transport` →
@@ -86,6 +88,8 @@ completion with full context.
 | 6 | Security review, findings.md | PASS | 7/7 seeded flaws found with correct line references, zero false positives, fixture left unmodified |
 | 7 | (live integration) `ledger.py` with exact requested bug + `bug-notes.txt` | PASS | Bug matches specification exactly (`sum(amounts) + 1`); verified via real `dispatch_via_child_transport` |
 | 8 | (live integration) same task, Codex | PASS | Identical correct bug produced independently by a different provider through the same governed path |
+| 9 | (canonical dispatch) `notes.py` with exact requested bug + `bug-notes.txt`, via real `mlgo-v2-dispatch run-job` | PASS | Bug matches specification exactly; real result packet extracted and validated via the production contract |
+| 10 | (canonical dispatch) same task, Codex, via real `mlgo-v2-dispatch run-job` | PASS | Identical correct bug; real result packet extracted and validated |
 
 QUALITY_REGRESSION_ACCEPTED_FOR_COST: **NO**
 
