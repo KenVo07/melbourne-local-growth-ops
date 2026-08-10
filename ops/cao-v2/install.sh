@@ -175,7 +175,7 @@ case "$phase" in
   stage-only)
     backup_one "$HOME/.local/lib/mlgo-cao-v2"; rm -rf "$HOME/.local/lib/mlgo-cao-v2"; mkdir -p "$HOME/.local/lib/mlgo-cao-v2/mlgo_cao_v2"; cp -a "$src/lib/mlgo_cao_v2/." "$HOME/.local/lib/mlgo-cao-v2/mlgo_cao_v2/"
     find "$HOME/.local/lib/mlgo-cao-v2" -type d -name __pycache__ -prune -exec rm -rf {} +; chmod -R go-rwx "$HOME/.local/lib/mlgo-cao-v2"
-    backup_one "$stage_root"; rm -rf "$stage_root"; mkdir -p "$stage_root/staged"; cp -a "$src/schemas" "$src/examples" "$src/profile-sources" "$src/registry" "$stage_root/"; cp "$src/config/cao-policy.json" "$stage_root/staged/cao-policy.json"; chmod -R go-rwx "$stage_root"
+    backup_one "$stage_root"; rm -rf "$stage_root"; mkdir -p "$stage_root/staged"; cp -a "$src/schemas" "$src/examples" "$src/profile-sources" "$src/registry" "$src/skills" "$stage_root/"; cp "$src/config/cao-policy.json" "$stage_root/staged/cao-policy.json"; chmod -R go-rwx "$stage_root"
     for source in "$src"/bin/*; do install_one "$source" "$HOME/.local/bin/$(basename "$source")" 700; done
     install_one "$src/systemd/mlgo-cao-v2-controller.service" "$HOME/.config/systemd/user/mlgo-cao-v2-controller.service" 600
     systemctl --user disable mlgo-cao-v2-controller.service >/dev/null 2>&1 || true

@@ -5,6 +5,7 @@ import argparse, json, sys
 from pathlib import Path
 from typing import Any
 
+from .canonical_lock import load_lock, population_plan
 from .capacity import create_snapshot, set_manual_hint
 from .common import MLGOError, atomic_write_json, iso_now, load_json
 from .contracts import load_and_validate
@@ -19,6 +20,8 @@ from .registry import compatibility_policy_routes, load_registry, resolve_regist
 from .provenance import capture_supervisor_decision, create_delivery, parse_model_artifact_observation, record_manual_observation, record_model_observation
 from .restart import active_resources, active_runs, guarded_restart
 from .routing import decide_route
+from .skill_cache import SealedSkillCache
+from .skill_population import bind_namespace, populate_cache, verify_native_mirror
 from .state_machine import RunStore
 from .task_lead import notify_supervisor, start_task_lead
 from .usage import agy_usage_placeholder, append_usage_event, claude_transcript_events, codex_rollout_events, correlate_registry_usage, enforce_usage_mode
@@ -88,6 +91,10 @@ def build_parser() -> argparse.ArgumentParser:
     p=sub.add_parser('active-resources'); _policy_arg(p)
     p=sub.add_parser('safe-restart'); p.add_argument('--scope',choices=('controller','control_plane','full_runtime'),default='controller'); p.add_argument('--apply',action='store_true'); p.add_argument('--force',action='store_true'); p.add_argument('--approval-file'); _policy_arg(p)
     p=sub.add_parser('validate-packet'); p.add_argument('--kind',choices=('charter','phase','routing','result','capacity'),required=True); p.add_argument('--file',required=True); p.add_argument('--charter'); p.add_argument('--phase'); _policy_arg(p)
+
+    p=sub.add_parser('skill-cache-plan'); p.add_argument('--lock',default=None)
+    p=sub.add_parser('skill-cache-populate'); p.add_argument('--lock',default=None); p.add_argument('--cache-root',required=True); p.add_argument('--project'); p.add_argument('--security-domain')
+    p=sub.add_parser('skill-cache-verify-mirror'); p.add_argument('--lock',default=None); p.add_argument('--cache-root',required=True); p.add_argument('--mirror-root',default='~/.agents/skills'); p.add_argument('--project',required=True); p.add_argument('--security-domain',required=True)
     return ap
 
 
@@ -161,6 +168,17 @@ def main(argv: list[str]|None=None) -> int:
         elif c=='active-resources': out=active_resources(load_policy(args.policy))
         elif c=='safe-restart': out=guarded_restart(policy_path=args.policy,force=args.force,approval_file=args.approval_file,scope=args.scope,apply=args.apply)
         elif c=='validate-packet': policy=load_policy(args.policy); out=load_and_validate(args.file,args.kind,policy,charter=load_json(args.charter) if args.charter else None,phase=load_json(args.phase) if args.phase else None)
+        elif c=='skill-cache-plan':
+            lock=load_lock(args.lock)
+            out={'lock_digest':lock['lock_digest'],'requires_semantic_choice_at_staging_time':False,'acquisitions':population_plan(lock)}
+        elif c=='skill-cache-populate':
+            lock=load_lock(args.lock); cache=SealedSkillCache(args.cache_root)
+            out=populate_cache(cache=cache,lock=lock)
+            if args.project and args.security_domain: out['bindings']=bind_namespace(cache=cache,lock=lock,project_id=args.project,security_domain_id=args.security_domain)
+        elif c=='skill-cache-verify-mirror':
+            lock=load_lock(args.lock); cache=SealedSkillCache(args.cache_root)
+            out=verify_native_mirror(cache=cache,lock=lock,mirror_root=args.mirror_root,project_id=args.project,security_domain_id=args.security_domain)
+            _print(out); return 0 if out['accepted'] else 1
         else: parser.error(f'unhandled command: {c}'); return 2
         _print(out); return 0
     except (MLGOError,OSError,ValueError,json.JSONDecodeError) as exc:

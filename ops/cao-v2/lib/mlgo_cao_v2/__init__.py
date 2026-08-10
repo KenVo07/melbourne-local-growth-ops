@@ -5,4 +5,4 @@ or Herdr.  It adds MLGO-owned policy enforcement, phase dispatch, durable state,
 Git execution, and recovery boundaries around the installed CAO runtime.
 """
 
-__version__ = "0.4.0-slice2-vnext"
+__version__ = "0.5.0-slice3-5-vnext"

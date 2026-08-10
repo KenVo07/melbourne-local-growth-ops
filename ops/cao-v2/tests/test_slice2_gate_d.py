@@ -67,7 +67,7 @@ from slice2_fixtures import (
     command_envelope,
 )
 
-RUNTIME_VERSION = "0.4.0-slice2-vnext"
+RUNTIME_VERSION = "0.5.0-slice3-5-vnext"
 
 
 def base_handle(**overrides):
