@@ -1,0 +1,16 @@
+{
+  "approval_outcome": "APPROVED_BY_DELEGATION",
+  "context_manifest_bytes": 31644,
+  "context_manifest_status": "WITHIN_CAP",
+  "denied": false,
+  "native_skill_projection_bytes": 30434,
+  "native_skill_projection_digest": "e5a0481997ac070a3d32b336f9d097cb273a9a6f9c45c5e0de0d9fdea2821b67",
+  "observation_digest": "24cbe7eadad8c02a5986458cc9f08cd5b736ca39a4dbdfa0bda752f52fabbf32",
+  "observed_state": "APPROVED",
+  "provider": "claude_code",
+  "requalification_digest": "831e1687cc64d8dc11e969f92d49f6f92af067e24db27c5be0e13f5e3ef922bc",
+  "requalified_with_real_evidence_sha256": "623aa855336f1904bee35c6747338abfde588c646d68effc9f7a5bf7134a378d",
+  "run_id": "perm-adapter-live-claude",
+  "skill_contract_digest": "658945f765248f788950e968f7578858b674369d0a4ac92c7b93f2eebc96c0a5",
+  "submit_certainty": "ACCEPTED"
+}

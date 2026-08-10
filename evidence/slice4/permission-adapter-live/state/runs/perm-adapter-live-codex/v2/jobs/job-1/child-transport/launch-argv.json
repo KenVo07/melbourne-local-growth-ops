@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "codex",
+    "exec",
+    "--json",
+    "-s",
+    "workspace-write",
+    "-C",
+    "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-codex",
+    "<prompt, 30267 bytes>"
+  ],
+  "cwd": "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-codex",
+  "launched_at": "2026-08-10T04:59:30Z",
+  "sandbox": "workspace-write"
+}

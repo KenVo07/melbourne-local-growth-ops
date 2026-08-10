@@ -1,0 +1,56 @@
+{
+  "block_reason": null,
+  "components": [
+    {
+      "bytes": 266,
+      "component_id": "phase-prompt",
+      "items": 1,
+      "kind": "objective_task",
+      "reducible": false,
+      "retention_rank": 5,
+      "sha256": "f5c6ead6c2e991e580b7ca49be3f38b463aa0b15b66c860f566f868cc87b945b"
+    },
+    {
+      "bytes": 30434,
+      "component_id": "native-skill-projection",
+      "items": 1,
+      "kind": "profile_text",
+      "reducible": false,
+      "retention_rank": 4,
+      "sha256": "e5a0481997ac070a3d32b336f9d097cb273a9a6f9c45c5e0de0d9fdea2821b67"
+    }
+  ],
+  "deterministic_reduction_only": true,
+  "hard_cap_bytes": 262144,
+  "hard_cap_items": null,
+  "manifest_digest": "6437245d8124b5ba012b090e68dfa70dff2384f371c94bee11f253f07064b309",
+  "manifest_id": "job-perm-adapter-live-claude",
+  "measured_at": "2026-08-10T04:59:16Z",
+  "measured_component_kinds": [
+    "objective_task",
+    "profile_text"
+  ],
+  "provider_internal_prompt_overhead": "UNAVAILABLE",
+  "provider_internal_transforms": "UNAVAILABLE",
+  "provider_native_token_counts": "UNAVAILABLE",
+  "reductions": [],
+  "role_id": "implementation",
+  "run_id": "perm-adapter-live-claude",
+  "schema_version": "1.0",
+  "semantic_compression_used": false,
+  "serialized_request_bytes": 31644,
+  "serialized_request_sha256": "9c3b982ba14a568d36a556fcded43751542597f023e378beb412576e05c4e39b",
+  "status": "WITHIN_CAP",
+  "task_id": "PERM-ADAPTER-LIVE-P01",
+  "token_estimation_method": "none; host measures bytes and items only",
+  "total_items": 2,
+  "unmeasured_component_kinds": [
+    "adapter_wrapper",
+    "attachment_excerpts",
+    "durable_state_summary",
+    "selected_history",
+    "system_control_text",
+    "tool_results",
+    "tool_schemas"
+  ]
+}

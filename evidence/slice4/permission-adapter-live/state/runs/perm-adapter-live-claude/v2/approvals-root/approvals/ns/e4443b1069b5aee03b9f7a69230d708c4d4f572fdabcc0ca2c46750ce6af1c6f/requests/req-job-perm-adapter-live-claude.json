@@ -1,0 +1,41 @@
+{
+  "actor_role": "implementation",
+  "approval_request_id": "req-job-perm-adapter-live-claude",
+  "arguments_digest": "b7c342203e92772e76f40aefe3acc1c676a686e1b935a1db9bd36c7bbd475674",
+  "attempt_id": "1",
+  "command_id": "job-perm-adapter-live-claude",
+  "created_at": "2026-08-10T04:59:16Z",
+  "delegation_revision": "3c44ec1aedfb43a217d95c797220be384bda18832859ceb8ccd0c00ef3734c4e",
+  "execution_agent_id": "mlgo-claude-subscription-builder",
+  "executor_epoch": null,
+  "expected_pre_state_digest": "f21eb3e1a57d07ad6ff56ffddae7b1e290bdf99d8f7cbf17d718abb7dbd6483d",
+  "expires_at": null,
+  "idempotency_key": "ff392f6981d3c1689dd17ff9184a4434ed82ffbc1bf8f3586a70a76195356e2d",
+  "namespace_key": "e4443b1069b5aee03b9f7a69230d708c4d4f572fdabcc0ca2c46750ce6af1c6f",
+  "normalized_arguments": {
+    "selected_route": "claude_code-live-adapter-proof"
+  },
+  "one_shot": true,
+  "operation_class": "WRITE_IN_OWNED_SCOPE",
+  "operation_name": "provider_dispatch_bounded_phase",
+  "owned_scope_digest": "19a3f6872c35183258369865a8dbf1c1d9153746792b755d177241c485a2544f",
+  "policy_revision": "0b62b7ab14032f7d6840ffa19f959c250fa5095c55acfdbad79f3ca4cd112f5e",
+  "project_id": "perm-adapter-live-claude",
+  "provider_profile_id": "mlgo-claude-subscription-builder",
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "repo_id": "repo-e7f96bbe680aaa63",
+  "request_digest": "d069bbc46f546b447546cdd38925980e64615c5b1ae75e50773e748d096f8bd1",
+  "resource_refs": [
+    {
+      "kind": "worktree",
+      "locator": "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-claude"
+    }
+  ],
+  "run_id": "perm-adapter-live-claude",
+  "schema_version": "1.0",
+  "security_domain_id": "perm-adapter-live-claude",
+  "skill_contract_digest": "658945f765248f788950e968f7578858b674369d0a4ac92c7b93f2eebc96c0a5",
+  "task_id": "PERM-ADAPTER-LIVE-P01",
+  "work_package_id": "PERM-ADAPTER-LIVE",
+  "worktree_id": "worktree-e7f96bbe680aaa63"
+}

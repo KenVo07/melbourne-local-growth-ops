@@ -1,0 +1,30 @@
+{
+  "approval_decision_id": "dec-job-perm-adapter-live-claude",
+  "approval_outcome": "APPROVED_BY_DELEGATION",
+  "approved_operation_constraints": {
+    "arguments_digest": "b7c342203e92772e76f40aefe3acc1c676a686e1b935a1db9bd36c7bbd475674",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "19a3f6872c35183258369865a8dbf1c1d9153746792b755d177241c485a2544f",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-claude"
+      }
+    ]
+  },
+  "budget_reservation_id": "res-job-perm-adapter-live-claude",
+  "command_id": "job-perm-adapter-live-claude",
+  "context_manifest_bytes": 31644,
+  "context_manifest_id": "job-perm-adapter-live-claude",
+  "context_manifest_status": "WITHIN_CAP",
+  "native_skill_projection_bytes": 30434,
+  "native_skill_projection_digest": "e5a0481997ac070a3d32b336f9d097cb273a9a6f9c45c5e0de0d9fdea2821b67",
+  "native_skill_projection_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/permission-adapter-live/state/runs/perm-adapter-live-claude/v2/jobs/job-1/governance/native-skill-projection.txt",
+  "owned_scope_digest": "19a3f6872c35183258369865a8dbf1c1d9153746792b755d177241c485a2544f",
+  "project_id": "perm-adapter-live-claude",
+  "schema_version": "1.1",
+  "security_domain_id": "perm-adapter-live-claude",
+  "skill_contract_digest": "658945f765248f788950e968f7578858b674369d0a4ac92c7b93f2eebc96c0a5",
+  "skill_contract_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/permission-adapter-live/state/runs/perm-adapter-live-claude/v2/jobs/job-1/governance/skill-contract.json"
+}
