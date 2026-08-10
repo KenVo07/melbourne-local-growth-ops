@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from . import canary_scope
 from .capacity import load_snapshot
 from .common import (
     ContractError,
@@ -245,6 +246,23 @@ def submit_phase(
         return {
             "ok": True,
             "shadow": True,
+            "phase_id": phase["phase_id"],
+            "decision": decision,
+            "decision_path": str(decision_path),
+        }
+
+    # Process/service liveness grants no execution authority. Real provider
+    # dispatch requires an explicit, time-bounded canary scope naming this
+    # run_id; a caller requesting non-shadow dispatch (including the
+    # controller, which always requests real dispatch for review phases)
+    # without an active authorizing scope is downgraded to a safe
+    # observe-only outcome instead of emitting a real provider call.
+    if not canary_scope.is_authorized(policy, run_id=phase["run_id"]):
+        return {
+            "ok": True,
+            "shadow": True,
+            "posture": canary_scope.posture(policy),
+            "reason": "no_active_canary_scope",
             "phase_id": phase["phase_id"],
             "decision": decision,
             "decision_path": str(decision_path),

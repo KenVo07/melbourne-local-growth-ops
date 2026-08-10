@@ -44,6 +44,7 @@ from mlgo_cao_v2.skill_population import (
     SkillPopulationError,
     bind_namespace,
     populate_cache,
+    project_native_mirror,
     verify_native_mirror,
 )
 from mlgo_cao_v2.skill_recipes import compile_skill_contract
@@ -690,6 +691,68 @@ class CachePopulationToolTests(unittest.TestCase):
         )
         self.assertFalse(report["accepted"])
         self.assertFalse(absent.exists(), "verification must not create the mirror")
+
+    # -- Slice 4: native mirror projection -----------------------------------
+
+    def test_S4_01_projection_writes_an_absent_mirror_to_byte_equivalence(self):
+        self.prepared_cache()
+        mirror = self.tmp / "projected-mirror"
+        rollback = self.tmp / "rollback"
+        report = project_native_mirror(
+            cache=self.cache, lock=self.lock, mirror_root=mirror,
+            project_id=PROJECT, security_domain_id=DOMAIN, rollback_root=rollback,
+        )
+        self.assertTrue(report["mirror_mutated"])
+        self.assertTrue(report["verification"]["equivalent"])
+        expected_files = sum(len(b["selected_skills"]) for b in self.lock["bundles"])
+        self.assertEqual(report["written_count"], expected_files)
+        self.assertEqual(report["skipped_count"], 0)
+        self.assertTrue(Path(report["rollback_record_path"]).is_file())
+        verification = verify_native_mirror(
+            cache=self.cache, lock=self.lock, mirror_root=mirror,
+            project_id=PROJECT, security_domain_id=DOMAIN,
+        )
+        self.assertTrue(verification["accepted"])
+
+    def test_S4_02_projection_is_idempotent_and_skips_already_equivalent_files(self):
+        self.prepared_cache()
+        mirror = self.tmp / "projected-mirror"
+        rollback = self.tmp / "rollback"
+        first = project_native_mirror(
+            cache=self.cache, lock=self.lock, mirror_root=mirror,
+            project_id=PROJECT, security_domain_id=DOMAIN, rollback_root=rollback,
+        )
+        second = project_native_mirror(
+            cache=self.cache, lock=self.lock, mirror_root=mirror,
+            project_id=PROJECT, security_domain_id=DOMAIN, rollback_root=rollback,
+        )
+        self.assertFalse(second["mirror_mutated"])
+        self.assertEqual(second["written_count"], 0)
+        self.assertEqual(second["skipped_count"], first["written_count"])
+
+    def test_S4_03_projection_backs_up_pre_existing_drifted_bytes_before_overwrite(self):
+        self.prepared_cache()
+        mirror = self.build_mirror(self.tmp / "mirror", drift=True)
+        rollback = self.tmp / "rollback"
+        first_skill = self.lock["bundles"][0]["selected_skills"][0]
+        drifted_path = mirror / first_skill["native_mirror_name"] / "SKILL.md"
+        self.assertEqual(drifted_path.read_bytes(), b"drifted")
+
+        report = project_native_mirror(
+            cache=self.cache, lock=self.lock, mirror_root=mirror,
+            project_id=PROJECT, security_domain_id=DOMAIN, rollback_root=rollback,
+        )
+        self.assertTrue(report["verification"]["equivalent"])
+        written_paths = {w["mirror_path"] for w in report["written"]}
+        self.assertIn(str(drifted_path), written_paths)
+
+        rollback_record = json.loads(Path(report["rollback_record_path"]).read_text())
+        backed_up = {s["skill_id"]: s for s in rollback_record["snapshot"]}
+        self.assertEqual(backed_up[first_skill["skill_id"]]["pre_content_sha256"], sha256_bytes(b"drifted"))
+        backup_path = Path(backed_up[first_skill["skill_id"]]["pre_content_backup"])
+        self.assertEqual(backup_path.read_bytes(), b"drifted")
+        # The mirror itself must now carry the sealed bytes, not the drift.
+        self.assertNotEqual(drifted_path.read_bytes(), b"drifted")
 
 
 class PopulationToolBoundaryTests(unittest.TestCase):
