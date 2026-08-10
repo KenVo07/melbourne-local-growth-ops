@@ -1,0 +1,67 @@
+{
+  "big_tasks": {
+    "PROOF4": {
+      "charter_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/charter-qualified-proof-codex-r4.json",
+      "completed_phases": [],
+      "created_at": "2026-08-10T08:53:08Z",
+      "phase_order": [
+        "PROOF4-P01"
+      ],
+      "status": "CHARTER_APPROVED",
+      "task_lead_id": null
+    }
+  },
+  "created_at": "2026-08-10T08:53:08Z",
+  "last_capacity_snapshot_id": null,
+  "maintenance_pause": false,
+  "open_semantic_exceptions": [],
+  "orchestration_mode": "v2_shadow",
+  "phases": {
+    "PROOF4-P01": {
+      "attempt": 1,
+      "big_task_id": "PROOF4",
+      "commit_sha": null,
+      "created_at": "2026-08-10T08:53:08Z",
+      "integration_sha": null,
+      "job_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-codex-r4/v2/jobs/phase-PROOF4-P01-a1-proof/job.json",
+      "last_error": "PERMISSION_DENIED",
+      "last_transition_reason": "child transport: provider denied the operation",
+      "packet_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-codex-r4/v2/packets/PROOF4-P01.json",
+      "parent_phase_id": null,
+      "phase_kind": "implementation",
+      "result_path": null,
+      "review_status": null,
+      "routing_decision_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-codex-r4/v2/packets/PROOF4-P01-routing-decision.json",
+      "selected_account_pool": "codex_plus",
+      "selected_provider": "codex",
+      "selected_route": "codex_plus_child_direct",
+      "selected_tier": 3,
+      "state": "FAILED",
+      "updated_at": "2026-08-10T08:55:02Z",
+      "write_capable": true
+    }
+  },
+  "recovery": {
+    "checkpoint_fallback_attempts": 0,
+    "status": "NOT_REQUIRED"
+  },
+  "run_contract_binding": null,
+  "run_id": "qualified-proof-codex-r4",
+  "schema_version": "2.1",
+  "state_version": 10,
+  "status": "ACTIVE",
+  "supervisor_selection": {
+    "account_pool": "codex_business",
+    "generation": 1,
+    "immutable": true,
+    "profile": "mlgo-supervisor",
+    "provider": null,
+    "provider_session_id": null,
+    "selected_at": "2026-08-10T08:53:08Z",
+    "selected_by": "operator",
+    "terminal_id": null
+  },
+  "task_leads": {},
+  "updated_at": "2026-08-10T08:55:02Z",
+  "vnext_writers_enabled": false
+}

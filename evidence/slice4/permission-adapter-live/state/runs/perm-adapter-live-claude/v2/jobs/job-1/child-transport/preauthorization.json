@@ -1,0 +1,22 @@
+{
+  "adapter_id": "cao-child-direct-claude_code",
+  "approval_request_id": "req-job-perm-adapter-live-claude",
+  "bounded_constraints": {
+    "arguments_digest": "b7c342203e92772e76f40aefe3acc1c676a686e1b935a1db9bd36c7bbd475674",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "19a3f6872c35183258369865a8dbf1c1d9153746792b755d177241c485a2544f",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-claude"
+      }
+    ]
+  },
+  "decision_id": "dec-job-perm-adapter-live-claude",
+  "observed_state": "PREAUTHORIZED",
+  "one_shot": true,
+  "preauthorization_digest": "ae1ebfd0d1319a6c4ce437b246a208e2d9eb9f122e57cdc964dcb531accb51f6",
+  "prepared_at": "2026-08-10T04:59:16Z",
+  "request_digest": "d069bbc46f546b447546cdd38925980e64615c5b1ae75e50773e748d096f8bd1"
+}

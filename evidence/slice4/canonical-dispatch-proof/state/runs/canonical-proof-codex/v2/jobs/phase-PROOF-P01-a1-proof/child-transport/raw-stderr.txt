@@ -1,0 +1,14 @@
+--- PREFLIGHT ATTESTATION ---
+run_id=canonical-proof-codex
+task_id=PROOF-P01
+parent_session=unknown
+profile_name=unknown
+expected_account=plus
+actual_account=Logged in using ChatGPT
+codex_executable=/home/khoa/.codex/packages/standalone/current/bin/codex
+config_auth_root=/home/khoa/.codex-plus
+timestamp=2026-08-10T05:42:03Z
+attestation_result=PASS
+environment_fingerprint=1428068f7b0c34da2e412ae91a8fb8fe8c9889c1b195f34bf85c5ac5184d16d6
+-----------------------------
+Reading additional input from stdin...

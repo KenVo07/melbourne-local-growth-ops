@@ -1,0 +1,41 @@
+{
+  "actor_role": "implementation",
+  "approval_request_id": "req-phase-PROOF-P01-a1-proof",
+  "arguments_digest": "7e049c416d67380d354da57484ee12a7f9d6f914458ffd1f0594a71e5283f1ef",
+  "attempt_id": "1",
+  "command_id": "phase-PROOF-P01-a1-proof",
+  "created_at": "2026-08-10T05:42:03Z",
+  "delegation_revision": "ff0addfaa4206ae8235ac0e2d56c1f39c139a495544247a90c1d2d4c859cbced",
+  "execution_agent_id": "mlgo-codex-plus-child-direct",
+  "executor_epoch": null,
+  "expected_pre_state_digest": "be9c3a3e7caf8b034ce217d3d9961ed773ec04ed9b94a5b42ddd8b795ee3d6ec",
+  "expires_at": null,
+  "idempotency_key": "680c5162587eae21fab04f64ff352e45a60068a09df1141056efe40c4d5a5d5d",
+  "namespace_key": "bf24bdd7e52a01271e35bed0ad9d5dea7f810578cbfe32b84cda6c923b6531a1",
+  "normalized_arguments": {
+    "selected_route": "codex_plus_child_direct"
+  },
+  "one_shot": true,
+  "operation_class": "WRITE_IN_OWNED_SCOPE",
+  "operation_name": "provider_dispatch_bounded_phase",
+  "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+  "policy_revision": "b43bcf7ca5943b7122cd202fef990fb6ea6b3e6a4cfed606643b7d75a77e2e7b",
+  "project_id": "canonical-proof-codex",
+  "provider_profile_id": "mlgo-codex-plus-child-direct",
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "repo_id": "repo-1e31f737710c9ebf",
+  "request_digest": "742ac2372bfbddcbe76bcbe149d710b1dbcd9c5b0324d662d83f747b6ad58770",
+  "resource_refs": [
+    {
+      "kind": "worktree",
+      "locator": "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-codex"
+    }
+  ],
+  "run_id": "canonical-proof-codex",
+  "schema_version": "1.0",
+  "security_domain_id": "canonical-proof-codex",
+  "skill_contract_digest": "b479988b710ad7c3ba133788a3a99fe99784e07cbd904670522dc662606a8721",
+  "task_id": "PROOF-P01",
+  "work_package_id": "PROOF",
+  "worktree_id": "worktree-ab4b68c46cfd361a"
+}

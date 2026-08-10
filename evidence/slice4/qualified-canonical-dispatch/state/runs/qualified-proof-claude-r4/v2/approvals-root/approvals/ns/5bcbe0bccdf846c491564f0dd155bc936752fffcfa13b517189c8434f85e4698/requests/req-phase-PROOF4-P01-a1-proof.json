@@ -1,0 +1,41 @@
+{
+  "actor_role": "implementation",
+  "approval_request_id": "req-phase-PROOF4-P01-a1-proof",
+  "arguments_digest": "6a29c0d02c57ec1cb81b5bceb1c98b5672610e889e37dc4aec41dd572a81f5c7",
+  "attempt_id": "1",
+  "command_id": "phase-PROOF4-P01-a1-proof",
+  "created_at": "2026-08-10T08:52:45Z",
+  "delegation_revision": "8398d85b26e39d9e195d70042c44dc7badbdb447959461e717d665c3f55b63af",
+  "execution_agent_id": "mlgo-claude-subscription-child-direct",
+  "executor_epoch": null,
+  "expected_pre_state_digest": "f9447327a6fb387df215283df33d9921a1578dd74f55df2b4f3ea983fb5a3980",
+  "expires_at": null,
+  "idempotency_key": "2d0a0da8d2f28bf251a47a475331c55f63e72f9265cff3322671f4af3793dbb2",
+  "namespace_key": "5bcbe0bccdf846c491564f0dd155bc936752fffcfa13b517189c8434f85e4698",
+  "normalized_arguments": {
+    "selected_route": "claude_subscription_child_direct"
+  },
+  "one_shot": true,
+  "operation_class": "WRITE_IN_OWNED_SCOPE",
+  "operation_name": "provider_dispatch_bounded_phase",
+  "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+  "policy_revision": "b43bcf7ca5943b7122cd202fef990fb6ea6b3e6a4cfed606643b7d75a77e2e7b",
+  "project_id": "qualified-proof-claude-r4",
+  "provider_profile_id": "mlgo-claude-subscription-child-direct",
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "repo_id": "repo-1e31f737710c9ebf",
+  "request_digest": "16bc712d7c121a582a1fa54b18625197c2b394dd9eacfb0119868776a559bfca",
+  "resource_refs": [
+    {
+      "kind": "worktree",
+      "locator": "/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree"
+    }
+  ],
+  "run_id": "qualified-proof-claude-r4",
+  "schema_version": "1.0",
+  "security_domain_id": "qualified-proof-claude-r4",
+  "skill_contract_digest": "8cc0b0bd7671aa5737865224899bd0f4d1f587e8f8342f7d3f7df72d81fdd31a",
+  "task_id": "PROOF4-P01",
+  "work_package_id": "PROOF4",
+  "worktree_id": "worktree-01d50a8ab71f6379"
+}

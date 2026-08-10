@@ -1,0 +1,19 @@
+{
+  "capabilities": {
+    "native_preauthorization": "QUALIFIED"
+  },
+  "evidence_sha256": "623aa855336f1904bee35c6747338abfde588c646d68effc9f7a5bf7134a378d",
+  "identity": {
+    "adapter_id": "cao-child-direct-claude_code",
+    "config_digest": "7d0a2f88fddec64a71fb7cc8855764a116568b538fd74e7cbb3e4bf4b22c4cd7",
+    "identity_digest": "889e9608b627cdff6fe9c700b57a8ebd804c0d0717232fd2cff99bd64b51b38e",
+    "provider_profile_id": "mlgo-claude-subscription-builder",
+    "provider_version": "2.1.226",
+    "wrapper_version": "1.0.0"
+  },
+  "identity_digest": "889e9608b627cdff6fe9c700b57a8ebd804c0d0717232fd2cff99bd64b51b38e",
+  "qualification_digest": "831e1687cc64d8dc11e969f92d49f6f92af067e24db27c5be0e13f5e3ef922bc",
+  "qualification_id": "qual-889e9608b627cdff",
+  "qualified_at": "2026-08-10T04:59:29Z",
+  "schema_version": "1.0"
+}

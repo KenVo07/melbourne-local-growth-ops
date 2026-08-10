@@ -1,0 +1,92 @@
+{
+  "actor_role": "implementation",
+  "command_id": "phase-PROOF4-P01-a1-proof",
+  "created_at": "2026-08-10T08:53:09Z",
+  "decision": {
+    "action": "allow",
+    "actor_role": "implementation",
+    "allowed": true,
+    "breached_limits": [],
+    "command_id": "phase-PROOF4-P01-a1-proof",
+    "decided_at": "2026-08-10T08:53:09Z",
+    "decision_digest": "f70d953360a98eaa8030d2f696d4ce5b754751bc54863729146e84833ccb5c33",
+    "enforcement_mode": "hard",
+    "evaluations": [
+      {
+        "action": "allow",
+        "already_consumed": 0.0,
+        "effective_capacity": 12.0,
+        "exceeded": false,
+        "limit_id": "run-provider-sessions",
+        "limit_value": 12.0,
+        "metric": "provider_sessions",
+        "native_unit": "sessions",
+        "projected": 1.0,
+        "reason": "provider_sessions in sessions: 1.0 of 12.0 on run=qualified-proof-codex-r4",
+        "requested": 1.0,
+        "scope_id": "qualified-proof-codex-r4",
+        "scope_kind": "run"
+      }
+    ],
+    "policy_digest": "b8e5b71438c5de2adb03c743d838e236e9b3149ef858e80f22f95c327922b960",
+    "protected_reserves": [],
+    "reason": "within all applicable limits",
+    "requests": [
+      {
+        "amount": 1.0,
+        "metric": "provider_sessions",
+        "native_unit": "sessions"
+      }
+    ],
+    "run_id": "qualified-proof-codex-r4",
+    "schema_version": "1.0",
+    "scopes": {
+      "run": "qualified-proof-codex-r4"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-10T08:53:09Z",
+      "reason": "reserved before governed command",
+      "status": "ACTIVE"
+    },
+    {
+      "at": "2026-08-10T08:55:02Z",
+      "reason": "confirmed completion settled to UsageRecord",
+      "status": "SETTLED"
+    }
+  ],
+  "request_digest": "d4e2d503ea7cf51214cb0c72fa01aa1985fa67334ba4fd4d39d29d3bf6a91278",
+  "requests": [
+    {
+      "amount": 1.0,
+      "metric": "provider_sessions",
+      "native_unit": "sessions"
+    }
+  ],
+  "reservation_id": "res-phase-PROOF4-P01-a1-proof",
+  "run_id": "qualified-proof-codex-r4",
+  "schema_version": "1.0",
+  "scopes": {
+    "run": "qualified-proof-codex-r4"
+  },
+  "settlement": {
+    "command_id": "phase-PROOF4-P01-a1-proof",
+    "run_id": "qualified-proof-codex-r4",
+    "schema_version": "1.0",
+    "scopes": {
+      "run": "qualified-proof-codex-r4"
+    },
+    "settled": [
+      {
+        "amount": 1.0,
+        "metric": "provider_sessions",
+        "native_unit": "sessions"
+      }
+    ],
+    "settled_at": "2026-08-10T08:55:02Z",
+    "usage_record_id": null
+  },
+  "status": "SETTLED",
+  "updated_at": "2026-08-10T08:55:02Z"
+}

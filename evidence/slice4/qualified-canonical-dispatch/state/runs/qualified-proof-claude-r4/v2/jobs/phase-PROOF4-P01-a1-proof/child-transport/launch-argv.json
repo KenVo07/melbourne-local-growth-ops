@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/home/khoa/.local/bin/mlgo-claude-subscription-high",
+    "-p",
+    "<33028 chars, digest d22f562dfe3472e8>",
+    "--permission-mode",
+    "acceptEdits",
+    "--allowedTools",
+    "Write(/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree/**)",
+    "Edit(/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree/**)",
+    "Read",
+    "Glob",
+    "Grep",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--disallowedTools",
+    "Bash"
+  ],
+  "cwd": "/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree",
+  "executable": "/home/khoa/.local/bin/mlgo-claude-subscription-high",
+  "launched_at": "2026-08-10T08:52:45Z"
+}

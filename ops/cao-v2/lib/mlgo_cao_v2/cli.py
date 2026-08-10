@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .canonical_lock import load_lock, population_plan
+from .canary_scope import close_scope, open_scope, status as canary_status
 from .capacity import create_snapshot, set_manual_hint
 from .common import MLGOError, atomic_write_json, iso_now, load_json
 from .contracts import load_and_validate
@@ -13,6 +14,7 @@ from .continuity import begin_checkpoint_fallback, complete_same_session_recover
 from .controller import process_event, process_run_once, run_forever
 from .completion import preflight_herdr_boundary
 from .dispatch import run_job, submit_phase
+from .dispatch_governance import qualify_child_transport_provider, QualificationEvidenceInvalid
 from .finalization import finalize_with_verdict, prepare_final_facts
 from .git_executor import commit_task, create_pull_request, integrate_commit, push_branch, verify_ci, verify_reachability
 from .policy import load_policy
@@ -21,7 +23,7 @@ from .provenance import capture_supervisor_decision, create_delivery, parse_mode
 from .restart import active_resources, active_runs, guarded_restart
 from .routing import decide_route
 from .skill_cache import SealedSkillCache
-from .skill_population import bind_namespace, populate_cache, verify_native_mirror
+from .skill_population import bind_namespace, populate_cache, project_native_mirror, verify_native_mirror
 from .state_machine import RunStore
 from .task_lead import notify_supervisor, start_task_lead
 from .usage import agy_usage_placeholder, append_usage_event, claude_transcript_events, codex_rollout_events, correlate_registry_usage, enforce_usage_mode
@@ -55,6 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     p=sub.add_parser('route'); p.add_argument('--proposal',required=True); p.add_argument('--charter',required=True); p.add_argument('--snapshot',required=True); p.add_argument('--output'); _policy_arg(p)
     p=sub.add_parser('submit-phase'); p.add_argument('--phase',required=True); p.add_argument('--shadow',action='store_true'); _policy_arg(p)
     p=sub.add_parser('run-job',help=argparse.SUPPRESS); p.add_argument('--job-file',required=True); _policy_arg(p)
+    p=sub.add_parser('qualify-provider',help='explicit, disposable qualification ceremony: parse+validate real captured provider evidence and bind a QUALIFIED native-preauthorization record to the currently measured provider/wrapper identity'); p.add_argument('--provider',choices=('claude_code','codex'),required=True); p.add_argument('--profile',required=True); p.add_argument('--evidence',required=True); p.add_argument('--launch-argv'); p.add_argument('--registry'); _policy_arg(p)
     p=sub.add_parser('controller-once'); p.add_argument('--run-id',required=True); _policy_arg(p)
     p=sub.add_parser('controller-event'); p.add_argument('--event',required=True); _policy_arg(p)
     p=sub.add_parser('controller-serve'); p.add_argument('--interval',type=float,default=2.0); _policy_arg(p)
@@ -90,11 +93,16 @@ def build_parser() -> argparse.ArgumentParser:
     p=sub.add_parser('herdr-preflight'); p.add_argument('--session-name'); p.add_argument('--output'); _policy_arg(p)
     p=sub.add_parser('active-resources'); _policy_arg(p)
     p=sub.add_parser('safe-restart'); p.add_argument('--scope',choices=('controller','control_plane','full_runtime'),default='controller'); p.add_argument('--apply',action='store_true'); p.add_argument('--force',action='store_true'); p.add_argument('--approval-file'); _policy_arg(p)
+
+    p=sub.add_parser('canary-open',help='open a bounded disposable canary scope authorizing real provider dispatch for named run_ids'); p.add_argument('--scope-id',required=True); p.add_argument('--run-ids',type=_json_list,required=True); p.add_argument('--ttl-seconds',type=int,default=1800); p.add_argument('--reason',required=True); p.add_argument('--opened-by',required=True); _policy_arg(p)
+    p=sub.add_parser('canary-close',help='restore safe v2_shadow posture'); p.add_argument('--reason',default='canary complete'); _policy_arg(p)
+    p=sub.add_parser('canary-status'); _policy_arg(p)
     p=sub.add_parser('validate-packet'); p.add_argument('--kind',choices=('charter','phase','routing','result','capacity'),required=True); p.add_argument('--file',required=True); p.add_argument('--charter'); p.add_argument('--phase'); _policy_arg(p)
 
     p=sub.add_parser('skill-cache-plan'); p.add_argument('--lock',default=None)
     p=sub.add_parser('skill-cache-populate'); p.add_argument('--lock',default=None); p.add_argument('--cache-root',required=True); p.add_argument('--project'); p.add_argument('--security-domain')
     p=sub.add_parser('skill-cache-verify-mirror'); p.add_argument('--lock',default=None); p.add_argument('--cache-root',required=True); p.add_argument('--mirror-root',default='~/.agents/skills'); p.add_argument('--project',required=True); p.add_argument('--security-domain',required=True)
+    p=sub.add_parser('skill-cache-project-mirror',help='project already-sealed, already-approved bundle bytes into the native ~/.agents/skills mirror'); p.add_argument('--lock',default=None); p.add_argument('--cache-root',required=True); p.add_argument('--mirror-root',default='~/.agents/skills'); p.add_argument('--project',required=True); p.add_argument('--security-domain',required=True); p.add_argument('--rollback-root',required=True)
     return ap
 
 
@@ -121,7 +129,13 @@ def main(argv: list[str]|None=None) -> int:
         elif c=='route':
             policy=load_policy(args.policy); charter=load_and_validate(args.charter,'charter',policy); proposal=load_and_validate(args.proposal,'routing',policy,charter=charter); snap=load_and_validate(args.snapshot,'capacity',policy); out=decide_route(proposal,charter,snap,policy); _write_optional(args.output,out)
         elif c=='submit-phase': out=submit_phase(phase_path=args.phase,policy_path=args.policy,shadow=args.shadow)
+        elif c=='canary-open': policy=load_policy(args.policy); out=open_scope(policy,scope_id=args.scope_id,run_ids=args.run_ids,ttl_seconds=args.ttl_seconds,reason=args.reason,opened_by=args.opened_by)
+        elif c=='canary-close': policy=load_policy(args.policy); out=close_scope(policy,reason=args.reason)
+        elif c=='canary-status': policy=load_policy(args.policy); out=canary_status(policy)
         elif c=='run-job': out=run_job(args.job_file,args.policy)
+        elif c=='qualify-provider':
+            policy=load_policy(args.policy,registry_path=args.registry)
+            out=qualify_child_transport_provider(policy=policy,provider=args.provider,selected_profile=args.profile,registry=policy['_registry'],evidence_path=Path(args.evidence),launch_argv_path=Path(args.launch_argv) if args.launch_argv else None)
         elif c=='controller-once': out=process_run_once(args.run_id,args.policy)
         elif c=='controller-event': out=process_event(args.event,args.policy)
         elif c=='controller-serve': run_forever(args.policy,args.interval); return 0
@@ -179,6 +193,9 @@ def main(argv: list[str]|None=None) -> int:
             lock=load_lock(args.lock); cache=SealedSkillCache(args.cache_root)
             out=verify_native_mirror(cache=cache,lock=lock,mirror_root=args.mirror_root,project_id=args.project,security_domain_id=args.security_domain)
             _print(out); return 0 if out['accepted'] else 1
+        elif c=='skill-cache-project-mirror':
+            lock=load_lock(args.lock); cache=SealedSkillCache(args.cache_root)
+            out=project_native_mirror(cache=cache,lock=lock,mirror_root=args.mirror_root,project_id=args.project,security_domain_id=args.security_domain,rollback_root=args.rollback_root)
         else: parser.error(f'unhandled command: {c}'); return 2
         _print(out); return 0
     except (MLGOError,OSError,ValueError,json.JSONDecodeError) as exc:

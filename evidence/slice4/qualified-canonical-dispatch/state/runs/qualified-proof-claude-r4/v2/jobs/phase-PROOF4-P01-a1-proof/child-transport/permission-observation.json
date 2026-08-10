@@ -1,0 +1,13 @@
+{
+  "adapter_id": "cao-child-direct-claude_code",
+  "bound_decision_id": "dec-phase-PROOF4-P01-a1-proof",
+  "bound_request_digest": "16bc712d7c121a582a1fa54b18625197c2b394dd9eacfb0119868776a559bfca",
+  "evidence_token": "claude.cli.permission_denied",
+  "observation_digest": "9eea80a857344c4f1e93eb349acfeef55875247e23e128b4c764a9aa5e2db7f4",
+  "observed_at": "2026-08-10T08:53:08Z",
+  "observed_state": "DENIED",
+  "provider_profile_id": "mlgo-claude-subscription-child-direct",
+  "provider_remember_active": false,
+  "provider_remember_offered": false,
+  "reason": "token mapped by qualified adapter observation map"
+}

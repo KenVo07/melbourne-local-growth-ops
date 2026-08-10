@@ -1,0 +1,80 @@
+• Ran find /home/khoa/.agents /home/khoa/.codex -type
+  │ f -name SKILL.md -print 2>/dev/null | sort | rg
+  │ -i 'unitone|security.review|secure.code|
+  │ … +1 lines
+  └ /home/khoa/.agents/skills/secure-code-review/
+    SKILL.md
+    … +28 lines (ctrl + t to view transcript)
+    twilio-developer-kit/skills/
+    twilio-security-hardening/SKILL.md
+
+──────────────────────────────────────────────────────
+
+• The named UnitOneAI security-review skill is not
+  installed in this environment. I’m using the
+  available secure-code-review skill as the closest
+  security-review fallback; this changes no files by
+  itself.
+
+• Explored
+  └ Read SKILL.md (secure-code-review skill), SKILL.md
+         (owasp-top-10-web skill), server.py
+
+• Added findings.md (+14 -0)
+     1 +# Security findings
+     2 +
+     3 +- `app/server.py:20` — A live-format Stripe AP
+        I key is hard-coded in source, exposing a reus
+        able credential to anyone who can read the cod
+        e.
+     4 +- `app/server.py:21` — A weak administrative p
+        assword is hard-coded in source, enabling triv
+        ial credential disclosure and guessing.
+     5 +- `app/server.py:24` — The invoice endpoint ha
+        s no authentication or tenant-ownership author
+        ization check, allowing cross-tenant invoice a
+        ccess (IDOR).
+     6 +- `app/server.py:31` — Attacker-controlled pat
+        h parameters are interpolated into SQL, enabli
+        ng SQL injection when the query executes on li
+        ne 35.
+     7 +- `app/server.py:42` — The payment webhook tru
+        sts an unsigned request body, allowing forged
+        payment events to be applied.
+     8 +- `app/server.py:51` — An attacker-controlled
+        URL is fetched without destination validation,
+         enabling SSRF against internal and metadata s
+        ervices.
+     9 +- `app/server.py:59` — The original upload fil
+        ename is joined directly to the destination pa
+        th, enabling path traversal and arbitrary file
+         overwrite.
+    10 +- `app/server.py:60` — Uploaded files are save
+        d without type or size validation, enabling da
+        ngerous-file upload and storage-exhaustion att
+        acks.
+    11 +- `app/server.py:64` — The administrative diag
+        nostic endpoint has no authentication or autho
+        rization, exposing a privileged operation publ
+        icly.
+    12 +- `app/server.py:68` — Attacker-controlled inp
+        ut is executed with `shell=True`, enabling arb
+        itrary operating-system command execution.
+    13 +- `app/server.py:73` — The Stripe API key is w
+        ritten to application output, leaking a sensit
+        ive credential through logs.
+    14 +- `app/server.py:78` — Passwords are hashed wi
+        th fast, collision-prone MD5 and no salt, maki
+        ng stolen password hashes inexpensive to crack
+        .
+
+──────────────────────────────────────────────────────
+
+• Created findings.md. app/server.py was not modified.
+
+──────────────────────────────────────────────────────
+
+
+› Explain this codebase
+
+  gpt-5.6-sol medium · ~/Projects/mlgo-slice4-canarie…

@@ -1,0 +1,17 @@
+{
+  "command_id": "job-perm-adapter-live-claude",
+  "run_id": "perm-adapter-live-claude",
+  "schema_version": "1.0",
+  "scopes": {
+    "run": "perm-adapter-live-claude"
+  },
+  "settled": [
+    {
+      "amount": 1.0,
+      "metric": "provider_sessions",
+      "native_unit": "sessions"
+    }
+  ],
+  "settled_at": "2026-08-10T05:00:04Z",
+  "usage_record_id": null
+}

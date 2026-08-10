@@ -1,0 +1,43 @@
+{
+  "actual_call_consumed": true,
+  "attempt": 1,
+  "big_task_id": "PROOF4",
+  "child_transport_observation": {
+    "adapter_id": "cao-child-direct-claude_code",
+    "bound_decision_id": "dec-phase-PROOF4-P01-a1-proof",
+    "bound_request_digest": "16bc712d7c121a582a1fa54b18625197c2b394dd9eacfb0119868776a559bfca",
+    "evidence_token": "claude.cli.permission_denied",
+    "observation_digest": "9eea80a857344c4f1e93eb349acfeef55875247e23e128b4c764a9aa5e2db7f4",
+    "observed_at": "2026-08-10T08:53:08Z",
+    "observed_state": "DENIED",
+    "provider_profile_id": "mlgo-claude-subscription-child-direct",
+    "provider_remember_active": false,
+    "provider_remember_offered": false,
+    "reason": "token mapped by qualified adapter observation map"
+  },
+  "completion_state": "PERMISSION_DENIED",
+  "idempotency_key": "682309ee4441",
+  "job_id": "phase-PROOF4-P01-a1-proof",
+  "phase_id": "PROOF4-P01",
+  "phase_packet_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-claude-r4/v2/packets/PROOF4-P01.json",
+  "prompt_manifest": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/telemetry/prompt-manifests/phase-PROOF4-P01-a1-proof.json",
+  "provider_start_state": "PROVIDER_RESPONSE_OBSERVED",
+  "route": {
+    "decision": "ROUTE_SELECTED",
+    "schema_version": "2.0",
+    "selected_account_pool": "claude_subscription",
+    "selected_model": "sonnet",
+    "selected_profile": "mlgo-claude-subscription-child-direct",
+    "selected_provider": "claude_code",
+    "selected_provider_api": "child_direct",
+    "selected_route": "claude_subscription_child_direct",
+    "selected_tier": 3
+  },
+  "routing_decision_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-claude-r4/v2/packets/PROOF4-P01-routing-decision.json",
+  "run_id": "qualified-proof-claude-r4",
+  "schema_version": "2.1",
+  "started_at": "2026-08-10T08:52:44Z",
+  "status": "FAILED",
+  "systemd_unit": null,
+  "updated_at": "2026-08-10T08:53:08Z"
+}

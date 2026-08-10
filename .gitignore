@@ -13,3 +13,5 @@ coverage/
 
 /docs/learning
 /.mlgo-local/
+__pycache__/
+*.pyc

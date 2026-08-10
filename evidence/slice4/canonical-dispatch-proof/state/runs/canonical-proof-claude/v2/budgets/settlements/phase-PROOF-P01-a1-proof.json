@@ -1,0 +1,17 @@
+{
+  "command_id": "phase-PROOF-P01-a1-proof",
+  "run_id": "canonical-proof-claude",
+  "schema_version": "1.0",
+  "scopes": {
+    "run": "canonical-proof-claude"
+  },
+  "settled": [
+    {
+      "amount": 1.0,
+      "metric": "provider_sessions",
+      "native_unit": "sessions"
+    }
+  ],
+  "settled_at": "2026-08-10T05:42:02Z",
+  "usage_record_id": null
+}

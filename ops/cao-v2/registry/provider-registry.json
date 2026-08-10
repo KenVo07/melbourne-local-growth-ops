@@ -1108,6 +1108,26 @@
       "store": "main",
       "transport_id": "cao-main"
     },
+    "mlgo-claude-subscription-child-direct": {
+      "account_profile_id": "claude_subscription",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-claude-subscription-child-direct"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-claude-subscription-child-direct\ndescription: Slice 4 governed, non-bypassed, direct child-process Claude dispatch proof.\nprovider: claude_code\nrole: developer\nclaudeExecutable: mlgo-claude-subscription-high\nmodel: sonnet\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - claude\n  - sonnet\n  - subscription\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "sonnet",
+      "profile_id": "mlgo-claude-subscription-child-direct",
+      "provider_id": "claude_code",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-child-direct"
+    },
     "mlgo-claude-subscription-opus-builder": {
       "account_profile_id": "claude_subscription",
       "body": "critical-bounded-builder",
@@ -1302,6 +1322,26 @@
       "role_id": "builder",
       "store": "main",
       "transport_id": "cao-main"
+    },
+    "mlgo-codex-plus-child-direct": {
+      "account_profile_id": "codex_plus",
+      "body": "bounded-phase-builder",
+      "compatibility_aliases": [
+        "mlgo-codex-plus-child-direct"
+      ],
+      "declared_capabilities": [
+        "execution_agent",
+        "structured_result",
+        "usage_telemetry"
+      ],
+      "frontmatter": "name: mlgo-codex-plus-child-direct\ndescription: GPT-5.6 Sol high-effort difficult code, debugging and integration builder.\nprovider: codex\nrole: developer\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: high\n  features.fast_mode: false\ncapabilities:\n  - bounded implementation in an isolated worktree\n  - structured result packet with no Git metadata mutation\ntags:\n  - mlgo\n  - developer\n  - codex\n  - sol\n  - v2\nskills:\n  - cao-worker-protocols",
+      "gateway": false,
+      "model": "gpt-5.6-sol",
+      "profile_id": "mlgo-codex-plus-child-direct",
+      "provider_id": "codex",
+      "role_id": "builder",
+      "store": "main",
+      "transport_id": "cao-child-direct"
     },
     "mlgo-codex-plus-reviewer": {
       "account_profile_id": "codex_plus",
@@ -1532,6 +1572,27 @@
       "transport_id": "cao-main",
       "write_capable": true
     },
+    "claude_subscription_child_direct": {
+      "account_pool": "claude_subscription",
+      "billing_mode": "subscription",
+      "display_model": "claude-sonnet-5",
+      "execution_profile_id": "mlgo-claude-subscription-child-direct",
+      "family": "claude",
+      "gateway": false,
+      "intended_for": [
+        "slice4_governed_non_bypassed_child_dispatch_proof"
+      ],
+      "model": "sonnet",
+      "profile": "mlgo-claude-subscription-child-direct",
+      "provider": "claude_code",
+      "provider_api": "main",
+      "provider_id": "claude_code",
+      "reviewer_profile": "mlgo-claude-subscription-reviewer",
+      "route_id": "claude_subscription_child_direct",
+      "tier": 3,
+      "transport_id": "cao-child-direct",
+      "write_capable": true
+    },
     "claude_subscription_opus": {
       "account_pool": "claude_subscription",
       "billing_mode": "subscription",
@@ -1624,6 +1685,26 @@
       "transport_id": "cao-main",
       "write_capable": true
     },
+    "codex_plus_child_direct": {
+      "account_pool": "codex_plus",
+      "billing_mode": "subscription",
+      "execution_profile_id": "mlgo-codex-plus-child-direct",
+      "family": "codex",
+      "gateway": false,
+      "intended_for": [
+        "slice4_governed_non_bypassed_child_dispatch_proof"
+      ],
+      "model": "gpt-5.6-sol",
+      "profile": "mlgo-codex-plus-child-direct",
+      "provider": "codex",
+      "provider_api": "main",
+      "provider_id": "codex",
+      "reviewer_profile": "mlgo-codex-plus-reviewer",
+      "route_id": "codex_plus_child_direct",
+      "tier": 4,
+      "transport_id": "cao-child-direct",
+      "write_capable": true
+    },
     "codex_plus_sol": {
       "account_pool": "codex_plus",
       "billing_mode": "subscription",
@@ -1679,6 +1760,14 @@
     }
   },
   "transports": {
+    "cao-child-direct": {
+      "adapter_id": "cao-child-direct",
+      "include_model": true,
+      "legacy_provider_api": "main",
+      "provider_side_idempotency": false,
+      "requires_herdr_preflight": false,
+      "transport_kind": "synchronous_child_process"
+    },
     "cao-main": {
       "adapter_id": "cao-run-step",
       "endpoint_policy_key": "main_cao_api",

@@ -1,0 +1,12 @@
+{
+  "capability_state": {
+    "authority_bearing": true,
+    "capability": "native_preauthorization",
+    "enabled": false,
+    "maturity": null,
+    "reason": "no qualification record exists for this adapter identity",
+    "stale": false
+  },
+  "ceremony_mode": true,
+  "note": "no pre-existing PermissionAdapter qualification; this call is the qualification ceremony"
+}

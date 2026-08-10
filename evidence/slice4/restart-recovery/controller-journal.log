@@ -1,0 +1,6 @@
+Aug 10 14:21:57 khoa-pc systemd[1894]: Started mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller.
+Aug 10 14:22:26 khoa-pc systemd[1894]: Stopping mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller...
+Aug 10 14:22:26 khoa-pc systemd[1894]: Stopped mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller.
+Aug 10 14:22:26 khoa-pc systemd[1894]: Started mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller.
+Aug 10 14:22:39 khoa-pc systemd[1894]: Stopping mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller...
+Aug 10 14:22:39 khoa-pc systemd[1894]: Stopped mlgo-cao-v2-controller.service - MLGO CAO v2 deterministic phase controller.

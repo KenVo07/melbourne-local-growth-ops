@@ -1,0 +1,1 @@
+Command: Fix the bug. Create a file named notes.py in the current directory with a function summarize(items) that has a deliberate bug (it returns len(items) + 1 instead of len(items)), then a second file bug-notes.txt briefly describing the bug. Do nothing else.

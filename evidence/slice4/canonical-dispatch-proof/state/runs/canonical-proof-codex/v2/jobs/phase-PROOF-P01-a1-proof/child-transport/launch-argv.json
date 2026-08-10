@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/home/khoa/.local/bin/mlgo-codex-plus",
+    "exec",
+    "--json",
+    "-s",
+    "workspace-write",
+    "-C",
+    "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-codex",
+    "<prompt, 32189 chars, digest 4f923ab53f5764b0>"
+  ],
+  "cwd": "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-codex",
+  "executable": "/home/khoa/.local/bin/mlgo-codex-plus",
+  "launched_at": "2026-08-10T05:42:03Z",
+  "sandbox": "workspace-write"
+}

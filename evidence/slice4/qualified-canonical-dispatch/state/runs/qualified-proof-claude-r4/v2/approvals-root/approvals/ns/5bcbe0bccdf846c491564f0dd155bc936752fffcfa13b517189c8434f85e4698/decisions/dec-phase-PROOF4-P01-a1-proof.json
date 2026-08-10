@@ -1,0 +1,40 @@
+{
+  "approval_request_id": "req-phase-PROOF4-P01-a1-proof",
+  "approved_operation_constraints": {
+    "arguments_digest": "6a29c0d02c57ec1cb81b5bceb1c98b5672610e889e37dc4aec41dd572a81f5c7",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree"
+      }
+    ]
+  },
+  "authority_class": "TECH_LEAD",
+  "command_id": "phase-PROOF4-P01-a1-proof",
+  "created_at": "2026-08-10T08:52:45Z",
+  "decision_digest": "420b9a6aefb96d6562f79a759d1b70d707ad7ac8e33171935b90a0cdf6ee202c",
+  "decision_event_id": null,
+  "decision_id": "dec-phase-PROOF4-P01-a1-proof",
+  "delegation_revision": "8398d85b26e39d9e195d70042c44dc7badbdb447959461e717d665c3f55b63af",
+  "expires_at": null,
+  "namespace_key": "5bcbe0bccdf846c491564f0dd155bc936752fffcfa13b517189c8434f85e4698",
+  "one_shot_or_bounded_grant": "ONE_SHOT",
+  "outcome": "APPROVED_BY_DELEGATION",
+  "policy_revision": "b43bcf7ca5943b7122cd202fef990fb6ea6b3e6a4cfed606643b7d75a77e2e7b",
+  "project_id": "qualified-proof-claude-r4",
+  "reason_codes": [
+    "BOUNDED_WRITE_IN_OWNED_SCOPE",
+    "DELEGATION_CURRENT",
+    "OPERATION_CLASS_WRITE_IN_OWNED_SCOPE"
+  ],
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "request_digest": "16bc712d7c121a582a1fa54b18625197c2b394dd9eacfb0119868776a559bfca",
+  "required_authority_class": null,
+  "schema_version": "1.0",
+  "security_domain_id": "qualified-proof-claude-r4",
+  "skill_contract_digest": "8cc0b0bd7671aa5737865224899bd0f4d1f587e8f8342f7d3f7df72d81fdd31a",
+  "valid_from": "2026-08-10T08:52:45Z"
+}

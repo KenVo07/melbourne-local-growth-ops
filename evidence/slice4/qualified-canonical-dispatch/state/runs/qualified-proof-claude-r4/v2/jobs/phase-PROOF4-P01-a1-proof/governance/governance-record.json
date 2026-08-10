@@ -1,0 +1,33 @@
+{
+  "approval_decision_id": "dec-phase-PROOF4-P01-a1-proof",
+  "approval_outcome": "APPROVED_BY_DELEGATION",
+  "approved_operation_constraints": {
+    "arguments_digest": "6a29c0d02c57ec1cb81b5bceb1c98b5672610e889e37dc4aec41dd572a81f5c7",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/round4-claude-worktree"
+      }
+    ]
+  },
+  "budget_reservation_id": "res-phase-PROOF4-P01-a1-proof",
+  "command_id": "phase-PROOF4-P01-a1-proof",
+  "context_manifest_bytes": 34568,
+  "context_manifest_id": "phase-PROOF4-P01-a1-proof",
+  "context_manifest_status": "WITHIN_CAP",
+  "effective_provider_request_digest": "6ea643fc8fbefca892a14d876b5d27058d52e3b40b562d9185e5871f5805b0b9",
+  "effective_provider_request_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-claude-r4/v2/jobs/phase-PROOF4-P01-a1-proof/governance/effective-provider-request.json",
+  "native_skill_projection_bytes": 30434,
+  "native_skill_projection_digest": "e5a0481997ac070a3d32b336f9d097cb273a9a6f9c45c5e0de0d9fdea2821b67",
+  "native_skill_projection_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-claude-r4/v2/jobs/phase-PROOF4-P01-a1-proof/governance/native-skill-projection.txt",
+  "operation_class": "WRITE_IN_OWNED_SCOPE",
+  "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+  "project_id": "qualified-proof-claude-r4",
+  "schema_version": "1.2",
+  "security_domain_id": "qualified-proof-claude-r4",
+  "skill_contract_digest": "8cc0b0bd7671aa5737865224899bd0f4d1f587e8f8342f7d3f7df72d81fdd31a",
+  "skill_contract_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-claude-r4/v2/jobs/phase-PROOF4-P01-a1-proof/governance/skill-contract.json"
+}

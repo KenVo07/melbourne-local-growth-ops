@@ -1,0 +1,98 @@
+{
+  "bundle_refs": [
+    [
+      "bundle-addy-osmani-agent-skills",
+      "a6805db39e7f9edfd9a58498bd841c313c15d4103fede03bcb6b1ded0710f602"
+    ],
+    [
+      "bundle-matt-pocock-skills",
+      "7f074121752b1347b5978b31b25a78a25d16449d95281bf75952de852376289d"
+    ]
+  ],
+  "compiled_at": "2026-08-10T08:52:45Z",
+  "effective_constraints": {
+    "increment_size": "small",
+    "plan_before_edit": true,
+    "test_strategy": "test_first"
+  },
+  "exclusions": [],
+  "family": "implementation_backend",
+  "maximum_skill_bytes": 65536,
+  "maximum_skill_count": 4,
+  "project_id": "qualified-proof-claude-r4",
+  "recipe_digest": "294efe87dfad594e0c1358f82118b12fa5b7cbf251442dfdc791a63fbb1f5910",
+  "recipe_id": "recipe-implementation-backend",
+  "recipe_version": "1.0.0",
+  "registry_revision": "e112f7006f7ee2b0b247bc6c87d967763406c99b6ff7dd4fdd5582c87598132d",
+  "requires_runtime_skill_loading": false,
+  "risk_class": "elevated",
+  "role": "developer",
+  "schema_version": "1.0",
+  "security_domain_id": "qualified-proof-claude-r4",
+  "selected_before_dispatch": true,
+  "selected_skills": [
+    {
+      "bundle_id": "bundle-addy-osmani-agent-skills",
+      "bundle_kind": "EXTERNAL_ENGINEERING",
+      "byte_count": 9501,
+      "content_digest": "f3336e581a5247d9a6a58096f0015dbbfb7673a35e71aebd39491c55662a1906",
+      "precedence_label": "CANONICAL_ENGINEERING_GUIDANCE",
+      "precedence_tier": 4,
+      "relative_path": "skills/incremental-implementation/SKILL.md",
+      "skill_id": "addy-incremental-implementation"
+    },
+    {
+      "bundle_id": "bundle-addy-osmani-agent-skills",
+      "bundle_kind": "EXTERNAL_ENGINEERING",
+      "byte_count": 16477,
+      "content_digest": "71fdddb96c2c54041fcfbfdaef3c172b202fb9240b609e658d9d82edbed6cad1",
+      "precedence_label": "CANONICAL_ENGINEERING_GUIDANCE",
+      "precedence_tier": 4,
+      "relative_path": "skills/test-driven-development/SKILL.md",
+      "skill_id": "addy-test-driven-development"
+    },
+    {
+      "bundle_id": "bundle-matt-pocock-skills",
+      "bundle_kind": "EXTERNAL_ENGINEERING",
+      "byte_count": 433,
+      "content_digest": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "precedence_label": "CANONICAL_ENGINEERING_GUIDANCE",
+      "precedence_tier": 4,
+      "relative_path": "skills/engineering/implement/SKILL.md",
+      "skill_id": "matt-implement"
+    },
+    {
+      "bundle_id": "bundle-matt-pocock-skills",
+      "bundle_kind": "EXTERNAL_ENGINEERING",
+      "byte_count": 3568,
+      "content_digest": "5e6b9c16b547113e90afbb946489d1c1384be5c2128f0159bd0bee57251ecf08",
+      "precedence_label": "CANONICAL_ENGINEERING_GUIDANCE",
+      "precedence_tier": 4,
+      "relative_path": "skills/engineering/tdd/SKILL.md",
+      "skill_id": "matt-tdd"
+    }
+  ],
+  "selection_reason_codes": [
+    {
+      "reason_code": "SELECTED_REQUIRED_BY_RECIPE",
+      "skill_id": "addy-incremental-implementation"
+    },
+    {
+      "reason_code": "SELECTED_OPTIONAL_CONDITION_MET",
+      "skill_id": "addy-test-driven-development"
+    },
+    {
+      "reason_code": "SELECTED_REQUIRED_BY_RECIPE",
+      "skill_id": "matt-implement"
+    },
+    {
+      "reason_code": "SELECTED_OPTIONAL_CONDITION_MET",
+      "skill_id": "matt-tdd"
+    }
+  ],
+  "skill_contract_digest": "8cc0b0bd7671aa5737865224899bd0f4d1f587e8f8342f7d3f7df72d81fdd31a",
+  "superseded_constraints": [],
+  "task_class": "implementation",
+  "total_skill_bytes": 29979,
+  "total_skill_count": 4
+}

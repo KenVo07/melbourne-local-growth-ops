@@ -29,6 +29,7 @@ report mirror equivalence, and it never writes there.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tempfile
@@ -251,6 +252,127 @@ def bind_namespace(
         )
         for bundle in sorted(lock["bundles"], key=lambda b: b["bundle_id"])
     ]
+
+
+def project_native_mirror(
+    *,
+    cache: SealedSkillCache,
+    lock: Mapping[str, Any],
+    mirror_root: str | Path,
+    project_id: str,
+    security_domain_id: str,
+    rollback_root: str | Path,
+) -> dict[str, Any]:
+    """Project already-sealed, already-approved bundle bytes into the native mirror.
+
+    This is the one authorized Slice 4 canary write path into
+    ``~/.agents/skills``.  It never selects, fetches, or executes anything: it
+    only copies bytes that are already sealed (and already digest-proven) in
+    the operator-populated cache, using the same skill_id -> mirror-name
+    mapping :func:`verify_native_mirror` uses to compare them.
+
+    Every file this call is about to touch is snapshotted first, so a single
+    rollback record can restore the mirror to its pre-projection state.
+    Already-equivalent files are left untouched (idempotent), and a mismatch
+    that survives the write is treated as failure, not partial success -
+    mirror drift fails closed.
+    """
+
+    root = Path(mirror_root).expanduser()
+    rollback_dir = Path(rollback_root).expanduser()
+    rollback_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    stamp = iso_now().replace(":", "").replace("-", "") + "-" + os.urandom(4).hex()
+    snapshot: list[dict[str, Any]] = []
+    written: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+
+    for bundle in sorted(lock["bundles"], key=lambda b: b["bundle_id"]):
+        resolved = cache.resolve(
+            bundle_id=bundle["bundle_id"],
+            project_id=project_id,
+            security_domain_id=security_domain_id,
+        )
+        sealed_by_path = {e["relative_path"]: e for e in resolved["files"]}
+        for skill in sorted(bundle["selected_skills"], key=lambda s: s["skill_id"]):
+            entry = sealed_by_path[skill["relative_path"]]
+            target = root / skill["native_mirror_name"] / "SKILL.md"
+            data = cache.read_file(resolved=resolved, relative_path=skill["relative_path"])
+            if sha256_bytes(data) != entry["content_digest"]:
+                raise SkillPopulationError(
+                    f"sealed content corrupt for skill {skill['skill_id']!r} before projection"
+                )
+
+            pre_existed = target.is_file()
+            pre_bytes = target.read_bytes() if pre_existed else None
+            if pre_existed and sha256_bytes(pre_bytes) == entry["content_digest"]:
+                skipped.append({"skill_id": skill["skill_id"], "mirror_path": str(target), "reason": "already equivalent"})
+                continue
+
+            snapshot.append({
+                "skill_id": skill["skill_id"],
+                "mirror_path": str(target),
+                "pre_existed": pre_existed,
+                "pre_content_sha256": sha256_bytes(pre_bytes) if pre_existed else None,
+                "pre_content_backup": None,
+            })
+            if pre_existed:
+                backup_path = rollback_dir / f"{stamp}-{skill['skill_id']}-SKILL.md.bak"
+                backup_path.write_bytes(pre_bytes)
+                backup_path.chmod(0o400)
+                snapshot[-1]["pre_content_backup"] = str(backup_path)
+
+            target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+            fd, tmp_name = tempfile.mkstemp(prefix=".mirror-", dir=str(target.parent))
+            tmp = Path(tmp_name)
+            try:
+                with os.fdopen(fd, "wb") as handle:
+                    handle.write(data)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(tmp, target)
+            finally:
+                if tmp.exists():
+                    tmp.unlink(missing_ok=True)
+            written.append({"skill_id": skill["skill_id"], "mirror_path": str(target), "bytes": len(data)})
+
+    rollback_record = {
+        "schema_version": "1.0",
+        "projected_at": iso_now(),
+        "mirror_root": str(root),
+        "project_id": project_id,
+        "security_domain_id": security_domain_id,
+        "lock_digest": lock["lock_digest"],
+        "snapshot": snapshot,
+        "written": written,
+        "skipped": skipped,
+    }
+    rollback_path = rollback_dir / f"{stamp}-rollback-record.json"
+    rollback_path.write_text(
+        json.dumps(rollback_record, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    rollback_path.chmod(0o400)
+
+    verification = verify_native_mirror(
+        cache=cache, lock=lock, mirror_root=root,
+        project_id=project_id, security_domain_id=security_domain_id,
+    )
+    if not verification["equivalent"]:
+        raise SkillPopulationError(
+            f"native mirror still drifted after projection: {verification['bundles']}"
+        )
+
+    return {
+        "schema_version": "1.0",
+        "mirror_root": str(root),
+        "mirror_mutated": bool(written),
+        "written_count": len(written),
+        "skipped_count": len(skipped),
+        "written": written,
+        "skipped": skipped,
+        "rollback_record_path": str(rollback_path),
+        "verification": verification,
+        "projected_at": iso_now(),
+    }
 
 
 def verify_native_mirror(

@@ -1,0 +1,17 @@
+{
+  "command_id": "job-perm-adapter-live-codex",
+  "run_id": "perm-adapter-live-codex",
+  "schema_version": "1.0",
+  "scopes": {
+    "run": "perm-adapter-live-codex"
+  },
+  "settled": [
+    {
+      "amount": 1.0,
+      "metric": "provider_sessions",
+      "native_unit": "sessions"
+    }
+  ],
+  "settled_at": "2026-08-10T05:00:04Z",
+  "usage_record_id": null
+}

@@ -1,0 +1,11 @@
+{
+  "decision": "ROUTE_SELECTED",
+  "schema_version": "2.0",
+  "selected_account_pool": "claude_subscription",
+  "selected_model": "sonnet",
+  "selected_profile": "mlgo-claude-subscription-child-direct",
+  "selected_provider": "claude_code",
+  "selected_provider_api": "child_direct",
+  "selected_route": "claude_subscription_child_direct",
+  "selected_tier": 3
+}

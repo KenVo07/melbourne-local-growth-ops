@@ -1,0 +1,40 @@
+{
+  "approval_request_id": "req-job-perm-adapter-live-claude",
+  "approved_operation_constraints": {
+    "arguments_digest": "b7c342203e92772e76f40aefe3acc1c676a686e1b935a1db9bd36c7bbd475674",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "19a3f6872c35183258369865a8dbf1c1d9153746792b755d177241c485a2544f",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/permission-adapter-live-claude"
+      }
+    ]
+  },
+  "authority_class": "TECH_LEAD",
+  "command_id": "job-perm-adapter-live-claude",
+  "created_at": "2026-08-10T04:59:16Z",
+  "decision_digest": "09750001751d767f9bfc1de774d2034a6a2312557e231938a4433913e7f58e6f",
+  "decision_event_id": null,
+  "decision_id": "dec-job-perm-adapter-live-claude",
+  "delegation_revision": "3c44ec1aedfb43a217d95c797220be384bda18832859ceb8ccd0c00ef3734c4e",
+  "expires_at": null,
+  "namespace_key": "e4443b1069b5aee03b9f7a69230d708c4d4f572fdabcc0ca2c46750ce6af1c6f",
+  "one_shot_or_bounded_grant": "ONE_SHOT",
+  "outcome": "APPROVED_BY_DELEGATION",
+  "policy_revision": "0b62b7ab14032f7d6840ffa19f959c250fa5095c55acfdbad79f3ca4cd112f5e",
+  "project_id": "perm-adapter-live-claude",
+  "reason_codes": [
+    "BOUNDED_WRITE_IN_OWNED_SCOPE",
+    "DELEGATION_CURRENT",
+    "OPERATION_CLASS_WRITE_IN_OWNED_SCOPE"
+  ],
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "request_digest": "d069bbc46f546b447546cdd38925980e64615c5b1ae75e50773e748d096f8bd1",
+  "required_authority_class": null,
+  "schema_version": "1.0",
+  "security_domain_id": "perm-adapter-live-claude",
+  "skill_contract_digest": "658945f765248f788950e968f7578858b674369d0a4ac92c7b93f2eebc96c0a5",
+  "valid_from": "2026-08-10T04:59:16Z"
+}

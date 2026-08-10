@@ -1,0 +1,1 @@
+Bug: total(amounts) in ledger.py returns sum(amounts) + 1 instead of sum(amounts), off by one.
