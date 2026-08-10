@@ -1,0 +1,23 @@
+{
+  "conversation_history_bytes": null,
+  "job_id": "phase-PROOF-P01-a1-proof",
+  "model": "gpt-5.6-sol",
+  "note": "Provider base prompt, history and tool output require provider records and are not estimated.",
+  "profile": "mlgo-codex-plus-child-direct",
+  "profile_body_bytes": 1132,
+  "profile_path": "/home/khoa/.config/mlgo-cao/profiles/mlgo-codex-plus-child-direct.md",
+  "profile_sha256": "7b8f2ac1a2488b93fceb051112b485d6a0de418efe4e0d5f6891d478b10954ea",
+  "provider": "codex",
+  "provider_base_prompt_bytes": null,
+  "recorded_at": "2026-08-10T05:42:03Z",
+  "schema_version": "1.0",
+  "skill_catalog_bytes": 405,
+  "skill_catalog_measurement": "exact installed build_skill_catalog",
+  "skills_filter": [
+    "cao-worker-protocols"
+  ],
+  "task_prompt_bytes": 2188,
+  "task_prompt_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/jobs/phase-PROOF-P01-a1-proof/effective-prompt.md",
+  "task_prompt_sha256": "3cde4e248a0e8765f29b0633187109fdfd6fde57a483c8571a9d49689a3098a0",
+  "tool_output_bytes": null
+}

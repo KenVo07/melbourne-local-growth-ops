@@ -1,0 +1,40 @@
+{
+  "approval_request_id": "req-phase-PROOF-P01-a1-proof",
+  "approved_operation_constraints": {
+    "arguments_digest": "6a29c0d02c57ec1cb81b5bceb1c98b5672610e889e37dc4aec41dd572a81f5c7",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-claude"
+      }
+    ]
+  },
+  "authority_class": "TECH_LEAD",
+  "command_id": "phase-PROOF-P01-a1-proof",
+  "created_at": "2026-08-10T05:41:47Z",
+  "decision_digest": "032c75af273bbadebf809c3861c88a8b1b9960413183e779d83e37a752a4c2d8",
+  "decision_event_id": null,
+  "decision_id": "dec-phase-PROOF-P01-a1-proof",
+  "delegation_revision": "ff0addfaa4206ae8235ac0e2d56c1f39c139a495544247a90c1d2d4c859cbced",
+  "expires_at": null,
+  "namespace_key": "41e5420858ffadc8e7974cf30b5b14d6e187d21fb6da4a2805e1f31e2355e154",
+  "one_shot_or_bounded_grant": "ONE_SHOT",
+  "outcome": "APPROVED_BY_DELEGATION",
+  "policy_revision": "b43bcf7ca5943b7122cd202fef990fb6ea6b3e6a4cfed606643b7d75a77e2e7b",
+  "project_id": "canonical-proof-claude",
+  "reason_codes": [
+    "BOUNDED_WRITE_IN_OWNED_SCOPE",
+    "DELEGATION_CURRENT",
+    "OPERATION_CLASS_WRITE_IN_OWNED_SCOPE"
+  ],
+  "registry_revision": "6027c8e95c653a86b8fa9bbc5dd85605da748306a6b3403dbb0a2f11dc733f7f",
+  "request_digest": "72b458617c06b0b294041b7dfff99b555591751a43b327b997187a02d688d689",
+  "required_authority_class": null,
+  "schema_version": "1.0",
+  "security_domain_id": "canonical-proof-claude",
+  "skill_contract_digest": "168d9666da4fb8bd3e552329cb75f7a5d34633fc1941a7b1b2a63c995961f282",
+  "valid_from": "2026-08-10T05:41:47Z"
+}

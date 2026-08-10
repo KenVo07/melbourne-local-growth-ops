@@ -1,0 +1,2 @@
+Bug: summarize(items) in notes.py returns len(items) + 1 instead of len(items),
+off by one due to a stray + 1 in the return statement.

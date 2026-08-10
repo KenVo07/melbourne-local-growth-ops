@@ -1,0 +1,32 @@
+{
+  "actual_call_consumed": true,
+  "attempt": 1,
+  "big_task_id": "PROOF",
+  "completion_state": "RESULT_PACKET_STABLE",
+  "idempotency_key": "f1812b5f3926",
+  "job_id": "phase-PROOF-P01-a1-proof",
+  "phase_id": "PROOF-P01",
+  "phase_packet_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/packets/PROOF-P01.json",
+  "prompt_manifest": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/telemetry/prompt-manifests/phase-PROOF-P01-a1-proof.json",
+  "provider_start_state": "NOT_STARTED",
+  "result_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/jobs/phase-PROOF-P01-a1-proof/result.json",
+  "route": {
+    "decision": "ROUTE_SELECTED",
+    "schema_version": "2.0",
+    "selected_account_pool": "codex_plus",
+    "selected_model": "gpt-5.6-sol",
+    "selected_profile": "mlgo-codex-plus-child-direct",
+    "selected_provider": "codex",
+    "selected_provider_api": "child_direct",
+    "selected_route": "codex_plus_child_direct",
+    "selected_tier": 3
+  },
+  "routing_decision_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/packets/PROOF-P01-routing-decision.json",
+  "run_id": "canonical-proof-codex",
+  "schema_version": "2.1",
+  "started_at": "2026-08-10T05:42:02Z",
+  "status": "RESULT_WRITTEN",
+  "systemd_unit": null,
+  "terminal_id": "child-direct-phase-PROOF-P01-a1-proof",
+  "updated_at": "2026-08-10T05:42:39Z"
+}

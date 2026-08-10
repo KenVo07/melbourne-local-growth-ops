@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/khoa/.local/bin/mlgo-claude-subscription-high",
+    "-p",
+    "<32195 chars, digest 7dee27cb06e1305c>",
+    "--permission-mode",
+    "acceptEdits",
+    "--allowedTools",
+    "Write(/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-claude/**)",
+    "Edit(/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-claude/**)",
+    "Read",
+    "Glob",
+    "Grep",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-claude",
+  "executable": "/home/khoa/.local/bin/mlgo-claude-subscription-high",
+  "launched_at": "2026-08-10T05:41:47Z"
+}

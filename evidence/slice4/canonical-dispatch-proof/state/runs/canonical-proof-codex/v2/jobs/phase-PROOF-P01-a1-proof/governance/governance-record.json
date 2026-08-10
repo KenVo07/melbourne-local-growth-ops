@@ -1,0 +1,33 @@
+{
+  "approval_decision_id": "dec-phase-PROOF-P01-a1-proof",
+  "approval_outcome": "APPROVED_BY_DELEGATION",
+  "approved_operation_constraints": {
+    "arguments_digest": "7e049c416d67380d354da57484ee12a7f9d6f914458ffd1f0594a71e5283f1ef",
+    "operation_class": "WRITE_IN_OWNED_SCOPE",
+    "operation_name": "provider_dispatch_bounded_phase",
+    "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+    "resource_refs": [
+      {
+        "kind": "worktree",
+        "locator": "/home/khoa/Projects/mlgo-slice4-canaries/canonical-dispatch-proof-codex"
+      }
+    ]
+  },
+  "budget_reservation_id": "res-phase-PROOF-P01-a1-proof",
+  "command_id": "phase-PROOF-P01-a1-proof",
+  "context_manifest_bytes": 33727,
+  "context_manifest_id": "phase-PROOF-P01-a1-proof",
+  "context_manifest_status": "WITHIN_CAP",
+  "effective_provider_request_digest": "2a8b0bf8d315cc1f293946d00b9b6aadfd31269c5e1bdaafe58f0fe84b46a8a1",
+  "effective_provider_request_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/jobs/phase-PROOF-P01-a1-proof/governance/effective-provider-request.json",
+  "native_skill_projection_bytes": 30434,
+  "native_skill_projection_digest": "e5a0481997ac070a3d32b336f9d097cb273a9a6f9c45c5e0de0d9fdea2821b67",
+  "native_skill_projection_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/jobs/phase-PROOF-P01-a1-proof/governance/native-skill-projection.txt",
+  "operation_class": "WRITE_IN_OWNED_SCOPE",
+  "owned_scope_digest": "b75f5458a217d07fa98570f24a3b531afbb65d01cd20593a22a008d9f34ce93a",
+  "project_id": "canonical-proof-codex",
+  "schema_version": "1.2",
+  "security_domain_id": "canonical-proof-codex",
+  "skill_contract_digest": "b479988b710ad7c3ba133788a3a99fe99784e07cbd904670522dc662606a8721",
+  "skill_contract_path": "/home/khoa/Projects/mlgo-slice4-wt/evidence/slice4/canonical-dispatch-proof/state/runs/canonical-proof-codex/v2/jobs/phase-PROOF-P01-a1-proof/governance/skill-contract.json"
+}
