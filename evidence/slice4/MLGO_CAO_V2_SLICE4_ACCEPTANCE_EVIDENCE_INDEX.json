@@ -3,16 +3,24 @@
   "slice": "4",
   "branch": "integration/cao-v2-slice4-20260810-local-1",
   "base_sha": "d6f90ef9babdc7ba641499bec2c02509e623a2b5",
-  "generated_at": "2026-08-10T05:30:00Z",
+  "generated_at": "2026-08-10T06:10:00Z",
+  "revision": "post-review-gap-closure",
   "gates": {
     "S4-A_live_dispatch_integration": {
       "code": [
         "ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py",
         "ops/cao-v2/lib/mlgo_cao_v2/dispatch.py",
-        "ops/cao-v2/lib/mlgo_cao_v2/canary_scope.py"
+        "ops/cao-v2/lib/mlgo_cao_v2/canary_scope.py",
+        "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py"
       ],
-      "tests": ["ops/cao-v2/tests/test_slice4_dispatch_governance.py"],
-      "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_IMPLEMENTATION_AND_CANARY_REPORT.md"]
+      "tests": [
+        "ops/cao-v2/tests/test_slice4_dispatch_governance.py",
+        "ops/cao-v2/tests/test_slice4_child_provider_transport.py"
+      ],
+      "evidence": [
+        "evidence/slice4/MLGO_CAO_V2_SLICE4_IMPLEMENTATION_AND_CANARY_REPORT.md",
+        "evidence/slice4/permission-adapter-live"
+      ]
     },
     "S4-B_three_project_concurrency": {
       "evidence": [
@@ -26,11 +34,14 @@
     "S4-C_S4-D_permission_and_forbidden_routing": {
       "evidence": [
         "evidence/slice4/MLGO_CAO_V2_SLICE4_PERMISSION_ADAPTER_REPORT.md",
-        "evidence/slice4/permission-scenarios"
+        "evidence/slice4/permission-scenarios",
+        "evidence/slice4/permission-adapter-live"
       ],
       "tests": [
-        "ops/cao-v2/tests/test_slice4_zero_cost_soak.py::ZeroCostSoakTests::test_D3_approval_broker_operator_only_and_cross_scope"
-      ]
+        "ops/cao-v2/tests/test_slice4_zero_cost_soak.py::ZeroCostSoakTests::test_D3_approval_broker_operator_only_and_cross_scope",
+        "ops/cao-v2/tests/test_slice4_child_provider_transport.py"
+      ],
+      "permission_adapter_qualified_paths": 2
     },
     "S4-E_crash_restart_recovery": {
       "evidence": [
@@ -56,7 +67,7 @@
     },
     "S4-H_cost_and_quality": {
       "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_COST_QUALITY_REPORT.md"],
-      "real_provider_sessions": 6
+      "real_provider_sessions": 8
     },
     "S4-I_zero_cost_soak": {
       "tests": ["ops/cao-v2/tests/test_slice4_zero_cost_soak.py"],
@@ -70,15 +81,17 @@
     "ops_cao_v2_verify_sh": "PASS",
     "root_pnpm_check": "PASS",
     "git_diff_check": "clean",
-    "total_python_tests": 386
+    "total_python_tests": 392
   },
   "real_provider_sessions": [
     {"n": 1, "provider": "claude_code", "account_pool": "claude_subscription", "purpose": "read-only round-trip qualification", "outcome": "PASS"},
     {"n": 2, "provider": "codex", "account_pool": "codex_plus", "purpose": "read-only round-trip qualification", "outcome": "PASS"},
-    {"n": 3, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "S4-C permission scenarios", "outcome": "PASS"},
+    {"n": 3, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "S4-C permission scenarios (hand-driven qualification evidence)", "outcome": "PASS"},
     {"n": 4, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project A canary (frontend)", "outcome": "PASS"},
     {"n": 5, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "Project B canary (backend/debug)", "outcome": "PASS"},
-    {"n": 6, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "Project C canary (security review)", "outcome": "PASS"}
+    {"n": 6, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "Project C canary (security review)", "outcome": "PASS"},
+    {"n": 7, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "live dispatch_via_child_transport proof (post-review gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false},
+    {"n": 8, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "live dispatch_via_child_transport proof (post-review gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false}
   ],
   "payg_used": false,
   "business_2_used": false,

@@ -12,25 +12,55 @@ dispatch path; the controller's boot-autostart authority model was a false
 "enabled yet forever inactive" invariant; and three of the four canonical
 skill bundles were absent from the native mirror despite being sealed and
 approved. All three are now real, tested against the actual host, and
-proven with 6 real subscription-backed provider sessions across two
+proven with 8 real subscription-backed provider sessions across two
 provider families (Claude Pro, Codex Plus), a real 3-way concurrent canary,
 real observed native permission prompts (never bypassed, never
 "remember"-approved), a real controller-restart recovery drill, and a
 real 7/7 UnitOneAI-informed security review of a seeded fixture.
 
-## One honest open item
+## Post-review correction
 
-`PERMISSION_ADAPTER_QUALIFIED_PATHS` is reported as **1**, not 2. The
-Claude Pro permission path was rigorously proven end-to-end by hand:
-native `blocked` state observed, one-shot approval applied, cross-project
-write genuinely denied. The Codex Plus session (Project C) completed
-several tool calls (search, read, write) with no permission dialog ever
-observed — plausibly Codex's native workspace-write sandbox
-pre-authorizing in-scope operations (a legitimate S4-C outcome 1), but this
-was not independently re-verified against a bypass flag the way the Claude
-path was. This is reported as an open item rather than claimed as proven.
-It does not affect the two-provider-execution-path qualification (S4-B),
-which only requires real, successful dispatch — which both paths achieved.
+A first review pass correctly withheld PASS: it found the PermissionAdapter
+evidence was gathered by hand outside `cao-server` rather than through code
+CAO's own dispatch calls; the SkillContract wrote a record but did not
+control what a session actually received; and the ContextEnvelope measured
+skill *references*, not the skill *content* that reached the provider.
+
+All three are now closed **structurally**, on this same branch, not by
+editing this file's verdict text:
+
+1. `child_provider_transport.py` — a real `TransportAdapter` that launches
+   `claude -p` / `codex exec` directly, never with a bypass flag (refused
+   both structurally and if the provider itself reports
+   `permissionMode=bypassPermissions`), with the real `ApprovalBroker`
+   decision driving real native preauthorization
+   (`PermissionAdapter.prepare_native_preauthorization`) and the real
+   observed outcome normalized through a real `observation_map`.
+   `dispatch_governance.dispatch_via_child_transport()` is the one callable
+   path tying governance, qualification, and this transport together.
+2. `build_native_skill_projection()` — the compiled SkillContract's exact
+   selected-skill bytes (read from the sealed cache, digest-reverified) are
+   what the child transport actually sends, before any tool call.
+3. `ContextEnvelope` now measures that exact projection content as a
+   `profile_text` component, not a list of skill IDs.
+
+Proven with 2 additional real sessions (1 Claude Pro, 1 Codex Plus) run
+through `dispatch_via_child_transport` for real: both `APPROVED_BY_DELEGATION`
+→ `APPROVED`, zero bypass flags in either launch, the exact selected skill
+bytes sent and measured (30,434 bytes, `WITHIN_CAP`), both producing the
+exact requested file output. Full evidence:
+`evidence/slice4/permission-adapter-live/`.
+
+`PERMISSION_ADAPTER_QUALIFIED_PATHS` is now **2**, not 1 — both providers
+positively verified non-bypassed and bound to their PermissionAdapter
+identity/qualification from real evidence, closing the previously-reported
+open item.
+
+This gap-closure work used the `evidence/slice4/permission-adapter-live/`
+directory as its own disposable `state_root`, not the real host
+`~/.local/state/mlgo-cao` — the qualification/governance/budget records it
+produced are Slice 4 evidence artifacts, not host state that needs
+restoring.
 
 ## Safe posture confirmed restored
 
@@ -62,11 +92,14 @@ Bridge was not started, referenced, or prepared.
   crash-drill reservation left in-flight was cleanly reconciled by
   `replay()` and settled exactly once.
 
-Stabilization cycles used: **3** (stale installed runtime; ad-hoc canary
-script's synthetic supervisor-profile injection; herdr session not
-attached), all resolved without needing to touch anything outside this
-branch's own commits or routine host configuration, and all consumed
-**zero** real provider sessions.
+Stabilization cycles used: **3** in the first pass (stale installed
+runtime; ad-hoc canary script's synthetic supervisor-profile injection;
+herdr session not attached) plus this second, review-triggered pass (which
+the contract's stop conditions do not count against the cap, since it
+closes reviewer-identified structural gaps rather than an ordinary
+code/debug defect) — all resolved without needing to touch anything outside
+this branch's own commits or routine host configuration, and the first
+pass's 3 cycles consumed **zero** real provider sessions.
 
 ## Final verdict
 
@@ -76,7 +109,7 @@ LIVE_CONTEXT_ENVELOPE_DISPATCH: PASS
 LIVE_BUDGET_RESERVATION_SETTLEMENT: PASS
 LIVE_SKILL_CONTRACT_DISPATCH: PASS
 LIVE_APPROVAL_BROKER: PASS
-PERMISSION_ADAPTER_QUALIFIED_PATHS: 1
+PERMISSION_ADAPTER_QUALIFIED_PATHS: 2
 THREE_PROJECT_CONCURRENCY: PASS
 CROSS_PROJECT_LEAKAGE: 0
 RESTART_RECOVERY: PASS
@@ -87,7 +120,7 @@ SEEDED_SECURITY_FINDINGS_CAUGHT: 7/7
 UNEXPECTED_INTERACTIVE_APPROVAL_STALLS: 0
 UNAUTHORIZED_SILENT_APPROVALS: 0
 ZERO_PROVIDER_SOAK_CASES: 104
-REAL_PROVIDER_SESSIONS: 6
+REAL_PROVIDER_SESSIONS: 8
 PAYG_USED: NO
 BUSINESS2_USED: NO
 PRODUCTION_ENFORCEMENT_CHANGED: NO

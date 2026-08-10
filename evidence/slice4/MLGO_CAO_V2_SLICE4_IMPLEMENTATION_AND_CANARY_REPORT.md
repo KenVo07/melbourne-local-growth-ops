@@ -143,6 +143,50 @@ Two provider execution paths (`claude_code`, `codex`) both qualified,
 both subscription-backed (OAuth / ChatGPT tokens, no API keys — no PAYG, no
 Business 2 exposure anywhere in this work).
 
+## Post-review correction (2026-08-10, second pass)
+
+Final review of the first draft found three integration gaps and correctly
+withheld a PASS verdict for them. All three are now closed structurally on
+this same branch, not by editing the verdict text:
+
+1. **PermissionAdapter was proven by hand, not wired into live CAO dispatch.**
+   The first pass's permission evidence came from manually driving `herdr`
+   outside `cao-server` — real and non-bypassed, but not code the dispatch
+   pipeline itself calls. Closed by `child_provider_transport.py`: a real
+   `transport.TransportAdapter` that launches `claude -p` / `codex exec`
+   directly (no herdr, no legacy `cao-server`), translates the real
+   `ApprovalBroker` decision into each provider's native non-interactive
+   authorization flags, structurally refuses to launch with any bypass flag
+   (`_assert_no_bypass`, plus a runtime check that Claude's own reported
+   `permissionMode` isn't `bypassPermissions`), and normalizes the real
+   observed outcome through a real `PermissionAdapter.observation_map`.
+   `dispatch_governance.dispatch_via_child_transport()` ties governance,
+   PermissionAdapter qualification, and this transport into one callable
+   path. Run for real: one Claude Pro and one Codex Plus session, both
+   `APPROVED_BY_DELEGATION` → `APPROVED`, zero bypass flags in either
+   launch. See `MLGO_CAO_V2_SLICE4_PERMISSION_ADAPTER_REPORT.md`.
+2. **SkillContract wasn't controlling the execution context.** Writing
+   `skill-contract.json` and listing skill IDs in the context manifest
+   didn't stop a session from using something the contract never selected.
+   Closed by `build_native_skill_projection()`: the exact selected-skill
+   bytes are read from the sealed cache (digest-reverified), and the child
+   transport sends *exactly* that projection before any tool call —
+   verified for both real runs (`native-skill-projection.txt`, 30,434
+   bytes, matching digest between the two runs since both compiled the
+   same recipe). See `MLGO_CAO_V2_SLICE4_NATIVE_SKILL_REPORT.md`.
+3. **ContextEnvelope was measuring skill IDs, not skill content.** A
+   reference list is not what reaches the provider. Closed by measuring the
+   actual native skill projection text as a `profile_text` component
+   (`context_manifest_bytes: 31644`, `WITHIN_CAP`, for both real runs) —
+   the cap now bounds what's actually sent, not a proxy for it.
+
+2 additional real provider sessions were used to prove the corrected path
+(1 Claude, 1 Codex — total real sessions across Slice 4: **8**, still under
+the 12-session cap). 6 new regression tests added
+(`test_slice4_child_provider_transport.py`), all against the real
+operator-populated sealed cache. Full suite: 392 tests, green;
+`verify.sh` green.
+
 ## Final verdict
 
 See `MLGO_CAO_V2_SLICE4_FINAL_HANDOFF.md` for the complete verdict block.

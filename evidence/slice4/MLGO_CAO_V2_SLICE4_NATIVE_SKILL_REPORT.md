@@ -42,6 +42,32 @@ verification.equivalent: true (all 4 bundles)
 Rollback record:
 `~/.local/state/mlgo-cao/governance/mirror-rollback/20260810T030043Z-rollback-record.json`
 
+## Revision note (post-review correction): SkillContract now actually
+controls the provider execution context
+
+Final review correctly flagged that writing `skill-contract.json` and
+listing skill IDs in the `ContextEnvelope` is not the same as the compiled
+contract *controlling* what the provider receives — a session could still
+free-search the whole ambient mirror and use something the contract never
+selected. Closed structurally:
+
+- `dispatch_governance.build_native_skill_projection()` reads the exact
+  selected-skill bytes straight out of the sealed cache (re-verifying each
+  against the contract's `content_digest` before use — a mismatch raises,
+  not silently substitutes) and concatenates them, in deterministic
+  skill_id order, into one projection text.
+- `child_provider_transport.ChildProcessTransportAdapter` sends *exactly*
+  that projection to the real provider before any tool call: Claude via
+  `--append-system-prompt`, Codex prepended to the exec prompt. Real
+  evidence for both, run 2026-08-10: `native_skill_projection_bytes: 30434`
+  (governance record), `native-skill-projection.txt` (the literal bytes
+  sent, readable in each run's evidence directory), digest
+  `e5a0481997ac...` — identical between the Claude and Codex runs because
+  both compiled the same recipe for the same objective, which is exactly
+  what "deterministic projection of the same contract" should produce.
+- Normal execution never calls `cao-mcp-server.load_skill`: the projection
+  is assembled and sent once, before dispatch, not fetched at runtime.
+
 ## Compiled recipes
 
 Per S4-F, at least one frontend (UIUX/Matt), one backend/debug (Addy/Matt),
