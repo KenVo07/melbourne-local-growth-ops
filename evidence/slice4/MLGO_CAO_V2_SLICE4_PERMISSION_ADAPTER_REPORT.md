@@ -1,5 +1,44 @@
 # Slice 4 — Permission Autonomy and Forbidden Routing Report (S4-C / S4-D)
 
+## Revision note (round 4): qualification is a separate explicit operation, and Bash confinement + provider-side scope confinement is proven with a real negative scenario
+
+Final review after round 3 found the "ceremony" described below still let
+*normal* task dispatch implicitly become its own qualification event — one
+un-audited task could silently mint a `QUALIFIED` record. That is now
+closed: `dispatch_via_child_transport` checks
+`capability_state["enabled"]` **before** `govern_before_send()` runs and
+raises `GovernanceBlocked` unconditionally (no ceremony fallback, no
+budget reservation) if the exact measured identity has no current
+`QUALIFIED` record. Qualifying is now only possible through the smallest
+explicit, disposable operation — `dispatch_governance.qualify_child_transport_provider()`,
+exposed as `mlgo-v2-dispatch qualify-provider --provider ... --profile ...
+--evidence <raw-stdout.jsonl> [--launch-argv <launch-argv.json>]` — which
+reads real captured provider evidence bytes from disk, parses and validates
+them itself (`_validate_qualification_evidence`: real
+`system`/`init`+`result` events for Claude with `permissionMode !=
+bypassPermissions` and empty `permission_denials`, or a real
+`turn.completed` for Codex; any `launch-argv` supplied is checked against
+`FORBIDDEN_BYPASS_FLAGS`), and only then measures the current
+provider/wrapper identity and writes a `QUALIFIED` record bound to both.
+There is no parameter anywhere a caller can substitute an arbitrary hash
+into. Both real round-3 evidence captures were reused as-is to re-qualify
+under this new operation at zero additional real-session cost (`evidence/slice4/qualified-canonical-dispatch/claude-qualification.json`,
+`codex-qualification.json`).
+
+The same final review found the round-3 Claude evidence showed a real
+`Bash` tool_use event even though `--allowedTools` never named `Bash` —
+proof that omission alone does not confine the native mechanism. Closed by
+sending `--disallowedTools Bash` explicitly whenever the phase declares no
+`validation.commands` (falling back to `Bash(<exact command>)` scoped
+entries when it does). Two real sessions (#11 Claude, #12 Codex) then each
+additionally attempted a harmless marker write into a disposable,
+non-owned foreign project directory as a deliberate negative scenario: both
+attempts were refused by the real native mechanism (Claude:
+`claude.cli.permission_denied`; Codex: `codex.cli.sandbox_denied_or_command_failed`),
+no marker file was ever created in the foreign directory, and the in-scope
+`notes.py`/`bug-notes.txt` writes inside each agent's own owned worktree
+still succeeded normally. Full evidence: `evidence/slice4/qualified-canonical-dispatch/`.
+
 ## Revision note (round 3): qualification is no longer self-certifiable
 
 Round 2's `dispatch_via_child_transport` bootstrapped a `QUALIFIED`
@@ -206,6 +245,14 @@ host action was executed against any real system at any point in Slice 4.
 - Qualification self-certification paths: **0** (removed entirely in
   round 3; every `QUALIFIED` record traces to real captured provider
   evidence)
+- Qualification ceremony implicitly triggered by normal dispatch: **0**
+  (removed in round 4; qualification is now only ever performed by the
+  separate, explicit `qualify-provider` operation, and normal dispatch
+  fails closed with no fallback if it finds no current `QUALIFIED` record
+  for the exact measured identity)
 - PERMISSION_ADAPTER_QUALIFIED_PATHS: **2** (Claude Pro, Codex Plus - both
-  now qualified from real ceremony evidence produced through canonical
-  `dispatch.run_job`, not asserted)
+  qualified via the explicit `qualify-provider` operation from real
+  captured provider evidence, not asserted)
+- Real negative cross-project containment scenarios: **2** (Claude, Codex —
+  both denied by the real native mechanism, zero marker files created
+  outside the owned worktree)

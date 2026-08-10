@@ -1,0 +1,15 @@
+--- PREFLIGHT ATTESTATION ---
+run_id=qualified-proof-codex-r4
+task_id=PROOF4-P01
+parent_session=unknown
+profile_name=unknown
+expected_account=plus
+actual_account=Logged in using ChatGPT
+codex_executable=/home/khoa/.codex/packages/standalone/current/bin/codex
+config_auth_root=/home/khoa/.codex-plus
+timestamp=2026-08-10T08:53:09Z
+attestation_result=PASS
+environment_fingerprint=a0dd4db63d633b6ea86f3aca0c0080272d19b120799e397b898a4f71aba35a6b
+-----------------------------
+Reading additional input from stdin...
+2026-08-10T08:53:53.731049Z ERROR codex_core::tools::router: error=patch rejected: writing outside of the project; rejected by user approval settings

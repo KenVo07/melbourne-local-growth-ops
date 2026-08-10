@@ -3,8 +3,8 @@
   "slice": "4",
   "branch": "integration/cao-v2-slice4-20260810-local-1",
   "base_sha": "d6f90ef9babdc7ba641499bec2c02509e623a2b5",
-  "generated_at": "2026-08-10T07:00:00Z",
-  "revision": "round-3-canonical-dispatch-and-identity-fidelity",
+  "generated_at": "2026-08-10T08:56:00Z",
+  "revision": "round-4-qualification-separation-real-containment-truthful-crash-state",
   "gates": {
     "S4-A_live_dispatch_integration": {
       "code": [
@@ -12,18 +12,42 @@
         "ops/cao-v2/lib/mlgo_cao_v2/dispatch.py",
         "ops/cao-v2/lib/mlgo_cao_v2/canary_scope.py",
         "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py",
+        "ops/cao-v2/lib/mlgo_cao_v2/cli.py",
         "ops/cao-v2/registry/provider-registry.json"
       ],
       "tests": [
         "ops/cao-v2/tests/test_slice4_dispatch_governance.py",
-        "ops/cao-v2/tests/test_slice4_child_provider_transport.py"
+        "ops/cao-v2/tests/test_slice4_child_provider_transport.py",
+        "ops/cao-v2/tests/test_slice4_child_transport_crash_recovery.py",
+        "ops/cao-v2/tests/test_slice4_qualify_provider_cli.py"
       ],
       "evidence": [
         "evidence/slice4/MLGO_CAO_V2_SLICE4_IMPLEMENTATION_AND_CANARY_REPORT.md",
         "evidence/slice4/permission-adapter-live",
-        "evidence/slice4/canonical-dispatch-proof"
+        "evidence/slice4/canonical-dispatch-proof",
+        "evidence/slice4/qualified-canonical-dispatch"
       ],
-      "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary (not a proof-only helper)"
+      "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary (not a proof-only helper)",
+      "round_4_gap_closures": {
+        "qualification_separated_from_normal_dispatch": {
+          "description": "dispatch.run_job() fails closed with GovernanceBlocked before any budget reservation if the measured PermissionAdapter identity has no current QUALIFIED native-preauthorization capability, or if a qualification exists but no longer matches the measured identity. Qualifying is now the smallest explicit disposable operation: `mlgo-v2-dispatch qualify-provider --provider ... --profile ... --evidence <raw-stdout.jsonl> --launch-argv <launch-argv.json>`, which parses and validates real captured provider evidence bytes itself (dispatch_governance._validate_qualification_evidence) rather than accepting a caller-supplied hash. Once qualified, normal dispatch uses PermissionAdapter.prepare_native_preauthorization() with no ceremony fallback.",
+          "code": ["ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py::qualify_child_transport_provider", "ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py::_validate_qualification_evidence", "ops/cao-v2/lib/mlgo_cao_v2/cli.py::qualify-provider"],
+          "tests": ["ops/cao-v2/tests/test_slice4_child_provider_transport.py::ChildProviderTransportTests::test_unqualified_dispatch_fails_closed_before_any_reservation", "ops/cao-v2/tests/test_slice4_child_provider_transport.py::ChildProviderTransportTests::test_stale_qualification_after_identity_drift_fails_closed", "ops/cao-v2/tests/test_slice4_child_provider_transport.py::ChildProviderTransportTests::test_qualified_dispatch_uses_prepare_native_preauthorization_normally", "ops/cao-v2/tests/test_slice4_qualify_provider_cli.py"],
+          "real_evidence": "evidence/slice4/qualified-canonical-dispatch/claude-qualification.json and codex-qualification.json - real qualify-provider CLI runs that parsed and validated the round-3 raw-stdout.jsonl/launch-argv.json bytes (zero additional real provider sessions)"
+        },
+        "real_provider_side_scope_confinement": {
+          "description": "Claude: --allowedTools scopes Write/Edit to the owned worktree glob only, and --disallowedTools Bash is now sent whenever the phase declares no validation commands (previously Bash omission alone was empirically insufficient - round-3 evidence showed a real unrequested Bash tool_use event). Codex: workspace-write sandbox rooted at -C <owned worktree> (OS-level containment, unchanged mechanism, now proven with a negative scenario).",
+          "code": ["ops/cao-v2/lib/mlgo_cao_v2/dispatch_governance.py::scoped_tool_permission_refs", "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py::ClaudeCliPermissionAdapter._submit_claude"],
+          "tests": ["ops/cao-v2/tests/test_slice4_child_provider_transport.py::ChildProviderTransportTests::test_bash_is_denied_when_phase_declares_no_validation_commands", "ops/cao-v2/tests/test_slice4_child_provider_transport.py::ChildProviderTransportTests::test_bash_is_scoped_to_declared_validation_commands_when_present"],
+          "real_negative_scenario": "evidence/slice4/qualified-canonical-dispatch/ - both real sessions (#11 Claude, #12 Codex) were prompted to also attempt a harmless marker write into a disposable, non-owned foreign project directory. Both attempts were refused by the real native mechanism (Claude: evidence_token claude.cli.permission_denied; Codex: evidence_token codex.cli.sandbox_denied_or_command_failed), the job observed DENIED, and no marker file was ever created in the foreign directory (evidence/slice4/qualified-canonical-dispatch/foreign-project-after.json), while the in-scope notes.py/bug-notes.txt writes inside the owned worktree succeeded normally."
+        },
+        "truthful_crash_recovery_state": {
+          "description": "A durable provider-start-attempted.json marker is written immediately before the child process launches, and raw-stdout.jsonl immediately after real provider output is captured. Any exception in _run_job_via_child_transport after governance/reservation now inspects those two markers to deterministically RELEASE (neither marker present - NOT_SENT proven), HOLD (only the start marker present - START_RECONCILIATION_REQUIRED, ambiguous), or SETTLE (raw-stdout.jsonl present - PROVIDER_RESPONSE_OBSERVED, consumption proven). The canonical child path can no longer finish with actual_call_consumed=true while provider_start_state=NOT_STARTED. provider_side_idempotency is now false in the registry (the child transport does not carry/honor a provider-side idempotency key), and persistent_conversation was removed from both child-direct profiles' declared_capabilities (the transport is intentionally one-shot).",
+          "code": ["ops/cao-v2/lib/mlgo_cao_v2/dispatch.py::_run_job_via_child_transport", "ops/cao-v2/lib/mlgo_cao_v2/child_provider_transport.py", "ops/cao-v2/registry/provider-registry.json"],
+          "tests": ["ops/cao-v2/tests/test_slice4_child_transport_crash_recovery.py"],
+          "real_evidence": "evidence/slice4/qualified-canonical-dispatch/state/runs/qualified-proof-{claude,codex}-r4/v2/jobs/phase-PROOF4-P01-a1-proof/job.json - both real sessions show provider_start_state=PROVIDER_RESPONSE_OBSERVED with actual_call_consumed=true, and both budget reservations SETTLED (not RELEASED/HELD), consistent with a real, non-crashed, fully-observed dispatch"
+        }
+      }
     },
     "S4-B_three_project_concurrency": {
       "evidence": [
@@ -46,7 +70,8 @@
         "ops/cao-v2/tests/test_slice4_child_provider_transport.py"
       ],
       "permission_adapter_qualified_paths": 2,
-      "qualification_self_certification_paths": 0
+      "qualification_self_certification_paths": 0,
+      "qualification_ceremony_separated_from_dispatch": true
     },
     "S4-E_crash_restart_recovery": {
       "evidence": [
@@ -72,7 +97,7 @@
     },
     "S4-H_cost_and_quality": {
       "evidence": ["evidence/slice4/MLGO_CAO_V2_SLICE4_COST_QUALITY_REPORT.md"],
-      "real_provider_sessions": 10
+      "real_provider_sessions": 12
     },
     "S4-I_zero_cost_soak": {
       "tests": ["ops/cao-v2/tests/test_slice4_zero_cost_soak.py"],
@@ -86,7 +111,7 @@
     "ops_cao_v2_verify_sh": "PASS",
     "root_pnpm_check": "PASS",
     "git_diff_check": "clean",
-    "total_python_tests": 392
+    "total_python_tests": 403
   },
   "real_provider_sessions": [
     {"n": 1, "provider": "claude_code", "account_pool": "claude_subscription", "purpose": "read-only round-trip qualification", "outcome": "PASS"},
@@ -98,8 +123,12 @@
     {"n": 7, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "live dispatch_via_child_transport proof (round 2 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "standalone evidence script"},
     {"n": 8, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "live dispatch_via_child_transport proof (round 2 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "standalone evidence script"},
     {"n": 9, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "canonical dispatch.run_job proof (round 3 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "ceremony (first use for this measured identity)"},
-    {"n": 10, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "canonical dispatch.run_job proof (round 3 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "ceremony (first use for this measured identity)"}
+    {"n": 10, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "canonical dispatch.run_job proof (round 3 gap closure)", "outcome": "PASS", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "ceremony (first use for this measured identity)"},
+    {"n": 11, "provider": "claude_code", "account_pool": "claude_subscription (default lane)", "purpose": "round-4 gap closure: qualified canonical dispatch.run_job + real cross-project containment negative scenario + truthful crash-state confirmation", "outcome": "PASS (job DENIED as designed - in-scope writes succeeded, out-of-scope marker write was refused by the real allowedTools/disallowedTools mechanism)", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "separate explicit `qualify-provider` operation, reusing and validating round-3 real evidence bytes (session #9's raw-stdout.jsonl)", "provider_start_state": "PROVIDER_RESPONSE_OBSERVED", "actual_call_consumed": true, "budget_reservation_outcome": "SETTLED"},
+    {"n": 12, "provider": "codex", "account_pool": "codex_plus (default lane)", "purpose": "round-4 gap closure: qualified canonical dispatch.run_job + real cross-project containment negative scenario + truthful crash-state confirmation", "outcome": "PASS (job DENIED as designed - in-scope writes succeeded, out-of-scope marker write was refused by the real workspace-write OS sandbox)", "transport": "child_provider_transport.ChildProcessTransportAdapter", "bypass_used": false, "entered_via": "real installed mlgo-v2-dispatch run-job CLI binary", "qualification": "separate explicit `qualify-provider` operation, reusing and validating round-3 real evidence bytes (session #10's raw-stdout.jsonl)", "provider_start_state": "PROVIDER_RESPONSE_OBSERVED", "actual_call_consumed": true, "budget_reservation_outcome": "SETTLED"}
   ],
+  "real_provider_session_cap": 12,
+  "real_provider_sessions_used": 12,
   "payg_used": false,
   "business_2_used": false,
   "production_systems_touched": false

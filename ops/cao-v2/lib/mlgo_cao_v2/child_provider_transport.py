@@ -149,28 +149,14 @@ class ChildProcessTransportAdapter:
         permission_adapter: PermissionAdapter = request["permission_adapter"]
         capability_state: dict[str, Any] = request["capability_state"]
         effective_request: dict[str, Any] = request["effective_request"]
-        ceremony_mode: bool = bool(request.get("ceremony_mode"))
 
-        if ceremony_mode:
-            # No pre-existing qualification exists yet for this measured
-            # identity, so permission_adapter.prepare_native_preauthorization
-            # (which requires capability_state["enabled"]) cannot be called -
-            # that method is reserved for already-qualified authority-bearing
-            # use. This call is the explicit qualification ceremony itself:
-            # it still launches with the real native flags derived from the
-            # ApprovalBroker-approved scope (never invented by this call),
-            # bypass is still structurally refused unconditionally below, and
-            # its real observed outcome is what produces the qualification -
-            # not a caller-supplied claim of one.
-            preauth = {
-                "ceremony_mode": True,
-                "capability_state": capability_state,
-                "note": "no pre-existing PermissionAdapter qualification; this call is the qualification ceremony",
-            }
-        else:
-            preauth = permission_adapter.prepare_native_preauthorization(
-                decision=decision, capability_state=capability_state,
-            )
+        # By the time submit() is called, dispatch_via_child_transport has
+        # already failed closed if this identity is not currently QUALIFIED
+        # - qualification is never performed as a side effect of dispatch,
+        # so this call site always has real authority to apply.
+        preauth = permission_adapter.prepare_native_preauthorization(
+            decision=decision, capability_state=capability_state,
+        )
         atomic_write_json(self.evidence_dir / "preauthorization.json", preauth)
         atomic_write_json(self.evidence_dir / "effective-request-used.json", {
             "effective_request_digest": effective_request["effective_request_digest"],
@@ -224,6 +210,7 @@ class ChildProcessTransportAdapter:
         refs = effective_request["tool_permission_refs"]
         permission_mode = refs["permission_mode"]
         allowed_tools = refs["allowed_tools"]
+        disallowed_tools = refs.get("disallowed_tools") or []
         rendered_text = effective_request["rendered_text"]
         # rendered_text (== what ContextEnvelope measured) is sent verbatim
         # as the one prompt argument - no separate --append-system-prompt,
@@ -231,11 +218,23 @@ class ChildProcessTransportAdapter:
         # independently-assembled ones that could drift apart.
         argv = [str(self.executable_path), "-p", rendered_text, "--permission-mode", permission_mode,
                 "--allowedTools", *allowed_tools, "--output-format", "stream-json", "--verbose"]
+        if disallowed_tools:
+            # --allowedTools alone was empirically found still to permit some
+            # Bash calls under acceptEdits even with Bash omitted from the
+            # list; Bash is an escape hatch around Write/Edit's path scoping,
+            # so it needs an explicit deny, not just an omission.
+            argv += ["--disallowedTools", *disallowed_tools]
         _assert_no_bypass(argv)
 
         argv_record = list(argv)
         argv_record[2] = f"<{len(rendered_text)} chars, digest {sha256_bytes(rendered_text.encode())[:16]}>"
         atomic_write_json(self.evidence_dir / "launch-argv.json", {"argv": argv_record, "cwd": self.worktree_path, "executable": str(self.executable_path), "launched_at": iso_now()})
+
+        # Durable, written before the process can possibly have received the
+        # request: a crash between here and raw-stdout.jsonl being written
+        # must read back as ambiguous (start attempted, outcome unknown),
+        # never as NOT_STARTED.
+        atomic_write_json(self.evidence_dir / "provider-start-attempted.json", {"attempted_at": iso_now()})
 
         proc = subprocess.run(argv, cwd=self.worktree_path, capture_output=True, text=True, timeout=self.timeout_seconds, env=self.env)
         atomic_write_text(self.evidence_dir / "raw-stdout.jsonl", proc.stdout)
@@ -303,6 +302,8 @@ class ChildProcessTransportAdapter:
         argv_record = list(argv)
         argv_record[-1] = f"<prompt, {len(rendered_text)} chars, digest {sha256_bytes(rendered_text.encode())[:16]}>"
         atomic_write_json(self.evidence_dir / "launch-argv.json", {"argv": argv_record, "cwd": self.worktree_path, "executable": str(self.executable_path), "sandbox": sandbox, "launched_at": iso_now()})
+
+        atomic_write_json(self.evidence_dir / "provider-start-attempted.json", {"attempted_at": iso_now()})
 
         proc = subprocess.run(argv, cwd=self.worktree_path, capture_output=True, text=True, timeout=self.timeout_seconds, env=self.env)
         atomic_write_text(self.evidence_dir / "raw-stdout.jsonl", proc.stdout)

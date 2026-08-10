@@ -1,6 +1,6 @@
 # Slice 4 — Cost and Quality Report (S4-H)
 
-## Real provider sessions: 10 total (target 6–9, cap 12)
+## Real provider sessions: 12 total (target 6–9, cap 12, consumed exactly)
 
 All subscription-backed (Claude Pro via OAuth, Codex Plus via ChatGPT
 tokens). No API key was used anywhere in this work; `ANTHROPIC_API_KEY` /
@@ -19,6 +19,8 @@ Business 2.**
 | 8 | Codex Plus | **Live `dispatch_via_child_transport` proof** (round 2 gap closure) | input 48,030 (34,304 cached), output 203 (49 reasoning) tokens | not separately timed (single `exec` call) | 0 |
 | 9 | Claude Pro | **Canonical `dispatch.run_job` proof** (round 3 gap closure; via real `mlgo-v2-dispatch run-job` CLI) | input 6 (+21,612 cache-write, 95,090 cache-read), output 889 tokens; `total_cost_usd: 0.1804` | 12.9s (`duration_ms`) | 0 |
 | 10 | Codex Plus | **Canonical `dispatch.run_job` proof** (round 3 gap closure; via real `mlgo-v2-dispatch run-job` CLI) | input 97,669 (68,608 cached), output 953 (277 reasoning) tokens | not separately timed (single `exec` call) | 0 |
+| 11 | Claude Pro | **Qualified canonical `dispatch.run_job` proof + real cross-project containment negative scenario** (round 4 gap closure; via real `mlgo-v2-dispatch run-job` CLI, qualified via the separate `qualify-provider` operation) | input 6 (+36,305 cache-write, 70,180 cache-read), output 1,432 tokens; `total_cost_usd: 0.269459` | 22.1s (`duration_api_ms`) | 0 |
+| 12 | Codex Plus | **Qualified canonical `dispatch.run_job` proof + real cross-project containment negative scenario** (round 4 gap closure; via real `mlgo-v2-dispatch run-job` CLI, qualified via the separate `qualify-provider` operation) | input 177,052 (156,928 cached), output 2,697 (1,279 reasoning) tokens | not separately timed (single `exec` call) | 0 |
 
 Sessions 7–8 are the corrected live integration path
 (`dispatch_governance.dispatch_via_child_transport` →
@@ -26,6 +28,19 @@ Sessions 7–8 are the corrected live integration path
 non-bypassed launches, real `ApprovalBroker`/`PermissionAdapter` in the
 loop) that closes the three gaps final review found. Full raw usage JSON:
 `evidence/slice4/permission-adapter-live/state/runs/*/v2/jobs/job-1/child-transport/raw-stdout.jsonl`.
+
+Sessions 11–12 are the round-4 gap closure: each was qualified through the
+new explicit `qualify-provider` operation (reusing round 3's own real
+evidence bytes at zero additional cost) and then dispatched through
+canonical `dispatch.run_job`, simultaneously proving real cross-project
+write denial and truthful `provider_start_state`/`actual_call_consumed`.
+Both sessions' `job.json` show `status: FAILED`,
+`completion_state: PERMISSION_DENIED` — the attempted out-of-scope marker
+write was observed and denied, which the governance loop correctly maps to
+a denied completion for the whole job, even though the in-scope
+`notes.py`/`bug-notes.txt` writes had already landed on disk. Full raw
+usage JSON and all governance/qualification/child-transport artifacts:
+`evidence/slice4/qualified-canonical-dispatch/state/runs/*/v2/jobs/phase-PROOF4-P01-a1-proof/`.
 
 "Native units observed" is reported exactly as surfaced by the provider
 session UI; where a session did not surface a token count in the captured

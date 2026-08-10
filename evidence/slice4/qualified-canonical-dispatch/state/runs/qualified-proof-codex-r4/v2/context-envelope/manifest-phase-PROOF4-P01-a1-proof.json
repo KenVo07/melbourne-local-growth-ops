@@ -1,0 +1,47 @@
+{
+  "block_reason": null,
+  "components": [
+    {
+      "bytes": 33582,
+      "component_id": "effective-provider-request",
+      "items": 1,
+      "kind": "objective_task",
+      "reducible": false,
+      "retention_rank": 5,
+      "sha256": "507e33c20fee69388d83c105c320d5a72f19f7aff71560e1a9103083c74c771b"
+    }
+  ],
+  "deterministic_reduction_only": true,
+  "hard_cap_bytes": 262144,
+  "hard_cap_items": null,
+  "manifest_digest": "8cf16aee3905b72dff85da8abfd47f32fb5f2d6c9240dce8c9120eabbffeb7e0",
+  "manifest_id": "phase-PROOF4-P01-a1-proof",
+  "measured_at": "2026-08-10T08:53:09Z",
+  "measured_component_kinds": [
+    "objective_task"
+  ],
+  "provider_internal_prompt_overhead": "UNAVAILABLE",
+  "provider_internal_transforms": "UNAVAILABLE",
+  "provider_native_token_counts": "UNAVAILABLE",
+  "reductions": [],
+  "role_id": "implementation",
+  "run_id": "qualified-proof-codex-r4",
+  "schema_version": "1.0",
+  "semantic_compression_used": false,
+  "serialized_request_bytes": 34562,
+  "serialized_request_sha256": "9fef89bf4bcf19e392c2afb475b607aa565d66a3252b54f28ce093169b3a23a6",
+  "status": "WITHIN_CAP",
+  "task_id": "PROOF4-P01",
+  "token_estimation_method": "none; host measures bytes and items only",
+  "total_items": 1,
+  "unmeasured_component_kinds": [
+    "adapter_wrapper",
+    "attachment_excerpts",
+    "durable_state_summary",
+    "profile_text",
+    "selected_history",
+    "system_control_text",
+    "tool_results",
+    "tool_schemas"
+  ]
+}

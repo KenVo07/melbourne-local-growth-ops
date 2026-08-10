@@ -522,7 +522,24 @@ def _run_job_via_child_transport(
     """The synchronous_child_process leg of run_job: governs, dispatches
     through the real non-bypassed child transport, and settles - entirely
     replacing the HTTP-terminal-polling flow, which does not apply to a call
-    that never opened an HTTP terminal."""
+    that never opened an HTTP terminal.
+
+    ``provider_start_state``/``actual_call_consumed`` are kept truthful
+    throughout: NOT_STARTED until the child transport is about to hand the
+    request to the real provider process (see
+    ``ChildProcessTransportAdapter``'s durable ``provider-start-attempted.json``
+    marker, written immediately before ``subprocess.run``), then either
+    PROVIDER_RESPONSE_OBSERVED (real evidence captured) or, if an exception
+    interrupts the call, an ambiguous state distinct from both - this
+    function never finishes with ``actual_call_consumed: true`` while
+    ``provider_start_state`` still reads NOT_STARTED.
+    """
+
+    command_id = job["job_id"]
+    run_id = phase["run_id"]
+    child_evidence_dir = job_dir / "child-transport"
+    job["provider_start_state"] = "NOT_STARTED"
+    atomic_write_json(job_path, job)
 
     try:
         outcome = dispatch_via_child_transport(
@@ -533,6 +550,10 @@ def _run_job_via_child_transport(
             registry=policy["_registry"],
         )
     except GovernanceBlocked as exc:
+        # Governance itself refused (including "not currently qualified") -
+        # no reservation was ever taken (govern_before_send/evaluate_and_reserve
+        # is one atomic step, and the qualification check now runs before it
+        # entirely), so there is nothing to release/hold/settle.
         job.update({
             "status": "FAILED", "completion_state": "GOVERNANCE_BLOCKED",
             "governance_block_reason": exc.reason, "governance_block_detail": exc.detail,
@@ -544,11 +565,55 @@ def _run_job_via_child_transport(
             updates={"last_error": exc.reason},
         )
         return {"ok": False, "decision": "GOVERNANCE_BLOCKED", "reason": exc.reason, "detail": exc.detail}
+    except Exception as exc:
+        # Anything else failing after governance may have already reserved
+        # budget. Classify from durable evidence, never by guessing: real
+        # captured provider output means capacity was genuinely spent
+        # (settle); a start was durably marked attempted but no evidence
+        # exists yet (a crash mid-send) means genuinely ambiguous (hold, per
+        # the certainty-first budget model - never released, since releasing
+        # an ambiguous send could double-spend); neither marker existing
+        # means the reservation (if any) covered a send that never happened
+        # (release).
+        raw_stdout_present = (child_evidence_dir / "raw-stdout.jsonl").is_file()
+        start_attempted = (child_evidence_dir / "provider-start-attempted.json").is_file()
+        if raw_stdout_present:
+            provider_start_state = "PROVIDER_RESPONSE_OBSERVED"
+            try:
+                settle_after_send(v2_dir=v2_dir, run_id=run_id, command_id=command_id, native_units=[])
+            except Exception:
+                pass
+        elif start_attempted:
+            provider_start_state = "START_RECONCILIATION_REQUIRED"
+            try:
+                hold_after_ambiguous(v2_dir=v2_dir, run_id=run_id, command_id=command_id, reason=str(exc))
+            except Exception:
+                pass
+        else:
+            provider_start_state = "NOT_STARTED"
+            try:
+                release_after_not_sent(v2_dir=v2_dir, run_id=run_id, command_id=command_id)
+            except Exception:
+                pass  # no reservation existed (governance failed before reserving)
+        job.update({
+            "status": "FAILED", "completion_state": "CHILD_TRANSPORT_EXCEPTION",
+            "provider_start_state": provider_start_state,
+            "actual_call_consumed": raw_stdout_present,
+            "last_error": str(exc), "updated_at": iso_now(),
+        })
+        atomic_write_json(job_path, job)
+        store.transition_phase(
+            phase["phase_id"], "FAILED", reason=f"child transport exception: {exc}",
+            updates={"last_error": str(exc)},
+        )
+        raise
 
     governance_record = outcome["governance_record"]
     submit_result = outcome["submit_result"]
-    command_id = job["job_id"]
-    run_id = phase["run_id"]
+    # A SubmitResult was returned at all only because raw-stdout.jsonl was
+    # actually captured (see ChildProcessTransportAdapter.submit) - real
+    # provider evidence exists from this point on, unconditionally.
+    job["provider_start_state"] = "PROVIDER_RESPONSE_OBSERVED"
 
     if submit_result.response.get("denied"):
         # A real call happened and the provider genuinely refused - capacity
@@ -557,7 +622,7 @@ def _run_job_via_child_transport(
         job.update({
             "status": "FAILED", "completion_state": "PERMISSION_DENIED",
             "child_transport_observation": submit_result.response["observation"],
-            "updated_at": iso_now(),
+            "actual_call_consumed": True, "updated_at": iso_now(),
         })
         atomic_write_json(job_path, job)
         store.transition_phase(
@@ -576,7 +641,7 @@ def _run_job_via_child_transport(
         settle_after_send(v2_dir=v2_dir, run_id=run_id, command_id=command_id, native_units=[])
         job.update({
             "status": "FAILED", "completion_state": "POST_MODEL_CONTRACT_FAILURE",
-            "last_error": str(exc), "updated_at": iso_now(),
+            "actual_call_consumed": True, "last_error": str(exc), "updated_at": iso_now(),
         })
         atomic_write_json(job_path, job)
         store.transition_phase(
@@ -603,6 +668,7 @@ def _run_job_via_child_transport(
     job.update({
         "status": "RESULT_WRITTEN", "completion_state": "RESULT_PACKET_STABLE",
         "result_path": str(result_path), "terminal_id": f"child-direct-{command_id}",
+        "provider_start_state": "PROVIDER_RESPONSE_OBSERVED",
         "actual_call_consumed": True, "updated_at": iso_now(),
     })
     atomic_write_json(job_path, job)

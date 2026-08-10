@@ -1116,7 +1116,6 @@
       ],
       "declared_capabilities": [
         "execution_agent",
-        "persistent_conversation",
         "structured_result",
         "usage_telemetry"
       ],
@@ -1332,7 +1331,6 @@
       ],
       "declared_capabilities": [
         "execution_agent",
-        "persistent_conversation",
         "structured_result",
         "usage_telemetry"
       ],
@@ -1766,7 +1764,7 @@
       "adapter_id": "cao-child-direct",
       "include_model": true,
       "legacy_provider_api": "main",
-      "provider_side_idempotency": true,
+      "provider_side_idempotency": false,
       "requires_herdr_preflight": false,
       "transport_kind": "synchronous_child_process"
     },

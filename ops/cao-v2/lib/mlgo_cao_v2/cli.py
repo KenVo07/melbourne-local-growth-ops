@@ -14,6 +14,7 @@ from .continuity import begin_checkpoint_fallback, complete_same_session_recover
 from .controller import process_event, process_run_once, run_forever
 from .completion import preflight_herdr_boundary
 from .dispatch import run_job, submit_phase
+from .dispatch_governance import qualify_child_transport_provider, QualificationEvidenceInvalid
 from .finalization import finalize_with_verdict, prepare_final_facts
 from .git_executor import commit_task, create_pull_request, integrate_commit, push_branch, verify_ci, verify_reachability
 from .policy import load_policy
@@ -56,6 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     p=sub.add_parser('route'); p.add_argument('--proposal',required=True); p.add_argument('--charter',required=True); p.add_argument('--snapshot',required=True); p.add_argument('--output'); _policy_arg(p)
     p=sub.add_parser('submit-phase'); p.add_argument('--phase',required=True); p.add_argument('--shadow',action='store_true'); _policy_arg(p)
     p=sub.add_parser('run-job',help=argparse.SUPPRESS); p.add_argument('--job-file',required=True); _policy_arg(p)
+    p=sub.add_parser('qualify-provider',help='explicit, disposable qualification ceremony: parse+validate real captured provider evidence and bind a QUALIFIED native-preauthorization record to the currently measured provider/wrapper identity'); p.add_argument('--provider',choices=('claude_code','codex'),required=True); p.add_argument('--profile',required=True); p.add_argument('--evidence',required=True); p.add_argument('--launch-argv'); p.add_argument('--registry'); _policy_arg(p)
     p=sub.add_parser('controller-once'); p.add_argument('--run-id',required=True); _policy_arg(p)
     p=sub.add_parser('controller-event'); p.add_argument('--event',required=True); _policy_arg(p)
     p=sub.add_parser('controller-serve'); p.add_argument('--interval',type=float,default=2.0); _policy_arg(p)
@@ -131,6 +133,9 @@ def main(argv: list[str]|None=None) -> int:
         elif c=='canary-close': policy=load_policy(args.policy); out=close_scope(policy,reason=args.reason)
         elif c=='canary-status': policy=load_policy(args.policy); out=canary_status(policy)
         elif c=='run-job': out=run_job(args.job_file,args.policy)
+        elif c=='qualify-provider':
+            policy=load_policy(args.policy,registry_path=args.registry)
+            out=qualify_child_transport_provider(policy=policy,provider=args.provider,selected_profile=args.profile,registry=policy['_registry'],evidence_path=Path(args.evidence),launch_argv_path=Path(args.launch_argv) if args.launch_argv else None)
         elif c=='controller-once': out=process_run_once(args.run_id,args.policy)
         elif c=='controller-event': out=process_event(args.event,args.policy)
         elif c=='controller-serve': run_forever(args.policy,args.interval); return 0

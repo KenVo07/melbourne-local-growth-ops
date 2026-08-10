@@ -122,21 +122,39 @@ def build_native_skill_projection(
 
 def scoped_tool_permission_refs(
     *, provider: str, operation_class: str, worktree_path: str,
+    validation_commands: list[str] | None = None,
 ) -> dict[str, Any]:
     """Translate the dispatch's operation class into each provider's own
     native, non-interactive tool/permission scoping - descriptive
     references carried on the EffectiveProviderRequest, not authority in
     themselves (the ApprovalBroker decision is the authority; this is what
     that decision gets turned into on the provider's own CLI surface).
+
+    Claude's ``--allowedTools`` path-scopes ``Write``/``Edit`` correctly, but
+    a bare shell (``Bash``) is an escape hatch around that scoping - it can
+    write anywhere the OS lets the process write, regardless of what
+    ``--allowedTools`` names. ``--allowedTools`` alone was empirically found
+    to still permit some Bash calls under ``acceptEdits`` even with ``Bash``
+    omitted from the list, so the shell must be handled by an explicit deny,
+    not merely an omission. Where the phase names its own ``validation``
+    commands (host-authored, not worker-invented), those exact commands are
+    the only Bash invocations scoped in - enough for tests/builds without a
+    general-purpose shell escape hatch. Codex's confinement is a real OS
+    sandbox (``-s workspace-write`` scoped to ``-C <worktree>``), not a tool
+    declaration, so it needs no equivalent Bash carve-out here.
     """
 
     if provider == "claude_code":
         if operation_class == CLASS_WRITE_IN_OWNED_SCOPE:
-            return {
-                "permission_mode": "acceptEdits",
-                "allowed_tools": [f"Write({worktree_path}/**)", f"Edit({worktree_path}/**)", "Read", "Glob", "Grep"],
-            }
-        return {"permission_mode": "default", "allowed_tools": ["Read", "Glob", "Grep"]}
+            allowed = [f"Write({worktree_path}/**)", f"Edit({worktree_path}/**)", "Read", "Glob", "Grep"]
+            commands = list(validation_commands or [])
+            if commands:
+                allowed += [f"Bash({cmd})" for cmd in commands]
+                disallowed: list[str] = []
+            else:
+                disallowed = ["Bash"]
+            return {"permission_mode": "acceptEdits", "allowed_tools": allowed, "disallowed_tools": disallowed}
+        return {"permission_mode": "default", "allowed_tools": ["Read", "Glob", "Grep"], "disallowed_tools": ["Bash"]}
     if provider == "codex":
         sandbox = "workspace-write" if operation_class == CLASS_WRITE_IN_OWNED_SCOPE else "read-only"
         return {"sandbox": sandbox}
@@ -271,6 +289,7 @@ def govern_before_send(
     tool_permission_refs = scoped_tool_permission_refs(
         provider=str(decision.get("selected_provider") or ""),
         operation_class=operation_class, worktree_path=worktree_path,
+        validation_commands=list((phase.get("validation") or {}).get("commands") or []),
     )
     route_identity = {
         "route_id": decision.get("selected_route"),
@@ -437,13 +456,109 @@ def load_qualification(*, policy: dict[str, Any], adapter_id: str) -> dict[str, 
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _record_qualification_from_evidence(
-    *, policy: dict[str, Any], adapter: Any, raw_evidence_bytes: bytes,
+class QualificationEvidenceInvalid(ContractError):
+    """Raised when evidence handed to the qualification operation does not
+    actually demonstrate non-bypassed native-preauthorization behaviour."""
+
+
+def _validate_qualification_evidence(*, provider: str, raw_evidence_bytes: bytes, launch_argv: dict[str, Any] | None) -> dict[str, Any]:
+    """Parse and validate real captured provider evidence for qualification.
+
+    This is the only thing standing between "some bytes a caller handed us"
+    and a QUALIFIED record - it is not a pass-through. It requires the bytes
+    to actually parse as the provider's own real event stream and to
+    actually show the mechanism working (Claude: a system/init event whose
+    permissionMode is not bypassPermissions, followed by a result event with
+    empty permission_denials, or a genuine tool_use if writes were
+    exercised; Codex: at least one turn.completed event). A launch-argv
+    record, if supplied, must contain no forbidden bypass flag.
+    """
+
+    text = raw_evidence_bytes.decode("utf-8", errors="strict")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        raise QualificationEvidenceInvalid("qualification evidence is empty")
+
+    events = []
+    for ln in lines:
+        try:
+            events.append(json.loads(ln))
+        except json.JSONDecodeError as exc:
+            raise QualificationEvidenceInvalid(f"qualification evidence is not valid JSONL: {exc}") from exc
+
+    if launch_argv is not None:
+        from .child_provider_transport import FORBIDDEN_BYPASS_FLAGS
+        argv = launch_argv.get("argv") or []
+        hit = FORBIDDEN_BYPASS_FLAGS.intersection(argv)
+        if hit:
+            raise QualificationEvidenceInvalid(f"launch-argv evidence contains forbidden bypass flag(s): {sorted(hit)}")
+
+    if provider == "claude_code":
+        init_events = [e for e in events if e.get("type") == "system" and e.get("subtype") == "init"]
+        result_events = [e for e in events if e.get("type") == "result"]
+        if not init_events:
+            raise QualificationEvidenceInvalid("claude evidence has no system/init event")
+        if not result_events:
+            raise QualificationEvidenceInvalid("claude evidence has no result event")
+        if init_events[0].get("permissionMode") == "bypassPermissions":
+            raise QualificationEvidenceInvalid("claude evidence reports permissionMode=bypassPermissions")
+        if result_events[-1].get("permission_denials"):
+            raise QualificationEvidenceInvalid("claude evidence's final result reports permission_denials; not a clean qualifying run")
+        summary = {"permission_mode_observed": init_events[0].get("permissionMode")}
+    elif provider == "codex":
+        turn_events = [e for e in events if e.get("type") in ("turn.completed", "turn.failed")]
+        if not turn_events:
+            raise QualificationEvidenceInvalid("codex evidence has no turn.completed/turn.failed event")
+        if turn_events[-1].get("type") != "turn.completed":
+            raise QualificationEvidenceInvalid("codex evidence's final turn did not complete")
+        summary = {"turn_type_observed": turn_events[-1].get("type")}
+    else:
+        raise QualificationEvidenceInvalid(f"unsupported provider for qualification: {provider!r}")
+
+    return summary
+
+
+def qualify_child_transport_provider(
+    *,
+    policy: dict[str, Any],
+    provider: str,
+    selected_profile: str,
+    registry: Any,
+    evidence_path: Path,
+    launch_argv_path: Path | None = None,
 ) -> dict[str, Any]:
-    """The only path to a QUALIFIED record: derived entirely from real raw
-    provider output bytes this exact adapter identity actually produced."""
+    """The smallest explicit, disposable qualification operation.
+
+    Separate from - and never implicitly invoked by - normal dispatch. Reads
+    real captured provider evidence from disk, parses and validates it (see
+    :func:`_validate_qualification_evidence`; there is no parameter here a
+    caller can substitute an arbitrary hash into), measures the current
+    provider/wrapper identity from the actually-resolved executable, and
+    only then writes a QUALIFIED record bound to that measured identity and
+    to the SHA-256 of the exact evidence bytes it validated.
+    """
 
     from .permission_adapter import CAP_NATIVE_PREAUTHORIZATION, MATURITY_QUALIFIED, new_adapter_qualification
+    from .registry import profile as registry_profile
+    from .child_provider_transport import ClaudeCliPermissionAdapter, CodexCliPermissionAdapter
+
+    prof = registry_profile(registry, selected_profile)
+    executable_path = resolve_provider_executable(registry_profile=prof, provider=provider)
+    mlgo_env = {**os.environ, "MLGO_PROFILE_NAME": selected_profile, "MLGO_ROLE": "qualification"}
+    identity_facts = measure_provider_identity(executable_path=executable_path, env=mlgo_env)
+
+    adapter_cls = ClaudeCliPermissionAdapter if provider == "claude_code" else CodexCliPermissionAdapter
+    adapter = adapter_cls(
+        adapter_id=f"cao-child-direct-{provider}", provider_profile_id=selected_profile,
+        provider_version=identity_facts["provider_version"], wrapper_version=identity_facts["wrapper_version"],
+        declared_capabilities=[CAP_NATIVE_PREAUTHORIZATION],
+    )
+
+    raw_evidence_bytes = evidence_path.read_bytes()
+    launch_argv = json.loads(launch_argv_path.read_text(encoding="utf-8")) if launch_argv_path else None
+    validation_summary = _validate_qualification_evidence(
+        provider=provider, raw_evidence_bytes=raw_evidence_bytes, launch_argv=launch_argv,
+    )
 
     identity = adapter.identity()
     evidence_sha256 = sha256_bytes(raw_evidence_bytes)
@@ -456,7 +571,10 @@ def _record_qualification_from_evidence(
     path = _permission_qualifications_dir(policy) / f"{adapter.adapter_id}.json"
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     atomic_write_json(path, qualification)
-    return qualification
+    return {
+        "qualification": qualification, "identity_facts": identity_facts,
+        "validation_summary": validation_summary, "evidence_path": str(evidence_path),
+    }
 
 
 def resolve_provider_executable(*, registry_profile: dict[str, Any], provider: str) -> Path:
@@ -528,19 +646,15 @@ def dispatch_via_child_transport(
     provider transport - the corrected live path for S4-A/S4-C, using the
     exact executable/config the selected route/profile names.
 
-    Qualification: if this exact measured identity (adapter_id +
-    provider_version + wrapper_version + observation-map config, all inside
-    ``identity_digest``) has never been qualified, this call proceeds as an
-    explicit, evidence-recording qualification ceremony - clearly labeled as
-    such in the returned record and in durable evidence - rather than
-    silently pretending to already be trusted. Authority to dispatch at all
-    comes from the ApprovalBroker decision (independent of this), and
-    non-bypass is enforced unconditionally by the transport regardless of
-    qualification state; what qualification state controls is only whether
-    this call's own outcome is *recorded* as confirming the mechanism.  If a
-    qualification exists for a *different* identity (drift: a provider
-    upgrade, a changed wrapper), this fails closed rather than silently
-    re-ceremonying over it.
+    Qualification is checked, never performed, here. If this exact measured
+    identity (adapter_id + provider_version + wrapper_version +
+    observation-map config, all inside ``identity_digest``) has no current
+    QUALIFIED native-preauthorization capability - because it was never
+    qualified, or because a qualification exists but no longer matches the
+    measured identity (drift: a provider upgrade, a changed wrapper) - this
+    fails closed with :class:`GovernanceBlocked` *before* governance/budget
+    reservation happens, not after. Qualifying an identity is a separate,
+    explicit operation: :func:`qualify_child_transport_provider`.
     """
 
     from .approval_broker import ApprovalStore
@@ -570,13 +684,13 @@ def dispatch_via_child_transport(
         qualification=existing_qualification, current_identity=adapter.identity(),
         capability=CAP_NATIVE_PREAUTHORIZATION, policy_enabled=True,
     )
-    if existing_qualification is not None and capability_state["stale"]:
+    if not capability_state["enabled"]:
         raise GovernanceBlocked(
-            "existing PermissionAdapter qualification is stale for this measured identity "
-            "(provider/wrapper drift) - re-qualify explicitly before authority-bearing use",
+            "PermissionAdapter native-preauthorization capability is absent or stale for this "
+            "measured identity - run the explicit qualify_child_transport_provider operation "
+            "before authority-bearing dispatch; normal dispatch never self-qualifies",
             detail={"capability_state": capability_state, "existing_qualification": existing_qualification, "identity_facts": identity_facts},
         )
-    ceremony_mode = not capability_state["enabled"]
 
     governance_record = govern_before_send(
         phase=phase, decision=decision, job=job, policy=policy, prompt_text=prompt_text,
@@ -607,16 +721,8 @@ def dispatch_via_child_transport(
             "permission_adapter": adapter,
             "capability_state": capability_state,
             "effective_request": effective_request,
-            "ceremony_mode": ceremony_mode,
         },
     )
-
-    qualification = existing_qualification
-    if ceremony_mode and not submit_result.response.get("denied") and submit_result.response["observation"]["observed_state"] not in ("UNKNOWN_RECONCILIATION_REQUIRED",):
-        raw_stdout_path = child_evidence_dir / "raw-stdout.jsonl"
-        qualification = _record_qualification_from_evidence(
-            policy=policy, adapter=adapter, raw_evidence_bytes=raw_stdout_path.read_bytes(),
-        )
 
     return {
         "governance_record": governance_record,
@@ -624,6 +730,5 @@ def dispatch_via_child_transport(
         "adapter_identity": adapter.identity(),
         "capability_state": capability_state,
         "identity_facts": identity_facts,
-        "ceremony_mode": ceremony_mode,
-        "qualification": qualification,
+        "qualification": existing_qualification,
     }
