@@ -50,8 +50,25 @@ edit state files, stage, commit, merge, push, poll CI, or recompute the runnable
 graph after ordinary events. Receive only compact phase gates and semantic
 exceptions.
 
-Use the installed MLGO v2 commands rather than legacy `assign`/`handoff` for
-write phases:
+### Supervisor dormancy invariant
+
+Long-running worker wait is never a supervisor-model responsibility. This is a
+hard economics and control-plane boundary, not a style preference.
+
+- Never invoke CAO `handoff` or `assign` directly from an authoritative supervisor,
+  including for builders, reviewers, capture workers, validation workers or advisors.
+- Never use shell commands to poll CAO terminals, tmux panes, PIDs, process tables,
+  worker files or status in order to wait for delegated work.
+- Submit lifecycle-managed work through the MLGO v2 host control plane. Once the
+  host returns a durable asynchronous dispatch receipt, end the model turn.
+- While the worker runs, the host owns waiting, retries, event observation, result
+  ingestion and deduplication with zero supervisor-model activity.
+- Resume only for a compact host-produced phase gate, semantic exception, final
+  facts packet, or an explicit operator message. If no admissible host path exists,
+  stop with a truthful blocked decision instead of bypassing the boundary.
+
+Use the installed MLGO v2 commands rather than legacy `assign`/`handoff` for any
+lifecycle-managed worker, review, capture, validation or advisory phase:
 
 - `mlgo-v2 init-run ...`
 - `mlgo-v2 register-charter ...`

@@ -1011,7 +1011,7 @@
         "structured_result",
         "usage_telemetry"
       ],
-      "frontmatter": "name: mlgo-claude-gateway-supervisor\ndescription: Explicit-operator-selected Claude gateway authoritative supervisor; Sonnet medium effort; PAYG never auto-selected.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "frontmatter": "name: mlgo-claude-gateway-supervisor\ndescription: Explicit-operator-selected Claude gateway authoritative supervisor; Sonnet medium effort; PAYG never auto-selected.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-gateway-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - gateway\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\nskills:\n  - cao-agent-routing",
       "gateway": true,
       "model": "sonnet",
       "profile_id": "mlgo-claude-gateway-supervisor",
@@ -1183,7 +1183,7 @@
         "structured_result",
         "usage_telemetry"
       ],
-      "frontmatter": "name: mlgo-claude-subscription-supervisor\ndescription: MLGO Claude subscription authoritative supervisor; Sonnet, medium effort, semantic-only v2 authority.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - subscription\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "frontmatter": "name: mlgo-claude-subscription-supervisor\ndescription: MLGO Claude subscription authoritative supervisor; Sonnet, medium effort, semantic-only v2 authority.\nprovider: claude_code\nrole: supervisor\nclaudeExecutable: mlgo-claude-subscription-medium\nmodel: sonnet\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - claude\n  - subscription\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\nskills:\n  - cao-agent-routing",
       "gateway": false,
       "model": "sonnet",
       "profile_id": "mlgo-claude-subscription-supervisor",
@@ -1272,7 +1272,7 @@
         "structured_result",
         "usage_telemetry"
       ],
-      "frontmatter": "name: mlgo-codex-business-2-supervisor\ndescription: Explicit-operator-only Codex Business 2 authoritative supervisor; never an automatic worker or replacement.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business-2\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "frontmatter": "name: mlgo-codex-business-2-supervisor\ndescription: Explicit-operator-only Codex Business 2 authoritative supervisor; never an automatic worker or replacement.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business-2\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business-2\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\nskills:\n  - cao-agent-routing",
       "gateway": false,
       "model": "gpt-5.6-sol",
       "profile_id": "mlgo-codex-business-2-supervisor",
@@ -1377,7 +1377,7 @@
         "structured_result",
         "usage_telemetry"
       ],
-      "frontmatter": "name: mlgo-codex-plus-supervisor\ndescription: MLGO Codex Plus authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - plus\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "frontmatter": "name: mlgo-codex-plus-supervisor\ndescription: MLGO Codex Plus authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-plus\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - plus\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\nskills:\n  - cao-agent-routing",
       "gateway": false,
       "model": "gpt-5.6-sol",
       "profile_id": "mlgo-codex-plus-supervisor",
@@ -1422,7 +1422,7 @@
         "structured_result",
         "usage_telemetry"
       ],
-      "frontmatter": "name: mlgo-supervisor\ndescription: MLGO Codex Business authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\n  - \"@cao-mcp-server\"\nskills:\n  - cao-supervisor-protocols\n  - cao-agent-routing\nmcpServers:\n  cao-mcp-server:\n    type: stdio\n    command: cao-mcp-server\n    args: []",
+      "frontmatter": "name: mlgo-supervisor\ndescription: MLGO Codex Business authoritative supervisor; medium effort and semantic-only v2 authority.\nprovider: codex\nrole: supervisor\ncodexExecutable: mlgo-codex-business\nmodel: gpt-5.6-sol\ncodexConfig:\n  model_reasoning_effort: medium\n  features.fast_mode: false\ncapabilities:\n  - authoritative milestone semantics and finalization\n  - approve Big Task Charters and delegation envelopes\n  - adjudicate material exceptions without running the control plane\ntags:\n  - mlgo\n  - supervisor\n  - business\n  - v2\nallowedTools:\n  - fs_*\n  - execute_bash\nskills:\n  - cao-agent-routing",
       "gateway": false,
       "model": "gpt-5.6-sol",
       "profile_id": "mlgo-supervisor",
