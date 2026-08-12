@@ -1,0 +1,19 @@
+[Unit]
+Description=MLGO CAO v2 deterministic controller (WB-0 instance)
+After=default.target
+
+[Service]
+Type=simple
+EnvironmentFile={{INSTANCE_ENV}}
+ExecStart={{CONTROLLER_EXEC}} controller-serve --interval 2
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths={{STATE_CURRENT}} {{PROJECT_READ_WRITE_PATHS}}
+
+[Install]
+WantedBy=default.target

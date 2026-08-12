@@ -33,6 +33,35 @@ class InstallerStagingTest(unittest.TestCase):
         process = self.run_plan("--stage-only")
         self.assertNotEqual(process.returncode, 0)
 
+    def test_legacy_installer_refuses_wb0_managed_launcher_without_explicit_override(self):
+        with tempfile.TemporaryDirectory() as td:
+            home = Path(td) / "home"
+            launcher = home / ".local/bin/mlgo-v2"
+            launcher.parent.mkdir(parents=True)
+            launcher.symlink_to(
+                "/srv/mlgo-cao/instances/default/release/current/release/bin/mlgo-v2"
+            )
+            env = os.environ.copy()
+            env["HOME"] = str(home)
+            refused = subprocess.run(
+                [str(ROOT / "install.sh"), "--stage-only", "--dry-run"],
+                text=True,
+                capture_output=True,
+                env=env,
+            )
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertIn("WB-0 versioned-release management is active", refused.stderr)
+            explicit = subprocess.run(
+                [
+                    str(ROOT / "install.sh"), "--stage-only", "--dry-run",
+                    "--allow-legacy-after-wb0",
+                ],
+                text=True,
+                capture_output=True,
+                env=env,
+            )
+            self.assertEqual(explicit.returncode, 0, explicit.stderr)
+
     def test_installed_verification_failure_rolls_back_before_applied_record(self):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)

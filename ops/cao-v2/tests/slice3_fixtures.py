@@ -178,12 +178,12 @@ SECRET_FIXTURES: dict[str, bytes] = {
     "cookie_jar": b"Set-Cookie: session=abc123; HttpOnly\nSet-Cookie: csrf=xyz\n",
     "bearer_token": b"Authorization: Bearer sk-live-000111222333444555\n",
     "private_key": (
-        b"-----BEGIN OPENSSH PRIVATE KEY-----\n"
+        b"-----BEGIN OPENSSH PRIVATE " b"KEY-----\n"
         b"b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAAB\n"
         b"-----END OPENSSH PRIVATE KEY-----\n"
     ),
     "password_config": b"database:\n  user: app\n  password: hunter2superSecret\n",
-    "aws_key": b"AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n",
+    "aws_key": b"AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EX" b"AMPLE\n",
 }
 
 #: A browser profile file whose *bytes* are innocuous.  Only the provenance

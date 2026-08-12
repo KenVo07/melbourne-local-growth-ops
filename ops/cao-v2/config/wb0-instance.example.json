@@ -1,0 +1,45 @@
+{
+  "host_adapter": {
+    "bin_root": "/home/example/.local/bin",
+    "controller_unit": "mlgo-cao-v2-controller.service",
+    "dispatch_command": "/home/example/.local/bin/mlgo-v2-dispatch",
+    "systemctl_command": "/usr/bin/systemctl",
+    "systemd_run_command": "/usr/bin/systemd-run",
+    "systemd_user_unit_root": "/home/example/.config/systemd/user",
+    "worktree_command": "/usr/local/bin/mlgo-worktree"
+  },
+  "instance_digest": "6a6f2a456153f80370e8f41249a60b5a6172b66c3229d5ca532a2e996be1c816",
+  "instance_id": "default",
+  "policy_bindings": {
+    "budget_policy_refs": [],
+    "policy_path": "/srv/mlgo-cao/instances/default/config/current/payload/cao-policy.json"
+  },
+  "project_roots": [
+    "/srv/mlgo-projects/melbourne-local-growth-ops"
+  ],
+  "provider_bindings": {
+    "profiles": {
+      "mlgo-claude-subscription-supervisor": {
+        "account_binding_id": "claude-subscription-primary",
+        "qualification_required": true
+      },
+      "mlgo-codex-plus-builder": {
+        "account_binding_id": "codex-plus-primary",
+        "qualification_required": true
+      }
+    },
+    "qualification_root": "/srv/mlgo-cao/instances/default/state/host-qualification"
+  },
+  "roots": {
+    "config_root": "/srv/mlgo-cao/instances/default/config",
+    "release_root": "/srv/mlgo-cao/instances/default/release",
+    "state_root": "/srv/mlgo-cao/instances/default/state"
+  },
+  "schema_version": "1.0",
+  "skill_bindings": {
+    "cache_root": "/srv/mlgo-cao/instances/default/state/skill-assets",
+    "native_mirror_root": "/home/example/.agents/skills",
+    "project_id": "melbourne-local-growth-ops",
+    "security_domain_id": "mlgo-internal"
+  }
+}

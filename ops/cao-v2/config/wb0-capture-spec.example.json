@@ -1,0 +1,151 @@
+{
+  "created_at": "2026-08-10T00:00:00Z",
+  "entries": [
+    {
+      "allow_symlink": false,
+      "category": "tracked_source",
+      "description": "Exact clean ops/cao-v2 tracked source from the detached canonical post-Slice-4 commit",
+      "destination": "release/evidence/source/ops/cao-v2",
+      "required": true,
+      "source": "/srv/mlgo-source/post-slice4-golden/ops/cao-v2"
+    },
+    {
+      "allow_symlink": false,
+      "category": "installed_runtime",
+      "description": "Exact current installed CAO Python package projection; destination is the active release lib root",
+      "destination": "release/lib",
+      "required": true,
+      "source": "/home/example/.local/lib/mlgo-cao-v2"
+    },
+    {
+      "allow_symlink": false,
+      "category": "runtime_launcher",
+      "description": "Allowlisted exact current mlgo-v2 launchers only, staged from the installed user bin",
+      "destination": "release/bin",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/runtime-bin"
+    },
+    {
+      "allow_symlink": false,
+      "category": "runtime_registry",
+      "description": "Exact installed provider registry projection",
+      "destination": "release/share/registry",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/registry"
+    },
+    {
+      "allow_symlink": false,
+      "category": "runtime_schema",
+      "description": "Exact installed CAO schemas",
+      "destination": "release/share/schemas",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/schemas"
+    },
+    {
+      "allow_symlink": false,
+      "category": "runtime_example",
+      "description": "Exact installed examples used by the current runtime",
+      "destination": "release/share/examples",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/examples"
+    },
+    {
+      "allow_symlink": false,
+      "category": "runtime_profile_source",
+      "description": "Exact installed non-secret profile source and generator projection",
+      "destination": "release/share/profile-sources",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/profile-sources"
+    },
+    {
+      "allow_symlink": false,
+      "category": "skill_lock",
+      "description": "Runtime copy of the exact canonical skill lock",
+      "destination": "release/share/skills/canonical-skill-bundles.lock.json",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/skills/canonical-skill-bundles.lock.json"
+    },
+    {
+      "allow_symlink": false,
+      "category": "provider_wrapper",
+      "description": "Read-only evidence of current provider wrapper scripts; never treated as credentials or portable qualification",
+      "destination": "release/evidence/provider-wrappers",
+      "required": false,
+      "source": "/srv/mlgo-wb0-inventory/provider-wrappers"
+    },
+    {
+      "allow_symlink": false,
+      "category": "non_secret_config",
+      "description": "Reviewed non-secret policy and profile projection; all credentials and browser/session material are excluded",
+      "destination": "config",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/non-secret-config"
+    },
+    {
+      "allow_symlink": false,
+      "category": "service_definition",
+      "description": "Current service evidence plus the portable WB-0 controller template",
+      "destination": "services",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/services"
+    },
+    {
+      "allow_symlink": false,
+      "category": "skill_lock",
+      "description": "Evidence copy of the exact canonical skill lock; bytes must equal the runtime copy",
+      "destination": "skills/lock/canonical-skill-bundles.lock.json",
+      "required": true,
+      "source": "/home/example/.local/share/mlgo-cao-v2/skills/canonical-skill-bundles.lock.json"
+    },
+    {
+      "allow_symlink": false,
+      "category": "sealed_skill",
+      "description": "Exact CAO-owned skill-cache objects and bundle manifests; namespace bindings are evidence only and are rebuilt per instance",
+      "destination": "skills/sealed/skill-cache",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/skill-cache"
+    },
+    {
+      "allow_symlink": false,
+      "category": "native_skill_mirror",
+      "description": "Curated canonical mirror subset only, proven byte-for-byte against sealed objects",
+      "destination": "skills/native-mirror",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/canonical-native-mirror"
+    },
+    {
+      "allow_symlink": false,
+      "category": "recovery_state_seed",
+      "description": "Reviewed CAO durable control-state seed; client repositories, auth stores, sockets, and volatile process files are excluded",
+      "destination": "recovery/state-seed",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/recovery-state-seed"
+    },
+    {
+      "allow_symlink": false,
+      "category": "recovery_tool",
+      "description": "Self-contained standard-library-only WB-0 bootstrap prepared from this reviewed implementation candidate",
+      "destination": "bootstrap",
+      "required": true,
+      "source": "/srv/mlgo-wb0-inventory/bootstrap"
+    }
+  ],
+  "release_id": "post-slice4-golden-d06073d92ff3",
+  "runtime_version": "0.5.0-slice3-5-vnext",
+  "schema_version": "1.0",
+  "skill_contract": {
+    "canonical_lock_required": true,
+    "mirror_must_be_digest_equivalent": true,
+    "new_skill_sources_allowed": false,
+    "sealed_bytes_required": true
+  },
+  "source_checkout": "/srv/mlgo-source/post-slice4-golden",
+  "source_commit": "d06073d92ff3491bcb7945da1a98c56c61b4a551",
+  "state_contract": {
+    "golden_state_is_immutable": true,
+    "reverse_migration_allowed": false,
+    "state_schema_id": "mlgo-cao-v2-control-state",
+    "state_schema_version": "2.1",
+    "writable_recovery_clone_required": true
+  }
+}

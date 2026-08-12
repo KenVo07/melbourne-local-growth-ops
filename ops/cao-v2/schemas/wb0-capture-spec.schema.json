@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/wb0-capture-spec.schema.json",
+  "title": "WB-0 Golden Capture Spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "source_commit",
+    "source_checkout",
+    "runtime_version",
+    "created_at",
+    "entries",
+    "state_contract",
+    "skill_contract"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "source_checkout": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "runtime_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "destination",
+          "category",
+          "required",
+          "allow_symlink",
+          "description"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "destination": {
+            "type": "string",
+            "pattern": "^[^/].*"
+          },
+          "category": {
+            "enum": [
+              "tracked_source",
+              "installed_runtime",
+              "runtime_launcher",
+              "runtime_registry",
+              "runtime_schema",
+              "runtime_example",
+              "runtime_profile_source",
+              "non_secret_config",
+              "provider_wrapper",
+              "service_definition",
+              "sealed_skill",
+              "skill_lock",
+              "native_skill_mirror",
+              "recovery_state_seed",
+              "recovery_tool",
+              "documentation"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "allow_symlink": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "state_contract": {
+      "type": "object",
+      "required": [
+        "golden_state_is_immutable",
+        "reverse_migration_allowed"
+      ],
+      "properties": {
+        "golden_state_is_immutable": {
+          "const": true
+        },
+        "reverse_migration_allowed": {
+          "const": false
+        }
+      }
+    },
+    "skill_contract": {
+      "type": "object",
+      "required": [
+        "sealed_bytes_required",
+        "canonical_lock_required",
+        "mirror_must_be_digest_equivalent",
+        "new_skill_sources_allowed"
+      ],
+      "properties": {
+        "sealed_bytes_required": {
+          "const": true
+        },
+        "canonical_lock_required": {
+          "const": true
+        },
+        "mirror_must_be_digest_equivalent": {
+          "const": true
+        },
+        "new_skill_sources_allowed": {
+          "const": false
+        }
+      }
+    }
+  }
+}

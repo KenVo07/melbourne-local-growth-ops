@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/wb0-recovery-transaction.schema.json",
+  "title": "WB-0 Recovery Transaction",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "transaction_id",
+    "instance_id",
+    "instance_digest",
+    "mode",
+    "release_id",
+    "release_manifest_digest",
+    "golden_generation_id",
+    "writable_generation_id",
+    "config_generation_id",
+    "state_schema",
+    "final_controller_state",
+    "request_digest",
+    "status",
+    "steps",
+    "provider_calls",
+    "production_enforcement",
+    "web_bridge_started"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.1"},
+    "transaction_id": {"type": "string"},
+    "mode": {"enum": ["same_host", "fresh_host"]},
+    "state_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"const": "mlgo-cao-v2-control-state"},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "final_controller_state": {"const": "STOPPED"},
+    "request_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"type": "string"},
+    "steps": {"type": "object"},
+    "provider_calls": {"const": 0},
+    "production_enforcement": {"const": false},
+    "web_bridge_started": {"const": false}
+  },
+  "description": "Crash-rerunnable WB-0 transaction. The transaction request digest binds instance, mode, release manifest, generation identities, state schema semantics, and STOPPED final controller posture. Controller start is a separate post-commit operation."
+}

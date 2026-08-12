@@ -3,21 +3,25 @@ set -euo pipefail
 
 usage(){ cat >&2 <<'EOF'
 usage:
-  install.sh --stage-only (--dry-run|--apply)
-  install.sh --activate-runtime (--dry-run|--apply) [--start-controller]
-  install.sh --activate-profiles (--dry-run|--apply)
+  install.sh --stage-only (--dry-run|--apply) [--allow-legacy-after-wb0]
+  install.sh --activate-runtime (--dry-run|--apply) [--start-controller] [--allow-legacy-after-wb0]
+  install.sh --activate-profiles (--dry-run|--apply) [--allow-legacy-after-wb0]
 
 The phases are intentionally separate. Stage-only is additive and does not
 replace profiles, provider wrappers, mlgo-supervise, or start any service.
+
+After WB-0 activates versioned-release launchers, this legacy in-place installer
+fails closed unless --allow-legacy-after-wb0 is supplied for an explicit migration.
 EOF
 exit 2; }
 
-phase=""; action=""; start_controller=false
+phase=""; action=""; start_controller=false; allow_legacy_after_wb0=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --stage-only|--activate-runtime|--activate-profiles) [[ -z "$phase" ]] || usage; phase=${1#--} ;;
     --dry-run|--apply) [[ -z "$action" ]] || usage; action=${1#--} ;;
     --start-controller) start_controller=true ;;
+    --allow-legacy-after-wb0) allow_legacy_after_wb0=true ;;
     -h|--help) usage ;;
     *) echo "unknown option: $1" >&2; usage ;;
   esac
@@ -30,6 +34,19 @@ src=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 stage_root="$HOME/.local/share/mlgo-cao-v2"
 state_dir="$HOME/.local/state/mlgo-cao/installations"
 state_file="$state_dir/v2-install-state.json"
+
+# WB-0 makes the stable launcher a symlink through release/current. Once that
+# projection exists, this legacy installer must not replace launchers/config/
+# services in-place and thereby bypass release-generation authority. The
+# override exists only for an explicit operator-controlled migration/escape hatch.
+wb0_launcher="$HOME/.local/bin/mlgo-v2"
+if [[ -L "$wb0_launcher" && "$allow_legacy_after_wb0" != true ]]; then
+  wb0_target=$(readlink "$wb0_launcher")
+  if [[ "$wb0_target" == */current/release/bin/mlgo-v2 ]]; then
+    echo 'legacy install refused: WB-0 versioned-release management is active; use mlgo-v2-wb0 recovery/install flows (or --allow-legacy-after-wb0 for an explicit migration)' >&2
+    exit 1
+  fi
+fi
 
 plan(){ printf '%-12s %s\n' "$1" "$2"; }
 changed(){ local s=$1 d=$2; [[ ! -e "$d" ]] || ! cmp -s "$s" "$d"; }

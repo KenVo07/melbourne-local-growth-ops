@@ -14,7 +14,9 @@ from .registry import (
     validate_policy_projection,
 )
 
-DEFAULT_POLICY_PATH = Path(os.environ.get("MLGO_CAO_V2_POLICY", "/home/khoa/.config/mlgo-cao/cao-policy.json"))
+DEFAULT_POLICY_PATH = Path(
+    os.environ.get("MLGO_CAO_V2_POLICY", "~/.config/mlgo-cao/cao-policy.json")
+).expanduser()
 
 
 def load_policy(path: str | Path | None = None, *, registry_path: str | Path | None = None) -> dict[str, Any]:

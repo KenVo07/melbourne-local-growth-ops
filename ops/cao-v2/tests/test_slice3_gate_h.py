@@ -154,6 +154,25 @@ class Slice3GateHTests(unittest.TestCase):
             run = Slice3Run(td)
             store = run.artifacts
 
+            private_key_header = b"-----BEGIN OPENSSH PRIVATE " + b"KEY-----\n"
+            aws_identifier = b"AKIAIOSFODNN7EX" + b"AMPLE"
+            self.assertTrue(SECRET_FIXTURES["private_key"].startswith(private_key_header))
+            self.assertEqual(
+                SECRET_FIXTURES["aws_key"],
+                b"AWS_ACCESS_KEY_ID=" + aws_identifier + b"\n",
+            )
+
+            detector_cases = {
+                b"-----BEGIN RSA PRIVATE " + b"KEY-----": {"private_key_block"},
+                private_key_header.rstrip(b"\n"): {
+                    "private_key_block",
+                    "openssh_private_key",
+                },
+                b"-----BEGIN PGP PRIVATE " + b"KEY BLOCK-----": {"pgp_private_key"},
+            }
+            for payload, expected_findings in detector_cases.items():
+                self.assertEqual(set(scan_secrets(payload)), expected_findings)
+
             quarantined_ids = []
             for name, payload in SECRET_FIXTURES.items():
                 self.assertTrue(scan_secrets(payload), f"secret fixture not detected: {name}")
@@ -196,7 +215,7 @@ class Slice3GateHTests(unittest.TestCase):
             # Quarantined bytes never appear in the export payload at all.
             rendered = json.dumps(manifest)
             self.assertNotIn("hunter2superSecret", rendered)
-            self.assertNotIn("AKIAIOSFODNN7EXAMPLE", rendered)
+            self.assertNotIn(aws_identifier.decode("ascii"), rendered)
 
             # A producer cannot declare credential material to be normal.
             forced = classify_artifact(SECRET_FIXTURES["private_key"],

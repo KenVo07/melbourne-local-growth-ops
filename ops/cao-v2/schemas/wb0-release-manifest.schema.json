@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/wb0-release-manifest.schema.json",
+  "title": "WB-0 Sealed Release Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "source_commit",
+    "runtime_version",
+    "created_at",
+    "entries",
+    "state_contract",
+    "skill_contract",
+    "safe_posture",
+    "host_qualification_portable",
+    "secret_scan",
+    "manifest_digest",
+    "skill_verification",
+    "activation_layout"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "runtime_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "manifest_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "host_qualification_portable": {
+      "const": false
+    },
+    "entries": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "type",
+          "mode",
+          "provenance"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "file",
+              "directory",
+              "symlink"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "pattern": "^0[0-7]{3}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "target": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "state_contract": {
+      "type": "object"
+    },
+    "skill_contract": {
+      "type": "object"
+    },
+    "safe_posture": {
+      "type": "object"
+    },
+    "secret_scan": {
+      "type": "object"
+    },
+    "skill_verification": {
+      "type": "object"
+    },
+    "activation_layout": {
+      "type": "object"
+    }
+  }
+}

@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 import traceback
@@ -64,6 +65,23 @@ from .usage import agy_usage_placeholder, append_usage_event, execution_usage_pl
 
 
 _ACTIVE_EXECUTION_STATES = {"DISPATCHED", "RUNNING"}
+
+
+def _host_command(policy: dict[str, Any], key: str, fallback: str) -> str:
+    configured = (policy.get("host_adapter") or {}).get(key)
+    if configured:
+        candidate = Path(str(configured)).expanduser()
+        if not candidate.is_absolute():
+            raise PolicyError(f"host adapter command must be absolute: {key}={configured!r}")
+        return str(candidate)
+    resolved = shutil.which(fallback)
+    if resolved:
+        return resolved
+    user_candidate = Path.home() / ".local" / "bin" / fallback
+    if user_candidate.is_file():
+        return str(user_candidate)
+    raise PolicyError(f"host adapter command is unavailable: {key} ({fallback})")
+
 
 def _active_execution_counts(policy: dict[str, Any], *, run_id: str, big_task_id: str) -> dict[str, int]:
     counts = {"global_writers": 0, "task_writers": 0, "route_groups": {}, "opus_phases": 0}
@@ -143,7 +161,7 @@ def _create_worktree_if_needed(phase: dict[str, Any], policy: dict[str, Any]) ->
     if not wt.get("create_if_missing", False):
         raise ContractError(f"worktree does not exist and create_if_missing=false: {path}")
     proc = run([
-        "/home/khoa/.local/bin/mlgo-worktree",
+        _host_command(policy, "worktree_command", "mlgo-worktree"),
         "create",
         phase["phase_id"],
         wt["base_ref"],
@@ -335,14 +353,15 @@ def submit_phase(
         current = store.load()["phases"][phase["phase_id"]]["state"]
         if current in {"ROUTED", "PREFLIGHT_PENDING"}:
             store.transition_phase(phase["phase_id"], "DISPATCHED", reason="phase job queued", updates={"job_path": str(job_path), "attempt": attempt})
-        command = ["/home/khoa/.local/bin/mlgo-v2-dispatch", "run-job", "--job-file", str(job_path)]
+        command = [_host_command(policy, "dispatch_command", "mlgo-v2-dispatch"), "run-job", "--job-file", str(job_path)]
         # A deterministic unit name makes a lost systemd-run response recoverable.
-        active = run(["systemctl", "--user", "show", unit, "--property=LoadState", "--value"], timeout=15, check=False)
+        active = run([_host_command(policy, "systemctl_command", "systemctl"), "--user", "show", unit, "--property=LoadState", "--value"], timeout=15, check=False)
         if active.returncode == 0 and active.stdout.strip() not in {"", "not-found"}:
             proc_stdout = "existing deterministic unit"
         else:
             proc = run([
-                "systemd-run", "--user", "--collect", "--unit", unit,
+                _host_command(policy, "systemd_run_command", "systemd-run"),
+                "--user", "--collect", "--unit", unit,
                 "--property=UMask=0077", "--property=NoNewPrivileges=yes", *command,
             ], timeout=30)
             proc_stdout = proc.stdout.strip()

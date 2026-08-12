@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
+self=$(readlink -f "${BASH_SOURCE[0]}")
+release_root=$(cd "$(dirname "$self")/.." && pwd -P)
+default_lib="$release_root/lib"
+if [[ ! -d "$default_lib/mlgo_cao_v2" && -d "$HOME/.local/lib/mlgo-cao-v2/mlgo_cao_v2" ]]; then
+  default_lib="$HOME/.local/lib/mlgo-cao-v2"
+fi
 export PYTHONPATH="${MLGO_CAO_V2_LIB:-$HOME/.local/lib/mlgo-cao-v2}:${PYTHONPATH:-}"
+export PYTHONPATH="${MLGO_CAO_V2_LIB:-$default_lib}:${PYTHONPATH#*:}"
 exec python3 -m mlgo_cao_v2.cli "$@"

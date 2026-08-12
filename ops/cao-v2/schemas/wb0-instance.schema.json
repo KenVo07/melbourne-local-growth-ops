@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mlgo://cao-v2/wb0-instance.schema.json",
+  "title": "WB-0 CAO Instance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "instance_id",
+    "roots",
+    "project_roots",
+    "provider_bindings",
+    "skill_bindings",
+    "policy_bindings",
+    "host_adapter",
+    "instance_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "instance_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "instance_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "config_root",
+        "state_root",
+        "release_root"
+      ],
+      "properties": {
+        "config_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "state_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "release_root": {
+          "type": "string",
+          "pattern": "^/"
+        }
+      }
+    },
+    "project_roots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^/"
+      }
+    },
+    "provider_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_root",
+        "profiles"
+      ],
+      "properties": {
+        "qualification_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "account_binding_id",
+              "qualification_required"
+            ],
+            "properties": {
+              "account_binding_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+              },
+              "qualification_required": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "policy_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_path",
+        "budget_policy_refs"
+      ],
+      "properties": {
+        "policy_path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "budget_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^/"
+          }
+        }
+      }
+    },
+    "host_adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worktree_command",
+        "dispatch_command",
+        "systemctl_command",
+        "systemd_run_command",
+        "controller_unit",
+        "bin_root",
+        "systemd_user_unit_root"
+      ],
+      "properties": {
+        "worktree_command": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "systemctl_command": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "systemd_run_command": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "controller_unit": {
+          "const": "mlgo-cao-v2-controller.service"
+        },
+        "bin_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "systemd_user_unit_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "dispatch_command": {
+          "type": "string",
+          "pattern": "^/"
+        }
+      }
+    },
+    "skill_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cache_root",
+        "native_mirror_root",
+        "project_id",
+        "security_domain_id"
+      ],
+      "properties": {
+        "cache_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "native_mirror_root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "security_domain_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      }
+    }
+  }
+}
