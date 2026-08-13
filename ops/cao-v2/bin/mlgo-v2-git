@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-export PYTHONPATH="${MLGO_CAO_V2_LIB:-$HOME/.local/lib/mlgo-cao-v2}:${PYTHONPATH:-}"
-case "${1:-}" in
-  commit|integrate|push|pr|reachability|ci) sub="$1"; shift ;;
-  *) echo 'usage: mlgo-v2-git {commit|integrate|push|pr|reachability|ci} ...' >&2; exit 2 ;;
-esac
-exec python3 -m mlgo_cao_v2.cli "git-$sub" "$@"

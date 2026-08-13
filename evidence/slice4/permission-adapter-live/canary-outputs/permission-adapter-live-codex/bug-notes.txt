@@ -1,1 +1,0 @@
-The total function deliberately adds 1 to the sum of the supplied amounts.

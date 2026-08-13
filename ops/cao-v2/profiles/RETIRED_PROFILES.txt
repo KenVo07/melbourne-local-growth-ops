@@ -1,4 +1,0 @@
-mlgo-agy-worker
-mlgo-agy-reviewer
-mlgo-claude-builder
-mlgo-claude-architect
