@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-4 complete; Phase 5 starting)
+Last updated: 2026-08-17 (Phases 0-5 complete; Phase 6 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `99e061a` — see Git section |
+| HEAD now | `dcf0695` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -45,9 +45,9 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 1 — freeze architecture in repo docs | **COMPLETE** (commit `482e9bb`; independent review findings all resolved) |
 | 2 — pure site-core v2 contracts | **COMPLETE** (commit `265fb15`) |
 | 3 — carry v2 data through generation | **COMPLETE** (commit `66c0c73`) |
-| 4 — trusted source-policy scanner | **COMPLETE** (commit `99e061a`; adversarial review running) |
-| 5 — public runtime contract + registry | **IN PROGRESS** |
-| 6 — static multi-route App Router | not started |
+| 4 — trusted source-policy scanner | **COMPLETE** (`99e061a`, hardened by `dcf0695` after adversarial review) |
+| 5 — public runtime contract + registry | **COMPLETE** (commit `cff8b13`) |
+| 6 — static multi-route App Router | **IN PROGRESS** |
 | 7 — Projects + client-owned media | not started |
 | 8 — standalone artifact generation | not started |
 | 9 — multi-route Foundation Search | not started |
@@ -95,24 +95,35 @@ which is not yet accepted by `FoundationSearchConfigSchema`.
 - [x] 4.3 red-team suite, 39 cases, all passing
 - [x] 4.4 gate + commit `99e061a`
 
-### Phase 5 subtask ledger — CURRENT
+### Phase 5 subtask ledger — DONE
 
-Goal: the narrow public runtime contract, registry, sanitized public projection
-and Platform components.
+- [x] 5.1 copy candidates; relocate every prebuilt test into
+      `tests/integration/site-core/` (co-located tests never run here)
+- [x] 5.2 sanitized public projection + secret-absence test on serialized props
+- [x] 5.3 reconcile PlatformLink / PlatformImage / PlatformRegion, add PlatformAction
+- [x] 5.4 `@proportion/client-experience` alias mapped in the app tsconfig
+      (**portable artifact tsconfig still owes the same mapping — Phase 8**)
+- [x] 5.5 gate + commit `cff8b13`
 
-- [ ] **CURRENT** 5.1 copy `client-experience/*` and `routing/*` candidates
-      (contract, public-api, registry, public-projection are GREEN;
-      `platform-components.tsx` and `render-client-route.tsx` are AMBER and must
-      be reconciled against real Next 16 / React 19 and the live module renderer)
-- [ ] 5.2 wire the sanitized public projection to the private snapshot; keep the
-      output field set fixed; test the ABSENCE of secretReferenceId,
-      runtimeSecretBindings, recipient addresses, raw connectors and entitlement
-      state in serialized route props
-- [ ] 5.3 reconcile PlatformLink / PlatformImage / PlatformRegion
-- [ ] 5.4 map the `@proportion/client-experience` alias through tsconfig paths in
-      BOTH the private app and the portable artifact tsconfig; do not rewrite
-      authored imports; do not publish an npm package
-- [ ] 5.5 gate + commit
+### Phase 6 subtask ledger — CURRENT
+
+Goal: static multi-route App Router, proven first by a neutral functional
+fixture with minimal CSS and no motion.
+
+- [ ] **CURRENT** 6.1 `app/page.tsx` detects legacy vs v2; legacy renders the
+      current shell unchanged; v2 resolves the Page Graph home route
+- [ ] 6.2 `app/[...segments]/page.tsx` with `dynamicParams = false`,
+      `generateStaticParams` excluding `/`, `generateMetadata`, `notFound()`
+- [ ] 6.3 `app/not-found.tsx` with recovery navigation and no internal leakage
+- [ ] 6.4 route-aware metadata + structured data; reconcile the root canonical
+      URL form against `structured-data.ts`
+- [ ] 6.5 **neutral functional fixture first** — `/`, `/services`, `/projects`,
+      `/projects/project-one`, `/about`, `/contact`, unknown 404, direct refresh
+- [ ] 6.6 build, serve production on port 3010, curl every route, commit
+
+Also needed in this phase: `load-client-experience.ts` to load the authored
+definition and build the registry, and the wiring of
+`resolveClientExperienceMedia` + the region/action maps into the route render.
 
 ## Implementation decisions applied
 
@@ -140,7 +151,10 @@ and Platform components.
 | A2 | `WebsiteServiceItemSchema` introduced; SERVICES uses it instead of the shared `titledItemSchema` | Patch 0008 §"Smallest compatible change" item 3: the ID must apply to SERVICES only, not every titled list (PROCESS/EVENTS/COLLECTIONS keep `titledItemSchema`). |
 | A3 | **Source-policy scanner reparented from the TypeScript compiler API to `@babel/parser@8.0.4`** (new MIT build-time devDependency of `apps/managed-web`) | The prebuilt candidate used `ts.createSourceFile` / `ts.forEachChild`. `typescript@7.0.2` is the native port and exposes **no standalone parser**: its `.` export is `lib/version.cjs`, and AST access requires spawning the TS server and loading a configured Project via the explicitly `unstable/*` namespace. Basing a security control on an API with no compatibility guarantee, or pinning a second TypeScript major, were both rejected. **Operator chose this option explicitly.** Recorded in `docs/governance/oss-adoption-register.md`; NOTICE regenerated; must never enter a client artifact graph. |
 | A4 | Scanner rules hardened well beyond the candidate | Red-teaming found real gaps: `use server` only detected at module scope (missing the actual server-action shape inside a function body); only `process.env.X` member access detected (missing `process["env"]` and aliasing); `eval`/`require` only as bare identifiers (missing `globalThis.eval`, bare `Function()`); `document.cookie` only via a direct `document` identifier (missing `window.document.cookie`); no `innerHTML` detection; `next`/`server-only`/unprefixed Node built-ins only blocked implicitly by non-declaration, so an approval mistake would open them; no `javascript:` URL detection; legacy CSS `expression()` only matched as a property name. |
-| A5 | The scanner's test lives in `tests/integration/site-core/`, not beside the source | The managed-web vitest config only includes `tests/integration/**`, and the app has no co-located tests. A co-located test would silently never run. |
+| A5 | Every prebuilt test lives in `tests/integration/site-core/`, not beside the source | The managed-web vitest config only includes `tests/integration/**`, and the app has no co-located tests. A co-located test would silently never run. |
+| A6 | **The whole client-experience runtime types against `runtime-types.ts`, not site-core** | The artifact assembler vendors `contracts`, `integrations`, `resend` and `contact-form` but deliberately **not** site-core; `runtime-types.ts` is the existing dependency-free portable mirror that makes that possible. The prebuilt runtime typed itself against site-core, which would have forced site-core (and zod, and asset-pipeline) into every client artifact. v2 contracts are mirrored there instead, and `tests/integration/site-core/runtime-type-conformance.test.ts` fails typecheck if the mirror drifts — a guard v1 never had. |
+| A7 | `PlatformImage` takes a media **reference**, not a pre-resolved media object | The prebuilt contract required the route to pre-resolve via `resolvePublicMedia`, which was not even exported on the public API, so authored source could not call it. |
+| A8 | **`PlatformAction` added** as a fourth Platform primitive | Without it a Contractor site cannot render its own phone or booking CTA: the source policy refuses raw anchors and `PlatformLink` accepts only internal routes. It renders a validated external action by stable ID and preserves the truthful `NOT_CONFIGURED` state. |
 
 ### Defects found in prebuilt candidates
 
@@ -216,18 +230,37 @@ M NOTICE.md                              (4 MIT Babel packages)
 M docs/governance/oss-adoption-register.md  (Babel parser adoption entry)
 ```
 
-### Expected to be edited next (Phase 5)
+### Committed in `cff8b13` + `dcf0695` (Phase 5 runtime)
 
 ```
 A apps/managed-web/src/client-experience/contract.tsx
 A apps/managed-web/src/client-experience/public-api.ts
 A apps/managed-web/src/client-experience/registry.ts
 A apps/managed-web/src/client-experience/public-projection.ts
-A apps/managed-web/src/client-experience/platform-components.tsx   (AMBER)
-A apps/managed-web/src/client-experience/render-client-route.tsx   (AMBER)
+A apps/managed-web/src/client-experience/platform-components.tsx
+A apps/managed-web/src/client-experience/render-client-route.tsx
+A apps/managed-web/src/client-experience/content-helpers.ts
+A apps/managed-web/src/client-experience/resolve-media.ts
 A apps/managed-web/src/routing/resolve-client-route.ts
+M apps/managed-web/src/runtime-types.ts   (portable v2 mirror + asset manifest)
 M apps/managed-web/tsconfig.json          (@proportion/client-experience alias)
-M apps/managed-web/src/runtime-types.ts
+A tests/integration/site-core/{platform-components,public-projection,registry,
+  render-client-route,resolve-client-route,runtime-type-conformance,
+  client-experience-secret-isolation}.test.ts(x)
+M apps/managed-web/src/generation/client-experience-source-policy.ts (hardening)
+M tests/integration/site-core/client-experience-source-policy.test.ts (59 cases)
+```
+
+### Expected to be edited next (Phase 6)
+
+```
+M apps/managed-web/src/app/page.tsx
+A apps/managed-web/src/app/[...segments]/page.tsx
+A apps/managed-web/src/app/not-found.tsx
+A apps/managed-web/src/client-experience/load-client-experience.ts
+M apps/managed-web/src/structured-data.ts
+M apps/managed-web/src/client-website.ts   (load experience/manifest.json)
+A apps/managed-web/client/experience/**    (neutral functional fixture)
 ```
 
 ### Prebuilt files NOT yet integrated
@@ -301,6 +334,36 @@ duplicate service IDs; service page with an undeclared ID; no title-matching
 fallback; route identity stable across a title edit; two pages competing for one
 service ID; a service with no detail page; search-excluded pages omitted.
 
+### Phase 5 gate — PASS (2026-08-17T02:5x +10:00)
+
+| Command | Result |
+|---|---|
+| `pnpm --filter …/managed-web typecheck` | pass |
+| `pnpm --filter …/managed-web test` | pass — **261** tests |
+| source-policy suite | pass — **59** cases |
+| `governance:secrets` | PASS — 352 files |
+
+### Adversarial source-policy review — all findings resolved in `dcf0695`
+
+The reviewer executed real bypasses rather than reasoning about them. Closed:
+package-subpath traversal out of the root; CSS ident escapes; `image-set()` /
+`src()` remote references; `createElement("script")` and variable/namespaced JSX
+tags; cast- and sequence-wrapped `eval`/`Function`/`fetch`;
+`globalThis["process"]` and destructured global aliases; `document.write`,
+`createContextualFragment`, `serviceWorker.register`, `new Image()` beacons,
+string `setTimeout`; hard links; escaped `use server`; template/concatenated
+URLs; `import.meta`.
+
+Five false positives were also fixed, because an unusable policy gets relaxed
+and a relaxed policy loses the rules above: content named `process`, self-hosted
+`@font-face` and inline SVG masks, prose beginning "JavaScript:", CSS comments,
+and decorated classes.
+
+**Still open from that review:** nothing blocking. The reviewer noted the
+scanner has no caller yet, so TOCTOU is not reachable; when Phase 8 wires it in,
+the copy step must copy the inspected bytes or re-verify the hash, and re-check
+`nlink`/`dev` at copy time.
+
 ### Phase 4 gate — PASS (2026-08-17T02:31 +10:00)
 
 | Command | Result |
@@ -349,6 +412,9 @@ creative work has been validated yet.
 | `66c0c73` | `feat(web01b): carry page graph projects and authored experience provenance` — composition/snapshot/provenance rendering-mode dispatch and the schemaVersion 1/2 parse boundary |
 | `185f584` | `docs(web01b): checkpoint implementation state after phase 3` |
 | `99e061a` | `feat(generation): govern authored client experience source` — Babel-based source-policy scanner, 39-case red-team suite, `@babel/parser` devDependency + OSS register entry + NOTICE |
+| `45a1c9a` | `docs(web01b): checkpoint implementation state after phase 4` |
+| `cff8b13` | `feat(managed-web): add safe authored client experience runtime` — contract, registry, public projection, Platform components incl. Action, media resolution, content helpers, portable type mirror + conformance test, alias mapping, secret-isolation test |
+| `dcf0695` | `fix(generation): close verified source-policy bypasses` — every adversarial-review finding plus five false positives |
 
 Uncommitted right now: `WEB01B_V2_IMPLEMENTATION_STATE.md` only (updated after each phase).
 
@@ -373,24 +439,29 @@ another PR; update Notion; promote a Vercel deployment to production; delete the
 
 ## Continuation — exact next action
 
-**Phase 5.1.** Copy the runtime candidates:
+**Phase 6.1.** Read `apps/managed-web/src/app/page.tsx`,
+`src/client-website.ts`, `src/managed-website.ts`, `src/structured-data.ts` and
+`src/rendering/ManagedWebsiteShell.tsx`, then branch the root route on
+`renderingMode`.
+
+Build the **neutral functional fixture first** — minimal CSS, no motion — and
+prove routing before any creative work. Serve production and check every route:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 cd /home/khoa/Projects/web01b-implementation/proportion-web-platform
-H=../inputs/WEB01B_V2_PRO_REASONING_OUTPUT/prebuilt/apps/managed-web/src
-mkdir -p apps/managed-web/src/client-experience apps/managed-web/src/routing
-cp "$H/client-experience/"*.ts*  apps/managed-web/src/client-experience/
-cp "$H/routing/"*.ts             apps/managed-web/src/routing/
+pnpm --filter @melbourne-local-growth-ops/managed-web build
+pnpm --filter @melbourne-local-growth-ops/managed-web start -- -p 3010
+# other shell:
+for p in / /services /projects /projects/project-one /about /contact; do
+  curl --fail --silent --show-error "http://127.0.0.1:3010${p}" >/dev/null || echo "FAIL $p"
+done
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/does-not-exist  # expect 404
 ```
 
-Prebuilt `*.test.ts*` files land beside the source but **will not run** there —
-move every one into `tests/integration/site-core/` and fix its import path, the
-same way the Phase 4 scanner test was handled.
-
-Read before reconciling: `apps/managed-web/src/runtime-types.ts`,
-`rendering/module-renderer-registry.ts`, `rendering/ManagedWebsiteShell.tsx`,
-`rendering/sections/ProfileSection.tsx` and `packages/asset-pipeline`'s resolver.
+Note: `next.config` uses `output: standalone`, so `next start` warns. The e2e
+harness already handles this; check `apps/managed-web/playwright.config.ts` and
+`tests/e2e/prepare-web01b.ts` for how it serves production.
 
 ## Deferred obligations — do not lose these
 
