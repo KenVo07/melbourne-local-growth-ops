@@ -2,6 +2,7 @@ import {
   composeManagedWebsite,
   createWebsiteModuleRegistry,
   createWebsiteTemplateRegistry,
+  validateClientExperienceReference,
   validateWebsiteConfiguration,
   validateWebsiteProfileContent,
   type ManagedWebsiteDefinition,
@@ -37,16 +38,31 @@ const definitionKeys = new Set([
   "modules",
   "assets",
   "experience",
+  "pageGraph",
+  "projects",
+  "clientExperience",
   "foundationSearch",
 ]);
+
+export interface GenerateClientWebsiteOptions {
+  /**
+   * Contents of `<input-directory>/experience/manifest.json`, already read from
+   * disk by the caller. Required for a schemaVersion 2 definition and rejected
+   * for a legacy one. The pure generator never resolves a filesystem path, so
+   * configuration cannot select an arbitrary manifest location.
+   */
+  readonly clientExperienceManifest?: unknown;
+}
 
 export function generateClientWebsiteSnapshot(
   input: unknown,
   publicDirectory: string,
+  options: GenerateClientWebsiteOptions = {},
 ): ClientWebsiteSnapshot {
   const managedDefinition = createManagedWebsiteDefinition(
     input,
     publicDirectory,
+    options,
   );
   const composition = composeManagedWebsite(managedDefinition, registries);
   if (!composition.success) {
@@ -73,12 +89,22 @@ export function generateClientWebsiteSnapshot(
   );
 
   return deepFreeze({
-    schemaVersion: 1,
+    schemaVersion: composition.data.schemaVersion,
+    renderingMode: composition.data.renderingMode,
     configuration: composition.data.configuration,
     profile: composition.data.profile,
     ...(composition.data.experience === undefined
       ? {}
       : { experience: composition.data.experience }),
+    ...(composition.data.pageGraph === undefined
+      ? {}
+      : { pageGraph: composition.data.pageGraph }),
+    ...(composition.data.projects === undefined
+      ? {}
+      : { projects: composition.data.projects }),
+    ...(composition.data.clientExperience === undefined
+      ? {}
+      : { clientExperience: composition.data.clientExperience }),
     foundationSearch: composition.data.foundationSearch,
     provenance: composition.data.provenance,
     assetManifest: composition.data.assetManifest,
@@ -92,6 +118,7 @@ export function generateClientWebsiteSnapshot(
 export function createManagedWebsiteDefinition(
   input: unknown,
   publicDirectory: string,
+  options: GenerateClientWebsiteOptions = {},
 ): ManagedWebsiteDefinition {
   const definition = parseDefinitionInput(input);
   const configuration = validateWebsiteConfiguration(definition.configuration);
@@ -104,12 +131,27 @@ export function createManagedWebsiteDefinition(
   }
   assertWebsiteProfileTemplateConsistency(profile.data, definition.template);
 
+  const clientExperienceManifest = resolveClientExperienceManifest(
+    definition,
+    options,
+  );
+
   return {
+    schemaVersion: definition.schemaVersion,
     configuration: configuration.data,
     profile: profile.data,
     ...(definition.experience === undefined
       ? {}
       : { experience: definition.experience }),
+    ...(definition.pageGraph === undefined
+      ? {}
+      : { pageGraph: definition.pageGraph }),
+    ...(definition.projects === undefined
+      ? {}
+      : { projects: definition.projects }),
+    ...(clientExperienceManifest === undefined
+      ? {}
+      : { clientExperienceManifest }),
     ...(definition.foundationSearch === undefined
       ? {}
       : { foundationSearch: definition.foundationSearch }),
@@ -121,6 +163,42 @@ export function createManagedWebsiteDefinition(
       assets: definition.assets,
     },
   };
+}
+
+/**
+ * Binds the definition's fixed manifest *reference* to the manifest *contents*
+ * the caller loaded from `<input-directory>/experience/manifest.json`.
+ *
+ * The reference is validated as data first, so a definition can never name an
+ * arbitrary path. Supplying manifest contents without a declared reference, or
+ * declaring a reference without supplying contents, is a hard failure rather
+ * than a silent downgrade to the legacy shell.
+ */
+function resolveClientExperienceManifest(
+  definition: ClientWebsiteDefinitionInput,
+  options: GenerateClientWebsiteOptions,
+): unknown {
+  if (definition.clientExperience === undefined) {
+    if (options.clientExperienceManifest !== undefined) {
+      throw new Error(
+        "A client experience manifest was supplied, but the client definition declares no clientExperience reference.",
+      );
+    }
+    return undefined;
+  }
+
+  const reference = validateClientExperienceReference(
+    definition.clientExperience,
+  );
+  if (!reference.success) {
+    throw new Error(formatValidationFailure(reference.issues));
+  }
+  if (options.clientExperienceManifest === undefined) {
+    throw new Error(
+      `Client definition references "${reference.data.manifestPath}", but its contents were not supplied. Load the manifest from the client input directory and pass it as clientExperienceManifest.`,
+    );
+  }
+  return options.clientExperienceManifest;
 }
 
 export function parseDefinitionInput(
@@ -139,7 +217,7 @@ export function parseDefinitionInput(
 
   if (
     !isRecord(input) ||
-    input.schemaVersion !== 1 ||
+    (input.schemaVersion !== 1 && input.schemaVersion !== 2) ||
     !isRecord(input.template) ||
     !Array.isArray(input.modules) ||
     !Array.isArray(input.assets) ||
@@ -147,17 +225,42 @@ export function parseDefinitionInput(
     !("profile" in input)
   ) {
     throw new TypeError(
-      "Client website input must include schemaVersion 1, configuration, profile, template, modules, and assets.",
+      "Client website input must include schemaVersion 1 or 2, configuration, profile, template, modules, and assets.",
+    );
+  }
+
+  const schemaVersion = input.schemaVersion;
+  const authoredFields = ["pageGraph", "projects", "clientExperience"] as const;
+  const supplied = authoredFields.filter(
+    (field) => input[field] !== undefined,
+  );
+
+  if (schemaVersion === 1 && supplied.length > 0) {
+    throw new TypeError(
+      `Legacy client website input uses schemaVersion 1 and cannot contain ${supplied.join(", ")}. Upgrade the complete definition to schemaVersion 2.`,
+    );
+  }
+  if (schemaVersion === 2 && supplied.length !== authoredFields.length) {
+    const missing = authoredFields.filter(
+      (field) => input[field] === undefined,
+    );
+    throw new TypeError(
+      `Client website input with schemaVersion 2 requires ${authoredFields.join(", ")} together. Missing: ${missing.join(", ")}. Partial authored input cannot fall back to the legacy shell.`,
     );
   }
 
   return {
-    schemaVersion: 1,
+    schemaVersion,
     configuration: input.configuration,
     profile: input.profile,
     ...(input.experience === undefined
       ? {}
       : { experience: input.experience }),
+    ...(input.pageGraph === undefined ? {} : { pageGraph: input.pageGraph }),
+    ...(input.projects === undefined ? {} : { projects: input.projects }),
+    ...(input.clientExperience === undefined
+      ? {}
+      : { clientExperience: input.clientExperience }),
     ...(input.foundationSearch === undefined
       ? {}
       : { foundationSearch: input.foundationSearch }),

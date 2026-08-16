@@ -25,6 +25,13 @@ import {
   type ResolvedFoundationSearch,
 } from "./foundation-search.js";
 import {
+  validateWebsiteV2Model,
+  type WebsiteRenderingMode,
+} from "./website-v2-model.js";
+import type { WebsitePageGraph } from "./page-graph.js";
+import type { WebsiteProjectCollection } from "./project-content.js";
+import type { ClientExperienceManifest } from "./client-experience-manifest.js";
+import {
   compareText,
   WebsiteModulePipelineError,
 } from "./module-registry.js";
@@ -46,9 +53,25 @@ import { validateWebsiteProfileContent } from "./profile-content.js";
 import { validateWebsiteConfiguration } from "./index.js";
 
 export interface ManagedWebsiteDefinition {
+  /**
+   * Top-level client definition version. Omitted or 1 selects the legacy
+   * one-page adapter. 2 selects the authored Page Graph model and requires
+   * `pageGraph`, `projects` and `clientExperienceManifest` together.
+   */
+  readonly schemaVersion?: 1 | 2;
   readonly configuration: unknown;
   readonly profile?: unknown;
+  /** v1 finite visual preset. Legacy/provenance path only. */
   readonly experience?: unknown;
+  readonly pageGraph?: unknown;
+  readonly projects?: unknown;
+  /**
+   * The already-loaded authored experience manifest object, never a path. The
+   * raw client definition may only carry the fixed
+   * `experience/manifest.json` reference; the assembler resolves and supplies
+   * the manifest contents here.
+   */
+  readonly clientExperienceManifest?: unknown;
   readonly foundationSearch?: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
@@ -87,6 +110,19 @@ export interface ManagedWebsiteCompositionProvenance {
     experienceVersion: string;
     source: "EXPLICIT" | "LEGACY_PROFILE_DEFAULT";
   }>;
+  /**
+   * Authored experience identity. Source file hashes and the exact resolved
+   * dependency graph are assembly-time facts and are added by the artifact
+   * assembler, not fabricated during pure composition.
+   */
+  readonly clientExperience?: Readonly<{
+    experienceId: string;
+    experienceVersion: string;
+    pageGraphSchemaVersion: number;
+    projectSchemaVersion: number;
+    projectCount: number;
+    routeCount: number;
+  }>;
   readonly foundationSearch: Readonly<{
     mode: "OFF" | "AUTO" | "ON";
     enabled: boolean;
@@ -94,9 +130,14 @@ export interface ManagedWebsiteCompositionProvenance {
 }
 
 export interface ManagedWebsiteComposition {
+  readonly schemaVersion: 1 | 2;
+  readonly renderingMode: WebsiteRenderingMode;
   readonly configuration: ValidatedWebsiteConfiguration;
   readonly profile?: WebsiteProfileContent;
   readonly experience?: ResolvedWebsiteExperience;
+  readonly pageGraph?: WebsitePageGraph;
+  readonly projects?: WebsiteProjectCollection;
+  readonly clientExperience?: ClientExperienceManifest;
   readonly foundationSearch: ResolvedFoundationSearch;
   readonly assetManifest: AssetManifest;
   readonly assets: readonly ResolvedWebsiteImage[];
@@ -128,6 +169,30 @@ export function composeManagedWebsite(
   if (!experienceValidation.success) {
     return experienceValidation;
   }
+
+  // Page Graph, Projects and the authored manifest are validated together and
+  // only after Profile content, so service detail routes can be bound to stable
+  // service IDs. A malformed authored definition fails here; it never degrades
+  // into the legacy shell.
+  const v2Validation = validateWebsiteV2Model({
+    schemaVersion: definition.schemaVersion ?? 1,
+    ...(definition.pageGraph === undefined
+      ? {}
+      : { pageGraph: definition.pageGraph }),
+    ...(definition.projects === undefined
+      ? {}
+      : { projects: definition.projects }),
+    ...(definition.clientExperienceManifest === undefined
+      ? {}
+      : { clientExperienceManifest: definition.clientExperienceManifest }),
+    ...(profileValidation?.data === undefined
+      ? {}
+      : { profile: profileValidation.data }),
+  });
+  if (!v2Validation.success) {
+    return v2Validation;
+  }
+  const authored = v2Validation.data;
 
   const foundationSearchValidation = resolveFoundationSearch(
     definition.foundationSearch,
@@ -174,9 +239,21 @@ export function composeManagedWebsite(
   return {
     success: true,
     data: Object.freeze({
+      schemaVersion: authored === undefined ? (1 as const) : (2 as const),
+      renderingMode:
+        authored === undefined
+          ? ("LEGACY_SHELL" as const)
+          : ("AUTHORED_CLIENT_EXPERIENCE" as const),
       configuration,
       ...(profile === undefined ? {} : { profile }),
       ...(experience === undefined ? {} : { experience }),
+      ...(authored === undefined
+        ? {}
+        : {
+            pageGraph: authored.pageGraph,
+            projects: authored.projects,
+            clientExperience: authored.clientExperienceManifest,
+          }),
       foundationSearch,
       assetManifest,
       assets,
@@ -201,6 +278,19 @@ export function composeManagedWebsite(
                 experienceId: experience.experienceId,
                 experienceVersion: experience.experienceVersion,
                 source: experience.source,
+              }),
+            }),
+        ...(authored === undefined
+          ? {}
+          : {
+              clientExperience: Object.freeze({
+                experienceId: authored.clientExperienceManifest.experienceId,
+                experienceVersion:
+                  authored.clientExperienceManifest.experienceVersion,
+                pageGraphSchemaVersion: authored.pageGraph.schemaVersion,
+                projectSchemaVersion: authored.projects.schemaVersion,
+                projectCount: authored.projects.projects.length,
+                routeCount: authored.pageGraph.pages.length,
               }),
             }),
         foundationSearch: Object.freeze({

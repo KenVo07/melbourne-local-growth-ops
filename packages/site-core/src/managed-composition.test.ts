@@ -780,3 +780,317 @@ describe("composeManagedWebsite", () => {
     expect(JSON.stringify(clientB)).not.toContain("client-a");
   });
 });
+
+function serviceProfileFixture(clientId: string): unknown {
+  const content = profileFixture(clientId) as {
+    sections: Array<Record<string, unknown>>;
+  };
+  content.sections[0]!.items = [
+    {
+      serviceId: "repairs",
+      title: "Repairs",
+      description: "Local repair services.",
+    },
+  ];
+  return content;
+}
+
+function pageGraphFixture(): unknown {
+  const page = (
+    pageId: string,
+    path: string,
+    kind: string,
+    experienceRouteId: string,
+    content: Record<string, unknown>,
+  ) => ({
+    pageId,
+    path,
+    kind,
+    experienceRouteId,
+    title: pageId,
+    metadata: { title: pageId, description: `Route description for ${pageId}.` },
+    content,
+    anchors: [],
+    relatedPageIds: [],
+    search: { include: true },
+  });
+
+  return {
+    schemaVersion: 1,
+    homePageId: "home",
+    pages: [
+      page("home", "/", "HOME", "home", { kind: "STATIC", contentKey: "home" }),
+      page("services", "/services", "SERVICES_INDEX", "services-index", {
+        kind: "SERVICES_INDEX",
+      }),
+      page("repairs", "/services/repairs", "SERVICE_DETAIL", "service-detail", {
+        kind: "SERVICE",
+        serviceId: "repairs",
+      }),
+      page("projects", "/projects", "PROJECTS_INDEX", "projects-index", {
+        kind: "PROJECTS_INDEX",
+      }),
+      page(
+        "project-one",
+        "/projects/project-one",
+        "PROJECT_DETAIL",
+        "project-detail",
+        { kind: "PROJECT", projectId: "project-one" },
+      ),
+    ],
+    navigation: {
+      primary: [
+        {
+          navigationId: "nav-home",
+          label: "Home",
+          target: { kind: "ROUTE", pageId: "home" },
+        },
+        {
+          navigationId: "nav-projects",
+          label: "Projects",
+          target: { kind: "ROUTE", pageId: "projects" },
+        },
+      ],
+      utility: [],
+      footer: [],
+    },
+  };
+}
+
+function projectsFixture(): unknown {
+  return {
+    schemaVersion: 1,
+    projects: [
+      {
+        schemaVersion: 1,
+        projectId: "project-one",
+        slug: "project-one",
+        title: "Project one",
+        summary: "Illustrative demonstration project.",
+        truthMode: "DEMONSTRATION",
+        demonstrationDisclosure:
+          "Concept work created to prove the platform, not completed client work.",
+        serviceIds: ["repairs"],
+        hero: {
+          assetId: "projects/project-one/hero",
+          role: "PROJECT",
+          decorative: false,
+          alt: "Illustrative project hero image",
+          presentation: { aspect: "LANDSCAPE", fit: "COVER" },
+        },
+        gallery: [],
+        facts: [],
+        story: [
+          {
+            blockId: "brief",
+            type: "BRIEF",
+            heading: "Brief",
+            body: "A fictional brief used to prove route and story architecture.",
+            media: [],
+          },
+        ],
+        relatedProjectIds: [],
+      },
+    ],
+  };
+}
+
+function manifestFixture(): unknown {
+  return {
+    schemaVersion: 1,
+    kind: "AUTHORED_CLIENT_EXPERIENCE",
+    experienceId: "reference-contractor",
+    experienceVersion: "1.2.0",
+    entrypoint: "index.tsx",
+    designDnaPath: "design-dna.json",
+    routeIds: [
+      "home",
+      "services-index",
+      "service-detail",
+      "projects-index",
+      "project-detail",
+    ],
+    signatureIds: [],
+    publicDependencies: [],
+    runtime: {
+      clientJavaScript: "NONE",
+      motion: "NONE",
+      reducedMotion: "REQUIRED",
+    },
+  };
+}
+
+function authoredDefinition(
+  clientId: string,
+  overrides: Partial<ManagedWebsiteDefinition> = {},
+): ManagedWebsiteDefinition {
+  return {
+    ...definition(configurationFixture({ clientId, bookingModuleId: `booking-module-${clientId}` })),
+    schemaVersion: 2,
+    profile: serviceProfileFixture(clientId),
+    pageGraph: pageGraphFixture(),
+    projects: projectsFixture(),
+    clientExperienceManifest: manifestFixture(),
+    ...overrides,
+  };
+}
+
+describe("composeManagedWebsite authored client experience", () => {
+  it("keeps an omitted schema version on the legacy shell", () => {
+    const result = composeManagedWebsite(
+      {
+        ...definition(configurationFixture({ clientId: "legacy-client", bookingModuleId: "booking-module-legacy" })),
+        profile: profileFixture("legacy-client"),
+      },
+      registries(),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.schemaVersion).toBe(1);
+    expect(result.data.renderingMode).toBe("LEGACY_SHELL");
+    expect(result.data.pageGraph).toBeUndefined();
+    expect(result.data.projects).toBeUndefined();
+    expect(result.data.clientExperience).toBeUndefined();
+    expect(result.data.provenance).not.toHaveProperty("clientExperience");
+  });
+
+  it("carries the validated page graph, projects and manifest identity", () => {
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client"),
+      registries(),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.schemaVersion).toBe(2);
+    expect(result.data.renderingMode).toBe("AUTHORED_CLIENT_EXPERIENCE");
+    expect(result.data.pageGraph?.pages).toHaveLength(5);
+    expect(result.data.projects?.projects).toHaveLength(1);
+    expect(result.data.clientExperience?.experienceId).toBe(
+      "reference-contractor",
+    );
+    expect(result.data.provenance.clientExperience).toEqual({
+      experienceId: "reference-contractor",
+      experienceVersion: "1.2.0",
+      pageGraphSchemaVersion: 1,
+      projectSchemaVersion: 1,
+      projectCount: 1,
+      routeCount: 5,
+    });
+    expect(Object.isFrozen(result.data.pageGraph)).toBe(true);
+    expect(Object.isFrozen(result.data.projects)).toBe(true);
+    expect(Object.isFrozen(result.data.provenance.clientExperience)).toBe(true);
+  });
+
+  it("records no authored provenance when the definition is legacy", () => {
+    const result = composeManagedWebsite(
+      {
+        ...definition(configurationFixture({ clientId: "legacy-client", bookingModuleId: "booking-module-legacy" })),
+        schemaVersion: 1,
+        profile: profileFixture("legacy-client"),
+        experience: experienceFixture("legacy-client-experience"),
+      },
+      registries(),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.renderingMode).toBe("LEGACY_SHELL");
+    expect(result.data.provenance.experience).toMatchObject({
+      experienceId: "legacy-client-experience",
+    });
+  });
+
+  it("rejects a page graph supplied without an authored manifest", () => {
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client", {
+        clientExperienceManifest: undefined,
+      }),
+      registries(),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.issues[0]?.message).toContain("Partial v2 input");
+  });
+
+  it("rejects an authored manifest supplied without a page graph", () => {
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client", { pageGraph: undefined }),
+      registries(),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.issues[0]?.message).toContain("Partial v2 input");
+  });
+
+  it("rejects authored fields under legacy schemaVersion 1", () => {
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client", { schemaVersion: 1 }),
+      registries(),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.issues[0]?.code).toBe("UNSUPPORTED_SCHEMA_VERSION");
+  });
+
+  it("rejects a route coverage mismatch between graph and manifest", () => {
+    const stale = manifestFixture() as { routeIds: string[] };
+    stale.routeIds = [...stale.routeIds, "unreferenced-route"];
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client", {
+        clientExperienceManifest: stale,
+      }),
+      registries(),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.issues[0]?.message).toContain("unreferenced: unreferenced-route");
+  });
+
+  it("does not fall back to the legacy shell when authored input is malformed", () => {
+    const broken = pageGraphFixture() as {
+      pages: Array<Record<string, unknown>>;
+    };
+    broken.pages[1]!.path = "/";
+    const result = composeManagedWebsite(
+      authoredDefinition("authored-client", { pageGraph: broken }),
+      registries(),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result).not.toHaveProperty("data");
+  });
+
+  it("keeps authored clients isolated through shared registries", async () => {
+    const sharedRegistries = registries();
+    const [clientA, clientB] = await Promise.all([
+      Promise.resolve().then(() =>
+        composeManagedWebsite(
+          authoredDefinition("authored-a"),
+          sharedRegistries,
+        ),
+      ),
+      Promise.resolve().then(() =>
+        composeManagedWebsite(
+          {
+            ...definition(configurationFixture({ clientId: "legacy-b", bookingModuleId: "booking-module-legacy-b" })),
+            profile: profileFixture("legacy-b"),
+          },
+          sharedRegistries,
+        ),
+      ),
+    ]);
+
+    expect(clientA.success && clientA.data.renderingMode).toBe(
+      "AUTHORED_CLIENT_EXPERIENCE",
+    );
+    expect(clientB.success && clientB.data.renderingMode).toBe("LEGACY_SHELL");
+    expect(JSON.stringify(clientB)).not.toContain("project-one");
+  });
+});

@@ -4,21 +4,38 @@ import type {
   PortableImageAssetReference,
 } from "@melbourne-local-growth-ops/asset-pipeline";
 import type {
+  ClientExperienceManifest,
   ManagedWebsiteCompositionRegion,
   ManagedWebsiteCompositionProvenance,
   ResolvedFoundationSearch,
   ResolvedWebsiteExperience,
   ValidatedWebsiteConfiguration,
   WebsiteModuleReference,
+  WebsitePageGraph,
   WebsiteProfileContent,
+  WebsiteProjectCollection,
+  WebsiteRenderingMode,
   WebsiteTemplateReference,
 } from "@melbourne-local-growth-ops/site-core";
 
 export interface ClientWebsiteDefinitionInput {
-  readonly schemaVersion: 1;
+  /**
+   * 1 selects the legacy one-page definition. 2 selects the authored Page Graph
+   * model and requires `pageGraph`, `projects` and `clientExperience` together.
+   */
+  readonly schemaVersion: 1 | 2;
   readonly configuration: unknown;
   readonly profile: unknown;
+  /** v1 finite visual preset. Legacy/provenance path only. */
   readonly experience?: unknown;
+  readonly pageGraph?: unknown;
+  readonly projects?: unknown;
+  /**
+   * Non-executable reference to the fixed `experience/manifest.json` path. The
+   * definition never carries manifest contents, source bytes or an arbitrary
+   * path; the assembler loads the manifest from the client input directory.
+   */
+  readonly clientExperience?: unknown;
   readonly foundationSearch?: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
@@ -32,10 +49,19 @@ export interface ClientRuntimeSecretBinding {
 }
 
 export interface ClientWebsiteSnapshot {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
+  /**
+   * Exactly one rendering path is selected by validation. `LEGACY_SHELL` keeps
+   * the existing one-page `ManagedWebsiteShell`; `AUTHORED_CLIENT_EXPERIENCE`
+   * renders the validated Page Graph through the authored route registry.
+   */
+  readonly renderingMode: WebsiteRenderingMode;
   readonly configuration: ValidatedWebsiteConfiguration;
   readonly profile: WebsiteProfileContent;
   readonly experience?: ResolvedWebsiteExperience;
+  readonly pageGraph?: WebsitePageGraph;
+  readonly projects?: WebsiteProjectCollection;
+  readonly clientExperience?: ClientExperienceManifest;
   readonly foundationSearch: ResolvedFoundationSearch;
   readonly provenance: ManagedWebsiteCompositionProvenance;
   readonly assetManifest: AssetManifest;
