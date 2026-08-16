@@ -147,6 +147,36 @@ export type {
   WebsiteProfileSection,
 } from "./profile-content.js";
 export {
+  WebsiteDesignDnaSchema,
+  WebsiteExperiencePaletteSchema,
+  WebsiteExperienceSchema,
+  WebsiteSignatureReferenceSchema,
+  resolveWebsiteExperience,
+  validateWebsiteExperience,
+} from "./experience.js";
+export type {
+  ResolvedWebsiteExperience,
+  WebsiteDesignDna,
+  WebsiteExperience,
+  WebsiteExperienceSource,
+  WebsiteSignatureReference,
+} from "./experience.js";
+export {
+  FOUNDATION_SEARCH_AUTO_MIN_CHARACTERS,
+  FOUNDATION_SEARCH_AUTO_MIN_SECTION_COUNT,
+  FoundationSearchConfigSchema,
+  projectProfileSearchRecords,
+  resolveFoundationSearch,
+  validateFoundationSearchConfig,
+} from "./foundation-search.js";
+export type {
+  FoundationSearchConfig,
+  FoundationSearchContext,
+  FoundationSearchRecord,
+  FoundationSearchResolutionReason,
+  ResolvedFoundationSearch,
+} from "./foundation-search.js";
+export {
   createWebsiteModuleRegistry,
   WebsiteModulePipelineError,
 } from "./module-registry.js";
