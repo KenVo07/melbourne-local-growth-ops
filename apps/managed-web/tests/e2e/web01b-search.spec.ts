@@ -23,7 +23,7 @@ test("Foundation Search OFF ships no output markup import or request", async ({
     .toBeVisible();
 });
 
-test("enabled search is lazy, keyboard operable, dismissible and lands on a visible anchor", async ({
+test("enabled search is lazy, keyboard operable, dismissible and lands on every indexed anchor", async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -51,15 +51,42 @@ test("enabled search is lazy, keyboard operable, dismissible and lands on a visi
     "No matching public website sections were found.",
   );
 
-  await query.fill("common questions");
-  await query.press("Enter");
-  await expect(dialog.getByRole("status")).toContainText(/results? found/);
-  const result = dialog.getByRole("link", { name: "Frequently Asked Questions" });
-  await expect(result).toHaveAttribute("href", "/#faq");
-  await result.click();
-  await expect(dialogElement).not.toHaveAttribute("open", "");
-  await expect(page.locator("#faq")).toBeVisible();
-  await expect(page.locator("#faq")).toBeFocused();
+  for (const expected of [
+    {
+      query: "residential electrical installation",
+      name: "Illustrative Services & Proposed Coverage",
+      anchor: "services",
+    },
+    {
+      query: "verification checklist",
+      name: "Proposed Verification Checklist",
+      anchor: "trust",
+    },
+    {
+      query: "common questions",
+      name: "Frequently Asked Questions",
+      anchor: "faq",
+    },
+    {
+      query: "request contractor enquiry",
+      name: "Request a Contractor Enquiry",
+      anchor: "contact",
+    },
+  ]) {
+    await query.fill(expected.query);
+    await query.press("Enter");
+    await expect(dialog.getByRole("status")).toContainText(/results? found/);
+    const result = dialog.getByRole("link", { name: expected.name });
+    await expect(result).toHaveAttribute("href", `/#${expected.anchor}`);
+    await result.click();
+    await expect(dialogElement).not.toHaveAttribute("open", "");
+    await expect(page.locator(`#${expected.anchor}`)).toBeVisible();
+    await expect(page.locator(`#${expected.anchor}`)).toBeFocused();
+    if (expected.anchor !== "contact") {
+      await trigger.click();
+      await expect(query).toBeFocused();
+    }
+  }
 
   await trigger.click();
   await expect(query).toBeFocused();

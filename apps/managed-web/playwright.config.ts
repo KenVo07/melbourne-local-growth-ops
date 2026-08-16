@@ -41,6 +41,7 @@ export default defineConfig({
     productionServer("/tmp/proportion-web01b-e2e/contractor-field-guide/source", 3012),
     productionServer("/tmp/proportion-web01b-e2e/restaurant/source", 3013),
     productionServer("/tmp/proportion-web01b-e2e/retailer/source", 3014),
+    productionServer("/tmp/proportion-web01b-e2e/contractor-stress/source", 3015),
   ],
 });
 
