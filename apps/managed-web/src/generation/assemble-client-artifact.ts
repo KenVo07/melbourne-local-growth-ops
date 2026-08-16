@@ -147,9 +147,10 @@ export async function assembleClientSourceArtifact(
     "src/client-website.ts",
     [
       'import type { ManagedWebsiteRuntime } from "./runtime-types";',
+      'import snapshot from "./generated/managed-website.json";',
       "",
-      `const snapshot = ${JSON.stringify(snapshot, null, 2)} as const;`,
-      "const checkedSnapshot: ManagedWebsiteRuntime = snapshot;",
+      "// Assembly validates the canonical JSON before writing this module.",
+      "const checkedSnapshot = snapshot as ManagedWebsiteRuntime;",
       "",
       "export const clientWebsite = checkedSnapshot;",
       "",

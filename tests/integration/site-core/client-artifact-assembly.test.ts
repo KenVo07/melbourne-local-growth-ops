@@ -147,6 +147,14 @@ describe("client source artifact assembly", () => {
         path.startsWith("public/pagefind/"),
       ),
     ).toBe(false);
+    const clientWebsiteModule = await readFile(
+      join(artifact.sourceDirectory, "src", "client-website.ts"),
+      "utf8",
+    );
+    expect(clientWebsiteModule).toContain(
+      'import snapshot from "./generated/managed-website.json";',
+    );
+    expect(clientWebsiteModule).not.toContain('"clientId": "client-a"');
     await expect(unresolvedRelativeRuntimeImports(artifact.sourceDirectory))
       .resolves.toEqual([]);
 

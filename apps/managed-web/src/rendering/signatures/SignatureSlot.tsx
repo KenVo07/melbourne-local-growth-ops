@@ -21,12 +21,14 @@ export function SignatureSlot({
 }: SignatureSlotProps) {
   if (signature === undefined || signature.placement !== placement) return null;
 
-  switch (signature.signatureId) {
-    case "service-area-proof":
-      return (
-        <ServiceAreaProof businessName={businessName} profile={profile} />
-      );
-    default:
-      return null;
+  if (
+    signature.signatureId !== "service-area-proof" ||
+    signature.signatureVersion !== "1.0.0"
+  ) {
+    throw new TypeError(
+      `Unsupported website signature ${signature.signatureId}@${signature.signatureVersion}.`,
+    );
   }
+
+  return <ServiceAreaProof businessName={businessName} profile={profile} />;
 }

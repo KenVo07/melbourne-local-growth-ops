@@ -44,7 +44,8 @@ export interface RuntimeWebsiteExperience {
     };
   };
   readonly signature?: {
-    readonly signatureId: string;
+    readonly signatureId: "service-area-proof";
+    readonly signatureVersion: "1.0.0";
     readonly placement: "AFTER_HERO" | "BEFORE_SECTIONS" | "BEFORE_FOOTER";
   } | undefined;
 }

@@ -53,6 +53,7 @@ const explicitExperience = {
   },
   signature: {
     signatureId: "service-area-proof",
+    signatureVersion: "1.0.0",
     placement: "AFTER_HERO",
   },
 } as const;
@@ -146,6 +147,18 @@ describe("Website Experience", () => {
         }),
       ]),
     );
+  });
+
+  it.each([
+    ["unknown signature IDs", { signatureId: "custom-signature", signatureVersion: "1.0.0" }],
+    ["unknown signature versions", { signatureId: "service-area-proof", signatureVersion: "2.0.0" }],
+  ])("rejects %s instead of silently omitting them", (_label, signature) => {
+    const result = validateWebsiteExperience({
+      ...explicitExperience,
+      signature: { ...signature, placement: "AFTER_HERO" },
+    });
+
+    expect(result.success).toBe(false);
   });
 });
 

@@ -92,7 +92,8 @@ export const WebsiteDesignDnaSchema = z.strictObject({
 });
 
 export const WebsiteSignatureReferenceSchema = z.strictObject({
-  signatureId: boundedId,
+  signatureId: z.literal("service-area-proof"),
+  signatureVersion: z.literal("1.0.0"),
   placement: z.enum(["AFTER_HERO", "BEFORE_SECTIONS", "BEFORE_FOOTER"]),
 });
 

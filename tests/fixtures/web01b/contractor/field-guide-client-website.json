@@ -323,6 +323,7 @@
     },
     "signature": {
       "signatureId": "service-area-proof",
+      "signatureVersion": "1.0.0",
       "placement": "AFTER_HERO"
     }
   }
