@@ -75,7 +75,7 @@ const forbiddenJsxTags = new Set([
   "form",
 ]);
 
-/** Identifiers that reach the network directly, called or constructed. */
+/** Identifiers that reach the network directly, however they are referenced. */
 const networkIdentifiers = new Set([
   "fetch",
   "WebSocket",
@@ -84,6 +84,19 @@ const networkIdentifiers = new Set([
   "Worker",
   "SharedWorker",
   "importScripts",
+  "sendBeacon",
+  "serviceWorker",
+  // `new Image().src = "https://…"` is a classic beacon that never calls fetch.
+  "Image",
+  "Audio",
+]);
+
+/** Dynamic code execution, however it is referenced. */
+const executionIdentifiers = new Set([
+  "eval",
+  "require",
+  "Function",
+  "execScript",
 ]);
 
 /** Persistent browser state the authored layer must not own. */
@@ -95,12 +108,50 @@ const browserStateIdentifiers = new Set([
   "caches",
 ]);
 
-/** Property names that assign unescaped markup. */
+/** Environment and host access with no legitimate authored use. */
+const environmentIdentifiers = new Set(["process"]);
+
+/** Property names and calls that inject unescaped markup. */
 const unsafeMarkupProperties = new Set([
   "innerHTML",
   "outerHTML",
   "insertAdjacentHTML",
   "dangerouslySetInnerHTML",
+  "createContextualFragment",
+  "write",
+  "writeln",
+]);
+
+/**
+ * Every identifier that is refused in *any* reference position, not only when
+ * called. Checking call position alone is defeated by a single cast, an alias
+ * or a computed string property.
+ */
+const forbiddenReferenceNames = new Map<
+  string,
+  ClientExperienceSourcePolicyErrorCode
+>([
+  ...[...environmentIdentifiers].map(
+    (name) => [name, "ENVIRONMENT_ACCESS_FORBIDDEN"] as const,
+  ),
+  ...[...executionIdentifiers].map(
+    (name) => [name, "EXECUTION_PRIMITIVE_FORBIDDEN"] as const,
+  ),
+  ...[...networkIdentifiers].map(
+    (name) => [name, "NETWORK_ACCESS_FORBIDDEN"] as const,
+  ),
+  ...[...browserStateIdentifiers].map(
+    (name) => [name, "BROWSER_STATE_FORBIDDEN"] as const,
+  ),
+]);
+
+/** JSX factory functions whose first argument names the element to create. */
+const elementFactories = new Set([
+  "createElement",
+  "jsx",
+  "jsxs",
+  "jsxDEV",
+  "createContextualFragment",
 ]);
 
 export type ClientExperienceSourcePolicyErrorCode =
@@ -273,7 +324,9 @@ interface RecursiveSourceFile {
 async function recursiveFiles(
   directory: string,
   root: string,
+  rootDevice?: number,
 ): Promise<RecursiveSourceFile[]> {
+  const device = rootDevice ?? (await lstat(root)).dev;
   const entries = await readdir(directory, { withFileTypes: true });
   const result: RecursiveSourceFile[] = [];
   for (const entry of entries.sort((left, right) =>
@@ -291,13 +344,29 @@ async function recursiveFiles(
     }
     assertInsideRoot(absolutePath, root, relativePath);
     if (stats.isDirectory()) {
-      result.push(...(await recursiveFiles(absolutePath, root)));
+      result.push(...(await recursiveFiles(absolutePath, root, device)));
       continue;
     }
     if (!stats.isFile()) {
       throw new ClientExperienceSourcePolicyError(
         "FILE_TYPE_FORBIDDEN",
         `Client experience source entry "${relativePath}" is not a regular file.`,
+        { path: relativePath },
+      );
+    }
+    // A hardlink is indistinguishable from a regular file to lstat, so it would
+    // otherwise smuggle a file from outside the root into the artifact.
+    if (stats.nlink > 1) {
+      throw new ClientExperienceSourcePolicyError(
+        "SYMLINK_FORBIDDEN",
+        `Client experience source file "${relativePath}" is a hard link. Authored source must contain only regular single-linked files.`,
+        { path: relativePath, detail: { links: stats.nlink } },
+      );
+    }
+    if (stats.dev !== device) {
+      throw new ClientExperienceSourcePolicyError(
+        "PATH_ESCAPE",
+        `Client experience source file "${relativePath}" lives on a different device than its source root.`,
         { path: relativePath },
       );
     }
@@ -337,6 +406,7 @@ function inspectTypeScriptSource(
       errorRecovery: false,
       plugins: [
         "typescript",
+        "decorators",
         ...(relativePath.endsWith(".tsx") ? (["jsx"] as const) : []),
       ],
     }).program as unknown as AstNode;
@@ -356,20 +426,35 @@ function inspectTypeScriptSource(
   }
 
   let clientRuntime = false;
+  // A tag name can be smuggled through a variable: `const Tag = "iframe"`.
+  // Collect string-literal bindings up front so a JSX tag or element factory
+  // that resolves to a forbidden intrinsic element is still refused.
+  const stringBindings = collectStringBindings(program);
 
-  const visit = (node: AstNode): void => {
+  const visit = (node: AstNode, parent: AstNode | undefined): void => {
     switch (node.type) {
       // Babel collects directive prologues into `.directives`, so a `use server`
-      // inside a function body is caught here as well as at module scope.
+      // inside a function body is caught here as well as at module scope. The
+      // cooked value is used because Babel keeps escapes raw in `value.value`,
+      // so `"use serve\u0072"` would otherwise read as a different string.
       case "Directive": {
-        const value = (node.value as { value?: unknown } | undefined)?.value;
-        if (value === "use client") clientRuntime = true;
-        if (value === "use server") {
+        const literal = node.value;
+        const cooked = isNode(literal)
+          ? ((literal.extra as { expressionValue?: unknown } | undefined)
+              ?.expressionValue ?? literal.value)
+          : undefined;
+        if (cooked === "use server") {
           throw new ClientExperienceSourcePolicyError(
             "EXECUTION_PRIMITIVE_FORBIDDEN",
             `Client experience source "${relativePath}" cannot declare use server.`,
             { path: relativePath },
           );
+        }
+        // Only a module-scope directive makes a file a client component; React
+        // ignores one nested in a function body, so honouring it would
+        // mis-describe the artifact.
+        if (cooked === "use client" && parent === program) {
+          clientRuntime = true;
         }
         break;
       }
@@ -411,7 +496,6 @@ function inspectTypeScriptSource(
 
       case "TSImportType":
       case "TSExternalModuleReference": {
-        // `import("x")` in type position and `import x = require("y")`.
         throw new ClientExperienceSourcePolicyError(
           "IMPORT_FORBIDDEN",
           `Client experience source "${relativePath}" cannot use import-equals or import type expressions; use a static import declaration.`,
@@ -419,30 +503,38 @@ function inspectTypeScriptSource(
         );
       }
 
+      case "MetaProperty": {
+        throw new ClientExperienceSourcePolicyError(
+          "ENVIRONMENT_ACCESS_FORBIDDEN",
+          `Client experience source "${relativePath}" cannot read import.meta.`,
+          { path: relativePath },
+        );
+      }
+
       case "CallExpression":
       case "NewExpression": {
-        const callee = node.callee;
+        const callee = unwrapExpression(node.callee);
         if (!isNode(callee)) break;
         const name = calleeName(callee);
-        if (name === undefined) break;
-        if (["eval", "require", "Function", "execScript"].includes(name)) {
+        if (name !== undefined && elementFactories.has(name)) {
+          assertSafeElementFactory(node, name, relativePath, stringBindings);
+        }
+        // `setTimeout("code", 0)` is string eval by another name.
+        if (
+          (name === "setTimeout" || name === "setInterval") &&
+          isStringish(firstArgument(node))
+        ) {
           throw new ClientExperienceSourcePolicyError(
             "EXECUTION_PRIMITIVE_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot use ${name}. Dynamic code execution is not available to authored client source.`,
+            `Client experience source "${relativePath}" cannot pass a string body to ${name}.`,
             { path: relativePath },
           );
         }
-        if (networkIdentifiers.has(name) || name === "sendBeacon") {
+        // `({}).constructor.constructor("…")` reaches Function without naming it.
+        if (name === "constructor") {
           throw new ClientExperienceSourcePolicyError(
-            "NETWORK_ACCESS_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot perform direct network I/O via ${name}. Use a reviewed Platform module or integration boundary.`,
-            { path: relativePath },
-          );
-        }
-        if (unsafeMarkupProperties.has(name)) {
-          throw new ClientExperienceSourcePolicyError(
-            "UNSAFE_MARKUP_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot call ${name}.`,
+            "EXECUTION_PRIMITIVE_FORBIDDEN",
+            `Client experience source "${relativePath}" cannot invoke a constructor property; it reaches dynamic code execution.`,
             { path: relativePath },
           );
         }
@@ -450,38 +542,29 @@ function inspectTypeScriptSource(
       }
 
       case "Identifier": {
-        const name = node.name;
-        // `process` has no legitimate use in authored client source, so every
-        // reference is refused rather than only the `process.env` shapes.
-        if (name === "process") {
-          throw new ClientExperienceSourcePolicyError(
-            "ENVIRONMENT_ACCESS_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot reference process. Use validated public inputs or a Platform-owned module boundary.`,
-            { path: relativePath },
-          );
-        }
-        if (typeof name === "string" && browserStateIdentifiers.has(name)) {
-          throw new ClientExperienceSourcePolicyError(
-            "BROWSER_STATE_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot access ${name}. Persistent browser state is not owned by the authored layer.`,
-            { path: relativePath },
-          );
-        }
+        // Only a genuine reference counts. A property name or an object key
+        // that happens to read `process` is ordinary client content, and
+        // refusing it would make a "Our process" section unauthorable.
+        if (!isReferencePosition(node, parent)) break;
+        assertAllowedReference(node.name, relativePath);
         break;
       }
 
       case "MemberExpression":
       case "OptionalMemberExpression": {
-        const property = node.property;
-        const propertyName = isNode(property)
-          ? typeof property.name === "string"
-            ? property.name
-            : typeof property.value === "string"
-              ? property.value
-              : undefined
-          : undefined;
+        const propertyName = staticPropertyName(node);
         if (propertyName === undefined) break;
-        if (propertyName === "cookie" && expressionMentions(node.object, "document")) {
+        // Reaching a forbidden name *through a global container* is the same as
+        // naming it: `globalThis["process"]`, `window.localStorage`,
+        // `globalThis.eval`. An ordinary property access such as
+        // `studio.process` is client content and stays authorable.
+        if (isGlobalContainer(node.object)) {
+          assertAllowedReference(propertyName, relativePath);
+        }
+        if (
+          propertyName === "cookie" &&
+          expressionMentions(node.object, "document")
+        ) {
           throw new ClientExperienceSourcePolicyError(
             "BROWSER_STATE_FORBIDDEN",
             `Client experience source "${relativePath}" cannot read or write document cookies.`,
@@ -491,7 +574,14 @@ function inspectTypeScriptSource(
         if (unsafeMarkupProperties.has(propertyName)) {
           throw new ClientExperienceSourcePolicyError(
             "UNSAFE_MARKUP_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot assign ${propertyName}. Use typed content and reviewed Platform primitives.`,
+            `Client experience source "${relativePath}" cannot use ${propertyName}. Use typed content and reviewed Platform primitives.`,
+            { path: relativePath },
+          );
+        }
+        if (networkIdentifiers.has(propertyName)) {
+          throw new ClientExperienceSourcePolicyError(
+            "NETWORK_ACCESS_FORBIDDEN",
+            `Client experience source "${relativePath}" cannot reach ${propertyName}. Use a reviewed Platform module or integration boundary.`,
             { path: relativePath },
           );
         }
@@ -500,6 +590,19 @@ function inspectTypeScriptSource(
 
       case "JSXAttribute": {
         const attributeName = isNode(node.name) ? node.name.name : undefined;
+        if (
+          typeof attributeName === "string" &&
+          urlValuedNames.has(attributeName)
+        ) {
+          const candidate = staticStringValue(node.value);
+          if (candidate !== undefined && isDangerousUrlValue(candidate)) {
+            throw new ClientExperienceSourcePolicyError(
+              "UNSAFE_URL_FORBIDDEN",
+              `Client experience source "${relativePath}" sets ${attributeName} to an executable or remote-code URL.`,
+              { path: relativePath },
+            );
+          }
+        }
         if (
           typeof attributeName === "string" &&
           unsafeMarkupProperties.has(attributeName)
@@ -513,15 +616,9 @@ function inspectTypeScriptSource(
         break;
       }
 
-      case "ObjectProperty": {
-        const key = node.key;
-        const keyName = isNode(key)
-          ? typeof key.name === "string"
-            ? key.name
-            : typeof key.value === "string"
-              ? key.value
-              : undefined
-          : undefined;
+      case "ObjectProperty":
+      case "ObjectMethod": {
+        const keyName = staticKeyName(node);
         if (keyName !== undefined && unsafeMarkupProperties.has(keyName)) {
           throw new ClientExperienceSourcePolicyError(
             "UNSAFE_MARKUP_FORBIDDEN",
@@ -529,24 +626,30 @@ function inspectTypeScriptSource(
             { path: relativePath },
           );
         }
+        if (keyName !== undefined && urlValuedNames.has(keyName)) {
+          const candidate = staticStringValue(node.value);
+          if (candidate !== undefined && isDangerousUrlValue(candidate)) {
+            throw new ClientExperienceSourcePolicyError(
+              "UNSAFE_URL_FORBIDDEN",
+              `Client experience source "${relativePath}" sets ${keyName} to an executable or remote-code URL.`,
+              { path: relativePath },
+            );
+          }
+        }
+        // `const { fetch: send } = window` aliases a forbidden global.
+        if (
+          parent?.type === "ObjectPattern" &&
+          keyName !== undefined &&
+          forbiddenReferenceNames.has(keyName)
+        ) {
+          assertAllowedReference(keyName, relativePath);
+        }
         break;
       }
 
-      case "JSXOpeningElement": {
-        const tag = jsxTagName(node.name);
-        // Lowercase names are intrinsic DOM elements. Component references such
-        // as `platform.Link` or `ProjectReveal` are not intrinsic and are fine.
-        if (
-          tag !== undefined &&
-          tag === tag.toLowerCase() &&
-          forbiddenJsxTags.has(tag)
-        ) {
-          throw new ClientExperienceSourcePolicyError(
-            "UNSAFE_MARKUP_FORBIDDEN",
-            `Client experience source "${relativePath}" cannot render a raw <${tag}> element. Use the sanctioned Platform primitive so route, media and markup validation is not bypassed.`,
-            { path: relativePath, detail: { tag } },
-          );
-        }
+      case "JSXOpeningElement":
+      case "JSXSelfClosingElement": {
+        assertSafeJsxTag(node.name, relativePath, stringBindings);
         break;
       }
 
@@ -562,6 +665,31 @@ function inspectTypeScriptSource(
         break;
       }
 
+      case "TemplateElement": {
+        const cooked = (node.value as { cooked?: unknown } | undefined)?.cooked;
+        if (typeof cooked === "string" && isDangerousUrl(cooked)) {
+          throw new ClientExperienceSourcePolicyError(
+            "UNSAFE_URL_FORBIDDEN",
+            `Client experience source "${relativePath}" contains an executable or remote-code URL.`,
+            { path: relativePath },
+          );
+        }
+        break;
+      }
+
+      case "BinaryExpression": {
+        // Fold simple string concatenation so a split scheme is still caught.
+        const folded = foldStringConcatenation(node);
+        if (folded !== undefined && isDangerousUrl(folded)) {
+          throw new ClientExperienceSourcePolicyError(
+            "UNSAFE_URL_FORBIDDEN",
+            `Client experience source "${relativePath}" builds an executable or remote-code URL by concatenation.`,
+            { path: relativePath },
+          );
+        }
+        break;
+      }
+
       default:
         break;
     }
@@ -570,15 +698,55 @@ function inspectTypeScriptSource(
       if (key === "loc" || key === "extra" || key.endsWith("Comments")) continue;
       const child = node[key];
       if (Array.isArray(child)) {
-        for (const item of child) if (isNode(item)) visit(item);
+        for (const item of child) if (isNode(item)) visit(item, node);
       } else if (isNode(child)) {
-        visit(child);
+        visit(child, node);
       }
     }
   };
 
-  visit(program);
+  function assertAllowedReference(
+    name: unknown,
+    filePath: string,
+  ): void {
+    if (typeof name !== "string") return;
+    const code = forbiddenReferenceNames.get(name);
+    if (code === undefined) return;
+    throw new ClientExperienceSourcePolicyError(
+      code,
+      `Client experience source "${filePath}" cannot reference ${name}. Consume validated public inputs and Platform primitives instead.`,
+      { path: filePath },
+    );
+  }
+
+  visit(program, undefined);
   return clientRuntime;
+}
+
+/** Strips casts and sequence wrappers so `(eval as any)(...)` still names eval. */
+function unwrapExpression(value: unknown): unknown {
+  let current = value;
+  while (isNode(current)) {
+    if (
+      current.type === "TSAsExpression" ||
+      current.type === "TSSatisfiesExpression" ||
+      current.type === "TSNonNullExpression" ||
+      current.type === "TSTypeAssertion" ||
+      current.type === "TSInstantiationExpression" ||
+      current.type === "ParenthesizedExpression"
+    ) {
+      current = current.expression;
+      continue;
+    }
+    if (current.type === "SequenceExpression") {
+      const expressions = current.expressions;
+      if (!Array.isArray(expressions) || expressions.length === 0) return current;
+      current = expressions.at(-1);
+      continue;
+    }
+    return current;
+  }
+  return current;
 }
 
 /** Resolves the simple name of a callee, including `globalThis.eval` forms. */
@@ -587,14 +755,283 @@ function calleeName(callee: AstNode): string | undefined {
     return callee.name;
   }
   if (
-    (callee.type === "MemberExpression" ||
-      callee.type === "OptionalMemberExpression") &&
-    isNode(callee.property)
+    callee.type === "MemberExpression" ||
+    callee.type === "OptionalMemberExpression"
   ) {
-    const property = callee.property;
-    if (typeof property.name === "string") return property.name;
-    if (typeof property.value === "string") return property.value;
+    return staticPropertyName(callee);
   }
+  return undefined;
+}
+
+/** The statically known property name of a member expression, if any. */
+function staticPropertyName(node: AstNode): string | undefined {
+  const property = node.property;
+  if (!isNode(property)) return undefined;
+  if (node.computed === true) {
+    return typeof property.value === "string" ? property.value : undefined;
+  }
+  return typeof property.name === "string" ? property.name : undefined;
+}
+
+/** The statically known key name of an object property or method. */
+function staticKeyName(node: AstNode): string | undefined {
+  const key = node.key;
+  if (!isNode(key)) return undefined;
+  if (node.computed === true) {
+    return typeof key.value === "string" ? key.value : undefined;
+  }
+  if (typeof key.name === "string") return key.name;
+  return typeof key.value === "string" ? key.value : undefined;
+}
+
+/**
+ * True when an identifier is used as a value rather than as a label.
+ *
+ * A non-computed member property or object key that happens to read `process`
+ * is ordinary client content — a Contractor site with an "Our process" section
+ * must remain authorable — so those positions are not references.
+ */
+function isReferencePosition(
+  node: AstNode,
+  parent: AstNode | undefined,
+): boolean {
+  if (parent === undefined) return true;
+  if (
+    (parent.type === "MemberExpression" ||
+      parent.type === "OptionalMemberExpression") &&
+    parent.property === node &&
+    parent.computed !== true
+  ) {
+    return false;
+  }
+  if (
+    (parent.type === "ObjectProperty" ||
+      parent.type === "ObjectMethod" ||
+      parent.type === "ClassProperty" ||
+      parent.type === "ClassMethod" ||
+      parent.type === "TSPropertySignature") &&
+    parent.key === node &&
+    parent.computed !== true
+  ) {
+    return false;
+  }
+  if (parent.type === "JSXAttribute" && parent.name === node) return false;
+  if (
+    (parent.type === "ImportSpecifier" ||
+      parent.type === "ExportSpecifier") &&
+    parent.imported === node
+  ) {
+    return false;
+  }
+  // A local binding that merely shadows the name is not a reference to the
+  // global, but treating it as one keeps the policy fail-closed and the name
+  // available for content is preserved by the label positions above.
+  return true;
+}
+
+/**
+ * Objects that expose the global scope. A property read through one of these is
+ * equivalent to naming the global directly.
+ */
+const globalContainers = new Set([
+  "globalThis",
+  "window",
+  "self",
+  "top",
+  "parent",
+  "frames",
+  "navigator",
+  "document",
+]);
+
+function isGlobalContainer(expression: unknown): boolean {
+  const node = unwrapExpression(expression);
+  if (!isNode(node)) return false;
+  if (node.type === "Identifier") {
+    return typeof node.name === "string" && globalContainers.has(node.name);
+  }
+  if (
+    node.type === "MemberExpression" ||
+    node.type === "OptionalMemberExpression"
+  ) {
+    const name = staticPropertyName(node);
+    return (
+      (name !== undefined && globalContainers.has(name)) ||
+      isGlobalContainer(node.object)
+    );
+  }
+  return false;
+}
+
+function firstArgument(node: AstNode): unknown {
+  const args = node.arguments;
+  return Array.isArray(args) ? args[0] : undefined;
+}
+
+function isStringish(value: unknown): boolean {
+  if (!isNode(value)) return false;
+  return value.type === "StringLiteral" || value.type === "TemplateLiteral";
+}
+
+/**
+ * Refuses `createElement("script", …)` and the jsx-runtime equivalents. A
+ * non-literal element name cannot be proven safe, so it is refused too.
+ */
+function assertSafeElementFactory(
+  node: AstNode,
+  factory: string,
+  relativePath: string,
+  stringBindings: ReadonlyMap<string, string>,
+): void {
+  if (factory === "createContextualFragment") {
+    throw new ClientExperienceSourcePolicyError(
+      "UNSAFE_MARKUP_FORBIDDEN",
+      `Client experience source "${relativePath}" cannot build markup with createContextualFragment.`,
+      { path: relativePath },
+    );
+  }
+  const first = unwrapExpression(firstArgument(node));
+  if (!isNode(first)) return;
+  if (first.type === "StringLiteral") {
+    const tag = String(first.value).toLowerCase();
+    if (forbiddenJsxTags.has(tag)) {
+      throw new ClientExperienceSourcePolicyError(
+        "UNSAFE_MARKUP_FORBIDDEN",
+        `Client experience source "${relativePath}" cannot create a raw <${tag}> element through ${factory}. Use the sanctioned Platform primitive.`,
+        { path: relativePath, detail: { tag, factory } },
+      );
+    }
+    return;
+  }
+  if (first.type === "Identifier" && typeof first.name === "string") {
+    const bound = stringBindings.get(first.name);
+    throw new ClientExperienceSourcePolicyError(
+      "UNSAFE_MARKUP_FORBIDDEN",
+      bound === undefined
+        ? `Client experience source "${relativePath}" cannot pass a non-literal element name to ${factory}; the rendered element cannot be proven safe.`
+        : `Client experience source "${relativePath}" cannot create a raw <${bound}> element through ${factory}.`,
+      { path: relativePath, detail: { factory } },
+    );
+  }
+  if (first.type === "TemplateLiteral") {
+    throw new ClientExperienceSourcePolicyError(
+      "UNSAFE_MARKUP_FORBIDDEN",
+      `Client experience source "${relativePath}" cannot pass a non-literal element name to ${factory}; the rendered element cannot be proven safe.`,
+      { path: relativePath, detail: { factory } },
+    );
+  }
+}
+
+/**
+ * Refuses forbidden intrinsic elements and any tag name that is not a plain
+ * identifier, because a member, namespaced or variable tag cannot be proven to
+ * resolve to a component rather than to a raw element.
+ */
+function assertSafeJsxTag(
+  name: unknown,
+  relativePath: string,
+  stringBindings: ReadonlyMap<string, string>,
+): void {
+  if (!isNode(name)) return;
+  if (name.type === "JSXIdentifier") {
+    const tag = typeof name.name === "string" ? name.name : "";
+    // A capitalised name is normally a component reference, but it can be a
+    // variable holding an intrinsic tag name.
+    if (tag !== tag.toLowerCase()) {
+      const bound = stringBindings.get(tag);
+      if (bound !== undefined && forbiddenJsxTags.has(bound)) {
+        throw new ClientExperienceSourcePolicyError(
+          "UNSAFE_MARKUP_FORBIDDEN",
+          `Client experience source "${relativePath}" cannot render a raw <${bound}> element through the variable tag "${tag}".`,
+          { path: relativePath, detail: { tag: bound } },
+        );
+      }
+      return;
+    }
+    if (forbiddenJsxTags.has(tag)) {
+      throw new ClientExperienceSourcePolicyError(
+        "UNSAFE_MARKUP_FORBIDDEN",
+        `Client experience source "${relativePath}" cannot render a raw <${tag}> element. Use the sanctioned Platform primitive so route, media and markup validation is not bypassed.`,
+        { path: relativePath, detail: { tag } },
+      );
+    }
+    return;
+  }
+  if (name.type === "JSXNamespacedName") {
+    throw new ClientExperienceSourcePolicyError(
+      "UNSAFE_MARKUP_FORBIDDEN",
+      `Client experience source "${relativePath}" cannot render a namespaced JSX element.`,
+      { path: relativePath },
+    );
+  }
+  // JSXMemberExpression such as <H.a> or <this.Foo> resolves at runtime.
+  if (name.type === "JSXMemberExpression") {
+    const property = name.property;
+    const tag =
+      isNode(property) && typeof property.name === "string"
+        ? property.name
+        : "";
+    if (tag === tag.toLowerCase() && forbiddenJsxTags.has(tag)) {
+      throw new ClientExperienceSourcePolicyError(
+        "UNSAFE_MARKUP_FORBIDDEN",
+        `Client experience source "${relativePath}" cannot render a raw <${tag}> element through a member expression.`,
+        { path: relativePath, detail: { tag } },
+      );
+    }
+  }
+}
+
+/**
+ * Collects `const X = "literal"` bindings anywhere in the file, so a tag name
+ * held in a variable can still be resolved to the element it would render.
+ */
+function collectStringBindings(program: AstNode): ReadonlyMap<string, string> {
+  const bindings = new Map<string, string>();
+  const walk = (node: AstNode): void => {
+    if (node.type === "VariableDeclarator") {
+      const id = node.id;
+      const init = unwrapExpression(node.init);
+      if (
+        isNode(id) &&
+        id.type === "Identifier" &&
+        typeof id.name === "string" &&
+        isNode(init) &&
+        init.type === "StringLiteral" &&
+        typeof init.value === "string"
+      ) {
+        bindings.set(id.name, init.value.toLowerCase());
+      }
+    }
+    for (const key of Object.keys(node)) {
+      if (key === "loc" || key === "extra" || key.endsWith("Comments")) continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        for (const item of child) if (isNode(item)) walk(item);
+      } else if (isNode(child)) {
+        walk(child);
+      }
+    }
+  };
+  walk(program);
+  return bindings;
+}
+
+/** Folds `"a" + "b"` so a split URL scheme is still detected. */
+function foldStringConcatenation(node: AstNode): string | undefined {
+  if (node.operator !== "+") return undefined;
+  const left = literalString(node.left);
+  const right = literalString(node.right);
+  if (left === undefined || right === undefined) return undefined;
+  return `${left}${right}`;
+}
+
+function literalString(value: unknown): string | undefined {
+  const node = unwrapExpression(value);
+  if (!isNode(node)) return undefined;
+  if (node.type === "StringLiteral" && typeof node.value === "string") {
+    return node.value;
+  }
+  if (node.type === "BinaryExpression") return foldStringConcatenation(node);
   return undefined;
 }
 
@@ -614,21 +1051,83 @@ function expressionMentions(expression: unknown, identifier: string): boolean {
   return false;
 }
 
-function jsxTagName(name: unknown): string | undefined {
-  if (!isNode(name)) return undefined;
-  if (name.type === "JSXIdentifier" && typeof name.name === "string") {
-    return name.name;
-  }
-  return undefined;
+// eslint-disable-next-line no-control-regex -- scheme obfuscation uses these
+const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/g;
+
+/** Attribute and property names whose value a browser resolves as a URL. */
+const urlValuedNames = new Set([
+  "href",
+  "src",
+  "srcset",
+  "action",
+  "formaction",
+  "poster",
+  "data",
+  "cite",
+  "background",
+  "ping",
+  "xlinkHref",
+  "xlink:href",
+]);
+
+/**
+ * Normalises a candidate URL the way a browser would before resolving a scheme:
+ * control characters, tabs and newlines are ignored anywhere in the value.
+ * Spaces and hyphens are preserved because both are meaningful.
+ */
+function normalizeUrlCandidate(value: string): string {
+  return value.replaceAll(CONTROL_CHARACTERS, "").trim().toLowerCase();
 }
 
+/**
+ * A value that is unambiguously an executable or remote-code URL, wherever it
+ * appears. A scheme is only real when nothing separates it from its body, so
+ * ordinary prose such as "JavaScript: The Good Parts" is not matched.
+ */
 function isDangerousUrl(value: string): boolean {
-  const normalized = value.trim().toLowerCase().replaceAll(/[\s -]/g, "");
+  const normalized = normalizeUrlCandidate(value);
+  return (
+    /^(?:javascript|vbscript):\S/.test(normalized) ||
+    normalized.startsWith("data:text/html")
+  );
+}
+
+/**
+ * The stricter test applied in a position a browser will resolve as a URL. Here
+ * even a spaced scheme is refused, because no legitimate href begins that way.
+ */
+function isDangerousUrlValue(value: string): boolean {
+  const normalized = normalizeUrlCandidate(value);
   return (
     normalized.startsWith("javascript:") ||
     normalized.startsWith("vbscript:") ||
     normalized.startsWith("data:text/html")
   );
+}
+
+/** Reads a statically known string from a literal, template or concatenation. */
+function staticStringValue(value: unknown): string | undefined {
+  const node = unwrapExpression(value);
+  if (!isNode(node)) return undefined;
+  if (node.type === "StringLiteral" && typeof node.value === "string") {
+    return node.value;
+  }
+  if (node.type === "JSXExpressionContainer") {
+    return staticStringValue(node.expression);
+  }
+  if (node.type === "TemplateLiteral") {
+    const quasis = node.quasis;
+    if (!Array.isArray(quasis)) return undefined;
+    return quasis
+      .map((quasi) =>
+        isNode(quasi)
+          ? String((quasi.value as { cooked?: unknown } | undefined)?.cooked ?? "")
+          : "",
+      )
+      .join("");
+  }
+  if (node.type === "BinaryExpression") return foldStringConcatenation(node);
+  return undefined;
 }
 
 function validateImportSpecifier(
@@ -658,6 +1157,25 @@ function validateImportSpecifier(
       );
     }
     return;
+  }
+
+  // A bare specifier must name a package and an ordinary subpath. Segments such
+  // as `motion/../next/link` resolve out of the package and out of the source
+  // root, which would defeat both the deny-list and root confinement.
+  const segments = specifier.split("/");
+  if (
+    segments.some(
+      (segment, index) =>
+        segment === "." ||
+        segment === ".." ||
+        (segment === "" && index !== segments.length - 1),
+    )
+  ) {
+    throw forbiddenImport(
+      sourcePath,
+      specifier,
+      "A bare import specifier cannot contain path traversal segments.",
+    );
   }
 
   const packageRoot = packageNameFor(specifier);
@@ -690,26 +1208,85 @@ function validateImportSpecifier(
   }
 }
 
+/**
+ * Normalises a stylesheet before pattern matching.
+ *
+ * CSS ident-sequences accept hex escapes, so `@\69 mport` and `u\72 l(` are
+ * honoured by a real CSS parser while a naive regex misses them. Comments are
+ * removed first so prose inside a comment is not mistaken for a rule.
+ */
+function normalizeCssForInspection(sourceText: string): string {
+  const withoutComments = sourceText.replaceAll(/\/\*[\s\S]*?\*\//g, " ");
+  return withoutComments.replaceAll(
+    /\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g,
+    (_match, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)),
+  );
+}
+
+/**
+ * Remote-resource forms that are refused. `url()` is the obvious one, but
+ * `image-set()` and `src()` both accept a bare string URL, so banning only
+ * `url(` leaves an un-reviewed third-party request open.
+ */
+const cssResourceFunctions = /\b(?:url|image-set|-webkit-image-set|src)\s*\(/i;
+
+/**
+ * Resource references a premium authored experience legitimately needs, which
+ * carry no third-party request: self-hosted fonts under the client's own public
+ * directory, and inline SVG data URIs used for masks, gradients and ornament.
+ */
+const allowedCssResource =
+  /^(?:\/fonts\/[A-Za-z0-9._/-]+|data:image\/svg\+xml[,;][^"')]*)$/i;
+
 function inspectCssSource(sourceText: string, relativePath: string): void {
-  if (/@import\b/i.test(sourceText)) {
+  const normalized = normalizeCssForInspection(sourceText);
+
+  if (/@import\b/i.test(normalized)) {
     throw new ClientExperienceSourcePolicyError(
       "CSS_RESOURCE_REFERENCE_FORBIDDEN",
       `Client experience stylesheet "${relativePath}" cannot use @import. Import local CSS from TypeScript so every file is inspected explicitly.`,
       { path: relativePath },
     );
   }
-  if (/url\s*\(/i.test(sourceText)) {
+
+  for (const match of normalized.matchAll(
+    /\b(url|image-set|-webkit-image-set|src)\s*\(([^)]*)\)/gi,
+  )) {
+    const rawArguments = match[2] ?? "";
+    const references = [...rawArguments.matchAll(/"([^"]*)"|'([^']*)'|([^\s,]+)/g)]
+      .map((reference) => reference[1] ?? reference[2] ?? reference[3] ?? "")
+      .map((reference) => reference.trim())
+      .filter((reference) => reference.length > 0 && !/^\d/.test(reference));
+    const offending = references.find(
+      (reference) => !allowedCssResource.test(reference),
+    );
+    if (offending !== undefined) {
+      throw new ClientExperienceSourcePolicyError(
+        "CSS_RESOURCE_REFERENCE_FORBIDDEN",
+        `Client experience stylesheet "${relativePath}" cannot reference "${offending}" through ${match[1]}(). Render validated client media through PlatformImage; only self-hosted /fonts/ files and inline SVG data URIs are permitted.`,
+        { path: relativePath, detail: { reference: offending } },
+      );
+    }
+  }
+
+  // A resource function whose arguments could not be read at all is refused,
+  // because an unparsed reference cannot be proven safe.
+  if (
+    cssResourceFunctions.test(normalized) &&
+    !/\b(?:url|image-set|-webkit-image-set|src)\s*\([^)]*\)/i.test(normalized)
+  ) {
     throw new ClientExperienceSourcePolicyError(
       "CSS_RESOURCE_REFERENCE_FORBIDDEN",
-      `Client experience stylesheet "${relativePath}" cannot use CSS url(). Render validated client media through PlatformImage instead.`,
+      `Client experience stylesheet "${relativePath}" contains an unreadable resource reference.`,
       { path: relativePath },
     );
   }
-  // Legacy IE `expression(...)` appears as a property *value*, while `behavior`
+
+  // Legacy IE `expression(...)` appears as a property value, while `behavior`
   // and `-moz-binding` appear as property names, so both shapes are matched.
   if (
-    /\bexpression\s*\(/i.test(sourceText) ||
-    /(?:^|[;{\s])(?:behavior|-moz-binding)\s*:/i.test(sourceText)
+    /\bexpression\s*\(/i.test(normalized) ||
+    /(?:^|[;{\s])(?:behavior|-moz-binding)\s*:/i.test(normalized)
   ) {
     throw new ClientExperienceSourcePolicyError(
       "EXECUTION_PRIMITIVE_FORBIDDEN",

