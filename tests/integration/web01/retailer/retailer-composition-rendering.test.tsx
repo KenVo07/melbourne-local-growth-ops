@@ -305,7 +305,7 @@ function productGridHtml(itemCount: number): string {
       `<li data-asset-id="product-${index}"><h3>Product ${index + 1}</h3><p>Fictional demonstration product copy.</p><p class="profile-price">$10.00</p></li>`,
   ).join("");
   return `<!doctype html><html><head><style>${globalsCss}\n${retailerCss}</style></head><body>
-    <main class="managed-site" data-profile="RETAILER" data-archetype="CATALOGUE_LED">
+    <main class="managed-site" data-experience-source="legacy_profile_default" data-profile="RETAILER" data-archetype="CATALOGUE_LED">
       <ul class="profile-product-grid">${items}</ul>
     </main>
   </body></html>`;

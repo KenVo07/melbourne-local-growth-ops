@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type {
   RuntimeProfileSection,
+  RuntimeWebsiteExperience,
   RuntimeWebsiteImage,
 } from "../runtime-types";
 
@@ -9,6 +10,7 @@ export type RuntimeProfileSectionType = RuntimeProfileSection["type"];
 
 export interface ManagedSectionRendererContext {
   readonly assets: readonly RuntimeWebsiteImage[];
+  readonly experience?: RuntimeWebsiteExperience | undefined;
 }
 
 export interface ManagedSectionRenderer {

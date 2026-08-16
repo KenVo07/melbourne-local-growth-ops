@@ -56,6 +56,8 @@ const runtimeFiles = Object.freeze([
   "src/rendering/sections/ExternalAction.tsx",
   "src/rendering/sections/ProfileSection.tsx",
   "src/rendering/sections/index.ts",
+  "src/rendering/signatures/ServiceAreaProof.tsx",
+  "src/rendering/signatures/SignatureSlot.tsx",
   "src/rendering/TrackedBookingLink.tsx",
   "src/runtime-types.ts",
   "src/server/contact-form-runtime.ts",

@@ -1,4 +1,4 @@
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] {
   --content-width: 76rem;
 }
 
@@ -9,7 +9,7 @@
  * breakout technique (verified to introduce no horizontal overflow at any of
  * the five frozen viewports or at 200% zoom, per this task's evidence).
  */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
   width: 100vw;
   margin-inline: calc(50% - 50vw);
   background: var(--profile-text);
@@ -17,12 +17,12 @@
   padding: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 6vw, 5rem);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow,
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow,
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline {
   color: var(--profile-surface);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .asset-slot {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .asset-slot {
   border-radius: 0.25rem;
 }
 
@@ -34,7 +34,7 @@
  * the shared shell renders them as two DOM siblings. Zero gap, same
  * full-bleed treatment, same dark surface.
  */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions {
   width: 100vw;
   margin-inline: calc(50% - 50vw);
   margin-top: 0;
@@ -43,14 +43,14 @@
   color: var(--profile-surface);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions .profile-section-heading {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions .profile-section-heading {
   display: none;
 }
 
 /* Exactly one primary action (F5): PHONE is elevated, DIRECTIONS becomes a
    subordinate outline link, and the two NOT_CONFIGURED actions already read
    as secondary via the shared card treatment. */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="PHONE"] {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="PHONE"] {
   border-color: var(--profile-surface);
   background: var(--profile-surface);
   color: var(--profile-text);
@@ -59,31 +59,31 @@
   transition: background-color 180ms ease, border-color 180ms ease;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="PHONE"]:hover {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="PHONE"]:hover {
   background: color-mix(in srgb, var(--profile-surface) 85%, black 15%);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="DIRECTIONS"] {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="DIRECTIONS"] {
   border-color: var(--profile-surface);
   background: transparent;
   color: var(--profile-surface);
   transition: background-color 180ms ease;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="DIRECTIONS"]:hover {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions [data-action-kind="DIRECTIONS"]:hover {
   background: color-mix(in srgb, var(--profile-surface) 18%, transparent);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions .profile-action-not-configured {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions .profile-action-not-configured {
   border: 1px solid color-mix(in srgb, var(--profile-surface) 45%, transparent);
   background: color-mix(in srgb, var(--profile-text) 55%, black 10%);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions .profile-action-not-configured strong {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-actions .profile-action-not-configured strong {
   color: var(--profile-surface);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-heading {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-section-heading {
   margin-inline: auto;
   text-align: center;
 }
@@ -92,12 +92,12 @@
    tabular-figure prices, and a legible legend-style dietary-tag treatment.
    Presentation only — no tag, price, or wording is added or changed
    (claims-ledger §4.3). */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu {
   max-width: 52rem;
   margin-inline: auto;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu h3 {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu h3 {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -106,14 +106,14 @@
   border-bottom: 2px solid var(--profile-accent);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu li > span:last-child {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu li > span:last-child {
   font-variant-numeric: tabular-nums;
   color: var(--profile-accent);
   font-weight: 800;
   text-align: right;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu li > small {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-menu li > small {
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -130,27 +130,27 @@
 
 /* D-R4 — hours and location become a prominent, card-level decision surface
    instead of thin low-contrast rows. */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours {
   gap: 0.5rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours > div {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours > div {
   border: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   padding: 1.1rem 1.5rem;
   font-size: 1.0625rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours dt {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-hours dt {
   font-weight: 800;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-exceptions {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-exceptions {
   font-weight: 700;
   color: var(--profile-accent);
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location {
   width: 100%;
   max-width: 32rem;
   border: 1px solid var(--line);
@@ -159,12 +159,12 @@
   gap: 0.5rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location strong {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location strong {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.375rem;
 }
 
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location a {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-location a {
   min-height: 3.25rem;
   margin-top: 0.75rem;
   border: 2px solid var(--profile-accent);
@@ -176,7 +176,7 @@
    asset-provenance.md. The gallery box now follows the image's true 3:2
    aspect ratio instead of a fixed clamp() height, which closes the upscale
    defect (P17) without touching shared globals.css. */
-.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-gallery img {
+.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-gallery img {
   height: auto;
   aspect-ratio: 3 / 2;
 }
@@ -192,17 +192,17 @@
  * the sizes hint removes the mismatch without touching the shared file.
  */
 @media (min-width: 64rem) {
-  .managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-gallery {
+  .managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .profile-gallery {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 48rem) {
-  .managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
+  .managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero {
     padding-block: clamp(3rem, 7vw, 6rem);
   }
 
-  .managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions {
+  .managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero + .profile-section-actions {
     padding-block-end: clamp(3rem, 6vw, 5rem);
   }
 }

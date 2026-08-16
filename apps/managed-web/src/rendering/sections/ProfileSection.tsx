@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import type {
   RuntimeProfileSection,
+  RuntimeWebsiteExperience,
   RuntimeWebsiteImage,
 } from "../../runtime-types";
 import { ExternalAction } from "./ExternalAction";
@@ -10,9 +11,11 @@ import { ExternalAction } from "./ExternalAction";
 export function ProfileSection({
   section,
   assets,
+  experience,
 }: {
   readonly section: RuntimeProfileSection;
   readonly assets: readonly RuntimeWebsiteImage[];
+  readonly experience?: RuntimeWebsiteExperience | undefined;
 }): ReactNode {
   switch (section.type) {
     case "SERVICES":
@@ -43,7 +46,7 @@ export function ProfileSection({
     case "GALLERY":
       return (
         <div className="profile-gallery">
-          {section.items.map((item) => {
+          {section.items.map((item, index) => {
             const image = assets.find(({ asset }) => asset.assetId === item.assetId);
             return (
               <figure key={item.assetId} data-asset-id={item.assetId}>
@@ -52,7 +55,10 @@ export function ProfileSection({
                   : <Image
                       alt={item.alt}
                       height={image.asset.height}
-                      sizes="(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw"
+                      sizes={galleryImageSizes(
+                        experience?.designDna.media.galleryFrame,
+                        index,
+                      )}
                       src={image.asset.publicPath}
                       width={image.asset.width}
                     />}
@@ -167,4 +173,18 @@ export function ProfileSection({
     case "ACTIONS":
       return <div className="profile-actions">{section.actions.map((action) => <ExternalAction action={action} key={action.actionId} />)}</div>;
   }
+}
+
+function galleryImageSizes(
+  frame:
+    | RuntimeWebsiteExperience["designDna"]["media"]["galleryFrame"]
+    | undefined,
+  index: number,
+): string {
+  if (frame !== "EDITORIAL") {
+    return "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw";
+  }
+  return index === 0
+    ? "(min-width: 64rem) 62vw, (min-width: 40rem) 58vw, 100vw"
+    : "(min-width: 64rem) 30vw, (min-width: 40rem) 38vw, 100vw";
 }

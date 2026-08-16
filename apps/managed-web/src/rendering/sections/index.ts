@@ -45,6 +45,7 @@ export const managedProfileSectionRenderers =
           }
           return createElement(ProfileSection, {
             assets: context.assets,
+            experience: context.experience,
             section,
           });
         },

@@ -1,0 +1,329 @@
+{
+  "schemaVersion": 1,
+  "configuration": {
+    "schemaVersion": 1,
+    "configurationId": "configuration-harbour-electrical",
+    "configurationVersion": 1,
+    "clientId": "harbour-electrical",
+    "entitlementId": "entitlement-harbour-electrical",
+    "deploymentId": "deployment-harbour-electrical",
+    "display": {
+      "businessName": "Harbour Electrical & Air",
+      "tagline": "Illustrative website concept for a Melbourne electrical and split-system contractor.",
+      "locationIds": [
+        "location-melbourne"
+      ]
+    },
+    "domains": [
+      {
+        "hostname": "harbour-electrical.example.com.au",
+        "canonical": true
+      }
+    ],
+    "modules": [
+      {
+        "schemaVersion": 1,
+        "moduleId": "booking-primary",
+        "connectorId": "booking-primary",
+        "type": "BOOKING_CTA",
+        "label": "Request a service time"
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "lead-primary",
+        "connectorId": "email-primary",
+        "type": "LEAD_FORM",
+        "fields": [
+          "NAME",
+          "EMAIL",
+          "PHONE",
+          "MESSAGE"
+        ]
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "analytics-primary",
+        "connectorId": "analytics-primary",
+        "type": "ANALYTICS"
+      }
+    ],
+    "connectors": [
+      {
+        "schemaVersion": 1,
+        "connectorId": "booking-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "BOOKING_LINK",
+        "bookingUrl": "https://harbour-electrical.example.com.au/book"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "email-primary",
+        "accountOwner": "CLIENT",
+        "portability": "TRANSFERABLE",
+        "type": "EMAIL_DELIVERY",
+        "provider": "RESEND",
+        "fromAddress": "website@harbour-electrical.example.com.au",
+        "recipientAddresses": [
+          "owner@harbour-electrical.example.com.au"
+        ],
+        "secretReferenceId": "resend-harbour-electrical"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "analytics-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "GOOGLE_ANALYTICS_4",
+        "measurementId": "G-MLGO123456"
+      }
+    ],
+    "configuredInfrastructure": []
+  },
+  "profile": {
+    "schemaVersion": 1,
+    "profile": "CONTRACTOR",
+    "archetype": "SERVICE_LED",
+    "brand": {
+      "eyebrow": "Illustrative Melbourne Electrical Website",
+      "accentColor": "#b94c2f",
+      "accentContrastColor": "#ffffff",
+      "surfaceColor": "#fffdf8",
+      "textColor": "#18201d"
+    },
+    "sections": [
+      {
+        "type": "CONTACT",
+        "sectionId": "contact",
+        "heading": "Request a Contractor Enquiry",
+        "eyebrow": "Get In Touch",
+        "body": "Fill out the basic enquiry form with your contact details and a short description of your electrical or air conditioning job. Please do not submit credit card numbers, passwords, or confidential personal information."
+      },
+      {
+        "type": "ACTIONS",
+        "sectionId": "primary",
+        "heading": "Talk with the Service Team",
+        "eyebrow": "Direct Contact",
+        "actions": [
+          {
+            "actionId": "call-primary",
+            "kind": "PHONE",
+            "state": "NOT_CONFIGURED",
+            "label": "Phone contact unavailable in demo",
+            "message": "No phone number is configured for this fictional demonstration. Add a client-verified business number before launch."
+          }
+        ]
+      },
+      {
+        "type": "SERVICES",
+        "sectionId": "services",
+        "heading": "Illustrative Services & Proposed Coverage",
+        "eyebrow": "Proposed Services",
+        "items": [
+          {
+            "title": "Residential Electrical Installation",
+            "description": "Illustrative proposed copy for general wiring, lighting, power point, and safety switch services. Confirm the real client's approved scope before publishing."
+          },
+          {
+            "title": "Switchboard Upgrades & Circuit Safety",
+            "description": "Illustrative proposed copy for switchboard and circuit-safety services. Verify the real client's qualifications and approved service wording before publishing."
+          },
+          {
+            "title": "Split-System Air Conditioning",
+            "description": "Illustrative proposed copy for split-system electrical work. Confirm the real client's licensing, service scope, and commissioning wording before publishing."
+          }
+        ]
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "trust",
+        "heading": "Proposed Verification Checklist",
+        "eyebrow": "Onboarding Requirements",
+        "items": [
+          "Verify current electrical licences and any relevant trade credentials before publishing this profile",
+          "Confirm current public liability insurance status and approve any public wording before publishing",
+          "Agree and approve any quoting, pricing, scope, or service-result statements before publishing"
+        ],
+        "disclaimer": "Harbour Electrical & Air is a fictional demonstration profile. These are onboarding verification requirements only; this demo asserts no licence, qualification, insurance, pricing, standards, or service-result claim."
+      },
+      {
+        "type": "GALLERY",
+        "sectionId": "gallery",
+        "heading": "Illustrative Electrical Service Views",
+        "eyebrow": "Demonstration Assets",
+        "items": [
+          {
+            "assetId": "gallery-switchboard-detail",
+            "alt": "Illustrative close view of an open residential switchboard showing circuit protection devices and wiring",
+            "caption": "Illustrative graphic showing switchboard detail; not evidence of a completed client project."
+          },
+          {
+            "assetId": "gallery-work-context",
+            "alt": "Illustrative residential context view of an open switchboard, tool belt, and workspace",
+            "caption": "Illustrative graphic showing the broader residential work context; not evidence of work performed by the fictional business."
+          }
+        ]
+      },
+      {
+        "type": "PROCESS",
+        "sectionId": "process",
+        "heading": "Illustrative Service Process",
+        "eyebrow": "Proposed Workflow",
+        "items": [
+          {
+            "title": "Enquiry & Initial Contact",
+            "description": "Illustrative process step: submit a basic enquiry through the demonstration contact form. Confirm live contact channels during onboarding."
+          },
+          {
+            "title": "Site Assessment & Proposed Quote",
+            "description": "Proposed process copy: a site assessment would inform a written scope and quote. Confirm the real client's quoting and pricing policy before publishing."
+          },
+          {
+            "title": "Trade Delivery Requirements",
+            "description": "Proposed process copy only. Verify the real client's trade qualifications and approve any safety or standards claims before publishing."
+          },
+          {
+            "title": "Testing & Customer Handover",
+            "description": "Illustrative process copy for testing, clean-up, and handover. Confirm the real client's actual procedure and approved result wording before publishing."
+          }
+        ]
+      },
+      {
+        "type": "TESTIMONIALS",
+        "sectionId": "testimonials",
+        "heading": "Illustrative Customer Voices",
+        "eyebrow": "Fictional Scenarios",
+        "items": [
+          {
+            "quote": "Clear updates, a tidy appointment, and an easy-to-follow explanation made the proposed customer journey feel reassuring.",
+            "attribution": "Illustrative customer voice — Oakleigh scenario",
+            "disclosure": "Fictional demonstration testimonial for presentation only; it is not customer evidence or a service-result claim."
+          },
+          {
+            "quote": "The example quote process was simple to understand, with scope and timing presented in a calm, practical way.",
+            "attribution": "Illustrative customer voice — Brighton scenario",
+            "disclosure": "Fictional demonstration testimonial for presentation only; replace it with verified, approved customer feedback before publishing."
+          }
+        ]
+      },
+      {
+        "type": "FAQ",
+        "sectionId": "faq",
+        "heading": "Frequently Asked Questions",
+        "eyebrow": "Help & Information",
+        "items": [
+          {
+            "question": "Which areas of Melbourne do you service?",
+            "answer": "This proposed demo profile uses South-Eastern, Eastern, and Bayside Melbourne as illustrative coverage only. Confirm the real client's service area before publishing."
+          },
+          {
+            "question": "How are job quotes calculated?",
+            "answer": "This demo proposes a site assessment followed by a written quote. Confirm the real client's quoting, pricing, and approval policy before publishing."
+          },
+          {
+            "question": "How can I request a service appointment?",
+            "answer": "The illustrative website offers a demonstration booking link and basic enquiry form. Confirm live appointment channels during onboarding."
+          },
+          {
+            "question": "Are emergency call-outs available?",
+            "answer": "Emergency call-out availability is not configured in this fictional demo. Confirm availability and a client-verified contact method before publishing."
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "templateId": "contractor",
+    "templateVersion": "1.0.0"
+  },
+  "modules": [
+    {
+      "type": "BOOKING_CTA",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "LEAD_FORM",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "ANALYTICS",
+      "moduleVersion": "1.0.0"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "hero-primary",
+      "kind": "IMAGE",
+      "sourcePath": "assets/hero/primary.png",
+      "mediaType": "image/png",
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "assetId": "gallery-switchboard-detail",
+      "kind": "IMAGE",
+      "sourcePath": "assets/gallery/switchboard-detail.png",
+      "mediaType": "image/png",
+      "width": 650,
+      "height": 720
+    },
+    {
+      "assetId": "gallery-work-context",
+      "kind": "IMAGE",
+      "sourcePath": "assets/gallery/work-context.png",
+      "mediaType": "image/png",
+      "width": 950,
+      "height": 820
+    }
+  ],
+  "experience": {
+    "schemaVersion": 1,
+    "experienceId": "contractor-field-guide",
+    "experienceVersion": "1.0.0",
+    "designDna": {
+      "palette": {
+        "accentColor": "#174a3b",
+        "accentContrastColor": "#ffffff",
+        "surfaceColor": "#f7f4ec",
+        "textColor": "#17201d"
+      },
+      "typography": {
+        "displayFamily": "SANS",
+        "bodyFamily": "SANS",
+        "displayScale": "EXPANSIVE",
+        "tracking": "TIGHT"
+      },
+      "composition": {
+        "heroLayout": "MEDIA_FIRST",
+        "navigation": "COMPACT",
+        "contentWidth": "WIDE",
+        "sectionRhythm": "EXPANSIVE",
+        "surfaceTreatment": "BANDED",
+        "sectionOrder": [
+          "services",
+          "trust",
+          "gallery",
+          "process",
+          "faq",
+          "contact",
+          "testimonials",
+          "primary"
+        ],
+        "featuredSectionId": "trust"
+      },
+      "media": {
+        "heroFrame": "EDGE_TO_EDGE",
+        "heroFit": "COVER",
+        "galleryFrame": "EDITORIAL"
+      },
+      "interaction": {
+        "actionStyle": "OUTLINE",
+        "motion": "SUBTLE"
+      }
+    },
+    "signature": {
+      "signatureId": "service-area-proof",
+      "placement": "AFTER_HERO"
+    }
+  }
+}

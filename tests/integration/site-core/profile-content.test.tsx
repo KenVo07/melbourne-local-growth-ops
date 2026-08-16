@@ -226,9 +226,9 @@ describe("restaurant hero accessible text overrides", () => {
   const cssRules = parseCssRules(readFileSync(restaurantProfileCssPath, "utf8"));
 
   const restaurantHeroEyebrowSelector =
-    '.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow';
+    '.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-eyebrow';
   const restaurantHeroTaglineSelector =
-    '.managed-site[data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline';
+    '.managed-site[data-experience-source="legacy_profile_default"][data-profile="RESTAURANT"][data-archetype="HOSPITALITY_EDITORIAL"] .site-hero .site-tagline';
 
   it("overrides the generic profile eyebrow color with the hero surface color", () => {
     const rule = cssRules.find((candidate) =>
