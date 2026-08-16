@@ -38,7 +38,7 @@ test("production fixtures and descriptors name one exact candidate SHA", async (
 
 test("two Contractor experiences materially recompose the same semantic task", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto(sites.reference);
   const reference = await experienceEvidence(page);
   await expect(page.getByRole("heading", { name: "Illustrative Services & Proposed Coverage" }))
@@ -48,6 +48,12 @@ test("two Contractor experiences materially recompose the same semantic task", a
   await expect(page.getByRole("status").filter({ hasText: "Phone contact unavailable" }))
     .toContainText("Add a client-verified business number before launch");
   await expect(page.getByRole("button", { name: "Send enquiry" })).toBeVisible();
+  if (testInfo.project.name === "desktop-chromium") {
+    await page.screenshot({
+      path: `${evidenceRoot}/contractor-reference-desktop.png`,
+      fullPage: true,
+    });
+  }
 
   await page.goto(sites.fieldGuide);
   const fieldGuide = await experienceEvidence(page);
@@ -55,6 +61,12 @@ test("two Contractor experiences materially recompose the same semantic task", a
   await expect(page.getByRole("heading", { name: "Illustrative Services & Proposed Coverage" }))
     .toBeVisible();
   await expect(page.getByRole("button", { name: "Send enquiry" })).toBeVisible();
+  if (testInfo.project.name === "desktop-chromium") {
+    await page.screenshot({
+      path: `${evidenceRoot}/contractor-field-guide-desktop.png`,
+      fullPage: true,
+    });
+  }
 
   expect(reference.sectionIds.sort()).toEqual(fieldGuide.sectionIds.sort());
   expect(reference).toMatchObject({
@@ -166,7 +178,7 @@ test("touch profiles expose usable search and navigation targets", async ({
 
 test("320px keyboard and reduced-motion baseline keeps every control reachable", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(sites.stress);
@@ -216,6 +228,12 @@ test("320px keyboard and reduced-motion baseline keeps every control reachable",
   expect(layout.clippedText).toEqual([]);
   expect(layout.reducedMotion).toBe(true);
   expect(layout.maximumAnimationSeconds).toBeLessThanOrEqual(0.00001);
+  if (testInfo.project.name === "desktop-chromium") {
+    await page.screenshot({
+      path: `${evidenceRoot}/contractor-stress-320.png`,
+      fullPage: false,
+    });
+  }
 });
 
 async function experienceEvidence(page: Page) {

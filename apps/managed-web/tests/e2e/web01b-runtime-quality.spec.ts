@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -108,17 +108,26 @@ test("constrained CPU and network preserve responsive search with bounded runtim
       "/tmp/proportion-web01b-e2e/candidate-sha.txt",
       "utf8",
     )).trim();
+    const evidence = JSON.stringify({
+      candidateSha,
+      conditions: {
+        cpuThrottlingRate: 4,
+        latencyMs: 150,
+        downloadBytesPerSecond: 200_000,
+        uploadBytesPerSecond: 100_000,
+      },
+      ...runtime,
+    }, null, 2);
+    await writeFile(
+      "/tmp/proportion-web01b-e2e/runtime-evidence.json",
+      `${evidence}\n`,
+    );
+    await page.screenshot({
+      path: "/tmp/proportion-web01b-e2e/field-guide-constrained.png",
+      fullPage: false,
+    });
     await testInfo.attach("web01b-runtime-evidence.json", {
-      body: Buffer.from(JSON.stringify({
-        candidateSha,
-        conditions: {
-          cpuThrottlingRate: 4,
-          latencyMs: 150,
-          downloadBytesPerSecond: 200_000,
-          uploadBytesPerSecond: 100_000,
-        },
-        ...runtime,
-      }, null, 2)),
+      body: Buffer.from(evidence),
       contentType: "application/json",
     });
 
