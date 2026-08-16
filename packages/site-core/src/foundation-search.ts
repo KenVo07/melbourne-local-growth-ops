@@ -228,7 +228,12 @@ function validateScope(
       ];
 }
 
-function sectionSearchText(section: WebsiteProfileSection): string {
+/**
+ * Single source of truth for projecting one validated profile section into
+ * searchable text. Both the legacy one-page projector and the v2 Page Graph
+ * projector consume this so the two paths cannot drift apart.
+ */
+export function sectionSearchText(section: WebsiteProfileSection): string {
   switch (section.type) {
     case "SERVICES":
     case "PROCESS":

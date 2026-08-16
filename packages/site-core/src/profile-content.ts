@@ -146,6 +146,19 @@ const titledItemSchema = z.strictObject({
   description: requiredText,
 });
 
+/**
+ * Services carry an additive stable identifier so multi-page definitions can
+ * route to a service detail page without ever matching an editable display
+ * title. The field stays optional: legacy one-page profiles remain valid and
+ * gain no route merely because an ID is present. Runtime title or slug matching
+ * is prohibited; the v2 cross-validator requires exact IDs.
+ */
+export const WebsiteServiceItemSchema = z.strictObject({
+  serviceId: sectionId.optional(),
+  title: shortText,
+  description: requiredText,
+});
+
 const galleryItemSchema = z.strictObject({
   assetId,
   alt: shortText,
@@ -201,7 +214,7 @@ export const WebsiteLocationSchema = z.strictObject({
 const serviceSectionSchema = z.strictObject({
   type: z.literal("SERVICES"),
   ...sectionHeading,
-  items: z.array(titledItemSchema).min(1).max(100),
+  items: z.array(WebsiteServiceItemSchema).min(1).max(100),
 });
 const trustSectionSchema = z.strictObject({
   type: z.literal("TRUST_SIGNALS"),
@@ -352,6 +365,7 @@ function profileShape<
     .superRefine((content, context) => {
       const seenIds = new Set<string>();
       const seenTypes = new Set<string>();
+      const seenServiceIds = new Set<string>();
       for (const [index, section] of content.sections.entries()) {
         if (seenIds.has(section.sectionId)) {
           context.addIssue({
@@ -362,6 +376,19 @@ function profileShape<
         }
         seenIds.add(section.sectionId);
         seenTypes.add(section.type);
+
+        if (section.type !== "SERVICES") continue;
+        for (const [itemIndex, item] of section.items.entries()) {
+          if (item.serviceId === undefined) continue;
+          if (seenServiceIds.has(item.serviceId)) {
+            context.addIssue({
+              code: "custom",
+              path: ["sections", index, "items", itemIndex, "serviceId"],
+              message: `Service ID "${item.serviceId}" is duplicated.`,
+            });
+          }
+          seenServiceIds.add(item.serviceId);
+        }
       }
 
       for (const required of requiredSections) {
@@ -407,6 +434,46 @@ export type WebsiteExternalAction = z.infer<
 export type WebsiteProfileSection = z.infer<
   typeof WebsiteProfileSectionSchema
 >;
+export type WebsiteServiceItem = z.infer<typeof WebsiteServiceItemSchema>;
+export type WebsiteServiceSection = Extract<
+  WebsiteProfileSection,
+  { readonly type: "SERVICES" }
+>;
+
+/**
+ * Resolves a service by its stable identifier only. Title and slug matching are
+ * deliberately unsupported so editing display copy can never change route
+ * identity.
+ */
+export function serviceItemById(
+  content: WebsiteProfileContent,
+  serviceId: string,
+): WebsiteServiceItem | undefined {
+  for (const section of content.sections) {
+    if (section.type !== "SERVICES") continue;
+    const match = section.items.find((item) => item.serviceId === serviceId);
+    if (match !== undefined) return match;
+  }
+  return undefined;
+}
+
+/** Every stable service identifier declared by the validated profile. */
+export function stableServiceIds(
+  content: WebsiteProfileContent,
+): readonly string[] {
+  return Object.freeze(
+    content.sections
+      .filter(
+        (section): section is WebsiteServiceSection =>
+          section.type === "SERVICES",
+      )
+      .flatMap((section) =>
+        section.items
+          .map(({ serviceId }) => serviceId)
+          .filter((serviceId): serviceId is string => serviceId !== undefined),
+      ),
+  );
+}
 export type WebsiteProfileContent = z.infer<
   typeof WebsiteProfileContentSchema
 >;

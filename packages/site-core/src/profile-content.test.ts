@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  serviceItemById,
+  stableServiceIds,
   validateWebsiteProfileContent,
   type WebsiteProfileContent,
 } from "./index.js";
@@ -39,6 +41,53 @@ describe("validateWebsiteProfileContent", () => {
     expect(result.data.profile).toBe("CONTRACTOR");
     expect(Object.isFrozen(result.data)).toBe(true);
     expect(Object.isFrozen(result.data.sections)).toBe(true);
+  });
+
+  it("accepts a legacy Contractor profile that declares no stable service IDs", () => {
+    const result = validateWebsiteProfileContent(contractorProfile());
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(stableServiceIds(result.data)).toEqual([]);
+  });
+
+  it("exposes stable service IDs and resolves a service by exact ID only", () => {
+    const input = contractorProfile() as {
+      sections: Array<Record<string, unknown>>;
+    };
+    input.sections[0]!.items = [
+      { serviceId: "lighting", title: "Architectural lighting", description: "Considered lighting design." },
+      { serviceId: "switchboards", title: "Switchboard upgrades", description: "Compliant switchboard replacement." },
+    ];
+
+    const result = validateWebsiteProfileContent(input);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(stableServiceIds(result.data)).toEqual(["lighting", "switchboards"]);
+    expect(serviceItemById(result.data, "lighting")?.title).toBe(
+      "Architectural lighting",
+    );
+    // Display titles and slugified titles are never route identity.
+    expect(serviceItemById(result.data, "architectural-lighting")).toBeUndefined();
+    expect(serviceItemById(result.data, "Architectural lighting")).toBeUndefined();
+  });
+
+  it("rejects duplicate service IDs at a deterministic path", () => {
+    const input = contractorProfile() as {
+      sections: Array<Record<string, unknown>>;
+    };
+    input.sections[0]!.items = [
+      { serviceId: "lighting", title: "Architectural lighting", description: "Considered lighting design." },
+      { serviceId: "lighting", title: "Feature lighting", description: "Duplicate identifier." },
+    ];
+
+    const result = validateWebsiteProfileContent(input);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.issues).toContainEqual({
+      code: "INVALID_INPUT",
+      path: ["sections", 0, "items", 1, "serviceId"],
+      message: 'Service ID "lighting" is duplicated.',
+    });
   });
 
   it("rejects unknown fields through the established validation contract", () => {

@@ -135,7 +135,10 @@ export {
   WebsiteProfileContentSchema,
   WebsiteProfileSchema,
   WebsiteProfileSectionSchema,
+  WebsiteServiceItemSchema,
   WebsiteTestimonialSchema,
+  serviceItemById,
+  stableServiceIds,
   validateWebsiteProfileContent,
 } from "./profile-content.js";
 export type {
@@ -145,6 +148,8 @@ export type {
   WebsiteProfile,
   WebsiteProfileContent,
   WebsiteProfileSection,
+  WebsiteServiceItem,
+  WebsiteServiceSection,
 } from "./profile-content.js";
 export {
   WebsiteDesignDnaSchema,
@@ -161,6 +166,108 @@ export type {
   WebsiteExperienceSource,
   WebsiteSignatureReference,
 } from "./experience.js";
+export {
+  ClientDesignDnaSchema,
+  validateClientDesignDna,
+} from "./client-design-dna.js";
+export type { ClientDesignDna } from "./client-design-dna.js";
+export {
+  ClientExperienceReferenceSchema,
+  validateClientExperienceReference,
+} from "./client-experience-reference.js";
+export type { ClientExperienceReference } from "./client-experience-reference.js";
+export {
+  WebsiteNavigationItemSchema,
+  WebsiteNavigationTargetSchema,
+  WebsitePageAnchorSchema,
+  WebsitePageContentReferenceSchema,
+  WebsitePageDefinitionSchema,
+  WebsitePageGraphSchema,
+  WebsitePageKindSchema,
+  WebsitePageMetadataSchema,
+  WebsitePageSearchSchema,
+  WebsiteRoutePathSchema,
+  navigationHref,
+  resolveWebsitePageById,
+  resolveWebsitePageByPath,
+  routeSegments,
+  staticRouteParams,
+  validateWebsitePageGraph,
+} from "./page-graph.js";
+export type {
+  WebsiteNavigationItem,
+  WebsiteNavigationTarget,
+  WebsitePageContentReference,
+  WebsitePageDefinition,
+  WebsitePageGraph,
+  WebsitePageKind,
+  WebsiteRoutePath,
+} from "./page-graph.js";
+export {
+  WebsiteMediaAspectSchema,
+  WebsiteMediaFitSchema,
+  WebsiteMediaFocalPointSchema,
+  WebsiteMediaPresentationSchema,
+  WebsiteMediaReferenceSchema,
+  WebsiteMediaRoleSchema,
+  WebsiteMediaViewportOverrideSchema,
+  mediaObjectPosition,
+  validateWebsiteMediaReference,
+} from "./media-reference.js";
+export type {
+  WebsiteMediaAspect,
+  WebsiteMediaFit,
+  WebsiteMediaFocalPoint,
+  WebsiteMediaPresentation,
+  WebsiteMediaReference,
+  WebsiteMediaRole,
+  WebsiteMediaViewportOverride,
+} from "./media-reference.js";
+export {
+  WebsiteProjectCollectionSchema,
+  WebsiteProjectFactSchema,
+  WebsiteProjectSchema,
+  WebsiteProjectStoryBlockSchema,
+  WebsiteProjectStoryBlockTypeSchema,
+  WebsiteProjectTruthModeSchema,
+  projectById,
+  projectBySlug,
+  validateWebsiteProjectCollection,
+} from "./project-content.js";
+export type {
+  WebsiteProject,
+  WebsiteProjectCollection,
+  WebsiteProjectStoryBlock,
+  WebsiteProjectTruthMode,
+} from "./project-content.js";
+export {
+  ClientExperienceDependencySchema,
+  ClientExperienceManifestSchema,
+  ClientExperienceRuntimeSchema,
+  validateClientExperienceManifest,
+  validateClientExperienceManifestForPageGraph,
+} from "./client-experience-manifest.js";
+export type {
+  ClientExperienceDependency,
+  ClientExperienceManifest,
+  ClientExperienceRuntime,
+} from "./client-experience-manifest.js";
+export { validateWebsiteV2Model } from "./website-v2-model.js";
+export type {
+  ValidatedWebsiteV2Model,
+  WebsiteRenderingMode,
+  WebsiteV2Input,
+} from "./website-v2-model.js";
+export { buildWebsiteRouteMetadataModel } from "./route-metadata-model.js";
+export type {
+  WebsiteRouteMetadataModel,
+  WebsiteRouteMetadataSiteIdentity,
+} from "./route-metadata-model.js";
+export { projectPageGraphSearchRecords } from "./page-graph-search.js";
+export type {
+  PageGraphFoundationSearchContext,
+  PageGraphFoundationSearchRecord,
+} from "./page-graph-search.js";
 export {
   FOUNDATION_SEARCH_AUTO_MIN_CHARACTERS,
   FOUNDATION_SEARCH_AUTO_MIN_SECTION_COUNT,
