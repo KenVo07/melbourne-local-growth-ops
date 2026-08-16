@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type {
   ManagedWebsiteRuntime,
+  RuntimePageDefinition,
   RuntimeProfileSection,
   RuntimeWebsiteConfiguration,
   RuntimeWebsiteProfile,
@@ -145,4 +146,58 @@ function resolveHoursText(
   const [section] = findSections(runtime, "HOURS");
   if (section === undefined) return undefined;
   return section.periods.map((period) => `${period.days} ${period.hours}`);
+}
+
+
+/**
+ * Route-aware metadata for one validated page.
+ *
+ * Every value comes from the validated Page Graph, so each route gets a unique
+ * title, description and canonical URL. Authored client source never supplies
+ * head markup; it supplies validated data and the Kernel converts it.
+ */
+export function buildManagedRouteMetadata(
+  runtime: ManagedWebsiteRuntime,
+  page: RuntimePageDefinition,
+): Metadata {
+  const { businessName } = runtime.configuration.display;
+  const siteUrl = resolveCanonicalSiteUrl(runtime);
+  const title = page.metadata.title.includes(businessName)
+    ? page.metadata.title
+    : `${page.metadata.title} | ${businessName}`;
+  const canonicalPath = page.path === "/" ? "" : page.path;
+  const canonicalUrl =
+    siteUrl === undefined ? undefined : `${siteUrl}${canonicalPath}`;
+  const openGraphImageUrl = resolveRouteImageUrl(runtime, page, siteUrl);
+
+  return {
+    title,
+    description: page.metadata.description,
+    ...(canonicalUrl === undefined
+      ? {}
+      : { alternates: { canonical: canonicalUrl } }),
+    openGraph: {
+      title,
+      description: page.metadata.description,
+      type: "website",
+      siteName: businessName,
+      ...(canonicalUrl === undefined ? {} : { url: canonicalUrl }),
+      ...(openGraphImageUrl === undefined
+        ? {}
+        : { images: [{ url: openGraphImageUrl }] }),
+    },
+  };
+}
+
+function resolveRouteImageUrl(
+  runtime: ManagedWebsiteRuntime,
+  page: RuntimePageDefinition,
+  siteUrl: string | undefined,
+): string | undefined {
+  const assetId = page.metadata.openGraphImageAssetId;
+  if (assetId === undefined || siteUrl === undefined) return undefined;
+  const asset = runtime.assetManifest?.assets.find(
+    (candidate) => candidate.assetId === assetId,
+  );
+  return asset === undefined ? undefined : `${siteUrl}${asset.publicPath}`;
 }

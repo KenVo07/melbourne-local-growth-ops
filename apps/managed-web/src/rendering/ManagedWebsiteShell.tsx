@@ -6,12 +6,12 @@ import type {
   RuntimeProfileSection,
   RuntimeWebsiteExperience,
   RuntimeWebsiteImage,
-  RuntimeWebsiteModule,
 } from "../runtime-types";
+import type { ManagedModuleRendererRegistry } from "./module-renderer-registry";
 import {
-  ManagedWebsiteRenderError,
-  type ManagedModuleRendererRegistry,
-} from "./module-renderer-registry";
+  renderFlatRegion,
+  renderModuleSlot,
+} from "./render-region";
 import type { ManagedSectionRendererRegistry } from "./section-renderer-registry";
 import { FoundationSearch } from "./search/FoundationSearch";
 import { managedProfileSectionRenderers } from "./sections";
@@ -210,25 +210,6 @@ function renderProfileSections(
   return <>{sections}{unmatchedRegions}</>;
 }
 
-function renderFlatRegion(
-  region: ManagedWebsiteRuntime["regions"][number],
-  renderers: ManagedModuleRendererRegistry,
-): ReactNode {
-  const modules = region.modules.map((module) =>
-    renderModuleSlot(module, renderers),
-  );
-  if (modules.every((module) => module === null)) return null;
-  return (
-    <section
-      aria-label={regionLabel(region.regionId)}
-      className={`site-region site-region-${region.regionId}`}
-      key={region.regionId}
-    >
-      {modules}
-    </section>
-  );
-}
-
 type ExperienceStyle = CSSProperties & {
   readonly "--profile-accent": string;
   readonly "--profile-accent-contrast": string;
@@ -337,67 +318,3 @@ function trackingValue(
   }
 }
 
-function renderModuleSlot(
-  module: RuntimeWebsiteModule,
-  renderers: ManagedModuleRendererRegistry,
-): ReactNode {
-  const reference = {
-    type: module.type,
-    moduleVersion: module.moduleVersion,
-  } as const;
-  const renderer = renderers.resolve(reference);
-  if (renderer === undefined) {
-    return renderFallback(module);
-  }
-
-  const content = renderer.render(module);
-  if (content === null || content === undefined || content === false) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`module-slot module-slot-${module.type.toLowerCase().replaceAll("_", "-")}`}
-      data-module-id={module.moduleId}
-      data-module-type={module.type}
-      data-module-version={module.moduleVersion}
-      key={module.moduleId}
-    >
-      {content}
-    </div>
-  );
-}
-
-function renderFallback(module: RuntimeWebsiteModule): ReactNode {
-  switch (module.contract.fallback.strategy) {
-    case "HIDE":
-      return null;
-    case "STATIC":
-      return (
-        <aside
-          className="module-fallback"
-          data-module-id={module.moduleId}
-          data-module-version={module.moduleVersion}
-          key={module.moduleId}
-          role="status"
-        >
-          {module.contract.fallback.description}
-        </aside>
-      );
-    case "ERROR":
-      throw new ManagedWebsiteRenderError({
-        code: "MISSING_MODULE_RENDERER",
-        reference: {
-          type: module.type,
-          moduleVersion: module.moduleVersion,
-        },
-        moduleId: module.moduleId,
-      });
-  }
-}
-
-function regionLabel(regionId: string): string | undefined {
-  if (regionId === "primary") return "Primary website content";
-  if (regionId === "analytics") return undefined;
-  return `${regionId.replaceAll("-", " ")} modules`;
-}

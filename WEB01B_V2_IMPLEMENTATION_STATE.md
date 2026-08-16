@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-5 complete; Phase 6 starting)
+Last updated: 2026-08-17 (Phases 0-5 complete; **Phase 6 IN PROGRESS, 3 tests red**)
 
 ## Workspace paths
 
@@ -47,7 +47,7 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 3 — carry v2 data through generation | **COMPLETE** (commit `66c0c73`) |
 | 4 — trusted source-policy scanner | **COMPLETE** (`99e061a`, hardened by `dcf0695` after adversarial review) |
 | 5 — public runtime contract + registry | **COMPLETE** (commit `cff8b13`) |
-| 6 — static multi-route App Router | **IN PROGRESS** |
+| 6 — static multi-route App Router | **IN PROGRESS — 3 artifact tests failing, see below** |
 | 7 — Projects + client-owned media | not started |
 | 8 — standalone artifact generation | not started |
 | 9 — multi-route Foundation Search | not started |
@@ -107,23 +107,54 @@ which is not yet accepted by `FoundationSearchConfigSchema`.
 
 ### Phase 6 subtask ledger — CURRENT
 
-Goal: static multi-route App Router, proven first by a neutral functional
-fixture with minimal CSS and no motion.
+- [x] 6.1 `app/page.tsx` branches on `renderingMode`; legacy renders the existing
+      shell unchanged
+- [x] 6.2 `app/[...segments]/page.tsx` with `dynamicParams = false`,
+      `generateStaticParams` (empty for legacy), `generateMetadata`, `notFound()`
+- [x] 6.3 `app/not-found.tsx` with validated primary-navigation recovery and no
+      path or internal detail leaked
+- [x] 6.4 `buildManagedRouteMetadata` in `structured-data.ts`. Deferred
+      obligation #4 is **RESOLVED**: `resolveCanonicalSiteUrl` already emits
+      `https://host` with no trailing slash, matching `route-metadata-model.ts`.
+- [x] extracted `rendering/render-region.tsx` so the legacy shell and the
+      authored path share one module-slot implementation
+- [x] `load-client-experience.ts` + `render-authored-page.tsx` + the fixed
+      `client-experience/authored/` source slot (exports `undefined` for legacy)
+- [x] added every new runtime file to the assembler's `runtimeFiles` list
+- [ ] **BLOCKED HERE** 3 artifact tests red — see "Current failure" below
+- [ ] 6.5 neutral functional fixture
+- [ ] 6.6 production build + curl every route + 404
 
-- [ ] **CURRENT** 6.1 `app/page.tsx` detects legacy vs v2; legacy renders the
-      current shell unchanged; v2 resolves the Page Graph home route
-- [ ] 6.2 `app/[...segments]/page.tsx` with `dynamicParams = false`,
-      `generateStaticParams` excluding `/`, `generateMetadata`, `notFound()`
-- [ ] 6.3 `app/not-found.tsx` with recovery navigation and no internal leakage
-- [ ] 6.4 route-aware metadata + structured data; reconcile the root canonical
-      URL form against `structured-data.ts`
-- [ ] 6.5 **neutral functional fixture first** — `/`, `/services`, `/projects`,
-      `/projects/project-one`, `/about`, `/contact`, unknown 404, direct refresh
-- [ ] 6.6 build, serve production on port 3010, curl every route, commit
+### Current failure — fix this first
 
-Also needed in this phase: `load-client-experience.ts` to load the authored
-definition and build the registry, and the wiring of
-`resolveClientExperienceMedia` + the region/action maps into the route render.
+```
+pnpm --filter @melbourne-local-growth-ops/managed-web test
+```
+
+3 of 261 fail (258 pass). Typecheck is green. All three are artifact-assembly
+isolation tests:
+
+- `tests/integration/site-core/client-artifact-assembly.test.ts`
+  - "does not place another client's configuration, analytics, assets, or
+    identity in an artifact" — `expected '<gitignore + next.config text>' not to
+    contain 'client-a'`
+  - "maps without private imports into Codex B's public ClientHandoffExportInput"
+- `tests/integration/web01/restaurant/restaurant-handoff.test.ts`
+  - "maps without private imports into the public ClientHandoffExportInput contract"
+
+Cause is almost certainly the `runtimeFiles` additions in
+`apps/managed-web/src/generation/assemble-client-artifact.ts`: the newly copied
+`src/client-experience/**` and `src/app/[...segments]/page.tsx` change the
+artifact inventory that those tests assert over. Check whether the test walks
+every artifact file and whether the bracketed `[...segments]` path breaks a glob
+or path assumption in the copy/inventory code. Run just the one test with
+`-t "another client"` and print the failing path.
+
+Note the assembler copies the whole client-experience runtime into **every**
+artifact, including legacy ones. That is intentional — these are server
+components with no client chunk, and `authored/index.tsx` is a generic
+placeholder — but confirm the no-global-tax bundle comparison in Phase 9 still
+holds, and consider making the copy list mode-aware in Phase 8 if it does not.
 
 ## Implementation decisions applied
 
@@ -439,29 +470,25 @@ another PR; update Notion; promote a Vercel deployment to production; delete the
 
 ## Continuation — exact next action
 
-**Phase 6.1.** Read `apps/managed-web/src/app/page.tsx`,
-`src/client-website.ts`, `src/managed-website.ts`, `src/structured-data.ts` and
-`src/rendering/ManagedWebsiteShell.tsx`, then branch the root route on
-`renderingMode`.
-
-Build the **neutral functional fixture first** — minimal CSS, no motion — and
-prove routing before any creative work. Serve production and check every route:
+1. Fix the 3 failing artifact tests described under "Current failure".
+2. Then Phase 6.5: build the neutral functional v2 fixture (minimal CSS, no
+   motion) and prove routing before any creative work.
+3. Then Phase 6.6 evidence. Because `apps/managed-web/client/client-website.json`
+   is legacy and must stay legacy (port 3010 e2e depends on it), get the curl
+   evidence by **temporarily** swapping that file for the v2 fixture, building,
+   curling, then reverting — do not commit the swap. `prepare-web01b.ts` requires
+   a clean tracked tree, so revert before running e2e.
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 cd /home/khoa/Projects/web01b-implementation/proportion-web-platform
 pnpm --filter @melbourne-local-growth-ops/managed-web build
-pnpm --filter @melbourne-local-growth-ops/managed-web start -- -p 3010
-# other shell:
+pnpm --filter @melbourne-local-growth-ops/managed-web exec next start -p 3010
 for p in / /services /projects /projects/project-one /about /contact; do
   curl --fail --silent --show-error "http://127.0.0.1:3010${p}" >/dev/null || echo "FAIL $p"
 done
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/does-not-exist  # expect 404
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/does-not-exist
 ```
-
-Note: `next.config` uses `output: standalone`, so `next start` warns. The e2e
-harness already handles this; check `apps/managed-web/playwright.config.ts` and
-`tests/e2e/prepare-web01b.ts` for how it serves production.
 
 ## Deferred obligations — do not lose these
 
