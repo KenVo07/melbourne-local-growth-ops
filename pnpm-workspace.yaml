@@ -5,6 +5,10 @@ packages:
 
 useNodeVersion: 24.18.0
 
+overrides:
+  # Patched 3.x line for GHSA-2v37-7h3g-55p8; both PostCSS ranges accept it.
+  nanoid: 3.3.18
+
 allowBuilds:
   esbuild: true
   sharp: true

@@ -77,7 +77,7 @@ describe("configuration-to-rendering pipeline", () => {
     );
 
     for (const section of result.data.profile.sections) {
-      expect(html).toContain(`href="#profile-section-${section.sectionId}"`);
+      expect(html).toContain(`href="#${section.sectionId}"`);
       expect(html).toContain(`>${section.heading}</a>`);
     }
     expect(html).toContain('class="skip-to-content"');

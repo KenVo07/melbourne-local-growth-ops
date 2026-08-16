@@ -13,6 +13,7 @@ import {
   type ManagedModuleRendererRegistry,
 } from "./module-renderer-registry";
 import type { ManagedSectionRendererRegistry } from "./section-renderer-registry";
+import { FoundationSearch } from "./search/FoundationSearch";
 import { managedProfileSectionRenderers } from "./sections";
 import { SignatureSlot } from "./signatures/SignatureSlot";
 
@@ -85,6 +86,12 @@ export function ManagedWebsiteShell({
         </nav>
       )}
 
+      {composition.foundationSearch.enabled ? (
+        <FoundationSearch
+          businessName={composition.configuration.display.businessName}
+        />
+      ) : null}
+
       <header className="site-hero" id="primary-content" tabIndex={-1}>
         {heroLayout === "MEDIA_FIRST"
           ? <>{heroImages}{introduction}</>
@@ -141,7 +148,7 @@ function renderSectionLinks(
 ): ReactNode {
   return sections.map((section) => (
     <li key={section.sectionId}>
-      <a href={`#profile-section-${section.sectionId}`}>{section.heading}</a>
+      <a href={`#${section.sectionId}`}>{section.heading}</a>
     </li>
   ));
 }
@@ -175,6 +182,7 @@ function renderProfileSections(
         className={`profile-section profile-section-${section.type.toLowerCase().replaceAll("_", "-")}`}
         data-section-id={section.sectionId}
         data-section-type={section.type}
+        id={section.sectionId}
         data-section-featured={
           composition.experience?.designDna.composition.featuredSectionId ===
           section.sectionId
@@ -182,6 +190,7 @@ function renderProfileSections(
             : undefined
         }
         key={section.sectionId}
+        tabIndex={-1}
       >
         <header className="profile-section-heading">
           {section.eyebrow === undefined ? null : <p>{section.eyebrow}</p>}

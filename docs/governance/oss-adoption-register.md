@@ -107,9 +107,13 @@ obligations. No universal elapsed-time threshold decides abandonment.
   that affects the selected client path.
 - **Migration class:** A client-local form-rendering implementation with the
   same validated schema and submission contract.
-- **Decision evidence:** Current Technical Build Plan/GOV-01 evidence:
-  Approved for the stated mode; package-specific adopter, version, and date are
-  pending.
+- **Decision evidence:** Adopted for WEB-01B on 2026-08-16 as exact npm package
+  `pagefind@1.5.2` for the stated build-time mode. The pnpm lock records the npm
+  integrity and exact optional platform binaries; the selected package and
+  binaries are MIT-licensed. Local frozen install, notice generation, licence
+  check, dependency audit, isolated custom-record indexing, disabled-output
+  cleanup, browser search and standalone rebuild evidence passed. Re-run these
+  gates on any version, licence, platform-binary or API change.
 
 ### Uppy (@uppy/core)
 

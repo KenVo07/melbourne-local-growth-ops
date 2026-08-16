@@ -222,6 +222,128 @@ h2 {
   color: var(--muted-ink);
 }
 
+.foundation-search-slot {
+  display: flex;
+  justify-content: flex-end;
+  margin: 1.25rem 0;
+}
+
+.foundation-search-trigger,
+.foundation-search-dialog button {
+  min-height: 2.75rem;
+  border: 2px solid var(--profile-accent, var(--accent));
+  padding: 0.65rem 1rem;
+  background: var(--profile-accent, var(--accent));
+  color: var(--profile-accent-contrast, #fff);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.foundation-search-trigger:focus-visible,
+.foundation-search-dialog button:focus-visible,
+.foundation-search-dialog input:focus-visible,
+.foundation-search-results a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.foundation-search-dialog::backdrop {
+  background: rgb(14 18 17 / 72%);
+}
+
+.foundation-search-dialog {
+  display: grid;
+  width: min(42rem, 100%);
+  max-height: calc(100vh - 2rem);
+  gap: 1.25rem;
+  overflow-y: auto;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  padding: clamp(1rem, 4vw, 2rem);
+  background: var(--profile-surface, var(--surface));
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 30%);
+  color: var(--profile-text, var(--ink));
+}
+
+.foundation-search-dialog:not([open]) {
+  display: none;
+}
+
+.foundation-search-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.foundation-search-dialog h2,
+.foundation-search-dialog p {
+  margin: 0;
+}
+
+.foundation-search-dialog form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.foundation-search-dialog label {
+  font-weight: 750;
+}
+
+.foundation-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+}
+
+.foundation-search-controls input {
+  min-width: 0;
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+.foundation-search-dialog button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.foundation-search-status {
+  color: var(--muted-ink);
+}
+
+.foundation-search-results {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foundation-search-results a {
+  display: block;
+  border: 1px solid var(--line);
+  padding: 0.85rem 1rem;
+  color: inherit;
+  font-weight: 750;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.2em;
+}
+
+@media (max-width: 34rem) {
+  .foundation-search-heading {
+    display: grid;
+  }
+
+  .foundation-search-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
 .managed-site[data-profile] {
   color: var(--profile-text);
 }

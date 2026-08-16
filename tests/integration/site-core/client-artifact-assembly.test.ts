@@ -20,7 +20,10 @@ import {
   generateClientWebsiteSnapshot,
   verifyClientSourceArtifact,
 } from "../../../apps/managed-web/src/generation";
-import { contractorProfileContent } from "./fixtures";
+import {
+  contractorProfileContent,
+  foundationSearchOnSelectedSections,
+} from "./fixtures";
 
 const temporaryDirectories: string[] = [];
 
@@ -129,8 +132,21 @@ describe("client source artifact assembly", () => {
     );
     expect(artifact.descriptor.handoff.optionalDataResources).toEqual([]);
     expect(artifact.descriptor.handoff.publicDependencyAllowlist).toEqual(
-      expect.arrayContaining(["next", "react", "react-dom", "resend", "zod"]),
+      expect.arrayContaining([
+        "next",
+        "pagefind",
+        "react",
+        "react-dom",
+        "resend",
+        "tsx",
+        "zod",
+      ]),
     );
+    expect(
+      artifact.descriptor.handoff.artifactAllowlist.some((path) =>
+        path.startsWith("public/pagefind/"),
+      ),
+    ).toBe(false);
     await expect(unresolvedRelativeRuntimeImports(artifact.sourceDirectory))
       .resolves.toEqual([]);
 
@@ -257,6 +273,47 @@ describe("client source artifact assembly", () => {
       success: true,
       checks: ["INSTALL", "TYPECHECK", "TEST", "BUILD"],
       outputPolicy: "TEMPORARY_ONLY",
+    });
+  }, 120_000);
+
+  it("inventories and clean-rebuilds one enabled client Pagefind index", async () => {
+    const input = await createClientInput("client-search", "G-SEARCH1234");
+    const outputDirectory = await temporaryDirectory("search-client-artifact");
+    const artifact = await assembleClientSourceArtifact({
+      definition: {
+        ...input.definition,
+        foundationSearch: foundationSearchOnSelectedSections,
+      },
+      publicDirectory: input.publicDirectory,
+      outputDirectory,
+      factoryRevision: "factory-revision-search",
+    });
+
+    const indexPaths = artifact.descriptor.handoff.artifactAllowlist.filter(
+      (path) => path.startsWith("public/pagefind/"),
+    );
+    expect(indexPaths).toEqual(expect.arrayContaining([
+      "public/pagefind/pagefind.js",
+      "public/pagefind/pagefind-entry.json",
+    ]));
+    expect(indexPaths.length).toBeGreaterThan(8);
+
+    const snapshot = JSON.parse(
+      await readFile(
+        join(artifact.sourceDirectory, "src", "generated", "managed-website.json"),
+        "utf8",
+      ),
+    ) as { foundationSearch: { enabled: boolean; records: { url: string }[] } };
+    expect(snapshot.foundationSearch.enabled).toBe(true);
+    expect(snapshot.foundationSearch.records.map(({ url }) => url)).toEqual([
+      "/#services",
+      "/#trust",
+      "/#faq",
+      "/#contact",
+    ]);
+    await expect(verifyClientSourceArtifact(artifact.sourceDirectory)).resolves.toMatchObject({
+      success: true,
+      checks: ["INSTALL", "TYPECHECK", "TEST", "BUILD"],
     });
   }, 120_000);
 

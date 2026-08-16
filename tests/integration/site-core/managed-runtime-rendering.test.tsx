@@ -89,10 +89,54 @@ describe("managed website production runtime", () => {
     expect(html).toContain('class="site-footer-business"');
     if (composition.profile !== undefined) {
       for (const section of composition.profile.sections) {
-        expect(html).toContain(`href="#profile-section-${section.sectionId}"`);
+        expect(html).toContain(`href="#${section.sectionId}"`);
       }
     }
+    expect(html).not.toContain("foundation-search-trigger");
+    expect(html).not.toContain("Search this website");
     expect(html).not.toContain('aria-label="analytics modules"');
+  });
+
+  it("renders the Foundation Search trigger only for a resolved enabled index", () => {
+    const composition = composeCurrentManagedWebsite();
+    const searchEnabled = {
+      ...composition,
+      foundationSearch: {
+        ...composition.foundationSearch,
+        mode: "ON" as const,
+        enabled: true,
+        reason: "EXPLICIT_ON" as const,
+        records: [
+          {
+            url: "/#services",
+            content: "Public services content",
+            language: "en" as const,
+            meta: {
+              title: "Services",
+              businessName: composition.configuration.display.businessName,
+              sectionId: "services",
+              profile: "CONTRACTOR",
+            },
+            filters: {
+              profile: ["CONTRACTOR"],
+              sectionType: ["SERVICES"],
+            },
+          },
+        ],
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <ManagedWebsiteShell
+        composition={searchEnabled}
+        renderers={managedWebsiteRenderers}
+      />,
+    );
+
+    expect(html).toContain("foundation-search-trigger");
+    expect(html).toContain("Search this website");
+    expect(html).toContain('/pagefind/foundation-search.js');
+    expect(html).not.toContain('/pagefind/pagefind.js');
   });
 
   it("emits conversion names without form values or technical identifiers", () => {

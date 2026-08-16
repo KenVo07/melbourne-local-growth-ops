@@ -1,4 +1,4 @@
-import { cp, mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,6 +31,7 @@ export async function verifyClientSourceArtifact(
     await runPnpm(repository, ["typecheck"]);
     await runPnpm(repository, ["test"]);
     await runPnpm(repository, ["build"]);
+    await verifyFoundationSearchOutput(repository);
 
     return Object.freeze({
       success: true,
@@ -41,6 +42,22 @@ export async function verifyClientSourceArtifact(
     });
   } finally {
     await rm(temporaryRoot, { force: true, recursive: true });
+  }
+}
+
+async function verifyFoundationSearchOutput(repository: string): Promise<void> {
+  const snapshot = JSON.parse(
+    await readFile(
+      join(repository, "src", "generated", "managed-website.json"),
+      "utf8",
+    ),
+  ) as { readonly foundationSearch?: { readonly enabled?: unknown } };
+  const outputExists = existsSync(join(repository, "public", "pagefind"));
+  if (snapshot.foundationSearch?.enabled === true && !outputExists) {
+    throw new Error("Enabled Foundation Search build did not produce public/pagefind.");
+  }
+  if (snapshot.foundationSearch?.enabled !== true && outputExists) {
+    throw new Error("Disabled Foundation Search build retained stale public/pagefind output.");
   }
 }
 

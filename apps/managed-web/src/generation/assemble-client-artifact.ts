@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 import { createIsolatedBuildEnvironment } from "./build-environment";
 import { generateClientWebsiteSnapshot } from "./generate-client-website";
+import { buildFoundationSearchIndex } from "../search/build-foundation-search";
 import type {
   AssembleClientSourceArtifactOptions,
   AssembledClientSourceArtifact,
@@ -28,6 +29,8 @@ const publicDependencies = Object.freeze([
   "react",
   "react-dom",
   "resend",
+  "pagefind",
+  "tsx",
   "typescript",
   "zod",
 ]);
@@ -56,10 +59,14 @@ const runtimeFiles = Object.freeze([
   "src/rendering/sections/ExternalAction.tsx",
   "src/rendering/sections/ProfileSection.tsx",
   "src/rendering/sections/index.ts",
+  "src/rendering/search/FoundationSearch.tsx",
   "src/rendering/signatures/ServiceAreaProof.tsx",
   "src/rendering/signatures/SignatureSlot.tsx",
   "src/rendering/TrackedBookingLink.tsx",
   "src/runtime-types.ts",
+  "src/search/build-current-foundation-search.ts",
+  "src/search/build-foundation-search.ts",
+  "src/search/foundation-search-browser.js",
   "src/server/contact-form-runtime.ts",
   "src/server/contact-guards.ts",
   "src/server/managed-contact-runtime.ts",
@@ -173,6 +180,11 @@ export async function assembleClientSourceArtifact(
       destination,
     );
   }
+
+  await buildFoundationSearchIndex(
+    snapshot.foundationSearch,
+    join(sourceDirectory, "public", "pagefind"),
+  );
 
   await generatePortableLockfile(sourceDirectory);
   const inventory = await createInventory(
@@ -300,7 +312,9 @@ async function recursiveFiles(directory: string): Promise<string[]> {
 }
 
 function categoryFor(path: string): HandoffArtifactCategory {
-  if (path.startsWith("public/assets/")) return "ASSET";
+  if (path.startsWith("public/assets/") || path.startsWith("public/pagefind/")) {
+    return "ASSET";
+  }
   if (path === "package.json" || path === "pnpm-lock.yaml") return "PACKAGE";
   if (path.startsWith("src/generated/") || path === ".gitignore") {
     return "CONFIGURATION";
@@ -338,7 +352,7 @@ function portablePackage(repositoryName: string) {
     engines: { node: "24.18.0", pnpm: "11.9.0" },
     scripts: {
       dev: "next dev",
-      build: "next build",
+      build: "tsx src/search/build-current-foundation-search.ts && next build",
       start: "next start",
       typecheck: "next typegen && tsc --noEmit",
       test: "node --test tests/*.test.mjs",
@@ -355,6 +369,8 @@ function portablePackage(repositoryName: string) {
       "@types/node": "26.1.1",
       "@types/react": "19.2.17",
       "@types/react-dom": "19.2.3",
+      pagefind: "1.5.2",
+      tsx: "4.20.6",
       typescript: "7.0.2",
     },
   };

@@ -57,6 +57,7 @@ appears without review.
 - @next/env@16.2.12
 - @next/swc-linux-x64-gnu@16.2.12
 - @oxc-project/types@0.139.0
+- @pagefind/linux-x64@1.5.2
 - @rolldown/binding-linux-x64-gnu@1.1.5
 - @rolldown/pluginutils@1.0.1
 - @stablelib/base64@1.0.1
@@ -84,9 +85,10 @@ appears without review.
 - estree-walker@3.0.3
 - fdir@6.5.0
 - magic-string@0.30.21
-- nanoid@3.3.16
+- nanoid@3.3.18
 - next@16.2.12
 - obug@2.1.4
+- pagefind@1.5.2
 - pathe@2.0.3
 - picomatch@4.0.5
 - postcss@8.4.31, 8.5.23
