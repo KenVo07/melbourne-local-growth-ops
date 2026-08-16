@@ -6,7 +6,12 @@ import {
   verifyClientSourceArtifact,
 } from "./index";
 
-const arguments_ = parseArguments(process.argv.slice(2));
+const forwardedArguments = process.argv.slice(2);
+const arguments_ = parseArguments(
+  forwardedArguments[0] === "--"
+    ? forwardedArguments.slice(1)
+    : forwardedArguments,
+);
 const inputDirectory = resolve(arguments_.input);
 const definition = JSON.parse(
   await readFile(resolve(inputDirectory, "client-website.json"), "utf8"),
