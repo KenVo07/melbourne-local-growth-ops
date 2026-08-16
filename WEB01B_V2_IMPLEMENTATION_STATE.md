@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-2 complete; Phase 3 starting)
+Last updated: 2026-08-17 (Phases 0-3 complete; Phase 4 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `265fb15` — see Git section |
+| HEAD now | `66c0c73` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -44,8 +44,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 0 — source/safety preflight + baseline | **COMPLETE** |
 | 1 — freeze architecture in repo docs | **COMPLETE** (commit `482e9bb`; independent review findings all resolved) |
 | 2 — pure site-core v2 contracts | **COMPLETE** (commit `265fb15`) |
-| 3 — carry v2 data through generation | **IN PROGRESS** |
-| 4 — trusted source-policy scanner | not started |
+| 3 — carry v2 data through generation | **COMPLETE** (commit `66c0c73`) |
+| 4 — trusted source-policy scanner | **IN PROGRESS** |
 | 5 — public runtime contract + registry | not started |
 | 6 — static multi-route App Router | not started |
 | 7 — Projects + client-owned media | not started |
@@ -67,28 +67,39 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 - [x] 2.6 adversarial coverage sweep (see Validation)
 - [x] 2.7 commit `265fb15`
 
-### Phase 3 subtask ledger — CURRENT
+### Phase 3 subtask ledger — DONE
 
-Goal: carry validated v2 data through definition → composition → snapshot →
-provenance while keeping the legacy adapter byte-compatible.
+- [x] 3.1 read the live composition/generation source before editing
+- [x] 3.2 additive definition inputs and fixed-reference-only manifest binding
+- [x] 3.3 deterministic validation order (config → profile → v1 experience →
+      page graph → projects → manifest → cross-reference → search → assets)
+- [x] 3.4 compatibility matrix enforced at both the parse boundary and the pure
+      validator
+- [x] 3.5 snapshot/provenance additions incl. `renderingMode`
+- [x] 3.6 gate + commit `66c0c73`
 
-- [ ] **CURRENT** 3.1 read `managed-composition.ts`, `generation/types.ts`,
-      `generation/generate-client-website.ts` and their tests before editing
-- [ ] 3.2 additive definition inputs: `schemaVersion: 1 | 2`, `pageGraph`,
-      `projects`, `clientExperience` (raw fixed reference only). Validate the raw
-      reference with `client-experience-reference.ts`; the CLI/assembler loads the
-      real manifest from `<input>/experience/manifest.json` and passes it in as
-      `clientExperienceManifest`. Never pass a path string into the pure validator.
-- [ ] 3.3 deterministic validation order: runtime config → profile → v1
-      experience → page graph → projects → manifest → cross-reference → search →
-      assets/modules/templates
-- [ ] 3.4 compatibility: v1+no v2 fields = legacy; v1+any v2 field = fail;
-      v2 complete = authored; v2 partial = fail; unknown version = fail;
-      malformed v2 must never fall back; v1 snapshot stays semantically unchanged
-- [ ] 3.5 snapshot/provenance: page graph, projects, media, manifest identity,
-      `renderingMode: LEGACY_SHELL | AUTHORED_CLIENT_EXPERIENCE`, route-aware
-      search records, source hashes after assembly
-- [ ] 3.6 gate: site-core + managed-web test/typecheck, then commit
+**Deferred out of Phase 3 on purpose:** route-aware Foundation Search record
+projection. `resolveFoundationSearch` still emits legacy `/#sectionId` records.
+A v2 definition that turns Search ON before Phase 9 will therefore produce
+section-anchor URLs. Phase 9 replaces this; the reference fixture's
+`foundationSearch` block already uses `schemaVersion: 2` + `includePageIds`,
+which is not yet accepted by `FoundationSearchConfigSchema`.
+
+### Phase 4 subtask ledger — CURRENT
+
+Goal: integrate and red-team the trusted source-policy scanner **before** any
+client source is copied or built.
+
+- [ ] **CURRENT** 4.1 copy `client-experience-source-policy.ts` + test (AMBER)
+- [ ] 4.2 integrate at the assembly boundary only, in this exact order: resolve
+      and canonicalize the source root → reject symlinks/path escape → parse and
+      validate the manifest → inventory files → parse TS/TSX → inspect imports
+      and execution primitives → compare declared dependencies against the
+      governance allowlist → hash files → only then copy or generate anything
+- [ ] 4.3 red-team with fixtures for every case in runbook §4.3 and
+      `tests/PLATFORM_BOUNDARY_REVIEW.md`; fail closed where AST inspection
+      cannot prove safety
+- [ ] 4.4 gate: managed-web test + typecheck + governance:secrets, then commit
 
 ## Implementation decisions applied
 
@@ -167,13 +178,24 @@ M packages/site-core/src/profile-content.ts  (patch 0008 + helpers)
 M packages/site-core/src/foundation-search.ts (export sectionSearchText)
 ```
 
-### Expected to be edited next (Phase 3)
+### Committed in `66c0c73` (Phase 3 generation)
 
 ```
-packages/site-core/src/managed-composition.ts        + .test.ts
-apps/managed-web/src/generation/types.ts
-apps/managed-web/src/generation/generate-client-website.ts
-tests/integration/site-core/*.ts
+M packages/site-core/src/managed-composition.ts       (schemaVersion, renderingMode, authored fields, provenance)
+M packages/site-core/src/managed-composition.test.ts  (+9 authored-composition cases)
+M apps/managed-web/src/generation/types.ts            (v2 definition input + snapshot fields)
+M apps/managed-web/src/generation/generate-client-website.ts
+                                                      (schemaVersion 1|2 parse, manifest reference binding)
+A tests/integration/site-core/authored-definition-snapshot.test.ts  (11 cases)
+```
+
+### Expected to be edited next (Phase 4)
+
+```
+A apps/managed-web/src/generation/client-experience-source-policy.ts + .test.ts
+M apps/managed-web/src/generation/assemble-client-artifact.ts  (call the scanner at the boundary)
+M apps/managed-web/src/generation/cli.ts                       (load <input>/experience/manifest.json)
+A tests/fixtures/web01b/experience-source/**                   (malicious + valid source fixtures)
 ```
 
 ### Prebuilt files NOT yet integrated
@@ -247,10 +269,27 @@ duplicate service IDs; service page with an undeclared ID; no title-matching
 fallback; route identity stable across a title edit; two pages competing for one
 service ID; a service with no detail page; search-excluded pages omitted.
 
+### Phase 3 gate — PASS (2026-08-17T01:46 +10:00)
+
+| Command | Result |
+|---|---|
+| `pnpm --filter …/site-core test` | pass — **124** tests |
+| `pnpm --filter …/site-core build` | pass |
+| `pnpm --filter …/managed-web typecheck` | pass |
+| `pnpm --filter …/managed-web test` | pass — **174** tests |
+| `governance:secrets` | PASS — 334 files |
+
+Recipe 0002 required cases all covered: legacy fixture unchanged; valid authored
+fixture; graph-only and manifest-only rejection; authored fields under
+schemaVersion 1; route coverage mismatch; project reference mismatch; malformed
+authored input does not fall back; deep freeze; deterministic snapshot for
+identical input. Plus manifest-path tampering, missing manifest contents and
+manifest contents without a reference.
+
 ### Still required
 
-Phases 3–12. No runtime, routing, artifact, search, motion or creative work has
-been validated yet.
+Phases 4–12. No source policy, runtime, routing, artifact, search, motion or
+creative work has been validated yet.
 
 ## Git
 
@@ -260,8 +299,10 @@ been validated yet.
 |---|---|
 | `482e9bb` | `docs(web01b): lock client experience and reference-class architecture` — ADR-0006, Reference-Class standard, reconciled boundaries/current-architecture/standard/glossary |
 | `265fb15` | `feat(site-core): add page graph project media and experience contracts` — nine new contract modules + tests, v2 exports, patch 0008 service IDs, two prebuilt-defect fixes |
+| `c701d11` | `docs(web01b): add durable v2 implementation state file` |
+| `66c0c73` | `feat(web01b): carry page graph projects and authored experience provenance` — composition/snapshot/provenance rendering-mode dispatch and the schemaVersion 1/2 parse boundary |
 
-Uncommitted right now: `WEB01B_V2_IMPLEMENTATION_STATE.md` only.
+Uncommitted right now: `WEB01B_V2_IMPLEMENTATION_STATE.md` only (updated after each phase).
 
 Remaining planned commit sequence (from `10_PR14_MIGRATION_STRATEGY.md`):
 
@@ -284,36 +325,24 @@ another PR; update Notion; promote a Vercel deployment to production; delete the
 
 ## Continuation — exact next action
 
-**Phase 3.1.** Read these before editing anything:
-
-```
-packages/site-core/src/managed-composition.ts        (composeManagedWebsite)
-packages/site-core/src/managed-composition.test.ts
-apps/managed-web/src/generation/types.ts             (ClientWebsiteDefinitionInput, ClientWebsiteSnapshot)
-apps/managed-web/src/generation/generate-client-website.ts  (parseDefinitionInput hard-codes schemaVersion 1)
-apps/managed-web/src/generation/cli.ts               (reads <input>/client-website.json)
-tests/integration/site-core/foundation-search-snapshot.test.ts
-tests/integration/site-core/client-artifact-assembly.test.ts
-```
-
-Then implement Phase 3.2–3.6 per the ledger above, following
-`patches/0002-definition-snapshot-integration.md` and
-`patches/0006-legacy-compatibility.md` as recipes (AMBER — validate against live
-source, do not apply blindly).
-
-Recommended commands:
+**Phase 4.1.** Copy the AMBER source-policy candidate and reconcile it against
+the live TypeScript 7 compiler API:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 cd /home/khoa/Projects/web01b-implementation/proportion-web-platform
-pnpm --filter @melbourne-local-growth-ops/site-core test
-pnpm --filter @melbourne-local-growth-ops/site-core typecheck
-pnpm --filter @melbourne-local-growth-ops/managed-web test
-pnpm --filter @melbourne-local-growth-ops/managed-web typecheck
+H=../inputs/WEB01B_V2_PRO_REASONING_OUTPUT/prebuilt/apps/managed-web/src/generation
+cp "$H/client-experience-source-policy.ts"      apps/managed-web/src/generation/
+cp "$H/client-experience-source-policy.test.ts" apps/managed-web/src/generation/
 ```
 
-Full `pnpm check` takes ~55s and `test:e2e` ~85s; use them at phase boundaries,
-not after every edit.
+Then read `apps/managed-web/src/generation/assemble-client-artifact.ts` and
+`verify-client-artifact.ts` before wiring the scanner in. **No client source may
+be copied until every policy test passes.**
+
+Reference material for this phase:
+`patches/0004-client-experience-artifact-assembly.md`,
+`tests/PLATFORM_BOUNDARY_REVIEW.md`, runbook §4.
 
 ## Deferred obligations — do not lose these
 
