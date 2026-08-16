@@ -51,6 +51,10 @@ appears without review.
 
 ### MIT
 
+- @babel/helper-string-parser@8.0.0
+- @babel/helper-validator-identifier@8.0.4
+- @babel/parser@8.0.4
+- @babel/types@8.0.4
 - @esbuild/linux-x64@0.28.1
 - @img/colour@1.1.0
 - @jridgewell/sourcemap-codec@1.5.5

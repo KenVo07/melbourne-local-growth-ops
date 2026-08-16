@@ -177,6 +177,53 @@ obligations. No universal elapsed-time threshold decides abandonment.
   Approved for the stated mode; package-specific adopter, version, and date are
   pending.
 
+### Babel parser (@babel/parser)
+
+- **Licence and exact evidence:** `@babel/parser@8.0.4` declares MIT, as do its
+  three transitive packages `@babel/types@8.0.4`,
+  `@babel/helper-string-parser@8.0.0` and
+  `@babel/helper-validator-identifier@8.0.4`. MIT requires retention of the
+  copyright and permission notice. Verified against the installed pnpm graph on
+  2026-08-17; `pnpm governance:licenses` re-checks the declared inventory.
+- **Why it was selected:** the WEB-01B v2 trusted-source policy scanner needs a
+  syntax-only TypeScript and TSX AST at generation time. The repository pins
+  `typescript@7.0.2`, the native port, whose public JavaScript surface exposes
+  **no standalone parser** — its `.` export is `lib/version.cjs`, and AST access
+  requires spawning the TypeScript server and loading a configured Project
+  through the explicitly `unstable/*` namespace. Founding a security control on
+  an API with no compatibility guarantee was rejected. Pinning a second
+  TypeScript major alongside 7 was also rejected as an invitation to typecheck
+  against the wrong compiler.
+- **Commercial and managed-service posture:** Build-time only. No hosted
+  product or service relationship.
+- **Status and adoption mode:** **Approved** as an exact-version build-time
+  devDependency of `apps/managed-web`, used solely by
+  `src/generation/client-experience-source-policy.ts` to parse authored client
+  experience source for inspection. It must never be added to a generated client
+  artifact's dependency graph, never appear in shipped client runtime code, and
+  never be used to transform or emit code — parse only.
+- **Enterprise/open-core boundary:** None. Single MIT package.
+- **Maintenance and security:** Inspect upstream
+  [releases](https://github.com/babel/babel/releases) and
+  [security policy](https://github.com/babel/babel/security) when upgrading.
+  The scanner passes `errorRecovery: false`, so a file the parser cannot fully
+  understand is refused rather than partially analysed.
+- **Isolation and handoff:** The package is a Factory build tool. Handoff
+  artifacts must not depend on it; an integration test asserts its absence from
+  generated artifact dependency graphs and lockfiles.
+- **Upgrade/support burden:** On upgrade, re-run the full source-policy
+  red-team suite. AST node-shape changes across Babel majors are the expected
+  breakage mode, and the suite is the regression gate.
+- **Triggers and review point:** Review on licence change, a parser advisory,
+  an AST shape change that weakens a policy rule, or if TypeScript later exposes
+  a stable standalone parser — at which point migrating back to the vendor
+  toolchain should be reconsidered.
+- **Migration class:** Any syntax-only TS/TSX parser with an equivalent public
+  AST, or a future stable TypeScript parser API, selected through a new review.
+- **Decision evidence:** Adopted for WEB-01B v2 on 2026-08-17 by the
+  implementation agent under founder direction, after the TypeScript 7 parser
+  gap was demonstrated. Recorded here before first use.
+
 ### CookieConsent (vanilla-cookieconsent)
 
 - **Licence and exact evidence:** The repository
