@@ -11,6 +11,11 @@ coverage/
 /apps/ops-console/playwright-report/
 /apps/ops-console/test-results/
 
+# Managed website production acceptance artifacts
+/apps/managed-web/.web01b-e2e/
+/apps/managed-web/playwright-report/
+/apps/managed-web/test-results/
+
 /docs/learning
 /.mlgo-local/
 __pycache__/

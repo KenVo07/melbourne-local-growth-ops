@@ -9,7 +9,7 @@
     "build": "tsx src/search/build-current-foundation-search.ts && next build",
     "start": "next start",
     "test": "vitest run --config ../../tests/integration/site-core/vitest.config.ts",
-    "test:e2e": "playwright test",
+    "test:e2e": "tsx tests/e2e/prepare-web01b.ts && playwright test",
     "typecheck": "next typegen && tsc --noEmit && tsc --project ../../tests/integration/site-core/tsconfig.json --noEmit"
   },
   "dependencies": {

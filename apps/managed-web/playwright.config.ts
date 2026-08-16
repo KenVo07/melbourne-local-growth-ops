@@ -10,17 +10,45 @@ export default defineConfig({
   outputDir: "test-results",
   use: {
     baseURL: "http://127.0.0.1:3010",
-    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    trace: "retain-on-failure",
+    video: "retain-on-failure",
   },
   projects: [
     {
-      name: "chromium",
+      name: "desktop-chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "mobile-chromium",
+      use: {
+        ...devices["Pixel 5"],
+        viewport: { width: 375, height: 812 },
+      },
+    },
+    {
+      name: "tablet-chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        hasTouch: true,
+        viewport: { width: 768, height: 1024 },
+      },
+    },
   ],
-  webServer: {
-    command: "pnpm exec next start -p 3010",
-    url: "http://127.0.0.1:3010",
-    reuseExistingServer: false,
-  },
+  webServer: [
+    productionServer(".", 3010),
+    productionServer("/tmp/proportion-web01b-e2e/contractor-reference/source", 3011),
+    productionServer("/tmp/proportion-web01b-e2e/contractor-field-guide/source", 3012),
+    productionServer("/tmp/proportion-web01b-e2e/restaurant/source", 3013),
+    productionServer("/tmp/proportion-web01b-e2e/retailer/source", 3014),
+  ],
 });
+
+function productionServer(directory: string, port: number) {
+  return {
+    command: `pnpm --dir ${directory} exec next start -p ${port}`,
+    url: `http://127.0.0.1:${port}`,
+    reuseExistingServer: false,
+    timeout: 120_000,
+  };
+}
