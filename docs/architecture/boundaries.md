@@ -25,9 +25,15 @@ Runtime configuration may contain deployment-safe values such as:
 - Connector selections and non-secret settings
 - Delivery-profile information required for operational behavior
 - A strict, versioned Website Experience selected from finite Design DNA and
-  Signature options
+  Signature options (legacy one-page preset path)
+- A strict, versioned client Page Graph describing routes, page kinds,
+  relationships, navigation labels and destinations
+- A strict, versioned Project/Case Study collection and client-owned media
+  references
+- A strict, versioned reference to the trusted authored Client Experience
+  manifest at the fixed path `experience/manifest.json`
 - Explicit `OFF | AUTO | ON` Foundation Search configuration and its bounded
-  public-section scope
+  public-page or public-section scope
 
 Runtime configuration must not be the source of truth for:
 
@@ -59,17 +65,102 @@ Do not force all three into one plugin abstraction.
 ## Website experience and search boundary
 
 - Semantic Profile Packs own truthful business/profile content and first-time
-  task meaning. Website Experience owns bounded visual and composition choices;
-  visible identity must not be smuggled into profile content.
+  task meaning. They do not own the client's route set or the final route
+  renderer. Visible identity must not be smuggled into profile content.
+- Route *mechanics* — static generation, path resolution, not-found behavior,
+  link/focus semantics, metadata and structured-data machinery — are Platform
+  Kernel property. The validated client Page Graph owns the actual *route graph*:
+  which pages exist, their paths, kinds, relationships, navigation labels and
+  navigation destinations.
+- Navigation labels and destinations are explicit validated data. They are not
+  derived from page or section headings.
+- Single-page delivery remains fully supported through the legacy adapter. It is
+  an output option, not a platform constraint. A multi-page route graph is
+  equally first-class.
+- Projects/Case Studies are first-class structured proof with stable IDs, slugs,
+  truth classification, narrative blocks, facts, media and relationships. They
+  are not a homepage gallery section.
 - Section order may permute only the exact validated semantic section set. It
-  cannot omit, duplicate or invent task content.
-- A Signature is one named, finite server-first component. It cannot become a
-  generic plugin SDK, global provider or prerequisite for baseline tasks.
-- Foundation Search indexes only already-validated public section records for
-  one client deployment. Connector secrets, action URLs, drafts, private routes
-  and cross-client content remain outside the index.
+  cannot omit, duplicate or invent task content. This rule governs the legacy
+  one-page adapter.
+
+### Untrusted configured data
+
+Client configuration is validated non-executable data. It must never carry
+arbitrary HTML, CSS or JavaScript source, class names, selectors, module
+specifiers, filesystem paths or remote code locations. Configuration may
+reference the trusted source package only through the single fixed manifest
+path.
+
+`experienceRouteId` is not an exception to that rule. It is a bounded lowercase
+identifier, never a path or module specifier. It is resolved only against the
+route set the trusted manifest itself registers, and validation fails when the
+page graph and the manifest do not cover exactly the same route IDs. Configured
+data therefore selects among code the authored package already declares; it can
+never name new code.
+
+### Trusted authored client source
+
+Real React/TypeScript/CSS source for one client is legitimate input, but only
+under the fixed `experience/` source boundary. Before it may be built or copied
+it must be inspected for path escapes and symlinks, restricted to sanctioned
+imports and exact governance-approved dependencies, denied server/private/secret
+access, typechecked, built, tested, accessibility- and performance-reviewed,
+hashed and inventoried. It ships inside the standalone client artifact and must
+not depend on private Factory packages at handoff. This boundary is not relaxed
+for convenience.
+
+The authoritative import allowlist and deny-list lives in the "Client Experience
+Layer" section of
+[Premium Website Platform & Experience Standard](../product/premium-website-experience-standard.md).
+Every declared dependency must be an exact version with an approved entry in
+[the OSS adoption register](../governance/oss-adoption-register.md).
+
+### Signatures and Design DNA
+
+- A Signature is a bounded client-specific component that creates a memorable
+  identity or interaction. A **client-local** Signature living in the client's
+  own `experience/` source is legal and requires no shared Core registry change.
+  Promotion into shared Platform code happens only on repeated evidence.
+- Design DNA governs the authored experience as a concise creative grammar and
+  provenance artifact. It is not the complete frontend, not an exhaustive
+  renderer configuration and not a layout DSL. The authored source is the
+  implementation.
+- Neither mechanism may become a generic plugin SDK, a page builder, a global
+  provider or a prerequisite for baseline tasks.
+
+### Motion
+
+The Kernel owns reduced-motion handling, lifecycle/cleanup conventions,
+performance instrumentation and opt-in client-island seams. It ships no
+mandatory animation package. Sophisticated motion is opt-in and scoped to the
+authored client experience that declares it. Legacy, static and no-motion sites
+must pay no motion runtime, chunk or dependency cost.
+
+### Foundation Search
+
+- Foundation Search indexes only already-validated public records for one client
+  deployment. Connector secrets, action URLs, drafts, private routes and
+  cross-client content remain outside the index.
+- v2 records target real route or route+anchor URLs from the validated Page
+  Graph. Legacy one-page definitions keep section-anchor records.
 - Search OFF is the legacy default and must produce no Pagefind output, markup,
-  browser import or request. Search ON remains an optional navigation aid.
+  browser import or request. Search ON remains an optional navigation aid and
+  must never repair weak information architecture.
+
+## Reference-class capability boundary
+
+The platform ceiling is gated by
+[Premium Website Reference-Class Capability Standard](../product/reference-class-capability-standard.md).
+Passing automated tests does not establish premium acceptance. A material human
+craft failure — template smell, weak mobile art direction, janky production
+motion, shallow Projects architecture or fabricated proof — blocks PASS and
+cannot be averaged away by green CI.
+
+WEB-01B proves the platform ceiling with fictional, clearly classified proof
+content. Real-client discovery, content sourcing, evidence verification,
+creative approval workflow and the delivered Creative Proof Loop remain WEB-01E
+responsibilities and are not implemented here.
 
 ## Infrastructure boundary
 
@@ -112,6 +203,8 @@ Approval is required before changing:
 - Seller/ecommerce scope
 - Handoff portability
 - Authentication, payments, tenancy, or secret-handling architecture
+- The trusted authored client source boundary, its import allowlist, or its
+  dependency governance rules
 
 ## Sources
 
