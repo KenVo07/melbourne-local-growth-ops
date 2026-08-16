@@ -105,7 +105,14 @@ interface RuntimeProfileSectionBase {
   readonly eyebrow?: string | undefined;
 }
 
-interface RuntimeTitledItem {
+export interface RuntimeTitledItem {
+  readonly title: string;
+  readonly description: string;
+}
+
+/** SERVICES items carry the additive stable identifier used by detail routes. */
+export interface RuntimeServiceItem {
+  readonly serviceId?: string | undefined;
   readonly title: string;
   readonly description: string;
 }
@@ -162,10 +169,15 @@ interface RuntimeLocation {
   readonly directionsUrl?: string | undefined;
 }
 
-type RuntimeTitledListSection = RuntimeProfileSectionBase & {
-  readonly type: "SERVICES" | "PROCESS" | "EVENTS" | "COLLECTIONS";
-  readonly items: readonly RuntimeTitledItem[];
-};
+type RuntimeTitledListSection =
+  | (RuntimeProfileSectionBase & {
+      readonly type: "SERVICES";
+      readonly items: readonly RuntimeServiceItem[];
+    })
+  | (RuntimeProfileSectionBase & {
+      readonly type: "PROCESS" | "EVENTS" | "COLLECTIONS";
+      readonly items: readonly RuntimeTitledItem[];
+    });
 
 export type RuntimeProfileSection =
   | RuntimeTitledListSection
@@ -329,10 +341,234 @@ export interface RuntimeWebsiteImage {
   };
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * Authored client experience (schemaVersion 2)
+ *
+ * These mirror the site-core contracts so a generated client artifact carries
+ * no private workspace dependency, exactly as the v1 runtime types already do.
+ * `tests/integration/site-core/runtime-type-conformance.test.ts` fails the build
+ * if the mirror drifts from the validated contracts.
+ * ---------------------------------------------------------------------------
+ */
+
+export type RuntimeRenderingMode =
+  | "LEGACY_SHELL"
+  | "AUTHORED_CLIENT_EXPERIENCE";
+
+export type RuntimeMediaRole =
+  | "HERO"
+  | "PROJECT"
+  | "GALLERY"
+  | "CONTENT"
+  | "PORTRAIT"
+  | "DECORATIVE";
+export type RuntimeMediaAspect =
+  | "NATURAL"
+  | "LANDSCAPE"
+  | "PORTRAIT"
+  | "SQUARE"
+  | "PANORAMIC";
+export type RuntimeMediaFit = "COVER" | "CONTAIN";
+
+export interface RuntimeMediaFocalPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface RuntimeMediaViewportOverride {
+  readonly aspect?: RuntimeMediaAspect | undefined;
+  readonly fit?: RuntimeMediaFit | undefined;
+  readonly focalPoint?: RuntimeMediaFocalPoint | undefined;
+}
+
+export interface RuntimeMediaPresentation {
+  readonly aspect: RuntimeMediaAspect;
+  readonly fit: RuntimeMediaFit;
+  readonly focalPoint?: RuntimeMediaFocalPoint | undefined;
+  readonly mobile?: RuntimeMediaViewportOverride | undefined;
+  readonly tablet?: RuntimeMediaViewportOverride | undefined;
+}
+
+export type RuntimeMediaReference =
+  | {
+      readonly assetId: string;
+      readonly role: Exclude<RuntimeMediaRole, "DECORATIVE">;
+      readonly decorative: false;
+      readonly alt: string;
+      readonly caption?: string | undefined;
+      readonly presentation: RuntimeMediaPresentation;
+    }
+  | {
+      readonly assetId: string;
+      readonly role: "DECORATIVE";
+      readonly decorative: true;
+      readonly alt: "";
+      readonly caption?: undefined;
+      readonly presentation: RuntimeMediaPresentation;
+    };
+
+export type RuntimePageKind =
+  | "HOME"
+  | "STANDARD"
+  | "SERVICES_INDEX"
+  | "SERVICE_DETAIL"
+  | "PROJECTS_INDEX"
+  | "PROJECT_DETAIL"
+  | "ABOUT"
+  | "SERVICE_AREAS"
+  | "CONTACT";
+
+export type RuntimePageContentReference =
+  | { readonly kind: "STATIC"; readonly contentKey: string }
+  | { readonly kind: "PROFILE_SECTIONS"; readonly sectionIds: readonly string[] }
+  | { readonly kind: "SERVICES_INDEX" }
+  | { readonly kind: "SERVICE"; readonly serviceId: string }
+  | { readonly kind: "PROJECTS_INDEX" }
+  | { readonly kind: "PROJECT"; readonly projectId: string };
+
+export interface RuntimePageAnchor {
+  readonly anchorId: string;
+  readonly label: string;
+}
+
+export interface RuntimePageDefinition {
+  readonly pageId: string;
+  readonly path: string;
+  readonly kind: RuntimePageKind;
+  readonly experienceRouteId: string;
+  readonly title: string;
+  readonly metadata: {
+    readonly title: string;
+    readonly description: string;
+    readonly openGraphImageAssetId?: string | undefined;
+  };
+  readonly content: RuntimePageContentReference;
+  readonly anchors: readonly RuntimePageAnchor[];
+  readonly parentPageId?: string | undefined;
+  readonly relatedPageIds: readonly string[];
+  readonly search: {
+    readonly include: boolean;
+    readonly title?: string | undefined;
+    readonly summary?: string | undefined;
+  };
+}
+
+export type RuntimeNavigationTarget =
+  | { readonly kind: "ROUTE"; readonly pageId: string }
+  | {
+      readonly kind: "ANCHOR";
+      readonly pageId: string;
+      readonly anchorId: string;
+    };
+
+export interface RuntimeNavigationItem {
+  readonly navigationId: string;
+  readonly label: string;
+  readonly target: RuntimeNavigationTarget;
+}
+
+export interface RuntimePageGraph {
+  readonly schemaVersion: 1;
+  readonly homePageId: string;
+  readonly pages: readonly RuntimePageDefinition[];
+  readonly navigation: {
+    readonly primary: readonly RuntimeNavigationItem[];
+    readonly utility: readonly RuntimeNavigationItem[];
+    readonly footer: readonly RuntimeNavigationItem[];
+    readonly primaryAction?: RuntimeNavigationItem | undefined;
+  };
+}
+
+export type RuntimeProjectTruthMode = "VERIFIED_CLIENT" | "DEMONSTRATION";
+
+export interface RuntimeProjectFact {
+  readonly label: string;
+  readonly value: string;
+}
+
+export type RuntimeProjectStoryBlockType =
+  | "BRIEF"
+  | "CHALLENGE"
+  | "APPROACH"
+  | "DELIVERY"
+  | "OUTCOME"
+  | "NOTE";
+
+export interface RuntimeProjectStoryBlock {
+  readonly blockId: string;
+  readonly type: RuntimeProjectStoryBlockType;
+  readonly heading: string;
+  readonly body: string;
+  readonly media: readonly RuntimeMediaReference[];
+}
+
+export interface RuntimeProject {
+  readonly schemaVersion: 1;
+  readonly projectId: string;
+  readonly slug: string;
+  readonly title: string;
+  readonly summary: string;
+  readonly truthMode: RuntimeProjectTruthMode;
+  readonly demonstrationDisclosure?: string | undefined;
+  readonly serviceIds: readonly string[];
+  readonly locationLabel?: string | undefined;
+  readonly hero: RuntimeMediaReference;
+  readonly gallery: readonly RuntimeMediaReference[];
+  readonly facts: readonly RuntimeProjectFact[];
+  readonly story: readonly RuntimeProjectStoryBlock[];
+  readonly relatedProjectIds: readonly string[];
+}
+
+export interface RuntimeProjectCollection {
+  readonly schemaVersion: 1;
+  readonly projects: readonly RuntimeProject[];
+}
+
+export interface RuntimeClientExperienceManifest {
+  readonly schemaVersion: 1;
+  readonly kind: "AUTHORED_CLIENT_EXPERIENCE";
+  readonly experienceId: string;
+  readonly experienceVersion: string;
+  readonly entrypoint: "index.tsx";
+  readonly designDnaPath: "design-dna.json";
+  readonly routeIds: readonly string[];
+  readonly signatureIds: readonly string[];
+  readonly publicDependencies: readonly {
+    readonly name: string;
+    readonly version: string;
+  }[];
+  readonly runtime: {
+    readonly clientJavaScript: "NONE" | "ROUTE_SCOPED" | "COMPONENT_SCOPED";
+    readonly motion: "NONE" | "NATIVE" | "CLIENT_LIBRARY";
+    readonly reducedMotion: "REQUIRED";
+  };
+}
+
+export interface RuntimeAssetManifestEntry {
+  readonly assetId: string;
+  readonly kind: "IMAGE";
+  readonly mediaType: string;
+  readonly publicPath: string;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface RuntimeAssetManifest {
+  readonly schemaVersion: 1;
+  readonly clientId: string;
+  readonly assets: readonly RuntimeAssetManifestEntry[];
+}
+
 export interface ManagedWebsiteRuntime {
+  readonly schemaVersion?: 1 | 2 | undefined;
+  readonly renderingMode?: RuntimeRenderingMode | undefined;
   readonly configuration: RuntimeWebsiteConfiguration;
   readonly profile?: RuntimeWebsiteProfileContent | undefined;
   readonly experience?: RuntimeWebsiteExperience | undefined;
+  readonly pageGraph?: RuntimePageGraph | undefined;
+  readonly projects?: RuntimeProjectCollection | undefined;
+  readonly clientExperience?: RuntimeClientExperienceManifest | undefined;
   readonly foundationSearch: RuntimeFoundationSearch;
   readonly provenance: {
     readonly configurationId: string;
@@ -346,12 +582,25 @@ export interface ManagedWebsiteRuntime {
       readonly experienceVersion: string;
       readonly source: "EXPLICIT" | "LEGACY_PROFILE_DEFAULT";
     }>;
+    readonly clientExperience?: Readonly<{
+      readonly experienceId: string;
+      readonly experienceVersion: string;
+      readonly pageGraphSchemaVersion: number;
+      readonly projectSchemaVersion: number;
+      readonly projectCount: number;
+      readonly routeCount: number;
+    }>;
     readonly foundationSearch: Readonly<{
       readonly mode: "OFF" | "AUTO" | "ON";
       readonly enabled: boolean;
     }>;
   };
   readonly assets: readonly RuntimeWebsiteImage[];
+  /**
+   * Every validated client asset, so an authored experience can render
+   * arbitrary client-owned media instead of a fixed set of template slots.
+   */
+  readonly assetManifest?: RuntimeAssetManifest | undefined;
   readonly regions: readonly {
     readonly regionId: string;
     readonly modules: readonly RuntimeWebsiteModule[];

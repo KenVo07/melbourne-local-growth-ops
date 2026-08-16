@@ -26,7 +26,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@proportion/client-experience": [
+        "./src/client-experience/public-api.ts"
+      ]
     }
   },
   "include": [
