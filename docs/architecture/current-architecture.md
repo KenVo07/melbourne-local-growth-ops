@@ -25,25 +25,41 @@ Vendors are initial choices, not permanent domain boundaries. Hosting, email,
 analytics, storage, and monitoring must remain replaceable behind explicit
 interfaces.
 
-## Intended components
+## Current component seams
 
 | Area | Responsibility |
 |---|---|
-| `apps/site-template` | Website runtime used to produce isolated client sites |
-| `apps/ops-console` | Later internal registry; not a required public-site runtime |
-| `tooling/deployment-generator` | Generates or updates client-specific repositories and projects |
-| `packages/site-core` | Rendering, page composition, and shared website behavior |
-| `packages/ui` | Shared components and design tokens |
-| `packages/templates` | Contractor, restaurant, and later approved compositions |
-| `packages/website-modules` | Quote, lead, booking, menu, catalog, gallery, and analytics modules |
-| `packages/integrations` | CRM, booking, POS, email, calendar, commerce, and Google adapters |
+| `apps/managed-web` | Isolated managed-site runtime, renderer, canonical client input, and portable source-artifact assembly |
+| `apps/ops-console` | Internal client/configuration surface; not a required public-site runtime |
+| `packages/site-core` | Validated semantic profiles, bounded website experience, conditional search resolution, registries, and composition |
+| `packages/templates` | Contractor, restaurant, and retailer semantic compositions |
+| `packages/website-modules` | Transferable website modules including the contact form |
+| `packages/integrations` | External-system contracts and the Resend adapter |
 | `packages/contracts` | Versioned schemas, events, entitlements, delivery profiles, and validation |
-| `packages/security` | Security helpers, access checks, audit support, and redaction |
+| `packages/asset-pipeline` | Client-scoped public asset validation and manifests |
+| `packages/deployment` | Deployment and handoff contracts |
+| `packages/observability` | Bounded operational event contracts |
 
-These paths describe the intended M1 structure. TSK-45 introduced only the
-minimal pnpm workspace and `packages/contracts` implementation needed for
-executable contracts. The applications, remaining packages, CI, and deployment
-tooling are still deferred to TSK-49.
+The managed website composes one validated semantic Profile Pack with one
+optional, finite `WebsiteExperience`. Experience owns visible Design DNA such as
+hero structure, section permutation, typography, palette, surface/media
+treatment and bounded interaction style; it cannot inject arbitrary HTML, CSS,
+classes or scripts. Omitted experience remains on the profile-specific legacy
+fallback. One server-rendered Signature slot consumes validated public profile
+content and adds no shared browser runtime.
+
+Foundation Search resolves independently as `OFF | AUTO | ON`, with omitted
+legacy configuration defaulting to OFF. Enabled builds project validated public
+profile sections into one client-local Pagefind custom-record index. Disabled
+builds delete stale `public/pagefind` output before Next builds and render no
+search markup or browser import. Search does not replace the normal section
+navigation or become necessary for a first-time task.
+
+Client source artifacts serialize the resolved experience and search state,
+copy the finite renderer/search source, pin public dependencies and generate a
+standalone lockfile. Enabled artifacts inventory their client-local Pagefind
+output; disabled artifacts reject stale output. Clean artifact verification runs
+outside the private workspace boundary.
 
 ## Default infrastructure posture
 

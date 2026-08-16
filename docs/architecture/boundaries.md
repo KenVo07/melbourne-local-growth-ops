@@ -24,6 +24,10 @@ Runtime configuration may contain deployment-safe values such as:
 - Domain and analytics identifiers
 - Connector selections and non-secret settings
 - Delivery-profile information required for operational behavior
+- A strict, versioned Website Experience selected from finite Design DNA and
+  Signature options
+- Explicit `OFF | AUTO | ON` Foundation Search configuration and its bounded
+  public-section scope
 
 Runtime configuration must not be the source of truth for:
 
@@ -52,6 +56,21 @@ reconciliation design.
 
 Do not force all three into one plugin abstraction.
 
+## Website experience and search boundary
+
+- Semantic Profile Packs own truthful business/profile content and first-time
+  task meaning. Website Experience owns bounded visual and composition choices;
+  visible identity must not be smuggled into profile content.
+- Section order may permute only the exact validated semantic section set. It
+  cannot omit, duplicate or invent task content.
+- A Signature is one named, finite server-first component. It cannot become a
+  generic plugin SDK, global provider or prerequisite for baseline tasks.
+- Foundation Search indexes only already-validated public section records for
+  one client deployment. Connector secrets, action URLs, drafts, private routes
+  and cross-client content remain outside the index.
+- Search OFF is the legacy default and must produce no Pagefind output, markup,
+  browser import or request. Search ON remains an optional navigation aid.
+
 ## Infrastructure boundary
 
 No database, authentication, object storage, or background jobs are required for
@@ -65,6 +84,10 @@ Client-specific delivery artifacts must not contain or depend on unrelated
 client data. A handed-off site cannot depend on private agency repositories,
 package registries, credentials, undocumented secrets, or personal accounts.
 Reusable factory IP remains private unless explicitly assigned.
+The portable managed-site source contains only the transformed runtime and
+vendored public contracts needed to rebuild that client. Compatibility evidence
+for this source artifact does not itself complete WEB-01D security and
+responsibility transfer.
 
 ## Integration and security boundary
 
