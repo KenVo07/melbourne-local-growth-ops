@@ -144,6 +144,132 @@ function definition(
   };
 }
 
+function profileFixture(clientId: string): unknown {
+  return {
+    schemaVersion: 1,
+    profile: "CONTRACTOR",
+    archetype: "SERVICE_LED",
+    brand: {
+      eyebrow: `Local service for ${clientId}`,
+      accentColor: "#174a3b",
+      accentContrastColor: "#ffffff",
+      surfaceColor: "#f7f4ec",
+      textColor: "#17201d",
+    },
+    sections: [
+      {
+        type: "SERVICES",
+        sectionId: "services",
+        heading: "Services",
+        items: [{ title: "Repairs", description: "Local repair services." }],
+      },
+      {
+        type: "TRUST_SIGNALS",
+        sectionId: "trust",
+        heading: "Trust",
+        items: ["Credentials confirmed before launch"],
+        disclaimer: "Fictional demonstration content.",
+      },
+      {
+        type: "GALLERY",
+        sectionId: "gallery",
+        heading: "Gallery",
+        items: [{ assetId: "hero-primary", alt: "Local repair service" }],
+      },
+      {
+        type: "PROCESS",
+        sectionId: "process",
+        heading: "Process",
+        items: [{ title: "Talk", description: "Discuss the work." }],
+      },
+      {
+        type: "TESTIMONIALS",
+        sectionId: "testimonials",
+        heading: "Feedback",
+        items: [
+          {
+            quote: "Fictional feedback.",
+            attribution: "Demo customer",
+            disclosure: "Fictional demonstration content.",
+          },
+        ],
+      },
+      {
+        type: "FAQ",
+        sectionId: "faq",
+        heading: "Questions",
+        items: [{ question: "How do I start?", answer: "Contact the team." }],
+      },
+      {
+        type: "CONTACT",
+        sectionId: "contact",
+        heading: "Contact",
+        body: "Contact the team to discuss the work.",
+      },
+      {
+        type: "ACTIONS",
+        sectionId: "primary",
+        heading: "Get started",
+        actions: [
+          {
+            actionId: "call",
+            kind: "PHONE",
+            state: "CONFIGURED",
+            label: "Call the team",
+            href: "tel:+61355500001",
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function experienceFixture(experienceId: string): unknown {
+  return {
+    schemaVersion: 1,
+    experienceId,
+    experienceVersion: "1.0.0",
+    designDna: {
+      palette: {
+        accentColor: "#174a3b",
+        accentContrastColor: "#ffffff",
+        surfaceColor: "#f7f4ec",
+        textColor: "#17201d",
+      },
+      typography: {
+        displayFamily: "SANS",
+        bodyFamily: "SANS",
+        displayScale: "EXPANSIVE",
+        tracking: "TIGHT",
+      },
+      composition: {
+        heroLayout: "MEDIA_FIRST",
+        navigation: "COMPACT",
+        contentWidth: "WIDE",
+        sectionRhythm: "EXPANSIVE",
+        surfaceTreatment: "BANDED",
+        sectionOrder: [
+          "contact",
+          "primary",
+          "services",
+          "trust",
+          "gallery",
+          "process",
+          "testimonials",
+          "faq",
+        ],
+        featuredSectionId: "services",
+      },
+      media: {
+        heroFrame: "EDGE_TO_EDGE",
+        heroFit: "COVER",
+        galleryFrame: "EDITORIAL",
+      },
+      interaction: { actionStyle: "OUTLINE", motion: "SUBTLE" },
+    },
+  };
+}
+
 function registries(
   contracts: readonly WebsiteModuleContract[] = [
     moduleContract("BOOKING_CTA"),
@@ -242,6 +368,16 @@ describe("composeManagedWebsite", () => {
         },
       },
     });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(
+      JSON.stringify({
+        template: result.data.provenance.template,
+        modules: result.data.provenance.modules,
+      }),
+    ).toBe(
+      '{"template":{"templateId":"contractor","templateVersion":"1.0.0"},"modules":[{"moduleId":"booking-a","type":"BOOKING_CTA","moduleVersion":"1.0.0"},{"moduleId":"analytics-a","type":"ANALYTICS","moduleVersion":"1.0.0"}]}',
+    );
   });
 
   it("stops invalid configuration before template resolution or composition", () => {
@@ -492,5 +628,155 @@ describe("composeManagedWebsite", () => {
     });
     expect(JSON.stringify(clientA)).not.toContain("booking-b");
     expect(JSON.stringify(clientB)).not.toContain("booking-a");
+  });
+
+  it("resolves legacy experience and deterministic OFF search when inputs are omitted", () => {
+    const result = composeManagedWebsite(
+      {
+        ...definition(
+          configurationFixture({
+            clientId: "client-a",
+            bookingModuleId: "booking-a",
+          }),
+        ),
+        profile: profileFixture("client-a"),
+      },
+      registries(),
+    );
+
+    expect(result).toMatchObject({
+      success: true,
+      data: {
+        experience: {
+          experienceId: "legacy-contractor",
+          source: "LEGACY_PROFILE_DEFAULT",
+        },
+        foundationSearch: {
+          mode: "OFF",
+          enabled: false,
+          reason: "DEFAULT_OFF",
+          records: [],
+        },
+        provenance: {
+          experience: {
+            experienceId: "legacy-contractor",
+            experienceVersion: "1.0.0",
+            source: "LEGACY_PROFILE_DEFAULT",
+          },
+          foundationSearch: { mode: "OFF", enabled: false },
+        },
+      },
+    });
+  });
+
+  it("freezes and records explicit experience and search output", () => {
+    const result = composeManagedWebsite(
+      {
+        ...definition(
+          configurationFixture({
+            clientId: "client-a",
+            bookingModuleId: "booking-a",
+          }),
+        ),
+        profile: profileFixture("client-a"),
+        experience: experienceFixture("client-a-field-guide"),
+        foundationSearch: { schemaVersion: 1, mode: "ON" },
+      },
+      registries(),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.provenance).toMatchObject({
+      experience: {
+        experienceId: "client-a-field-guide",
+        experienceVersion: "1.0.0",
+        source: "EXPLICIT",
+      },
+      foundationSearch: { mode: "ON", enabled: true },
+    });
+    expect(result.data.foundationSearch.records).toHaveLength(8);
+    expect(Object.isFrozen(result.data.experience)).toBe(true);
+    expect(Object.isFrozen(result.data.experience?.designDna)).toBe(true);
+    expect(Object.isFrozen(result.data.foundationSearch)).toBe(true);
+    expect(Object.isFrozen(result.data.foundationSearch.records)).toBe(true);
+  });
+
+  it("stops invalid section references before template composition", () => {
+    const compose = vi.fn<WebsiteTemplate["compose"]>();
+    const invalidExperience = experienceFixture("invalid") as {
+      designDna: { composition: { sectionOrder: string[] } };
+    };
+    invalidExperience.designDna.composition.sectionOrder = [
+      "services",
+      "missing",
+      "gallery",
+      "process",
+      "testimonials",
+      "faq",
+      "contact",
+      "primary",
+    ];
+
+    const result = composeManagedWebsite(
+      {
+        ...definition(
+          configurationFixture({
+            clientId: "client-a",
+            bookingModuleId: "booking-a",
+          }),
+        ),
+        profile: profileFixture("client-a"),
+        experience: invalidExperience,
+      },
+      registries(undefined, template(compose)),
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      issues: [{ code: "REFERENCE_NOT_FOUND" }],
+    });
+    expect(compose).not.toHaveBeenCalled();
+  });
+
+  it("does not leak explicit experience or search records between clients", async () => {
+    const sharedRegistries = registries();
+    const composeClient = (clientId: string, mode: "OFF" | "ON") =>
+      composeManagedWebsite(
+        {
+          ...definition(
+            configurationFixture({
+              clientId,
+              bookingModuleId: `booking-${clientId}`,
+            }),
+          ),
+          profile: profileFixture(clientId),
+          experience: experienceFixture(`${clientId}-experience`),
+          foundationSearch: { schemaVersion: 1, mode },
+        },
+        sharedRegistries,
+      );
+
+    const [clientA, clientB] = await Promise.all([
+      Promise.resolve().then(() => composeClient("client-a", "ON")),
+      Promise.resolve().then(() => composeClient("client-b", "OFF")),
+    ]);
+
+    expect(clientA).toMatchObject({
+      success: true,
+      data: {
+        experience: { experienceId: "client-a-experience" },
+        foundationSearch: { enabled: true },
+      },
+    });
+    expect(clientB).toMatchObject({
+      success: true,
+      data: {
+        experience: { experienceId: "client-b-experience" },
+        foundationSearch: { enabled: false, records: [] },
+      },
+    });
+    expect(JSON.stringify(clientA)).not.toContain("client-b");
+    expect(JSON.stringify(clientB)).not.toContain("client-a");
   });
 });

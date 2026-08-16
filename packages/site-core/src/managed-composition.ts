@@ -17,6 +17,14 @@ import type {
 import { createWebsiteTemplateAssetContext } from "./asset-composition.js";
 import { composeValidatedWebsite } from "./composition.js";
 import {
+  resolveWebsiteExperience,
+  type ResolvedWebsiteExperience,
+} from "./experience.js";
+import {
+  resolveFoundationSearch,
+  type ResolvedFoundationSearch,
+} from "./foundation-search.js";
+import {
   compareText,
   WebsiteModulePipelineError,
 } from "./module-registry.js";
@@ -40,6 +48,8 @@ import { validateWebsiteConfiguration } from "./index.js";
 export interface ManagedWebsiteDefinition {
   readonly configuration: unknown;
   readonly profile?: unknown;
+  readonly experience?: unknown;
+  readonly foundationSearch?: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
   readonly assets?: AssetManifestSource;
@@ -72,11 +82,22 @@ export interface ManagedWebsiteCompositionProvenance {
   readonly configurationVersion: number;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleProvenance[];
+  readonly experience?: Readonly<{
+    experienceId: string;
+    experienceVersion: string;
+    source: "EXPLICIT" | "LEGACY_PROFILE_DEFAULT";
+  }>;
+  readonly foundationSearch: Readonly<{
+    mode: "OFF" | "AUTO" | "ON";
+    enabled: boolean;
+  }>;
 }
 
 export interface ManagedWebsiteComposition {
   readonly configuration: ValidatedWebsiteConfiguration;
   readonly profile?: WebsiteProfileContent;
+  readonly experience?: ResolvedWebsiteExperience;
+  readonly foundationSearch: ResolvedFoundationSearch;
   readonly assetManifest: AssetManifest;
   readonly assets: readonly ResolvedWebsiteImage[];
   readonly template: WebsiteComposition;
@@ -100,8 +121,31 @@ export function composeManagedWebsite(
     return profileValidation;
   }
 
+  const experienceValidation = resolveWebsiteExperience(
+    definition.experience,
+    profileValidation?.data,
+  );
+  if (!experienceValidation.success) {
+    return experienceValidation;
+  }
+
+  const foundationSearchValidation = resolveFoundationSearch(
+    definition.foundationSearch,
+    profileValidation?.data === undefined
+      ? undefined
+      : {
+          businessName: validation.data.display.businessName,
+          profile: profileValidation.data,
+        },
+  );
+  if (!foundationSearchValidation.success) {
+    return foundationSearchValidation;
+  }
+
   const configuration = deepFreeze(validation.data);
   const profile = profileValidation?.data;
+  const experience = experienceValidation.data;
+  const foundationSearch = foundationSearchValidation.data;
   const assetManifest =
     definition.assets === undefined
       ? createEmptyAssetManifest(configuration.clientId)
@@ -132,6 +176,8 @@ export function composeManagedWebsite(
     data: Object.freeze({
       configuration,
       ...(profile === undefined ? {} : { profile }),
+      ...(experience === undefined ? {} : { experience }),
+      foundationSearch,
       assetManifest,
       assets,
       template: templateComposition,
@@ -148,6 +194,19 @@ export function composeManagedWebsite(
             Object.freeze({ moduleId, type, moduleVersion }),
           ),
         ),
+        ...(experience === undefined
+          ? {}
+          : {
+              experience: Object.freeze({
+                experienceId: experience.experienceId,
+                experienceVersion: experience.experienceVersion,
+                source: experience.source,
+              }),
+            }),
+        foundationSearch: Object.freeze({
+          mode: foundationSearch.mode,
+          enabled: foundationSearch.enabled,
+        }),
       }),
     }),
   };
