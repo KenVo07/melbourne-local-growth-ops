@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-3 complete; Phase 4 starting)
+Last updated: 2026-08-17 (Phases 0-4 complete; Phase 5 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `66c0c73` — see Git section |
+| HEAD now | `99e061a` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -45,8 +45,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 1 — freeze architecture in repo docs | **COMPLETE** (commit `482e9bb`; independent review findings all resolved) |
 | 2 — pure site-core v2 contracts | **COMPLETE** (commit `265fb15`) |
 | 3 — carry v2 data through generation | **COMPLETE** (commit `66c0c73`) |
-| 4 — trusted source-policy scanner | **IN PROGRESS** |
-| 5 — public runtime contract + registry | not started |
+| 4 — trusted source-policy scanner | **COMPLETE** (commit `99e061a`; adversarial review running) |
+| 5 — public runtime contract + registry | **IN PROGRESS** |
 | 6 — static multi-route App Router | not started |
 | 7 — Projects + client-owned media | not started |
 | 8 — standalone artifact generation | not started |
@@ -85,21 +85,34 @@ section-anchor URLs. Phase 9 replaces this; the reference fixture's
 `foundationSearch` block already uses `schemaVersion: 2` + `includePageIds`,
 which is not yet accepted by `FoundationSearchConfigSchema`.
 
-### Phase 4 subtask ledger — CURRENT
+### Phase 4 subtask ledger — DONE
 
-Goal: integrate and red-team the trusted source-policy scanner **before** any
-client source is copied or built.
+- [x] 4.1 copy the AMBER scanner, then rewrite its parser layer (see A3 below)
+- [x] 4.2 fixed inspection order established inside `inspectClientExperienceSource`.
+      **Assembler wiring is deliberately deferred to Phase 8**, because copying
+      needs the Phase 5/6 runtime to exist. Phase 4's gate — "no client source is
+      copied until every policy test passes" — is satisfied: nothing copies yet.
+- [x] 4.3 red-team suite, 39 cases, all passing
+- [x] 4.4 gate + commit `99e061a`
 
-- [ ] **CURRENT** 4.1 copy `client-experience-source-policy.ts` + test (AMBER)
-- [ ] 4.2 integrate at the assembly boundary only, in this exact order: resolve
-      and canonicalize the source root → reject symlinks/path escape → parse and
-      validate the manifest → inventory files → parse TS/TSX → inspect imports
-      and execution primitives → compare declared dependencies against the
-      governance allowlist → hash files → only then copy or generate anything
-- [ ] 4.3 red-team with fixtures for every case in runbook §4.3 and
-      `tests/PLATFORM_BOUNDARY_REVIEW.md`; fail closed where AST inspection
-      cannot prove safety
-- [ ] 4.4 gate: managed-web test + typecheck + governance:secrets, then commit
+### Phase 5 subtask ledger — CURRENT
+
+Goal: the narrow public runtime contract, registry, sanitized public projection
+and Platform components.
+
+- [ ] **CURRENT** 5.1 copy `client-experience/*` and `routing/*` candidates
+      (contract, public-api, registry, public-projection are GREEN;
+      `platform-components.tsx` and `render-client-route.tsx` are AMBER and must
+      be reconciled against real Next 16 / React 19 and the live module renderer)
+- [ ] 5.2 wire the sanitized public projection to the private snapshot; keep the
+      output field set fixed; test the ABSENCE of secretReferenceId,
+      runtimeSecretBindings, recipient addresses, raw connectors and entitlement
+      state in serialized route props
+- [ ] 5.3 reconcile PlatformLink / PlatformImage / PlatformRegion
+- [ ] 5.4 map the `@proportion/client-experience` alias through tsconfig paths in
+      BOTH the private app and the portable artifact tsconfig; do not rewrite
+      authored imports; do not publish an npm package
+- [ ] 5.5 gate + commit
 
 ## Implementation decisions applied
 
@@ -125,6 +138,9 @@ client source is copied or built.
 |---|---|---|
 | A1 | `validateWebsiteV2Model` gained a required `profile` input for v2 | Patch 0008 requires SERVICE_DETAIL→serviceId cross-validation, which needs validated profile content. The prebuilt candidate had no service coverage check at all. |
 | A2 | `WebsiteServiceItemSchema` introduced; SERVICES uses it instead of the shared `titledItemSchema` | Patch 0008 §"Smallest compatible change" item 3: the ID must apply to SERVICES only, not every titled list (PROCESS/EVENTS/COLLECTIONS keep `titledItemSchema`). |
+| A3 | **Source-policy scanner reparented from the TypeScript compiler API to `@babel/parser@8.0.4`** (new MIT build-time devDependency of `apps/managed-web`) | The prebuilt candidate used `ts.createSourceFile` / `ts.forEachChild`. `typescript@7.0.2` is the native port and exposes **no standalone parser**: its `.` export is `lib/version.cjs`, and AST access requires spawning the TS server and loading a configured Project via the explicitly `unstable/*` namespace. Basing a security control on an API with no compatibility guarantee, or pinning a second TypeScript major, were both rejected. **Operator chose this option explicitly.** Recorded in `docs/governance/oss-adoption-register.md`; NOTICE regenerated; must never enter a client artifact graph. |
+| A4 | Scanner rules hardened well beyond the candidate | Red-teaming found real gaps: `use server` only detected at module scope (missing the actual server-action shape inside a function body); only `process.env.X` member access detected (missing `process["env"]` and aliasing); `eval`/`require` only as bare identifiers (missing `globalThis.eval`, bare `Function()`); `document.cookie` only via a direct `document` identifier (missing `window.document.cookie`); no `innerHTML` detection; `next`/`server-only`/unprefixed Node built-ins only blocked implicitly by non-declaration, so an approval mistake would open them; no `javascript:` URL detection; legacy CSS `expression()` only matched as a property name. |
+| A5 | The scanner's test lives in `tests/integration/site-core/`, not beside the source | The managed-web vitest config only includes `tests/integration/**`, and the app has no co-located tests. A co-located test would silently never run. |
 
 ### Defects found in prebuilt candidates
 
@@ -189,13 +205,29 @@ M apps/managed-web/src/generation/generate-client-website.ts
 A tests/integration/site-core/authored-definition-snapshot.test.ts  (11 cases)
 ```
 
-### Expected to be edited next (Phase 4)
+### Committed in `99e061a` (Phase 4 source policy)
 
 ```
-A apps/managed-web/src/generation/client-experience-source-policy.ts + .test.ts
-M apps/managed-web/src/generation/assemble-client-artifact.ts  (call the scanner at the boundary)
-M apps/managed-web/src/generation/cli.ts                       (load <input>/experience/manifest.json)
-A tests/fixtures/web01b/experience-source/**                   (malicious + valid source fixtures)
+A apps/managed-web/src/generation/client-experience-source-policy.ts
+A tests/integration/site-core/client-experience-source-policy.test.ts  (39 cases)
+M apps/managed-web/package.json          (@babel/parser 8.0.4 devDependency)
+M pnpm-lock.yaml
+M NOTICE.md                              (4 MIT Babel packages)
+M docs/governance/oss-adoption-register.md  (Babel parser adoption entry)
+```
+
+### Expected to be edited next (Phase 5)
+
+```
+A apps/managed-web/src/client-experience/contract.tsx
+A apps/managed-web/src/client-experience/public-api.ts
+A apps/managed-web/src/client-experience/registry.ts
+A apps/managed-web/src/client-experience/public-projection.ts
+A apps/managed-web/src/client-experience/platform-components.tsx   (AMBER)
+A apps/managed-web/src/client-experience/render-client-route.tsx   (AMBER)
+A apps/managed-web/src/routing/resolve-client-route.ts
+M apps/managed-web/tsconfig.json          (@proportion/client-experience alias)
+M apps/managed-web/src/runtime-types.ts
 ```
 
 ### Prebuilt files NOT yet integrated
@@ -269,6 +301,20 @@ duplicate service IDs; service page with an undeclared ID; no title-matching
 fallback; route identity stable across a title edit; two pages competing for one
 service ID; a service with no detail page; search-excluded pages omitted.
 
+### Phase 4 gate — PASS (2026-08-17T02:31 +10:00)
+
+| Command | Result |
+|---|---|
+| source-policy red-team suite | pass — **39** cases |
+| `pnpm --filter …/managed-web typecheck` | pass |
+| `pnpm --filter …/managed-web test` | pass — **213** tests |
+| `pnpm run governance:secrets` | PASS — 335 files |
+| `pnpm run governance:licenses` | PASS after `governance:notices` regenerated NOTICE (4 MIT Babel packages added) |
+| `pnpm run governance:audit` | PASS — no new advisories from the Babel subtree; still the same 3 deferrals |
+
+An independent adversarial source-policy review is running against the committed
+scanner. Treat its findings as required work before the final candidate.
+
 ### Phase 3 gate — PASS (2026-08-17T01:46 +10:00)
 
 | Command | Result |
@@ -301,6 +347,8 @@ creative work has been validated yet.
 | `265fb15` | `feat(site-core): add page graph project media and experience contracts` — nine new contract modules + tests, v2 exports, patch 0008 service IDs, two prebuilt-defect fixes |
 | `c701d11` | `docs(web01b): add durable v2 implementation state file` |
 | `66c0c73` | `feat(web01b): carry page graph projects and authored experience provenance` — composition/snapshot/provenance rendering-mode dispatch and the schemaVersion 1/2 parse boundary |
+| `185f584` | `docs(web01b): checkpoint implementation state after phase 3` |
+| `99e061a` | `feat(generation): govern authored client experience source` — Babel-based source-policy scanner, 39-case red-team suite, `@babel/parser` devDependency + OSS register entry + NOTICE |
 
 Uncommitted right now: `WEB01B_V2_IMPLEMENTATION_STATE.md` only (updated after each phase).
 
@@ -325,24 +373,24 @@ another PR; update Notion; promote a Vercel deployment to production; delete the
 
 ## Continuation — exact next action
 
-**Phase 4.1.** Copy the AMBER source-policy candidate and reconcile it against
-the live TypeScript 7 compiler API:
+**Phase 5.1.** Copy the runtime candidates:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 cd /home/khoa/Projects/web01b-implementation/proportion-web-platform
-H=../inputs/WEB01B_V2_PRO_REASONING_OUTPUT/prebuilt/apps/managed-web/src/generation
-cp "$H/client-experience-source-policy.ts"      apps/managed-web/src/generation/
-cp "$H/client-experience-source-policy.test.ts" apps/managed-web/src/generation/
+H=../inputs/WEB01B_V2_PRO_REASONING_OUTPUT/prebuilt/apps/managed-web/src
+mkdir -p apps/managed-web/src/client-experience apps/managed-web/src/routing
+cp "$H/client-experience/"*.ts*  apps/managed-web/src/client-experience/
+cp "$H/routing/"*.ts             apps/managed-web/src/routing/
 ```
 
-Then read `apps/managed-web/src/generation/assemble-client-artifact.ts` and
-`verify-client-artifact.ts` before wiring the scanner in. **No client source may
-be copied until every policy test passes.**
+Prebuilt `*.test.ts*` files land beside the source but **will not run** there —
+move every one into `tests/integration/site-core/` and fix its import path, the
+same way the Phase 4 scanner test was handled.
 
-Reference material for this phase:
-`patches/0004-client-experience-artifact-assembly.md`,
-`tests/PLATFORM_BOUNDARY_REVIEW.md`, runbook §4.
+Read before reconciling: `apps/managed-web/src/runtime-types.ts`,
+`rendering/module-renderer-registry.ts`, `rendering/ManagedWebsiteShell.tsx`,
+`rendering/sections/ProfileSection.tsx` and `packages/asset-pipeline`'s resolver.
 
 ## Deferred obligations — do not lose these
 
