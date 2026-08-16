@@ -29,6 +29,17 @@ const registries = Object.freeze({
   modules: createWebsiteModuleRegistry(managedWebsiteModuleContracts),
 });
 
+const definitionKeys = new Set([
+  "schemaVersion",
+  "configuration",
+  "profile",
+  "template",
+  "modules",
+  "assets",
+  "experience",
+  "foundationSearch",
+]);
+
 export function generateClientWebsiteSnapshot(
   input: unknown,
   publicDirectory: string,
@@ -65,13 +76,17 @@ export function generateClientWebsiteSnapshot(
     schemaVersion: 1,
     configuration: composition.data.configuration,
     profile: composition.data.profile,
+    ...(composition.data.experience === undefined
+      ? {}
+      : { experience: composition.data.experience }),
+    foundationSearch: composition.data.foundationSearch,
     provenance: composition.data.provenance,
     assetManifest: composition.data.assetManifest,
     assets: composition.data.assets,
     regions: composition.data.regions,
     analyticsMeasurementIds,
     runtimeSecretBindings: runtimeSecretBindings(composition.data.configuration),
-  }) as ClientWebsiteSnapshot;
+  });
 }
 
 export function createManagedWebsiteDefinition(
@@ -92,6 +107,12 @@ export function createManagedWebsiteDefinition(
   return {
     configuration: configuration.data,
     profile: profile.data,
+    ...(definition.experience === undefined
+      ? {}
+      : { experience: definition.experience }),
+    ...(definition.foundationSearch === undefined
+      ? {}
+      : { foundationSearch: definition.foundationSearch }),
     template: definition.template,
     modules: definition.modules,
     assets: {
@@ -105,6 +126,17 @@ export function createManagedWebsiteDefinition(
 export function parseDefinitionInput(
   input: unknown,
 ): ClientWebsiteDefinitionInput {
+  if (isRecord(input)) {
+    const unknownKeys = Object.keys(input)
+      .filter((key) => !definitionKeys.has(key))
+      .sort(compareText);
+    if (unknownKeys.length > 0) {
+      throw new TypeError(
+        `Client website input contains unknown top-level field(s): ${unknownKeys.join(", ")}.`,
+      );
+    }
+  }
+
   if (
     !isRecord(input) ||
     input.schemaVersion !== 1 ||
@@ -123,6 +155,12 @@ export function parseDefinitionInput(
     schemaVersion: 1,
     configuration: input.configuration,
     profile: input.profile,
+    ...(input.experience === undefined
+      ? {}
+      : { experience: input.experience }),
+    ...(input.foundationSearch === undefined
+      ? {}
+      : { foundationSearch: input.foundationSearch }),
     template: input.template as unknown as ClientWebsiteDefinitionInput["template"],
     modules: input.modules as unknown as ClientWebsiteDefinitionInput["modules"],
     assets: input.assets as unknown as ClientWebsiteDefinitionInput["assets"],

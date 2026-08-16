@@ -6,6 +6,76 @@ export type RuntimeWebsiteArchetype =
   | "HOSPITALITY_EDITORIAL"
   | "CATALOGUE_LED";
 
+export interface RuntimeWebsiteExperience {
+  readonly schemaVersion: 1;
+  readonly experienceId: string;
+  readonly experienceVersion: string;
+  readonly source: "EXPLICIT" | "LEGACY_PROFILE_DEFAULT";
+  readonly designDna: {
+    readonly palette: {
+      readonly accentColor: string;
+      readonly accentContrastColor: string;
+      readonly surfaceColor: string;
+      readonly textColor: string;
+    };
+    readonly typography: {
+      readonly displayFamily: "SANS" | "SERIF";
+      readonly bodyFamily: "SANS" | "SERIF";
+      readonly displayScale: "COMPACT" | "BALANCED" | "EXPANSIVE";
+      readonly tracking: "TIGHT" | "NORMAL" | "OPEN";
+    };
+    readonly composition: {
+      readonly heroLayout: "SPLIT" | "STACKED" | "MEDIA_FIRST";
+      readonly navigation: "INLINE" | "COMPACT";
+      readonly contentWidth: "STANDARD" | "WIDE";
+      readonly sectionRhythm: "COMPACT" | "BALANCED" | "EXPANSIVE";
+      readonly surfaceTreatment: "FLAT" | "BANDED" | "CARDS";
+      readonly sectionOrder?: readonly string[] | undefined;
+      readonly featuredSectionId?: string | undefined;
+    };
+    readonly media: {
+      readonly heroFrame: "EDGE_TO_EDGE" | "CONTAINED" | "INSET";
+      readonly heroFit: "COVER" | "CONTAIN";
+      readonly galleryFrame: "NATURAL" | "UNIFORM" | "EDITORIAL";
+    };
+    readonly interaction: {
+      readonly actionStyle: "TEXT" | "SOLID" | "OUTLINE";
+      readonly motion: "NONE" | "SUBTLE";
+    };
+  };
+  readonly signature?: {
+    readonly signatureId: string;
+    readonly placement: "AFTER_HERO" | "BEFORE_SECTIONS" | "BEFORE_FOOTER";
+  } | undefined;
+}
+
+export interface RuntimeFoundationSearch {
+  readonly schemaVersion: 1;
+  readonly mode: "OFF" | "AUTO" | "ON";
+  readonly enabled: boolean;
+  readonly reason:
+    | "DEFAULT_OFF"
+    | "EXPLICIT_OFF"
+    | "EXPLICIT_ON"
+    | "AUTO_ENABLED"
+    | "AUTO_BELOW_THRESHOLD";
+  readonly records: readonly {
+    readonly url: string;
+    readonly content: string;
+    readonly language: "en";
+    readonly meta: {
+      readonly title: string;
+      readonly businessName: string;
+      readonly sectionId: string;
+      readonly profile: string;
+    };
+    readonly filters: {
+      readonly profile: readonly string[];
+      readonly sectionType: readonly string[];
+    };
+  }[];
+}
+
 export interface RuntimeWebsiteBrand {
   readonly eyebrow: string;
   readonly accentColor: string;
@@ -261,6 +331,8 @@ export interface RuntimeWebsiteImage {
 export interface ManagedWebsiteRuntime {
   readonly configuration: RuntimeWebsiteConfiguration;
   readonly profile?: RuntimeWebsiteProfileContent | undefined;
+  readonly experience?: RuntimeWebsiteExperience | undefined;
+  readonly foundationSearch: RuntimeFoundationSearch;
   readonly provenance: {
     readonly configurationId: string;
     readonly configurationVersion: number;
@@ -268,6 +340,15 @@ export interface ManagedWebsiteRuntime {
       readonly templateId: string;
       readonly templateVersion: string;
     };
+    readonly experience?: Readonly<{
+      readonly experienceId: string;
+      readonly experienceVersion: string;
+      readonly source: "EXPLICIT" | "LEGACY_PROFILE_DEFAULT";
+    }>;
+    readonly foundationSearch: Readonly<{
+      readonly mode: "OFF" | "AUTO" | "ON";
+      readonly enabled: boolean;
+    }>;
   };
   readonly assets: readonly RuntimeWebsiteImage[];
   readonly regions: readonly {

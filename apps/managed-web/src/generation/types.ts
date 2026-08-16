@@ -5,6 +5,9 @@ import type {
 } from "@melbourne-local-growth-ops/asset-pipeline";
 import type {
   ManagedWebsiteCompositionRegion,
+  ManagedWebsiteCompositionProvenance,
+  ResolvedFoundationSearch,
+  ResolvedWebsiteExperience,
   ValidatedWebsiteConfiguration,
   WebsiteModuleReference,
   WebsiteProfileContent,
@@ -15,6 +18,8 @@ export interface ClientWebsiteDefinitionInput {
   readonly schemaVersion: 1;
   readonly configuration: unknown;
   readonly profile: unknown;
+  readonly experience?: unknown;
+  readonly foundationSearch?: unknown;
   readonly template: WebsiteTemplateReference;
   readonly modules: readonly WebsiteModuleReference[];
   readonly assets: readonly PortableImageAssetReference[];
@@ -30,16 +35,9 @@ export interface ClientWebsiteSnapshot {
   readonly schemaVersion: 1;
   readonly configuration: ValidatedWebsiteConfiguration;
   readonly profile: WebsiteProfileContent;
-  readonly provenance: {
-    readonly configurationId: string;
-    readonly configurationVersion: number;
-    readonly template: WebsiteTemplateReference;
-    readonly modules: readonly {
-      readonly moduleId: string;
-      readonly type: "LEAD_FORM" | "BOOKING_CTA" | "ANALYTICS";
-      readonly moduleVersion: string;
-    }[];
-  };
+  readonly experience?: ResolvedWebsiteExperience;
+  readonly foundationSearch: ResolvedFoundationSearch;
+  readonly provenance: ManagedWebsiteCompositionProvenance;
   readonly assetManifest: AssetManifest;
   readonly assets: readonly {
     readonly slotId: string;

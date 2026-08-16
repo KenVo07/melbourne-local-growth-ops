@@ -9,7 +9,7 @@ const applicationRoot = process.cwd().endsWith("apps\\managed-web") ||
   ? process.cwd()
   : resolve(process.cwd(), "apps", "managed-web");
 
-export const clientWebsite = generateClientWebsiteSnapshot(
+export const clientWebsite: ManagedWebsiteRuntime = generateClientWebsiteSnapshot(
   clientWebsiteInput,
   resolve(applicationRoot, "public"),
-) as unknown as ManagedWebsiteRuntime;
+);

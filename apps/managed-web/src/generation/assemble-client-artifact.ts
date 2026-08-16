@@ -137,10 +137,12 @@ export async function assembleClientSourceArtifact(
     sourceDirectory,
     "src/client-website.ts",
     [
-      'import snapshot from "./generated/managed-website.json";',
       'import type { ManagedWebsiteRuntime } from "./runtime-types";',
       "",
-      "export const clientWebsite = snapshot as unknown as ManagedWebsiteRuntime;",
+      `const snapshot = ${JSON.stringify(snapshot, null, 2)} as const;`,
+      "const checkedSnapshot: ManagedWebsiteRuntime = snapshot;",
+      "",
+      "export const clientWebsite = checkedSnapshot;",
       "",
     ].join("\n"),
   );

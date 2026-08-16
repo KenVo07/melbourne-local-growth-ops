@@ -94,6 +94,56 @@ export function contractorProfileContent(clientId: string) {
   };
 }
 
+export const contractorReferenceExperience = Object.freeze({
+  schemaVersion: 1,
+  experienceId: "contractor-reference-split",
+  experienceVersion: "1.0.0",
+  designDna: Object.freeze({
+    palette: Object.freeze({
+      accentColor: "#b94c2f",
+      accentContrastColor: "#ffffff",
+      surfaceColor: "#fffdf8",
+      textColor: "#18201d",
+    }),
+    typography: Object.freeze({
+      displayFamily: "SERIF",
+      bodyFamily: "SANS",
+      displayScale: "BALANCED",
+      tracking: "NORMAL",
+    }),
+    composition: Object.freeze({
+      heroLayout: "SPLIT",
+      navigation: "INLINE",
+      contentWidth: "STANDARD",
+      sectionRhythm: "BALANCED",
+      surfaceTreatment: "CARDS",
+      sectionOrder: Object.freeze([
+        "contact",
+        "primary",
+        "services",
+        "trust",
+        "gallery",
+        "process",
+        "testimonials",
+        "faq",
+      ]),
+      featuredSectionId: "services",
+    }),
+    media: Object.freeze({
+      heroFrame: "CONTAINED",
+      heroFit: "COVER",
+      galleryFrame: "UNIFORM",
+    }),
+    interaction: Object.freeze({ actionStyle: "SOLID", motion: "NONE" }),
+  }),
+});
+
+export const foundationSearchOnSelectedSections = Object.freeze({
+  schemaVersion: 1,
+  mode: "ON",
+  includeSectionIds: Object.freeze(["services", "trust", "faq", "contact"]),
+});
+
 export const bookingCtaContract: WebsiteModuleContract = {
   type: "BOOKING_CTA",
   version: "1.0.0",
