@@ -132,7 +132,7 @@ test("both explicit Contractor variants preserve lead-form validation and delive
   await page.getByLabel("Phone").fill("+61 400 000 000");
   await page.getByLabel("How can we help?").fill("A bounded variant enquiry.");
   await page.getByRole("button", { name: "Send enquiry" }).click();
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(page.locator(".lead-form-status")).toHaveText(
     "Thanks. Your enquiry has been sent.",
   );
 });

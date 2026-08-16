@@ -355,9 +355,15 @@ h2 {
 
 .managed-site[data-profile] .profile-section {
   display: grid;
+  min-width: 0;
   gap: clamp(1.5rem, 3vw, 2.5rem);
   margin-top: clamp(3.5rem, 9vw, 8rem);
+  overflow-wrap: anywhere;
   scroll-margin-top: 2rem;
+}
+
+.managed-site[data-profile] .profile-section > * {
+  min-width: 0;
 }
 
 .managed-site[data-profile] .profile-section-heading {

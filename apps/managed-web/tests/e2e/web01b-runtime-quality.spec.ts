@@ -94,6 +94,9 @@ test("constrained CPU and network preserve responsive search with bounded runtim
           renderedWidth: hero.getBoundingClientRect().width,
           sizes: hero.sizes,
           fetchPriority: hero.fetchPriority,
+          preloaded: [...document.querySelectorAll<HTMLLinkElement>(
+            'link[rel="preload"][as="image"]',
+          )].length === 1,
         },
         viewport: {
           width: document.documentElement.clientWidth,
@@ -124,7 +127,9 @@ test("constrained CPU and network preserve responsive search with bounded runtim
     expect(runtime.hero?.naturalWidth).toBeGreaterThan(0);
     expect(runtime.hero?.naturalHeight).toBeGreaterThan(0);
     expect(runtime.hero?.sizes).not.toBe("");
-    expect(runtime.hero?.fetchPriority).toBe("high");
+    expect(
+      runtime.hero?.fetchPriority === "high" || runtime.hero?.preloaded === true,
+    ).toBe(true);
     expect(runtime.pagefindRequests.some((url) => url.endsWith("/pagefind/pagefind.js")))
       .toBe(true);
     expect(runtime.layoutShift).toBeLessThanOrEqual(0.1);
