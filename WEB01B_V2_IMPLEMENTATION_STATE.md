@@ -291,7 +291,7 @@ audited with axe rather than by eye.
 - Lower or mid-range physical phone (I-04, and the device half of C-06, E-07).
 
 **Milestone verdict: BLOCKED, not PASS.** Every automatable A–H row passes for
-`a9a779abb35304bad188f0fc16d3597b67d55301`. Section I is untouched, and the
+`cab4933c3064710a620e970569084c4d4c3db508`. Section I is untouched, and the
 matrix rule is explicit that a blocked human gate stays blocked rather than
 becoming a technical pass.
 
