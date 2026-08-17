@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-8 complete and green; Phase 9 starting)
+Last updated: 2026-08-17 (Phases 0-9 complete and green; Phase 10 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `503e613` — see Git section |
+| HEAD now | `dbf1b2d` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -50,8 +50,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 6 — static multi-route App Router | **COMPLETE** (`e415ed4`, `d2e85ad`, `fce7b3e`) |
 | 7 — Projects + client-owned media | **COMPLETE** (`47d82fe`) |
 | 8 — standalone artifact generation | **COMPLETE** (`503e613`) |
-| 9 — multi-route Foundation Search | **IN PROGRESS** |
-| 10 — optional motion substrate | not started |
+| 9 — multi-route Foundation Search | **COMPLETE** (`dbf1b2d`) |
+| 10 — optional motion substrate | **IN PROGRESS** |
 | 11 — production Signature Slice + Creative Gate | not started |
 | 12 — full proof, artifacts, deploy, acceptance | not started |
 
@@ -141,26 +141,47 @@ Two real defects were found by actually running the gate rather than assuming it
 | every artifact declared `verify:handoff`, which three runbooks and the governance DoD tell clients to run, but the script was never written into the artifact | artifacts now ship `handoff-manifest.json`, `handoff-manifest.sha256` and a dependency-free `scripts/verify-handoff.mjs` |
 | Pagefind output is content-hash named per build, so hash-pinning it fails on any honest rebuild | search verified by posture (enabled ⇒ output present, disabled ⇒ absent); handoff-process files excluded from the inventory, matching what `isSafeExportPath` already classified them as |
 
-### Phase 9 subtask ledger — CURRENT
+### Phase 9 — DONE (`dbf1b2d`)
 
-Runbook §9. Adapt, do not rewrite, the working v1 Pagefind implementation.
+Search config became a discriminated union: v1 keeps section scope, v2 adds page
+scope. Records for an authored site target real routes; project results land on
+the project route. Evidence: `evidence/phase09/search-no-tax.md`.
 
-- [ ] **CURRENT** 9.1 confirm the v1 invariants still hold: OFF/AUTO/ON, legacy
-      default OFF, stale output deletion, enabled-only browser runtime, no
-      server search dependency, one index per client
-- [ ] 9.2 page-aware record projection. `packages/site-core/src/page-graph-search.ts`
-      already exists and is exported but is **not yet wired into
-      `resolveFoundationSearch`**. `FoundationSearchConfigSchema` still only
-      accepts `schemaVersion: 1` + `includeSectionIds`; the reference fixture's
-      `foundationSearch` block uses `schemaVersion: 2` + `includePageIds`, which
-      is currently rejected. Add the v2 config shape and route it to the page
-      graph projector while leaving the legacy section path untouched.
-- [ ] 9.3 validate navigation: route/anchor URLs, project results landing on the
-      project route, keyboard/Escape/focus return, OFF core tasks
-- [ ] 9.4 no-tax comparison: v2 static Search OFF vs an equivalent build with
-      search capability absent — client chunks, transferred JS, requests,
-      `public/pagefind`, search markup
-- [ ] 9.5 gate + commit
+**No-tax result (two artifacts identical except search mode):** OFF ships no
+index, no markup, no controller. ON adds 17 index files and search markup on 36
+prerendered pages but **exactly zero client JavaScript bytes** — both builds are
+13 chunks / 660,951 bytes — because Pagefind is fetched lazily from the
+generated index rather than bundled.
+
+**`PlatformSearch` added** as a fifth primitive. Without it an authored route
+had no way to render search: the source policy refuses raw markup and Kernel
+imports, so search would have been indexable but unreachable. It renders nothing
+when disabled.
+
+Root e2e suite still 43 passed / 5 skipped, unchanged from the v1 baseline.
+
+### Phase 10 subtask ledger — CURRENT
+
+Runbook §10. **Do not adopt a motion library speculatively.**
+
+- [ ] 10.1 do NOT enable Next `experimental.viewTransition` or depend on React
+      Canary `<ViewTransition>` — explicitly excluded from milestone acceptance
+- [ ] 10.2 select a dependency **only from a concrete Signature need**, and only
+      after trying CSS/WAAPI. `approvedClientExperienceDependencies` is
+      deliberately empty; adding an entry requires an OSS adoption register
+      entry first, then NOTICE regeneration.
+- [ ] 10.3 required runtime properties: no global scroll listener on static or
+      legacy sites; no per-frame work while offscreen; cleanup on unmount and
+      route change; no hydration mismatch; reduced-motion equivalent preserves
+      comprehension; touch does not depend on hover; dependency chunk absent
+      from experiences that do not declare it
+- [ ] 10.4 gate against `tests/MOTION_PERFORMANCE_BUDGET.md`. **Do not commit
+      final choreography before the Signature Slice passes the Creative Gate.**
+
+Phase 10 is deliberately thin until Phase 11 reveals what the Signature actually
+needs. The Kernel already provides the seams: `PlatformSearch`-style opt-in
+primitives, per-experience dependency declaration, and a manifest that records
+`clientJavaScript` and `motion` posture and is cross-validated for coherence.
 
 ## Implementation decisions applied
 
