@@ -19,7 +19,7 @@ appears without review.
 
 ### Apache-2.0
 
-- @img/sharp-linux-x64@0.34.5
+- @img/sharp-linux-x64@0.35.3
 - @playwright/test@1.62.0
 - @swc/helpers@0.5.15
 - @typescript/typescript-linux-x64@7.0.2
@@ -28,7 +28,7 @@ appears without review.
 - expect-type@1.4.0
 - playwright@1.62.0
 - playwright-core@1.62.0
-- sharp@0.34.5
+- sharp@0.35.3
 - typescript@7.0.2
 
 ### BSD-3-Clause
@@ -47,7 +47,7 @@ appears without review.
 
 ### LGPL-3.0-or-later
 
-- @img/sharp-libvips-linux-x64@1.2.4
+- @img/sharp-libvips-linux-x64@1.3.2
 
 ### MIT
 
@@ -95,7 +95,7 @@ appears without review.
 - pagefind@1.5.2
 - pathe@2.0.3
 - picomatch@4.0.5
-- postcss@8.4.31, 8.5.23
+- postcss@8.5.26
 - react@19.2.8
 - react-dom@19.2.8
 - resend@6.18.1

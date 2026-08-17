@@ -8,6 +8,15 @@ useNodeVersion: 24.18.0
 overrides:
   # Patched 3.x line for GHSA-2v37-7h3g-55p8; both PostCSS ranges accept it.
   nanoid: 3.3.18
+  # Next 16.2.12 pins postcss 8.4.31, which carries four advisories — arbitrary
+  # file read, path traversal in source-map auto-loading, and two XSS/stringify
+  # issues. All are patched at 8.5.23. Upgrading Next does not resolve them:
+  # 16.3.1 pins exactly 8.5.23, so the override is required either way and is
+  # kept ahead of it. postcss is build-time only and never reaches the browser.
+  postcss: ^8.5.26
+  # sharp <0.35.0 inherits libvips CVE-2026-33327 and related. Build-time image
+  # encoding only; Next treats it as optional.
+  sharp: ^0.35.3
 
 allowBuilds:
   esbuild: true

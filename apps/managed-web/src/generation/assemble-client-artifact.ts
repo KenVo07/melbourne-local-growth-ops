@@ -188,12 +188,25 @@ export async function assembleClientSourceArtifact(
       "# Both spellings are present on purpose. pnpm 11 reads `allowBuilds` and",
       "# rewrites this file if a needed entry is missing — which would change a",
       "# file the integrity manifest covers. pnpm 10 reads `onlyBuiltDependencies`.",
+      "# They live here rather than in package.json, which pnpm 11 no longer reads",
+      "# and warns about on every install.",
       "allowBuilds:",
       "  esbuild: true",
       "  sharp: true",
       "onlyBuiltDependencies:",
       "  - esbuild",
       "  - sharp",
+      "",
+      "# Transitive versions Next pins that carry published advisories. Both are",
+      "# build-time only and neither reaches the browser, but the artifact should",
+      "# not install a known-vulnerable package on the client's machine.",
+      "#   postcss <8.5.23 — arbitrary file read, path traversal in source-map",
+      "#     auto-loading, and two stringify/XSS issues.",
+      "#   sharp <0.35.0  — inherits libvips CVE-2026-33327 and related.",
+      "# Upgrading Next does not resolve postcss: 16.3.1 pins exactly 8.5.23.",
+      "overrides:",
+      "  postcss: ^8.5.26",
+      "  sharp: ^0.35.3",
       "",
     ].join("\n"),
   );
@@ -536,19 +549,6 @@ function portablePackage(
      * is a compatibility statement and has to be expressed as one.
      */
     engines: { node: "^24.0.0", pnpm: ">=11.9.0" },
-    /*
-     * pnpm 10+ refuses to run dependency install scripts unless they are named,
-     * and exits non-zero when it has ignored any. Without this the artifact
-     * cannot be installed with the package manager it declares — which is how
-     * it failed its first real deployment.
-     *
-     * The list is deliberately exhaustive and minimal: `esbuild` is tsx's
-     * platform binary and `sharp` is Next's image encoder, both of which fetch
-     * a native binary at install. Naming them is a stronger posture than the
-     * blanket script execution npm performs, because anything else that tries
-     * to run code at install is still refused.
-     */
-    pnpm: { onlyBuiltDependencies: ["esbuild", "sharp"] },
     scripts: {
       dev: "next dev",
       build: "tsx src/search/build-current-foundation-search.ts && next build",
