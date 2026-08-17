@@ -1,4 +1,8 @@
 import Image from "next/image";
+
+// Safe responsive mechanics for every validated client image. Zero-specificity,
+// so authored composition overrides it freely.
+import "./platform-media.css";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -20,6 +24,7 @@ import type {
 } from "./contract";
 
 interface PlatformMediaStyle extends CSSProperties {
+  readonly "--platform-media-fit"?: string;
   readonly "--platform-media-position-desktop"?: string;
   readonly "--platform-media-position-tablet"?: string;
   readonly "--platform-media-position-mobile"?: string;
@@ -91,9 +96,15 @@ export function createClientExperiencePlatformComponents(
         `Client media "${reference.assetId}" is not part of this route's validated media set.`,
       );
     }
+    /*
+     * Presentation is published as custom properties rather than as inline
+     * `object-fit` / `object-position`. Inline styles outrank every stylesheet,
+     * which would both freeze the desktop focal point at all viewports and make
+     * the values impossible for authored CSS to override. platform-media.css
+     * resolves them per viewport tier at zero specificity.
+     */
     const style: PlatformMediaStyle = {
-      objectFit: reference.presentation.fit.toLowerCase() as "cover" | "contain",
-      objectPosition: mediaObjectPosition(reference, "DESKTOP"),
+      "--platform-media-fit": reference.presentation.fit.toLowerCase(),
       "--platform-media-position-desktop": mediaObjectPosition(
         reference,
         "DESKTOP",

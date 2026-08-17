@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -138,6 +141,31 @@ describe("PlatformImage", () => {
     expect(markup).toContain('data-platform-media-role="project"');
   });
 
+  it("publishes fit and focal points as overridable custom properties, not inline styles", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(
+      <platform.Image reference={heroReference} sizes="60vw" />,
+    );
+
+    // The behavioural inputs travel as custom properties so the stylesheet can
+    // resolve them per viewport tier. Inline object-position would outrank every
+    // stylesheet and freeze the desktop focal point at every width.
+    expect(markup).toContain("--platform-media-fit:cover");
+    expect(markup).not.toMatch(/style="[^"]*[^-]object-position:/);
+    expect(markup).not.toMatch(/style="[^"]*[^-]object-fit:/);
+  });
+
+  it("carries the marker the safe responsive stylesheet targets", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(
+      <platform.Image reference={heroReference} sizes="60vw" />,
+    );
+
+    // platform-media.css keys entirely off this attribute. Losing it would
+    // silently remove overflow safety from every client image.
+    expect(markup).toContain("data-platform-media-role=");
+  });
+
   it("renders decorative media with an empty alt and hides it from assistive tech", () => {
     const platform = platformComponents();
     const markup = renderToStaticMarkup(
@@ -238,5 +266,61 @@ describe("PlatformAction", () => {
     expect(() =>
       renderToStaticMarkup(<platform.Action actionId="invented" />),
     ).toThrow(/unknown external action/);
+  });
+});
+
+describe("platform-media.css — safe responsive mechanics", () => {
+  const stylesheet = readFileSync(
+    fileURLToPath(
+      new URL(
+        "../../../apps/managed-web/src/client-experience/platform-media.css",
+        import.meta.url,
+      ),
+    ),
+    "utf8",
+  );
+
+  it("prevents a large client asset from overflowing its composition", () => {
+    // The Gate A failure: a 2400px asset rendered at intrinsic width and pushed
+    // the document wider than the viewport at 1440, 390 and 320.
+    expect(stylesheet).toMatch(/max-width:\s*100%/);
+    expect(stylesheet).toMatch(/height:\s*auto/);
+  });
+
+  it("stays zero-specificity so authored composition can override it", () => {
+    // Every rule must be wrapped in :where(). A bare selector would outrank a
+    // single authored class and make the Platform dictate framing.
+    const withoutComments = stylesheet.replaceAll(/\/\*[\s\S]*?\*\//g, "");
+    const selectors = [...withoutComments.matchAll(/([^{}]+)\{/g)]
+      .map(([, selector]) => selector?.trim() ?? "")
+      .filter((selector) => selector.length > 0 && !selector.startsWith("@"));
+    expect(selectors.length).toBeGreaterThan(0);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^:where\(/);
+    }
+  });
+
+  it("resolves each viewport tier's focal point", () => {
+    expect(stylesheet).toContain("--platform-media-position-desktop");
+    expect(stylesheet).toContain("--platform-media-position-tablet");
+    expect(stylesheet).toContain("--platform-media-position-mobile");
+    expect(stylesheet).toMatch(/@media \(max-width: 63\.999rem\)/);
+    expect(stylesheet).toMatch(/@media \(max-width: 47\.999rem\)/);
+  });
+
+  it("imposes no visual treatment", () => {
+    // Safety mechanics only. Anything here would be the Platform authoring
+    // aesthetics on the client's behalf.
+    for (const property of [
+      "aspect-ratio",
+      "border-radius",
+      "box-shadow",
+      "filter",
+      "background",
+      "margin",
+      "padding",
+    ]) {
+      expect(stylesheet).not.toContain(`${property}:`);
+    }
   });
 });

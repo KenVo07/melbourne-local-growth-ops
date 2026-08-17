@@ -1,0 +1,58 @@
+/*
+ * Safe responsive mechanics for PlatformImage.
+ *
+ * The Platform owns mechanics; the authored Client Experience owns aesthetics.
+ * This file is deliberately the smallest rule set that makes a validated client
+ * image safe in any normal composition, and it imposes no visual treatment:
+ * no aspect ratio, no frame, no border, no radius, no size.
+ *
+ * Every rule is wrapped in `:where()`, which contributes **zero specificity**.
+ * A single authored class selector therefore overrides any of it without
+ * `!important` and without knowing this file exists. That is the point: the
+ * default must be safe to inherit and trivial to replace.
+ *
+ * Why this exists: a validated client asset is commonly 2400px wide. `next/image`
+ * emits intrinsic `width`/`height`, so with no CSS at all the element renders at
+ * 2400px and pushes the document wider than the viewport. Requiring every client
+ * author to remember `max-width: 100%` is exactly the kind of duplicated Platform
+ * plumbing the Client Experience boundary is supposed to remove.
+ */
+
+:where(img[data-platform-media-role]) {
+  /* Never wider than the composition the author placed it in. */
+  max-width: 100%;
+  /* Keep the intrinsic ratio unless the author constrains the box themselves. */
+  height: auto;
+
+  /*
+   * `fit` and `focalPoint` are behavioural inputs of the documented
+   * PlatformImage contract ("responsive focal points"). They are applied here
+   * rather than inline so that an authored rule can override them, and so the
+   * per-viewport focal points the component already emits actually take effect
+   * instead of being inert custom properties the client has to re-wire.
+   *
+   * `object-fit` only becomes visible once the author constrains the box — by
+   * setting an aspect-ratio or a height. That division is intentional: framing
+   * is an authored decision, safety is not.
+   */
+  object-fit: var(--platform-media-fit, fill);
+  object-position: var(--platform-media-position-desktop, 50% 50%);
+}
+
+/*
+ * Viewport tiers for the MOBILE / TABLET / DESKTOP focal points carried by the
+ * media reference. 48rem matches the breakpoint the rest of the Platform
+ * already uses. These bound a mechanic, not a layout: an authored experience is
+ * free to use entirely different breakpoints for its own composition.
+ */
+@media (max-width: 63.999rem) {
+  :where(img[data-platform-media-role]) {
+    object-position: var(--platform-media-position-tablet, 50% 50%);
+  }
+}
+
+@media (max-width: 47.999rem) {
+  :where(img[data-platform-media-role]) {
+    object-position: var(--platform-media-position-mobile, 50% 50%);
+  }
+}

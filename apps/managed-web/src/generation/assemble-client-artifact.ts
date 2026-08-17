@@ -61,6 +61,7 @@ const runtimeFiles = Object.freeze([
   "src/client-experience/contract.tsx",
   "src/client-experience/load-client-experience.ts",
   "src/client-experience/platform-components.tsx",
+  "src/client-experience/platform-media.css",
   "src/client-experience/public-api.ts",
   "src/client-experience/public-projection.ts",
   "src/client-experience/registry.ts",
