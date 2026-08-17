@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "AUTHORED_CLIENT_EXPERIENCE",
+  "experienceId": "harbour-drawn-to-code",
+  "experienceVersion": "0.1.0",
+  "entrypoint": "index.tsx",
+  "designDnaPath": "design-dna.json",
+  "routeIds": ["home", "projects-index", "project-detail"],
+  "signatureIds": ["conductor"],
+  "publicDependencies": [],
+  "runtime": {
+    "clientJavaScript": "COMPONENT_SCOPED",
+    "motion": "NATIVE",
+    "reducedMotion": "REQUIRED"
+  }
+}

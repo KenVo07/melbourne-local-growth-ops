@@ -41,27 +41,19 @@ export function resolveClientExperienceMedia(
   const entries = new Map(
     assetManifest.assets.map((asset) => [asset.assetId, asset]),
   );
-  const resolved = new Map<string, ClientExperienceResolvedMedia>();
 
+  /*
+   * Integrity pass. Every reference the validated content already makes must
+   * resolve, and it must fail here — during generation, naming the exact
+   * reference — rather than as a broken image in a browser.
+   */
   for (const use of collectReferences(projects)) {
-    if (resolved.has(use.reference.assetId)) continue;
-    const asset = entries.get(use.reference.assetId);
-    if (asset === undefined) {
+    if (!entries.has(use.reference.assetId)) {
       throw new ClientExperienceMediaError(
         use.reference.assetId,
         use.referencedBy,
       );
     }
-    resolved.set(
-      use.reference.assetId,
-      Object.freeze({
-        reference: use.reference,
-        src: asset.publicPath,
-        width: asset.width,
-        height: asset.height,
-        mediaType: asset.mediaType,
-      }),
-    );
   }
 
   // Open Graph images are page metadata rather than composed media, but they
@@ -77,15 +69,54 @@ export function resolveClientExperienceMedia(
     }
   }
 
-  return Object.freeze(
-    [...resolved.values()].sort((left, right) =>
-      left.reference.assetId < right.reference.assetId
-        ? -1
-        : left.reference.assetId > right.reference.assetId
-          ? 1
-          : 0,
-    ),
+  /*
+   * Resolution set. Every validated client asset is resolvable, not only the
+   * ones a project happens to reference, because an authored route legitimately
+   * uses site-level media — a home plate, an about portrait — that belongs to no
+   * project. The asset manifest is the client's validated media, so it is the
+   * correct boundary: an authored route can render any asset the client owns
+   * and nothing else.
+   *
+   * Alt text, role and responsive presentation always come from the reference
+   * the route passes, never from here, so media semantics stay client-owned
+   * per usage.
+   */
+  const referenceByAssetId = new Map(
+    collectReferences(projects).map((use) => [use.reference.assetId, use.reference]),
   );
+
+  return Object.freeze(
+    [...entries.values()]
+      .sort((left, right) =>
+        left.assetId < right.assetId ? -1 : left.assetId > right.assetId ? 1 : 0,
+      )
+      .map((asset) =>
+        Object.freeze({
+          reference:
+            referenceByAssetId.get(asset.assetId) ??
+            defaultReference(asset.assetId),
+          src: asset.publicPath,
+          width: asset.width,
+          height: asset.height,
+          mediaType: asset.mediaType,
+        }),
+      ),
+  );
+}
+
+/**
+ * Placeholder reference for an asset no project references. It is only ever the
+ * key in the resolution map: a route that renders this asset supplies its own
+ * reference, carrying the alt text and presentation that usage requires.
+ */
+function defaultReference(assetId: string): RuntimeMediaReference {
+  return {
+    assetId,
+    role: "CONTENT",
+    decorative: false,
+    alt: "",
+    presentation: { aspect: "NATURAL", fit: "COVER" },
+  };
 }
 
 function collectReferences(

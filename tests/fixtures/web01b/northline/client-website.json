@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 2,
+  "configuration": {
+    "schemaVersion": 1,
+    "configurationId": "configuration-harbour-electrical",
+    "configurationVersion": 1,
+    "clientId": "harbour-electrical",
+    "entitlementId": "entitlement-harbour-electrical",
+    "deploymentId": "deployment-harbour-electrical",
+    "display": {
+      "businessName": "Harbour Electrical & Air",
+      "tagline": "Illustrative website concept for a Melbourne electrical and split-system contractor.",
+      "locationIds": [
+        "location-melbourne"
+      ]
+    },
+    "domains": [
+      {
+        "hostname": "harbour-electrical.example.com.au",
+        "canonical": true
+      }
+    ],
+    "modules": [
+      {
+        "schemaVersion": 1,
+        "moduleId": "booking-primary",
+        "connectorId": "booking-primary",
+        "type": "BOOKING_CTA",
+        "label": "Request a service time"
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "lead-primary",
+        "connectorId": "email-primary",
+        "type": "LEAD_FORM",
+        "fields": [
+          "NAME",
+          "EMAIL",
+          "PHONE",
+          "MESSAGE"
+        ]
+      },
+      {
+        "schemaVersion": 1,
+        "moduleId": "analytics-primary",
+        "connectorId": "analytics-primary",
+        "type": "ANALYTICS"
+      }
+    ],
+    "connectors": [
+      {
+        "schemaVersion": 1,
+        "connectorId": "booking-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "BOOKING_LINK",
+        "bookingUrl": "https://harbour-electrical.example.com.au/book"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "email-primary",
+        "accountOwner": "CLIENT",
+        "portability": "TRANSFERABLE",
+        "type": "EMAIL_DELIVERY",
+        "provider": "RESEND",
+        "fromAddress": "website@harbour-electrical.example.com.au",
+        "recipientAddresses": [
+          "owner@harbour-electrical.example.com.au"
+        ],
+        "secretReferenceId": "resend-harbour-electrical"
+      },
+      {
+        "schemaVersion": 1,
+        "connectorId": "analytics-primary",
+        "accountOwner": "CLIENT",
+        "portability": "CLIENT_OWNED",
+        "type": "GOOGLE_ANALYTICS_4",
+        "measurementId": "G-MLGO123456"
+      }
+    ],
+    "configuredInfrastructure": []
+  },
+  "profile": {
+    "schemaVersion": 1,
+    "profile": "CONTRACTOR",
+    "archetype": "SERVICE_LED",
+    "brand": {
+      "eyebrow": "Illustrative Melbourne Electrical Website",
+      "accentColor": "#b94c2f",
+      "accentContrastColor": "#ffffff",
+      "surfaceColor": "#fffdf8",
+      "textColor": "#18201d"
+    },
+    "sections": [
+      {
+        "type": "CONTACT",
+        "sectionId": "contact",
+        "heading": "Request a Contractor Enquiry",
+        "eyebrow": "Get In Touch",
+        "body": "Fill out the basic enquiry form with your contact details and a short description of your electrical or air conditioning job. Please do not submit credit card numbers, passwords, or confidential personal information."
+      },
+      {
+        "type": "ACTIONS",
+        "sectionId": "primary",
+        "heading": "Talk with the Service Team",
+        "eyebrow": "Direct Contact",
+        "actions": [
+          {
+            "actionId": "call-primary",
+            "kind": "PHONE",
+            "state": "NOT_CONFIGURED",
+            "label": "Phone contact unavailable in demo",
+            "message": "No phone number is configured for this fictional demonstration. Add a client-verified business number before launch."
+          }
+        ]
+      },
+      {
+        "type": "SERVICES",
+        "sectionId": "services",
+        "heading": "Illustrative Services & Proposed Coverage",
+        "eyebrow": "Proposed Services",
+        "items": [
+          {
+            "serviceId": "rewiring",
+            "title": "Full and partial rewiring",
+            "description": "Documented rewiring of older homes, sequenced so the house stays usable."
+          }
+        ]
+      },
+      {
+        "type": "TRUST_SIGNALS",
+        "sectionId": "trust",
+        "heading": "Proposed Verification Checklist",
+        "eyebrow": "Onboarding Requirements",
+        "items": [
+          "Verify current electrical licences and any relevant trade credentials before publishing this profile",
+          "Confirm current public liability insurance status and approve any public wording before publishing",
+          "Agree and approve any quoting, pricing, scope, or service-result statements before publishing"
+        ],
+        "disclaimer": "Harbour Electrical & Air is a fictional demonstration profile. These are onboarding verification requirements only; this demo asserts no licence, qualification, insurance, pricing, standards, or service-result claim."
+      },
+      {
+        "type": "GALLERY",
+        "sectionId": "gallery",
+        "heading": "Illustrative Electrical Service Views",
+        "eyebrow": "Demonstration Assets",
+        "items": [
+          {
+            "assetId": "hero-primary",
+            "alt": "Illustrative close view of an open residential switchboard showing circuit protection devices and wiring",
+            "caption": "Illustrative graphic showing switchboard detail; not evidence of a completed client project."
+          },
+          {
+            "assetId": "hero-primary",
+            "alt": "Illustrative residential context view of an open switchboard, tool belt, and workspace",
+            "caption": "Illustrative graphic showing the broader residential work context; not evidence of work performed by the fictional business."
+          }
+        ]
+      },
+      {
+        "type": "PROCESS",
+        "sectionId": "process",
+        "heading": "Illustrative Service Process",
+        "eyebrow": "Proposed Workflow",
+        "items": [
+          {
+            "title": "Enquiry & Initial Contact",
+            "description": "Illustrative process step: submit a basic enquiry through the demonstration contact form. Confirm live contact channels during onboarding."
+          },
+          {
+            "title": "Site Assessment & Proposed Quote",
+            "description": "Proposed process copy: a site assessment would inform a written scope and quote. Confirm the real client's quoting and pricing policy before publishing."
+          },
+          {
+            "title": "Trade Delivery Requirements",
+            "description": "Proposed process copy only. Verify the real client's trade qualifications and approve any safety or standards claims before publishing."
+          },
+          {
+            "title": "Testing & Customer Handover",
+            "description": "Illustrative process copy for testing, clean-up, and handover. Confirm the real client's actual procedure and approved result wording before publishing."
+          }
+        ]
+      },
+      {
+        "type": "TESTIMONIALS",
+        "sectionId": "testimonials",
+        "heading": "Illustrative Customer Voices",
+        "eyebrow": "Fictional Scenarios",
+        "items": [
+          {
+            "quote": "Clear updates, a tidy appointment, and an easy-to-follow explanation made the proposed customer journey feel reassuring.",
+            "attribution": "Illustrative customer voice — Oakleigh scenario",
+            "disclosure": "Fictional demonstration testimonial for presentation only; it is not customer evidence or a service-result claim."
+          },
+          {
+            "quote": "The example quote process was simple to understand, with scope and timing presented in a calm, practical way.",
+            "attribution": "Illustrative customer voice — Brighton scenario",
+            "disclosure": "Fictional demonstration testimonial for presentation only; replace it with verified, approved customer feedback before publishing."
+          }
+        ]
+      },
+      {
+        "type": "FAQ",
+        "sectionId": "faq",
+        "heading": "Frequently Asked Questions",
+        "eyebrow": "Help & Information",
+        "items": [
+          {
+            "question": "Which areas of Melbourne do you service?",
+            "answer": "This proposed demo profile uses South-Eastern, Eastern, and Bayside Melbourne as illustrative coverage only. Confirm the real client's service area before publishing."
+          },
+          {
+            "question": "How are job quotes calculated?",
+            "answer": "This demo proposes a site assessment followed by a written quote. Confirm the real client's quoting, pricing, and approval policy before publishing."
+          },
+          {
+            "question": "How can I request a service appointment?",
+            "answer": "The illustrative website offers a demonstration booking link and basic enquiry form. Confirm live appointment channels during onboarding."
+          },
+          {
+            "question": "Are emergency call-outs available?",
+            "answer": "Emergency call-out availability is not configured in this fictional demo. Confirm availability and a client-verified contact method before publishing."
+          }
+        ]
+      }
+    ]
+  },
+  "pageGraph": {
+    "schemaVersion": 1,
+    "homePageId": "home",
+    "pages": [
+      {
+        "pageId": "home",
+        "path": "/",
+        "kind": "HOME",
+        "experienceRouteId": "home",
+        "title": "Documented electrical work",
+        "metadata": {
+          "title": "Documented electrical work",
+          "description": "Residential electrical work on older inner-Melbourne houses, drawn before it is cut and drawn again as built."
+        },
+        "content": {
+          "kind": "STATIC",
+          "contentKey": "home"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        }
+      },
+      {
+        "pageId": "projects",
+        "path": "/projects",
+        "kind": "PROJECTS_INDEX",
+        "experienceRouteId": "projects-index",
+        "title": "Record of works",
+        "metadata": {
+          "title": "Record of works",
+          "description": "Demonstration records showing how Harbour Electrical & Air documents a job."
+        },
+        "content": {
+          "kind": "PROJECTS_INDEX"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        }
+      },
+      {
+        "pageId": "project-northcote",
+        "path": "/projects/northcote-terrace",
+        "kind": "PROJECT_DETAIL",
+        "experienceRouteId": "project-detail",
+        "title": "Northcote terrace, full rewire",
+        "metadata": {
+          "title": "Northcote terrace, full rewire",
+          "description": "A demonstration record of a full rewire in an 1890s single-fronted terrace, documented before opening up and as built."
+        },
+        "content": {
+          "kind": "PROJECT",
+          "projectId": "northcote-terrace"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        }
+      }
+    ],
+    "navigation": {
+      "primary": [
+        {
+          "navigationId": "nav-work",
+          "label": "Work",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "projects"
+          }
+        }
+      ],
+      "utility": [],
+      "footer": [
+        {
+          "navigationId": "foot-home",
+          "label": "Home",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "home"
+          }
+        },
+        {
+          "navigationId": "foot-work",
+          "label": "Record of works",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "projects"
+          }
+        }
+      ],
+      "primaryAction": {
+        "navigationId": "action-quote",
+        "label": "Request a quote",
+        "target": {
+          "kind": "ROUTE",
+          "pageId": "projects"
+        }
+      }
+    }
+  },
+  "projects": {
+    "schemaVersion": 1,
+    "projects": [
+      {
+        "schemaVersion": 1,
+        "projectId": "northcote-terrace",
+        "slug": "northcote-terrace",
+        "title": "Northcote terrace, full rewire",
+        "summary": "A single-fronted 1890s terrace with four decades of additions behind the plaster. Documented before opening up, rewired, then documented again as built.",
+        "truthMode": "DEMONSTRATION",
+        "demonstrationDisclosure": "This record describes a fictional job created to demonstrate how work would be documented. It is not a completed project, the house does not exist, and no outcome, timeframe, cost or compliance claim here has been verified.",
+        "serviceIds": [
+          "rewiring"
+        ],
+        "locationLabel": "Northcote, Victoria",
+        "hero": {
+          "assetId": "plate-facade",
+          "role": "PROJECT",
+          "decorative": false,
+          "alt": "Orthographic elevation of a single-fronted terrace facade, with the supply run from the meter box to the roof space marked in brass",
+          "presentation": {
+            "aspect": "LANDSCAPE",
+            "fit": "COVER",
+            "focalPoint": {
+              "x": 0.5,
+              "y": 0.45
+            },
+            "mobile": {
+              "aspect": "SQUARE",
+              "focalPoint": {
+                "x": 0.62,
+                "y": 0.4
+              }
+            }
+          }
+        },
+        "gallery": [],
+        "facts": [
+          {
+            "label": "Dwelling",
+            "value": "1890s single-fronted"
+          },
+          {
+            "label": "Circuits",
+            "value": "14 final"
+          },
+          {
+            "label": "Board",
+            "value": "Replaced"
+          },
+          {
+            "label": "Documented",
+            "value": "Before and as built"
+          }
+        ],
+        "story": [
+          {
+            "blockId": "brief",
+            "type": "BRIEF",
+            "heading": "What the owners asked for",
+            "body": "The owners had bought the house eighteen months earlier and had been adding lamps and extension leads to make rooms usable. They wanted to stop guessing which switch did what, and they wanted the work finished before the floors went down. Their actual question was not technical: they wanted to know whether the house was safe to leave children in.",
+            "media": []
+          },
+          {
+            "blockId": "survey",
+            "type": "CHALLENGE",
+            "heading": "What we found behind the plaster",
+            "body": "Three generations of wiring sharing one board: original rubber-insulated runs, a 1970s extension on its own circuit, and a kitchen addition fed from a socket circuit. Nothing was labelled and two circuits were bridged in a ceiling junction with no access hatch. We drew the existing arrangement before touching any of it, because the drawing is what makes the quote honest.",
+            "media": [
+              {
+                "assetId": "plate-circuit-plan",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Orthographic floor plan of the terrace with the existing lighting circuit traced in brass through four rooms, showing junctions and three ceiling fittings on drops",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.35,
+                      "y": 0.5
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "blockId": "approach",
+            "type": "APPROACH",
+            "heading": "How we sequenced it",
+            "body": "We worked room by room from the rear so the family could keep the front of the house in use, and we kept the old board live until the new one was proven. Each circuit was terminated, tested and labelled before the next was pulled, which is slower on paper and considerably faster in practice than chasing faults at the end.",
+            "media": [
+              {
+                "assetId": "plate-junction-detail",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Close orthographic detail of a terminal block with eight terminals, screw heads and conductor terminations, with the feed entering from the left",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.5,
+                      "y": 0.45
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "blockId": "outcome",
+            "type": "OUTCOME",
+            "heading": "What the owners were left with",
+            "body": "A replaced board with every circuit labelled to the room it serves, and a drawing set showing both what was there and what is there now. If they sell, the next owner inherits the record. If they renovate again, nobody has to open a wall to find out what is behind it.",
+            "media": []
+          }
+        ],
+        "relatedProjectIds": []
+      }
+    ]
+  },
+  "clientExperience": {
+    "schemaVersion": 1,
+    "kind": "AUTHORED_CLIENT_EXPERIENCE",
+    "manifestPath": "experience/manifest.json"
+  },
+  "foundationSearch": {
+    "schemaVersion": 2,
+    "mode": "OFF"
+  },
+  "template": {
+    "templateId": "contractor",
+    "templateVersion": "1.0.0"
+  },
+  "modules": [
+    {
+      "type": "BOOKING_CTA",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "LEAD_FORM",
+      "moduleVersion": "1.0.0"
+    },
+    {
+      "type": "ANALYTICS",
+      "moduleVersion": "1.0.0"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "plate-switchboard",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/switchboard.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-circuit-plan",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/circuit-plan.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-facade",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/facade.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-junction-detail",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/junction-detail.png",
+      "mediaType": "image/png",
+      "width": 1100,
+      "height": 1100
+    }
+  ]
+}

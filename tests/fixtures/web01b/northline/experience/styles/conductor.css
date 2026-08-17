@@ -1,0 +1,126 @@
+/*
+ * The Conductor — the Signature interaction.
+ *
+ * One brass line runs the length of a project document, connecting the hero to
+ * each story beat to the outcome and into the conversion panel. It draws ahead
+ * of the reader and its junction nodes come up as they are reached.
+ *
+ * Motion budget: this is the only animated element on the site.
+ */
+
+.hea-conductor-track {
+  /* The conductor runs the length of the document, not one viewport, because
+     it is the document's spine rather than a scroll indicator. */
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4.5rem;
+  pointer-events: none;
+}
+
+@media (max-width: 60rem) {
+  .hea-conductor-track {
+    width: 2rem;
+  }
+}
+
+.hea-conductor-svg {
+  height: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
+.hea-conductor-rail {
+  stroke: var(--rule);
+  stroke-width: 1;
+  fill: none;
+}
+
+.hea-conductor-live {
+  stroke: var(--brass);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: square;
+  /* Set from the path length so the line can be drawn by dashoffset. */
+  stroke-dasharray: var(--conductor-length);
+  stroke-dashoffset: var(--conductor-length);
+}
+
+/*
+ * Preferred path: native scroll-driven animation. No JavaScript, no library,
+ * no per-frame main-thread work. The timeline is the document's own scroll.
+ */
+@supports (animation-timeline: view()) {
+  .hea-conductor-live {
+    animation: hea-conductor-draw linear both;
+    animation-timeline: view(block);
+    animation-range: cover 0% cover 92%;
+  }
+}
+
+@keyframes hea-conductor-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/*
+ * Fallback for engines without scroll-driven animation. A small
+ * IntersectionObserver island marks progress in discrete steps, which is also
+ * what mobile uses deliberately: continuous drawing on a small screen reads as
+ * jitter rather than precision.
+ */
+.hea-conductor[data-conductor-progress] .hea-conductor-live {
+  animation: none;
+  stroke-dashoffset: calc(
+    var(--conductor-length) -
+      (var(--conductor-length) * var(--conductor-progress, 0))
+  );
+  transition: stroke-dashoffset 640ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.hea-conductor-node {
+  fill: var(--paper);
+  stroke: var(--rule);
+  stroke-width: 2;
+  transition:
+    fill 320ms linear,
+    stroke 320ms linear,
+    r 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.hea-conductor-node[data-reached="true"] {
+  fill: var(--brass);
+  stroke: var(--brass);
+}
+
+/* The beat a reader has arrived at is annotated, not merely coloured. */
+.hea-beat[data-reached="true"] .hea-beat-index {
+  color: var(--brass);
+}
+
+.hea-beat-index {
+  transition: color 320ms linear;
+}
+
+/*
+ * Reduced motion: the conductor is drawn complete and every node is lit. This
+ * is the same document at rest, not a degraded one — nothing about the story's
+ * structure or legibility depended on the animation having run.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .hea-conductor-live {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+
+  .hea-conductor-node {
+    fill: var(--brass);
+    stroke: var(--brass);
+    transition: none;
+  }
+
+  .hea-beat-index {
+    transition: none;
+  }
+}

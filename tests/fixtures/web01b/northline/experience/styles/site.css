@@ -1,0 +1,584 @@
+/*
+ * Drawn to code — Harbour Electrical & Air.
+ *
+ * The grid is visible and structural. Panels are plates: square corners,
+ * hairline rules, generous internal margin, no radius and no shadow.
+ */
+
+:root {
+  --ink: #111821;
+  --ink-soft: #3a4754;
+  --ink-faint: #6b7684;
+  --paper: #f3f0e9;
+  --paper-deep: #e7e2d6;
+  --rule: #c6bfb0;
+  --rule-faint: #ded7c7;
+  --brass: #8a5f1f;
+  --brass-bright: #b07c2e;
+
+  --unit: 0.5rem;
+  --measure: 34rem;
+  --rule-width: 1px;
+
+  --display: ui-sans-serif, "Helvetica Neue", Helvetica, Arial, system-ui,
+    sans-serif;
+  --body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.hea {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.6;
+  /*
+   * One drawing-sheet grid, sized to the layout unit and kept faint enough to
+   * sit behind the work. A second finer grid was tried and moired against this
+   * one; a real sheet has one module.
+   */
+  background-image:
+    linear-gradient(to right, var(--rule-faint) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule-faint) 1px, transparent 1px);
+  background-size: calc(var(--unit) * 10) calc(var(--unit) * 10);
+}
+
+.hea-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.hea *:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+.hea a {
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------- labels */
+
+.hea-label {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.hea-rule {
+  border: 0;
+  border-top: var(--rule-width) solid var(--rule);
+  margin: 0;
+}
+
+/* ----------------------------------------------------------------- shell */
+
+.hea-shell {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 0 calc(var(--unit) * 3);
+}
+
+.hea-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: calc(var(--unit) * 2);
+  padding: calc(var(--unit) * 3) 0 calc(var(--unit) * 2);
+  border-bottom: var(--rule-width) solid var(--ink);
+}
+
+.hea-wordmark {
+  font-family: var(--display);
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.hea-wordmark span {
+  display: block;
+}
+
+.hea-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hea-nav a {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: calc(var(--unit) * 1.5) 0;
+  display: inline-block;
+  border-bottom: 2px solid transparent;
+}
+
+.hea-nav a:hover,
+.hea-nav a[aria-current="page"] {
+  border-bottom-color: var(--brass);
+}
+
+.hea-action {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid var(--ink);
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2.5);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hea-action:hover {
+  background: var(--brass);
+  border-color: var(--brass);
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.hea-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: calc(var(--unit) * 6);
+  align-items: start;
+  padding: calc(var(--unit) * 10) 0 calc(var(--unit) * 8);
+}
+
+.hea-hero-title {
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 6.2vw, 4.6rem);
+  font-weight: 650;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  margin: calc(var(--unit) * 2) 0 0;
+  text-wrap: balance;
+}
+
+.hea-hero-title em {
+  font-style: normal;
+  color: var(--brass);
+}
+
+.hea-hero-lede {
+  max-width: var(--measure);
+  margin: calc(var(--unit) * 4) 0 0;
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+.hea-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 2);
+  align-items: center;
+  margin-top: calc(var(--unit) * 5);
+}
+
+.hea-hero-plate {
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  position: relative;
+  overflow: hidden;
+}
+
+.hea-hero-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /*
+   * Art-directed crop. The source plates carry drawing margins, so the frame is
+   * tighter than the source ratio and object-fit crops into the subject. Done
+   * with ratio rather than transform, so the caption is not clipped out of the
+   * plate along with the margin.
+   */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: 50% 46%;
+}
+
+.hea-plate-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--unit) * 2);
+  border-top: var(--rule-width) solid var(--rule);
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
+  background: var(--paper);
+}
+
+/* --------------------------------------------------------------- schedule */
+
+.hea-schedule {
+  padding: calc(var(--unit) * 6) 0 calc(var(--unit) * 10);
+}
+
+/* Home's lead record: a band that uses the full measure rather than leaving a
+   dead right-hand column, which was the v1 showcase's most visible failure. */
+.hea-lead {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: calc(var(--unit) * 6);
+  align-items: start;
+  padding: calc(var(--unit) * 7) 0 calc(var(--unit) * 9);
+  border-top: 2px solid var(--ink);
+}
+
+.hea-lead-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--unit) * 3) calc(var(--unit) * 4);
+  margin: 0;
+}
+
+.hea-lead-meta dd {
+  margin: calc(var(--unit) * 0.5) 0 0;
+  font-family: var(--display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hea-schedule-head {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) 12rem 8rem;
+  gap: calc(var(--unit) * 3);
+  padding-bottom: calc(var(--unit) * 1.5);
+  border-bottom: 2px solid var(--ink);
+}
+
+.hea-schedule-row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) 12rem 8rem;
+  gap: calc(var(--unit) * 3);
+  align-items: baseline;
+  padding: calc(var(--unit) * 3.5) 0;
+  border-bottom: var(--rule-width) solid var(--rule);
+  text-decoration: none;
+}
+
+.hea-schedule-row:hover .hea-schedule-title,
+.hea-schedule-row:focus-visible .hea-schedule-title {
+  color: var(--brass);
+}
+
+.hea-schedule-title {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.hea-schedule-summary {
+  margin: calc(var(--unit) * 1.5) 0 0;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+  font-size: 0.9375rem;
+}
+
+/* --------------------------------------------------------------- document */
+
+.hea-document {
+  /* The conductor occupies its own column on desktop. */
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0;
+  padding: calc(var(--unit) * 8) 0 calc(var(--unit) * 6);
+  position: relative;
+}
+
+.hea-conductor {
+  grid-column: 1;
+  position: relative;
+}
+
+.hea-document-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.hea-disclosure {
+  border: 2px solid var(--ink-soft);
+  background: var(--paper-deep);
+  padding: calc(var(--unit) * 2.5) calc(var(--unit) * 3);
+  margin: 0 0 calc(var(--unit) * 6);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
+
+.hea-document-title {
+  font-family: var(--display);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: calc(var(--unit) * 2) 0 0;
+}
+
+.hea-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0;
+  margin: calc(var(--unit) * 6) 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+}
+
+.hea-fact {
+  padding: calc(var(--unit) * 3) calc(var(--unit) * 3) calc(var(--unit) * 3) 0;
+  border-right: var(--rule-width) solid var(--rule);
+}
+
+.hea-fact:last-child {
+  border-right: 0;
+}
+
+.hea-fact dd {
+  margin: calc(var(--unit) * 1) 0 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hea-beat {
+  padding: calc(var(--unit) * 7) 0;
+  border-top: var(--rule-width) solid var(--rule);
+}
+
+.hea-beat:first-of-type {
+  border-top: 0;
+}
+
+.hea-beat h3 {
+  font-family: var(--display);
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  font-weight: 620;
+  letter-spacing: -0.015em;
+  margin: calc(var(--unit) * 1.5) 0 calc(var(--unit) * 2);
+}
+
+.hea-beat p {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.hea-beat-plate {
+  margin-top: calc(var(--unit) * 4);
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  overflow: hidden;
+}
+
+.hea-beat-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* ------------------------------------------------------------- conversion */
+
+.hea-conversion {
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  padding: calc(var(--unit) * 7);
+  margin: calc(var(--unit) * 4) 0 calc(var(--unit) * 10);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(var(--unit) * 5);
+  align-items: center;
+}
+
+.hea-conversion h2 {
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: calc(var(--unit) * 2) 0 0;
+}
+
+.hea-conversion p {
+  margin: calc(var(--unit) * 2) 0 0;
+  color: var(--paper-deep);
+  max-width: var(--measure);
+}
+
+.hea-conversion .hea-label {
+  color: var(--rule);
+}
+
+.hea-conversion-actions {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 2);
+}
+
+.hea-conversion-actions [data-platform-action] {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid var(--paper);
+  background: var(--paper);
+  color: var(--ink);
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 3);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.hea-conversion-actions [data-platform-action]:hover {
+  background: var(--brass-bright);
+  border-color: var(--brass-bright);
+}
+
+.hea-conversion-actions [data-action-state="NOT_CONFIGURED"] {
+  display: block;
+  background: transparent;
+  color: var(--paper-deep);
+  border-color: var(--ink-soft);
+  font-family: var(--body);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.hea-conversion-actions [data-action-state="NOT_CONFIGURED"] strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: calc(var(--unit) * 0.5);
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.hea-footer {
+  border-top: 2px solid var(--ink);
+  padding: calc(var(--unit) * 5) 0 calc(var(--unit) * 8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(var(--unit) * 3);
+  align-items: start;
+}
+
+.hea-footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hea-footer a {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hea-footer a:hover {
+  color: var(--brass);
+}
+
+/* ------------------------------------------------------- mobile grammar */
+
+@media (max-width: 60rem) {
+  .hea-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--unit) * 5);
+    padding: calc(var(--unit) * 6) 0;
+  }
+
+  /* Mobile leads with the drawing, then the claim: the plate is the proof. */
+  .hea-hero-plate {
+    order: -1;
+  }
+
+  .hea-hero-plate img {
+    /* Art-directed crop: the plate is taller and tighter on the subject. */
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .hea-header {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .hea-schedule-head {
+    display: none;
+  }
+
+  .hea-lead {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--unit) * 4);
+  }
+
+  .hea::before {
+    background-size: calc(var(--unit) * 12) calc(var(--unit) * 12);
+  }
+
+  .hea-schedule-row {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    row-gap: calc(var(--unit) * 1.5);
+  }
+
+  .hea-schedule-row > :nth-child(3),
+  .hea-schedule-row > :nth-child(4) {
+    grid-column: 2;
+  }
+
+  /* The conductor narrows to a margin spine. */
+  .hea-document {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    padding-top: calc(var(--unit) * 5);
+  }
+
+  .hea-conversion {
+    grid-template-columns: minmax(0, 1fr);
+    padding: calc(var(--unit) * 5);
+  }
+
+  .hea-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hea-fact:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .hea-footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

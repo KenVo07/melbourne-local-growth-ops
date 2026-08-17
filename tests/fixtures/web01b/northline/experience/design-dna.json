@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "designDnaId": "drawn-to-code",
+  "designDnaVersion": "0.1.0",
+  "creativeThesis": "Electrical work is invisible once finished, so the site sells precision by documenting it. The trade's own drawing conventions become the art direction: plate panels, a ruled sheet grid, orthographic illustration, real dimensions.",
+  "perceptionTargets": [
+    "Precise",
+    "Documented",
+    "Unhurried",
+    "Building-literate",
+    "Approachable enough to phone"
+  ],
+  "antiTargets": [
+    "Lightning bolts and neon",
+    "Emergency-callout urgency",
+    "Hero photo plus three icon cards",
+    "SaaS gradient cards",
+    "Luxury minimalism that hides the phone number",
+    "Motion as decoration"
+  ],
+  "typography": {
+    "intent": "Two roles doing real work: condensed structural labels and numerals against a plain grotesque for reading. System stack only, so the site adds no font dependency and stays fast.",
+    "principles": [
+      "Numerals are tabular and treated as data, because in this trade they are.",
+      "Labels are uppercase, tracked and small; they annotate rather than shout.",
+      "Reading measure never exceeds roughly 68 characters."
+    ]
+  },
+  "colour": {
+    "intent": "Ink, paper and one brass accent reserved for the conductor and the primary action.",
+    "principles": [
+      "Brass is never the only carrier of meaning.",
+      "All text and interactive contrast meets WCAG AA on the paper ground.",
+      "No gradient, no shadow, no glow."
+    ]
+  },
+  "composition": {
+    "intent": "A visible ruled grid that content aligns to deliberately, with plates rather than cards.",
+    "principles": [
+      "Square corners, hairline rules, generous internal margin; no radius or shadow.",
+      "Every gap is a multiple of the grid unit.",
+      "Each route has its own grammar: asymmetric title block, indexed schedule, vertical document."
+    ]
+  },
+  "imagery": {
+    "intent": "Original orthographic technical illustration in one stroke weight and palette. The drawn idiom is the direction, not a stand-in for photography.",
+    "principles": [
+      "A project's plate shows that project's work and story beats reference its details.",
+      "No photography, stock, AI photorealism or depiction of any person.",
+      "Every asset carries provenance and every project is labelled DEMONSTRATION."
+    ]
+  },
+  "interaction": {
+    "intent": "Quiet and mechanical. Interactive states are drawn, not animated.",
+    "principles": [
+      "Focus is a visible drawn outline, never a removed outline.",
+      "No meaning is carried by hover alone.",
+      "Targets are at least 44px on touch."
+    ]
+  },
+  "motion": {
+    "intent": "Motion explains sequence and nothing else. Slow, near-linear, mechanical; nothing overshoots, bounces or loops.",
+    "principles": [
+      "Durations sit between 240ms and 900ms.",
+      "Everything is interruptible and everything settles.",
+      "One Signature carries the motion budget; the rest of the site is still."
+    ],
+    "reducedMotionIntent": "The conductor is drawn complete and every node is lit. Nothing about the story's structure or legibility depends on the animation having run: it is the same document at rest, not a degraded one."
+  },
+  "responsive": {
+    "intent": "Mobile recomposes rather than stacks. The conductor becomes a left-margin spine and the plate crops shift to keep the drawn subject in frame.",
+    "principles": [
+      "Node activation is stepwise on small screens, because continuous scroll-linked drawing reads as jitter there.",
+      "Media focal points differ per breakpoint.",
+      "The primary action stays reachable without scrolling back."
+    ]
+  },
+  "signatureIntent": {
+    "name": "The Conductor",
+    "purpose": "One continuous brass line connects the project hero to each story beat to the outcome and into the conversion panel, showing the reader where they are in the story and that the story is finite. A conductor joining junctions is literally what this business installs."
+  }
+}

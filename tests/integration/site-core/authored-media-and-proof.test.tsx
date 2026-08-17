@@ -100,11 +100,16 @@ describe("client-owned media replaces the legacy fixed slots", () => {
       snapshot.pageGraph.pages,
     );
 
+    // Every validated client asset is resolvable, not only the ones a project
+    // references, because an authored route legitimately uses site-level media.
     expect(media).toHaveLength(1);
     expect(media[0]?.reference.assetId).toBe("studio-northcote-frame-07");
     expect(media[0]?.src).toContain("/assets/hero/primary.png");
-    // Alt text belongs to the client media reference, never to the template.
-    expect(media[0]?.reference.alt).toContain("Illustrative hero image");
+    expect(media[0]?.width).toBe(1672);
+    // Alt text is supplied per usage by the reference the route passes, never
+    // by the template and never by this resolution map, which only carries the
+    // asset's file facts. PlatformImage's own tests cover that binding.
+    expect(media[0]?.reference.alt).toContain("Illustrative");
   });
 
   it("fails generation when a project references media the manifest lacks", () => {
