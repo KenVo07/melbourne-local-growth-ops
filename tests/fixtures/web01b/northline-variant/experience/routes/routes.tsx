@@ -31,6 +31,7 @@ function Shell({
   const action = pageGraph.navigation.primaryAction;
   return (
     <div className="nsh" data-page-kind={page.kind}>
+      <platform.SkipLink className="nsh-skip" />
       <div className="nsh-shell">
         <header className="nsh-header">
           <p className="nsh-wordmark">{site.businessName}</p>
@@ -60,7 +61,7 @@ function Shell({
         </header>
       </div>
 
-      <main className="nsh-main">{children}</main>
+      <platform.Main className="nsh-main">{children}</platform.Main>
 
       <div className="nsh-shell">
         <footer className="nsh-footer">
@@ -267,7 +268,7 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
           {project.story.map((block) => (
             <section className="nsh-beat" key={block.blockId}>
               <p className="nsh-eyebrow">{block.type}</p>
-              <h3>{block.heading}</h3>
+              <h2>{block.heading}</h2>
               <p>{block.body}</p>
             </section>
           ))}
@@ -320,7 +321,7 @@ export function AboutRoute(props: ClientExperienceRouteProps) {
             .filter((section) => wanted.has(section.sectionId))
             .map((section) => (
               <section className="nsh-beat" key={section.sectionId}>
-                <h3>{section.heading}</h3>
+                <h2>{section.heading}</h2>
                 {section.type === "TRUST_SIGNALS" ? (
                   <>
                     <ul>
@@ -388,13 +389,14 @@ export function NotFoundRoute({
 }: ClientExperienceNotFoundProps) {
   return (
     <div className="nsh" data-page-kind="NOT_FOUND">
+      <platform.SkipLink className="nsh-skip" />
       <div className="nsh-shell">
         <header className="nsh-header">
           <p className="nsh-wordmark">{site.businessName}</p>
         </header>
       </div>
 
-      <main className="nsh-main">
+      <platform.Main className="nsh-main">
         <div className="nsh-shell">
           <p className="nsh-eyebrow">No record at this address</p>
           <h1 className="nsh-title">Nothing was filed here.</h1>
@@ -411,7 +413,7 @@ export function NotFoundRoute({
             ))}
           </ul>
         </div>
-      </main>
+      </platform.Main>
 
       <div className="nsh-shell">
         <footer className="nsh-footer">

@@ -24,6 +24,7 @@ export function NotFoundRoute({
 }: ClientExperienceNotFoundProps) {
   return (
     <div className="hea" data-page-kind="NOT_FOUND">
+      <platform.SkipLink className="hea-skip" />
       <div className="hea-shell">
         <header className="hea-header">
           <div>
@@ -34,7 +35,7 @@ export function NotFoundRoute({
           </div>
         </header>
 
-        <main className="hea-missing">
+        <platform.Main className="hea-missing">
           <div className="hea-missing-body">
             <p className="hea-label">Sheet not issued</p>
             <h2 className="hea-hero-title" style={{ maxWidth: "13ch" }}>
@@ -73,7 +74,7 @@ export function NotFoundRoute({
               <span className="hea-plate-note">Not issued</span>
             </figcaption>
           </figure>
-        </main>
+        </platform.Main>
 
         <footer className="hea-footer">
           <nav aria-label="Footer">

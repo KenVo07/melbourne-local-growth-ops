@@ -72,6 +72,18 @@ export interface ClientExperienceActionProps {
  * route may place it unconditionally and a disabled site still ships no search
  * markup, controller or request.
  */
+export interface ClientExperienceMainProps {
+  /** Styling hook. The id and the landmark role are Kernel-owned. */
+  readonly className?: string | undefined;
+  readonly children?: ReactNode;
+}
+
+export interface ClientExperienceSkipLinkProps {
+  /** Defaults to "Skip to content". */
+  readonly children?: ReactNode;
+  readonly className?: string | undefined;
+}
+
 export interface ClientExperienceSearchProps {
   readonly className?: string;
 }
@@ -82,6 +94,17 @@ export interface ClientExperiencePlatformComponents {
   readonly Region: ComponentType<ClientExperienceRegionProps>;
   readonly Action: ComponentType<ClientExperienceActionProps>;
   readonly Search: ComponentType<ClientExperienceSearchProps>;
+  /**
+   * The page's main landmark. Renders `<main>` with the id the skip link
+   * targets, so the two cannot disagree and a route cannot ship one without
+   * the other. Every route must render exactly one.
+   */
+  readonly Main: ComponentType<ClientExperienceMainProps>;
+  /**
+   * A visually-hidden-until-focused link to the main landmark. Place it as the
+   * first focusable element of the route.
+   */
+  readonly SkipLink: ComponentType<ClientExperienceSkipLinkProps>;
 }
 
 export interface ClientExperienceRouteProps {

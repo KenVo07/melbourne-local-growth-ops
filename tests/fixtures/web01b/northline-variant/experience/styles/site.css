@@ -15,7 +15,12 @@
 .nsh {
   --ink: #f2efe8;
   --ink-soft: #b9b3a6;
-  --ink-faint: #7d776c;
+  /*
+   * Eyebrows, captions, nav and footer are set at 12–14px, so this has to clear
+   * 4.5:1 as small text. The previous value reached only 4.08 on the ground and
+   * 3.67 on the lifted panel. This clears 5.56 and 5.01.
+   */
+  --ink-faint: #948e82;
   --ground: #14161a;
   --ground-lift: #1d2027;
   --edge: #2c3038;
@@ -33,6 +38,30 @@
   font-family: var(--body);
   line-height: 1.65;
   /* No grid at all: the variation's ground is flat. */
+}
+
+.nsh-skip {
+  position: absolute;
+  left: calc(var(--unit) * 2);
+  top: calc(var(--unit) * 2);
+  z-index: 10;
+  clip-path: inset(50%);
+  background: var(--signal);
+  color: var(--ground);
+  font-family: var(--body);
+  font-size: 0.9375rem;
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 3);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nsh-skip:focus-visible {
+  clip-path: none;
+}
+
+.nsh main:focus {
+  outline: none;
 }
 
 .nsh *:focus-visible {
@@ -232,7 +261,8 @@
   margin: calc(var(--unit) * 9) 0;
 }
 
-.nsh-beat h3 {
+/* Story beats and About sections sit directly under the route's h1. */
+.nsh-beat h2 {
   font-family: var(--display);
   font-size: clamp(1.4rem, 3vw, 2rem);
   font-weight: 300;

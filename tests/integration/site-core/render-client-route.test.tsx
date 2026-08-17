@@ -86,6 +86,8 @@ describe("renderClientRoute", () => {
           Region: () => null,
           Action: () => null,
           Search: () => null,
+    Main: ({ children }) => <main>{children}</main>,
+    SkipLink: () => null,
         },
       }),
     );
@@ -112,6 +114,8 @@ describe("renderClientRoute", () => {
           Region: () => null,
           Action: () => null,
           Search: () => null,
+    Main: ({ children }) => <main>{children}</main>,
+    SkipLink: () => null,
         },
       }),
     ).toThrow(/requires experience route/);

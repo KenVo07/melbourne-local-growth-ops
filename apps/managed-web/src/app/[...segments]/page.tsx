@@ -9,7 +9,11 @@ import {
 import { composeCurrentManagedWebsite } from "../../managed-website";
 import { clientStaticParams, segmentsToPath } from "../../routing/resolve-client-route";
 import { authoredClientExperienceContext } from "../../client-experience/load-client-experience";
-import { buildManagedRouteMetadata } from "../../structured-data";
+import {
+  buildManagedRouteJsonLd,
+  buildManagedRouteMetadata,
+  serializeStructuredData,
+} from "../../structured-data";
 
 /**
  * Every non-root route of the validated Page Graph.
@@ -48,5 +52,17 @@ export default async function ClientRoutePage({ params }: RouteParams) {
   const { segments } = await params;
   const page = authoredPageForPath(segmentsToPath(segments));
   if (page === undefined) notFound();
-  return renderAuthoredPage(page);
+
+  const jsonLd = buildManagedRouteJsonLd(composeCurrentManagedWebsite(), page);
+  return (
+    <>
+      {jsonLd === undefined ? null : (
+        <script
+          dangerouslySetInnerHTML={{ __html: serializeStructuredData(jsonLd) }}
+          type="application/ld+json"
+        />
+      )}
+      {renderAuthoredPage(page)}
+    </>
+  );
 }

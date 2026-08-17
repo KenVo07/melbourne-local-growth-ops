@@ -8,6 +8,7 @@ export { defineClientExperience } from "./contract";
 export type {
   ClientExperienceActionProps,
   ClientExperienceDefinition,
+  ClientExperienceMainProps,
   ClientExperienceNotFoundComponent,
   ClientExperienceNotFoundProps,
   ClientExperienceImageProps,
@@ -18,6 +19,7 @@ export type {
   ClientExperienceRouteComponent,
   ClientExperienceRouteProps,
   ClientExperienceSearchProps,
+  ClientExperienceSkipLinkProps,
   ClientExperienceSignatureComponent,
   ClientExperienceSignatureProps,
   ClientExperienceSiteIdentity,

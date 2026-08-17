@@ -22,6 +22,12 @@ export function Chrome({ site, page, pageGraph, platform, children }: ChromeProp
 
   return (
     <div className="hea" data-page-kind={page.kind}>
+      {/*
+        * Skip link and main landmark. Every route composes its own body, so
+        * without these a keyboard or screen-reader user has to walk the header
+        * on each page and has no landmark to jump to.
+        */}
+      <platform.SkipLink className="hea-skip" />
       <div className="hea-shell">
         <header className="hea-header">
           <div>
@@ -61,7 +67,7 @@ export function Chrome({ site, page, pageGraph, platform, children }: ChromeProp
           </div>
         </header>
 
-        {children}
+        <platform.Main>{children}</platform.Main>
 
         <footer className="hea-footer">
           <nav aria-label="Footer">

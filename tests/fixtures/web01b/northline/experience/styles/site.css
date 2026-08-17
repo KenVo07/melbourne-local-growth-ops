@@ -8,7 +8,15 @@
 :root {
   --ink: #111821;
   --ink-soft: #3a4754;
-  --ink-faint: #6b7684;
+  /*
+   * Labels are set at 11px, so this has to clear 4.5:1 as small text — not the
+   * 3:1 large-text allowance. The previous value reached 4.06 on paper and only
+   * 3.57 on the deeper panel tone, which axe flagged as a serious violation on
+   * every route carrying a plate caption or a form label. This clears 5.53 and
+   * 4.87 respectively, and stays quiet enough to read as secondary beside the
+   * near-black body ink.
+   */
+  --ink-faint: #57616d;
   --paper: #f3f0e9;
   --paper-deep: #e7e2d6;
   --rule: #c6bfb0;
@@ -47,6 +55,38 @@
 .hea-shell {
   position: relative;
   z-index: 1;
+}
+
+/*
+ * Skip link: off-screen until focused, then a real target at the top left.
+ * `clip-path` rather than `display: none`, which would take it out of the
+ * focus order entirely and defeat the point.
+ */
+.hea-skip {
+  position: absolute;
+  left: calc(var(--unit) * 2);
+  top: calc(var(--unit) * 2);
+  z-index: 10;
+  clip-path: inset(50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2.5);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hea-skip:focus-visible {
+  clip-path: none;
+}
+
+/* The Kernel's Main primitive is focusable so the skip link can land. */
+.hea main:focus {
+  outline: none;
 }
 
 .hea *:focus-visible {

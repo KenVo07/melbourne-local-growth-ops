@@ -14,7 +14,9 @@ import type {
   ClientExperiencePlatformComponents,
   ClientExperienceRegionProps,
   ClientExperienceResolvedMedia,
+  ClientExperienceMainProps,
   ClientExperienceSearchProps,
+  ClientExperienceSkipLinkProps,
 } from "./contract";
 
 interface PlatformMediaStyle extends CSSProperties {
@@ -197,12 +199,46 @@ export function createClientExperiencePlatformComponents(
     );
   }
 
+  /*
+   * The main landmark and its skip target are Kernel-owned and share one id, so
+   * an authored route cannot ship a skip link that points nowhere, or a landmark
+   * nothing can reach. The route decides where they go; it does not get to
+   * disagree about what they are.
+   */
+  const mainElementId = "client-main";
+
+  function PlatformMain({ className, children }: ClientExperienceMainProps) {
+    return (
+      <main
+        {...(className === undefined ? {} : { className })}
+        id={mainElementId}
+        tabIndex={-1}
+      >
+        {children}
+      </main>
+    );
+  }
+
+  function PlatformSkipLink({ children, className }: ClientExperienceSkipLinkProps) {
+    return (
+      <a
+        {...(className === undefined ? {} : { className })}
+        data-platform-skip-link=""
+        href={`#${mainElementId}`}
+      >
+        {children ?? "Skip to content"}
+      </a>
+    );
+  }
+
   return Object.freeze({
     Link: PlatformLink,
     Image: PlatformImage,
     Region: PlatformRegion,
     Action: PlatformAction,
     Search: PlatformSearch,
+    Main: PlatformMain,
+    SkipLink: PlatformSkipLink,
   });
 }
 
