@@ -324,3 +324,131 @@ describe("platform-media.css — safe responsive mechanics", () => {
     }
   });
 });
+
+describe("PlatformDisclosure — responsive disclosure mechanics", () => {
+  it("renders the disclosed content twice from one source", () => {
+    // A closed <details> hides its non-summary content regardless of CSS, so a
+    // single instance cannot serve both a wide navigation and a compact menu.
+    // Every client hit this and duplicated the markup by hand.
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(
+      <platform.Disclosure summary="Menu">
+        <platform.Link href="/projects">Projects</platform.Link>
+      </platform.Disclosure>,
+    );
+    expect([...markup.matchAll(/href="\/projects"/g)]).toHaveLength(2);
+    expect(markup).toContain('data-platform-disclosure="static"');
+    expect(markup).toContain('data-platform-disclosure="compact"');
+    expect(markup).toContain("<details");
+    expect(markup).toContain("<summary");
+  });
+
+  it("passes every visual hook through and adds none of its own", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(
+      <platform.Disclosure
+        className="menu"
+        panelClassName="menu-panel"
+        staticClassName="nav-wide"
+        summary={<span className="menu-label">Menu</span>}
+        summaryClassName="menu-toggle"
+      >
+        <span>content</span>
+      </platform.Disclosure>,
+    );
+    for (const hook of [
+      'class="menu"',
+      'class="menu-panel"',
+      'class="nav-wide"',
+      'class="menu-toggle"',
+      'class="menu-label"',
+    ]) {
+      expect(markup).toContain(hook);
+    }
+    // No Platform-authored label, icon, role or aria state.
+    expect(markup).not.toMatch(/aria-|role=/);
+  });
+
+  it("omits the class attribute entirely when the client supplies none", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(
+      <platform.Disclosure summary="Menu">
+        <span>content</span>
+      </platform.Disclosure>,
+    );
+    expect(markup).not.toContain("class=");
+  });
+});
+
+describe("PlatformAction — NOT_CONFIGURED is two statements, not one sentence", () => {
+  it("marks the label and the message as separate statements", () => {
+    // Before this, the two rendered as adjacent inline nodes and read as
+    // "Book a consultationOnline booking is not connected yet." until every
+    // client wrote the same rule.
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(<platform.Action actionId="book" />);
+    expect(markup).toContain("data-platform-action-label=");
+    expect(markup).toContain("data-platform-action-message=");
+    expect(markup).toContain('data-action-state="NOT_CONFIGURED"');
+  });
+
+  it("adds no state hooks to a configured action", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(<platform.Action actionId="call" />);
+    expect(markup).not.toContain("data-platform-action-label=");
+    expect(markup).not.toContain("data-platform-action-message=");
+  });
+});
+
+describe("platform-mechanics.css — interaction and state mechanics", () => {
+  const stylesheet = readFileSync(
+    fileURLToPath(
+      new URL(
+        "../../../apps/managed-web/src/client-experience/platform-mechanics.css",
+        import.meta.url,
+      ),
+    ),
+    "utf8",
+  );
+
+  it("keeps exactly one disclosure instance live by default", () => {
+    expect(stylesheet).toMatch(
+      /:where\(\[data-platform-disclosure="compact"\]\)\s*\{\s*display:\s*none/,
+    );
+  });
+
+  it("stays zero-specificity so authored composition can override it", () => {
+    const withoutComments = stylesheet.replaceAll(/\/\*[\s\S]*?\*\//g, "");
+    const selectors = [...withoutComments.matchAll(/([^{}]+)\{/g)]
+      .flatMap(([, group]) => (group ?? "").split(","))
+      .map((selector) => selector.trim())
+      .filter((selector) => selector.length > 0 && !selector.startsWith("@"));
+    expect(selectors.length).toBeGreaterThan(0);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^:where\(/);
+    }
+  });
+
+  it("imposes no visual treatment", () => {
+    // Mechanics only. A colour, size, space or frame here would be the Platform
+    // designing the client's navigation and unavailable states for them.
+    // Declarations only: the rationale comments name these properties in prose.
+    const declarations = stylesheet.replaceAll(/\/\*[\s\S]*?\*\//g, "");
+    for (const property of [
+      "color:",
+      "background",
+      "font-size:",
+      "font-family:",
+      "margin",
+      "padding",
+      "border",
+      "aspect-ratio:",
+      "box-shadow:",
+      "position:",
+      "transition:",
+      "animation",
+    ]) {
+      expect(declarations).not.toContain(property);
+    }
+  });
+});

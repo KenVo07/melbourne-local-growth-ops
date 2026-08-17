@@ -88,12 +88,52 @@ export interface ClientExperienceSearchProps {
   readonly className?: string;
 }
 
+/**
+ * A responsive disclosure whose content exists at every viewport.
+ *
+ * This is a mechanic, not a component design. A native `<details>` hides its
+ * non-summary content whenever it is closed, *regardless of any CSS applied to
+ * that content*, so one instance cannot serve both a wide always-visible
+ * navigation and a compact disclosure. Every client that wants a
+ * JavaScript-free responsive menu therefore has to discover that and duplicate
+ * the markup by hand — which is exactly the kind of repeated Platform plumbing
+ * the Client Experience boundary exists to remove.
+ *
+ * The primitive renders `children` twice from one source and keeps exactly one
+ * of the two in the accessibility tree. It chooses no breakpoint, no label, no
+ * icon, no placement and no visual treatment: the client styles
+ * `[data-platform-disclosure]` and flips which instance is live at whatever
+ * width its own composition calls for.
+ *
+ * `children` is duplicated, so it must not contain element `id`s.
+ */
+export interface ClientExperienceDisclosureProps {
+  /** The control's visible content. Client-authored; nothing is added to it. */
+  readonly summary: ReactNode;
+  /** Rendered into both the always-open instance and the disclosure panel. */
+  readonly children: ReactNode;
+  /** Styling hook for the `<details>` element. */
+  readonly className?: string | undefined;
+  /** Styling hook for the `<summary>` control. */
+  readonly summaryClassName?: string | undefined;
+  /** Styling hook for the panel wrapping the disclosed copy of `children`. */
+  readonly panelClassName?: string | undefined;
+  /** Styling hook for the always-open copy of `children`. */
+  readonly staticClassName?: string | undefined;
+}
+
 export interface ClientExperiencePlatformComponents {
   readonly Link: ComponentType<ClientExperienceLinkProps>;
   readonly Image: ComponentType<ClientExperienceImageProps>;
   readonly Region: ComponentType<ClientExperienceRegionProps>;
   readonly Action: ComponentType<ClientExperienceActionProps>;
   readonly Search: ComponentType<ClientExperienceSearchProps>;
+  /**
+   * Responsive disclosure mechanics. See `ClientExperienceDisclosureProps`: the
+   * Platform owns only "the same content, rendered twice, exactly one of them
+   * live". Design, breakpoint and motion stay with the client.
+   */
+  readonly Disclosure: ComponentType<ClientExperienceDisclosureProps>;
   /**
    * The page's main landmark. Renders `<main>` with the id the skip link
    * targets, so the two cannot disagree and a route cannot ship one without

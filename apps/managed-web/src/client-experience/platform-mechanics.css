@@ -1,0 +1,51 @@
+/*
+ * Safe interaction and state mechanics for the Client Experience primitives.
+ *
+ * Same contract as platform-media.css: the Platform owns mechanics, the authored
+ * Client Experience owns aesthetics. Every rule is wrapped in `:where()` and
+ * therefore contributes **zero specificity**, so a single authored class
+ * overrides any of it without `!important` and without knowing this file exists.
+ *
+ * Nothing here sets a colour, a size, a space, a border or a background. If a
+ * rule here would be a visual decision, it belongs in the client's stylesheet.
+ */
+
+/*
+ * PlatformDisclosure renders its children twice — once always-open, once inside
+ * a native <details> — because a closed <details> hides its non-summary content
+ * regardless of any CSS applied to that content. The compact instance is hidden
+ * by default so a client that places the primitive and writes no CSS at all
+ * still ships exactly one navigation in the accessibility tree rather than two.
+ *
+ * `display: none` is the mechanic that makes "exactly one of these is live"
+ * true. *Where* the swap happens is a composition decision and is deliberately
+ * not made here: the client flips these two rules at its own breakpoint.
+ */
+:where([data-platform-disclosure="compact"]) {
+  display: none;
+}
+
+:where([data-platform-disclosure="static"]) {
+  display: contents;
+}
+
+/*
+ * A NOT_CONFIGURED action states the truth in place. Its label and its message
+ * are two separate statements, so they must not run together into one sentence
+ * ("Phone not configuredNo business phone number is configured"). Block flow is
+ * the correct default for two sibling statements; every visual property of both
+ * remains the client's.
+ */
+:where([data-platform-action-label]),
+:where([data-platform-action-message]) {
+  display: block;
+}
+
+/*
+ * The message is prose the Platform generated, not copy the client wrote to fit
+ * a column, so it must be allowed to break rather than force a horizontal
+ * overflow inside a narrow authored panel.
+ */
+:where([data-action-state="NOT_CONFIGURED"]) {
+  overflow-wrap: break-word;
+}

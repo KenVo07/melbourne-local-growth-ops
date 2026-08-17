@@ -3,6 +3,8 @@ import Image from "next/image";
 // Safe responsive mechanics for every validated client image. Zero-specificity,
 // so authored composition overrides it freely.
 import "./platform-media.css";
+// Disclosure and truthful-state mechanics. Zero-specificity, same contract.
+import "./platform-mechanics.css";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -13,6 +15,7 @@ import type {
 import { FoundationSearch } from "../rendering/search/FoundationSearch";
 import type {
   ClientExperienceActionProps,
+  ClientExperienceDisclosureProps,
   ClientExperienceImageProps,
   ClientExperienceLinkProps,
   ClientExperiencePlatformComponents,
@@ -183,6 +186,14 @@ export function createClientExperiencePlatformComponents(
         </a>
       );
     }
+    /*
+     * The label and the message are two separate statements. They were emitted
+     * as bare inline nodes, which read as one run-on sentence until the client
+     * wrote a rule — a rule every client had to write. Both now carry a
+     * mechanical hook that platform-mechanics.css sets to block flow at zero
+     * specificity. The Platform still chooses no colour, size or spacing, so the
+     * client styles the semantic state rather than inheriting a design.
+     */
     return (
       <div
         className={className}
@@ -191,9 +202,54 @@ export function createClientExperiencePlatformComponents(
         data-platform-action={action.actionId}
         role="status"
       >
-        <strong>{action.label}</strong>
-        {action.message === undefined ? null : <span>{action.message}</span>}
+        <strong data-platform-action-label="">{action.label}</strong>
+        {action.message === undefined ? null : (
+          <span data-platform-action-message="">{action.message}</span>
+        )}
       </div>
+    );
+  }
+
+  /*
+   * One source of truth for the disclosed content, rendered twice, with exactly
+   * one instance live. See ClientExperienceDisclosureProps for why duplication
+   * is unavoidable rather than lazy.
+   */
+  function PlatformDisclosure({
+    summary,
+    children,
+    className,
+    summaryClassName,
+    panelClassName,
+    staticClassName,
+  }: ClientExperienceDisclosureProps) {
+    return (
+      <>
+        <div
+          {...(staticClassName === undefined ? {} : { className: staticClassName })}
+          data-platform-disclosure="static"
+        >
+          {children}
+        </div>
+        <details
+          {...(className === undefined ? {} : { className })}
+          data-platform-disclosure="compact"
+        >
+          <summary
+            {...(summaryClassName === undefined
+              ? {}
+              : { className: summaryClassName })}
+          >
+            {summary}
+          </summary>
+          <div
+            {...(panelClassName === undefined ? {} : { className: panelClassName })}
+            data-platform-disclosure-panel=""
+          >
+            {children}
+          </div>
+        </details>
+      </>
     );
   }
 
@@ -248,6 +304,7 @@ export function createClientExperiencePlatformComponents(
     Region: PlatformRegion,
     Action: PlatformAction,
     Search: PlatformSearch,
+    Disclosure: PlatformDisclosure,
     Main: PlatformMain,
     SkipLink: PlatformSkipLink,
   });

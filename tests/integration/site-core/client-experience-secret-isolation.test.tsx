@@ -286,6 +286,7 @@ describe("authored client source receives no private data", () => {
         Region: () => null,
         Action: () => null,
         Search: () => null,
+        Disclosure: () => null,
     Main: () => null,
     SkipLink: () => null,
       },
