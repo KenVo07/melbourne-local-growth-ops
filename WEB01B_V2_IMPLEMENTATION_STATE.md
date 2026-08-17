@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-5 complete; **Phase 6 IN PROGRESS, 3 tests red**)
+Last updated: 2026-08-17 (Phases 0-6 complete and green; Phase 7 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `dcf0695` — see Git section |
+| HEAD now | `fce7b3e` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -47,8 +47,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 3 — carry v2 data through generation | **COMPLETE** (commit `66c0c73`) |
 | 4 — trusted source-policy scanner | **COMPLETE** (`99e061a`, hardened by `dcf0695` after adversarial review) |
 | 5 — public runtime contract + registry | **COMPLETE** (commit `cff8b13`) |
-| 6 — static multi-route App Router | **IN PROGRESS — 3 artifact tests failing, see below** |
-| 7 — Projects + client-owned media | not started |
+| 6 — static multi-route App Router | **COMPLETE** (`e415ed4`, `d2e85ad`, `fce7b3e`) |
+| 7 — Projects + client-owned media | **IN PROGRESS** |
 | 8 — standalone artifact generation | not started |
 | 9 — multi-route Foundation Search | not started |
 | 10 — optional motion substrate | not started |
@@ -105,56 +105,51 @@ which is not yet accepted by `FoundationSearchConfigSchema`.
       (**portable artifact tsconfig still owes the same mapping — Phase 8**)
 - [x] 5.5 gate + commit `cff8b13`
 
-### Phase 6 subtask ledger — CURRENT
+### Phase 6 subtask ledger — DONE
 
-- [x] 6.1 `app/page.tsx` branches on `renderingMode`; legacy renders the existing
-      shell unchanged
-- [x] 6.2 `app/[...segments]/page.tsx` with `dynamicParams = false`,
-      `generateStaticParams` (empty for legacy), `generateMetadata`, `notFound()`
-- [x] 6.3 `app/not-found.tsx` with validated primary-navigation recovery and no
-      path or internal detail leaked
-- [x] 6.4 `buildManagedRouteMetadata` in `structured-data.ts`. Deferred
-      obligation #4 is **RESOLVED**: `resolveCanonicalSiteUrl` already emits
-      `https://host` with no trailing slash, matching `route-metadata-model.ts`.
-- [x] extracted `rendering/render-region.tsx` so the legacy shell and the
-      authored path share one module-slot implementation
-- [x] `load-client-experience.ts` + `render-authored-page.tsx` + the fixed
-      `client-experience/authored/` source slot (exports `undefined` for legacy)
-- [x] added every new runtime file to the assembler's `runtimeFiles` list
-- [ ] **BLOCKED HERE** 3 artifact tests red — see "Current failure" below
-- [ ] 6.5 neutral functional fixture
-- [ ] 6.6 production build + curl every route + 404
+All of 6.1–6.6 complete. Evidence in `evidence/phase06/route-evidence.md`.
 
-### Current failure — fix this first
+The recorded blocker is resolved. Root cause was **not** what the previous
+session guessed. Three handoff-scanner rules were firing on legitimate portable
+source, and one on prose:
 
-```
-pnpm --filter @melbourne-local-growth-ops/managed-web test
-```
+| Symptom | Real cause | Fix |
+|---|---|---|
+| cross-client leak on `client-a` | the phrase "client-**a**uthored" in two doc comments contains the token the isolation test scans for | reworded to "authored client", matching ADR-0006 |
+| `UNSAFE_EXPORT_PATH` on `src/app/[...segments]/page.tsx` | the path allowlist rejected any bracketed segment, which would make **any** multi-route site unhandoffable | allow exactly `[id]`, `[...name]`, `[[...name]]` with word-character inner names |
+| `PRIVATE_DEPENDENCY` on several runtime files | `/\b(?:link\|file):/i` matched the `Link:` property; the registry rule matched a `registry:` property and `context.registry` | both tightened to require an actual specifier path / URL scheme |
 
-3 of 261 fail (258 pass). Typecheck is green. All three are artifact-assembly
-isolation tests:
+All three scanner changes are in `packages/deployment/src/handoff-scanner.ts`
+with regression tests both ways (real threats still refused, ordinary source
+accepted). deployment 73 → 93 tests.
 
-- `tests/integration/site-core/client-artifact-assembly.test.ts`
-  - "does not place another client's configuration, analytics, assets, or
-    identity in an artifact" — `expected '<gitignore + next.config text>' not to
-    contain 'client-a'`
-  - "maps without private imports into Codex B's public ClientHandoffExportInput"
-- `tests/integration/web01/restaurant/restaurant-handoff.test.ts`
-  - "maps without private imports into the public ClientHandoffExportInput contract"
+### Phase 7 subtask ledger — CURRENT
 
-Cause is almost certainly the `runtimeFiles` additions in
-`apps/managed-web/src/generation/assemble-client-artifact.ts`: the newly copied
-`src/client-experience/**` and `src/app/[...segments]/page.tsx` change the
-artifact inventory that those tests assert over. Check whether the test walks
-every artifact file and whether the bracketed `[...segments]` path breaks a glob
-or path assumption in the copy/inventory code. Run just the one test with
-`-t "another client"` and print the failing path.
+Runbook §7. Much of this landed early while proving Phase 6; confirm rather than
+rebuild, then close the gaps.
 
-Note the assembler copies the whole client-experience runtime into **every**
-artifact, including legacy ones. That is intentional — these are server
-components with no client chunk, and `authored/index.tsx` is a generic
-placeholder — but confirm the no-global-tax bundle comparison in Phase 9 still
-holds, and consider making the copy list mode-aware in Phase 8 if it does not.
+Already done and covered by `tests/integration/site-core/authored-route-rendering.test.tsx`:
+
+- [x] project detail resolves by `projectId` from the page content reference
+- [x] service detail resolves an exact stable `serviceId`, no title/slug fallback
+- [x] arbitrary validated asset IDs render; alt is client-owned
+- [x] per-viewport focal points reach CSS custom properties
+- [x] relationship helpers (related, previous/next, service by ID)
+- [x] DEMONSTRATION disclosure always visible
+- [x] three distinct project routes
+
+Remaining for Phase 7:
+
+- [ ] **CURRENT** 7.2 audit the legacy Contractor template for hard-coded asset
+      slot assumptions and confirm they are reachable only from the legacy
+      adapter, never from the v2 path
+- [ ] 7.4 add the negative cases: a missing project reference and a missing
+      media asset must fail **generation**, with the exact reference named,
+      rather than producing broken browser output. `resolveClientExperienceMedia`
+      already throws `ClientExperienceMediaError`; it needs test cover.
+- [ ] 7.4 assert no fabricated review/rating/licence/result structured data is
+      emitted for a DEMONSTRATION project
+- [ ] gate + commit
 
 ## Implementation decisions applied
 
@@ -186,6 +181,9 @@ holds, and consider making the copy list mode-aware in Phase 8 if it does not.
 | A6 | **The whole client-experience runtime types against `runtime-types.ts`, not site-core** | The artifact assembler vendors `contracts`, `integrations`, `resend` and `contact-form` but deliberately **not** site-core; `runtime-types.ts` is the existing dependency-free portable mirror that makes that possible. The prebuilt runtime typed itself against site-core, which would have forced site-core (and zod, and asset-pipeline) into every client artifact. v2 contracts are mirrored there instead, and `tests/integration/site-core/runtime-type-conformance.test.ts` fails typecheck if the mirror drifts — a guard v1 never had. |
 | A7 | `PlatformImage` takes a media **reference**, not a pre-resolved media object | The prebuilt contract required the route to pre-resolve via `resolvePublicMedia`, which was not even exported on the public API, so authored source could not call it. |
 | A8 | **`PlatformAction` added** as a fourth Platform primitive | Without it a Contractor site cannot render its own phone or booking CTA: the source policy refuses raw anchors and `PlatformLink` accepts only internal routes. It renders a validated external action by stable ID and preserves the truthful `NOT_CONFIGURED` state. |
+| A9 | The authored **manifest travels with the authored source slot** (`src/client-experience/authored/manifest.json`), not with the definition | `client-website.ts` needs the manifest contents at module scope but must not resolve a path. Copying the whole `experience/` directory into the slot brings the manifest along for free, and a legacy slot holds `null`. The definition still carries only the fixed reference. |
+| A10 | Three **handoff-scanner rules tightened** in `packages/deployment` | They fired on legitimate portable multi-route source, not on real leaks. See the Phase 6 table. Bending the source around a false positive would have been the wrong trade; each rule now still refuses every real threat form and has tests both ways. |
+| A11 | `scripts/stage-client-input.ts` stages a client input into the app for build/evidence runs | The app statically imports its canonical client, so proving v2 routing needs the input swapped. The script runs the **same source policy** as the assembler, so staging cannot admit source the delivery path would reject. It is a dev/evidence tool, not the delivery path. |
 
 ### Defects found in prebuilt candidates
 
@@ -282,16 +280,36 @@ M apps/managed-web/src/generation/client-experience-source-policy.ts (hardening)
 M tests/integration/site-core/client-experience-source-policy.test.ts (59 cases)
 ```
 
-### Expected to be edited next (Phase 6)
+### Committed in `e415ed4` + `d2e85ad` + `fce7b3e` (Phase 6)
 
 ```
 M apps/managed-web/src/app/page.tsx
 A apps/managed-web/src/app/[...segments]/page.tsx
 A apps/managed-web/src/app/not-found.tsx
 A apps/managed-web/src/client-experience/load-client-experience.ts
-M apps/managed-web/src/structured-data.ts
-M apps/managed-web/src/client-website.ts   (load experience/manifest.json)
-A apps/managed-web/client/experience/**    (neutral functional fixture)
+A apps/managed-web/src/client-experience/render-authored-page.tsx
+A apps/managed-web/src/client-experience/authored/{index.tsx,manifest.json}
+A apps/managed-web/src/rendering/render-region.tsx
+A apps/managed-web/scripts/stage-client-input.ts
+M apps/managed-web/src/{client-website.ts,structured-data.ts,runtime-types.ts}
+M apps/managed-web/src/generation/assemble-client-artifact.ts  (runtimeFiles)
+M packages/deployment/src/handoff-scanner.ts + client-handoff.test.ts
+A tests/fixtures/web01b/neutral-v2/**
+A tests/integration/site-core/authored-route-rendering.test.tsx
+M tests/integration/site-core/{tsconfig.json,vitest.config.ts}  (alias)
+A evidence/phase06/route-evidence.md   (outside the repo tree)
+```
+
+### Expected to be edited next (Phase 7 / 8)
+
+```
+apps/managed-web/src/generation/assemble-client-artifact.ts  (call the scanner,
+  copy inspected source into source/src/client-experience, dependency
+  projection, route inventory, descriptor provenance)
+apps/managed-web/src/generation/{client-experience-dependencies,
+  client-route-inventory}.ts   (still unintegrated prebuilt candidates)
+apps/managed-web/src/generation/cli.ts   (load <input>/experience/manifest.json)
+packages/templates/src/contractor*        (audit for fixed asset slots)
 ```
 
 ### Prebuilt files NOT yet integrated
@@ -364,6 +382,22 @@ versions; client-JS/motion contradiction; legacy profile without service IDs;
 duplicate service IDs; service page with an undeclared ID; no title-matching
 fallback; route identity stable across a title edit; two pages competing for one
 service ID; a service with no detail page; search-excluded pages omitted.
+
+### Phase 6 gate — PASS (2026-08-17T12:3x +10:00)
+
+| Command | Result |
+|---|---|
+| `pnpm --filter …/managed-web typecheck` | pass |
+| `pnpm --filter …/managed-web build` | pass — 8 non-root routes statically generated for v2, **0** for legacy |
+| `pnpm check` (whole workspace) | pass — **746** tests |
+| production `next start -p 3010` + curl | all 9 routes 200; 4 unknown paths 404 |
+| `governance:secrets` | PASS — 368 files |
+
+Evidence file: `evidence/phase06/route-evidence.md`.
+
+**The neutral fixture is not creative evidence.** It is deliberately undesigned
+and its own Design DNA says so. It proves routing, resolution, media, metadata
+and 404 only. Do not cite it for art direction, motion or responsive quality.
 
 ### Phase 5 gate — PASS (2026-08-17T02:5x +10:00)
 
@@ -446,6 +480,10 @@ creative work has been validated yet.
 | `45a1c9a` | `docs(web01b): checkpoint implementation state after phase 4` |
 | `cff8b13` | `feat(managed-web): add safe authored client experience runtime` — contract, registry, public projection, Platform components incl. Action, media resolution, content helpers, portable type mirror + conformance test, alias mapping, secret-isolation test |
 | `dcf0695` | `fix(generation): close verified source-policy bypasses` — every adversarial-review finding plus five false positives |
+| `4d5e9b0` | `docs(web01b): checkpoint implementation state after phase 5` |
+| `e415ed4` | `wip(managed-web): render validated client page graphs` — root branch, catch-all, not-found, route metadata, shared region renderer, authored source slot |
+| `d2e85ad` | `fix(deployment): let the handoff scanner accept real multi-route source` — three tightened rules + 20 regression tests |
+| `fce7b3e` | `feat(managed-web): prove static multi-route rendering with a neutral fixture` — neutral v2 fixture, staging script, manifest wiring, absolute route titles, alias in vitest/tsconfig, 12 route-rendering tests |
 
 Uncommitted right now: `WEB01B_V2_IMPLEMENTATION_STATE.md` only (updated after each phase).
 
@@ -470,25 +508,31 @@ another PR; update Notion; promote a Vercel deployment to production; delete the
 
 ## Continuation — exact next action
 
-1. Fix the 3 failing artifact tests described under "Current failure".
-2. Then Phase 6.5: build the neutral functional v2 fixture (minimal CSS, no
-   motion) and prove routing before any creative work.
-3. Then Phase 6.6 evidence. Because `apps/managed-web/client/client-website.json`
-   is legacy and must stay legacy (port 3010 e2e depends on it), get the curl
-   evidence by **temporarily** swapping that file for the v2 fixture, building,
-   curling, then reverting — do not commit the swap. `prepare-web01b.ts` requires
-   a clean tracked tree, so revert before running e2e.
+**Phase 7**, per the ledger above. Most of Phase 7 landed while proving Phase 6,
+so start by confirming what is already covered rather than rebuilding it, then
+close the three remaining gaps (legacy asset-slot audit, generation-time failure
+cases for missing project/media, no fabricated structured data).
+
+Useful commands:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 cd /home/khoa/Projects/web01b-implementation/proportion-web-platform
-pnpm --filter @melbourne-local-growth-ops/managed-web build
-pnpm --filter @melbourne-local-growth-ops/managed-web exec next start -p 3010
-for p in / /services /projects /projects/project-one /about /contact; do
-  curl --fail --silent --show-error "http://127.0.0.1:3010${p}" >/dev/null || echo "FAIL $p"
-done
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/does-not-exist
+
+# targeted
+pnpm --filter @melbourne-local-growth-ops/managed-web test
+pnpm --filter @melbourne-local-growth-ops/managed-web typecheck
+
+# stage the v2 fixture for a real build / browser run, then ALWAYS restore
+cd apps/managed-web
+pnpm exec tsx scripts/stage-client-input.ts ../../tests/fixtures/web01b/neutral-v2
+pnpm exec next build && nohup pnpm exec next start -p 3010 &
+pnpm exec tsx scripts/stage-client-input.ts --restore
+git checkout apps/managed-web/client/client-website.json
 ```
+
+`prepare-web01b.ts` refuses to run against a dirty tracked tree, so restore the
+staged input before any e2e run.
 
 ## Deferred obligations — do not lose these
 
