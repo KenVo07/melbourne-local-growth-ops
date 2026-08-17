@@ -52,8 +52,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 8 — standalone artifact generation | **COMPLETE** (`503e613`) |
 | 9 — multi-route Foundation Search | **COMPLETE** (`dbf1b2d`) |
 | 10 — optional motion substrate | **COMPLETE** — concluded *no library needed* |
-| 11 — production Signature Slice + Creative Gate | **SLICE BUILT** (`156c544`); **BLOCKED on founder Creative Gate** |
-| 12 — full proof, artifacts, deploy, acceptance | not started |
+| 11 — production Signature Slice + Creative Gate | **COMPLETE** — founder gate returned **PASS WITH NAMED FIXES** 2026-08-17; all seven fixes closed |
+| 12 — full proof, artifacts, deploy, acceptance | **IN PROGRESS** — artifact matrix green; e2e, runtime evidence, Preview and acceptance matrix outstanding |
 
 ### Phase 2 subtask ledger — DONE
 
@@ -173,37 +173,88 @@ the supported path, observers disconnected on unmount, no hydration mismatch
 (the island is `"use client"` and renders identical initial markup), designed
 reduced-motion state, and touch never depends on hover.
 
-### Phase 11 — slice built, gate is the founder's
+### Phase 11 — COMPLETE (founder gate passed with named fixes)
 
-Built and committed as `156c544`. Screenshots in `evidence/phase11/shots`.
-Creative Contract in `tests/fixtures/web01b/northline/acceptance/`.
+The founder returned **PASS WITH NAMED FIXES** on 2026-08-17, recorded in
+`tests/fixtures/web01b/northline/acceptance/creative-gate-decision.md`. That PASS
+authorises scaling the direction. It is explicitly **not** final WEB-01B
+acceptance.
 
-**This is where the machine work stops and human judgement starts.** The
-Creative Gate is explicitly the founder's decision and cannot be self-certified.
-Do not scale the remaining routes until it passes.
+All seven named fixes are closed:
 
-My own assessment, offered as input rather than as a verdict:
+1. *Media art direction must not hide behind the illustration language.* The
+   whole plate set was rewritten: every plate now carries the drafting apparatus
+   a real sheet has (hatched cut material, dashed hidden runs, dimension chains,
+   leaders, sheet border, title block), and `board-detail` was redrawn outright.
+   The committed generator now produces all ten plates — it previously produced
+   four while ten shipped — and `PROVENANCE.md` lists each with its SHA-256 and
+   the command that reproduces it.
+2. *At least three substantial Project records.* Three records, 5/4/3 story
+   beats, index→detail, related and sibling navigation, no drawing reused
+   between records.
+3. */about and /contact complete and part of one site.* Both built. `/about` no
+   longer publishes internal onboarding notes.
+4. *Do not flatten routes back into heading + card grid.* Each route keeps its
+   own grammar: title block, specification list, register, document with the
+   Conductor spine, notes with a margin rail, one contact panel, blank sheet.
+5. *Second fresh-eyes review after all routes exist.* Commissioned and returned
+   3 blockers + 6 majors + 5 minors. All closed — see the defect table below.
+6. *No motion dependency.* Still none. Native CSS + IntersectionObserver only.
+7. *This is not final acceptance.* Recorded; the remaining gates are listed
+   under "Still required".
 
-*Working:* identity, offer and action share the first viewport, which was the
-precise v1 failure; route grammars differ materially; the Signature is specific
-to the trade rather than decorative; reduced motion is a designed state; mobile
-recomposes rather than stacks.
+### Fresh-eyes review defects — all closed (`64139da`, `2b463ef`)
 
-*Weakest points, honestly:* the direction is drawn rather than photographic, and
-whether that clears the reference-class bar for a *contractor* is exactly the
-judgement I cannot make. The palette is restrained to the point where a reviewer
-may read it as austere. Only one project record exists, so PRJ-04 related/next
-is unproven. There is no About or Contact route yet.
+| # | Severity | Finding | Resolution |
+|---|---|---|---|
+| 1 | BLOCKER | Mobile record scrolled sideways | NOT_CONFIGURED notice inherited `white-space: nowrap` from the configured-action rule; reset with `max-width: 100%` and wrapping |
+| 2 | BLOCKER | Blank PLATE 05 on record 1 | Two causes. The drawing was genuinely weak and was redrawn. The empty frame in the evidence was a **capture artefact** — `next/image` lazy-loads and full-page screenshots do not scroll. Harness now scrolls and waits for decode. Served bytes were always correct |
+| 3 | BLOCKER | 404 was unstyled raw HTML | Contract gap, not styling: the experience had no way to reach the 404. Optional `notFound` component added to `ClientExperienceDefinition`; flagship authors a blank drawing sheet |
+| 4 | MAJOR | /about published internal build notes | `trust` and `process` profile sections rewritten as real front-end copy |
+| 5 | MAJOR | Register rows underlined | `text-decoration: none` moved to the anchor, where it works |
+| 6 | MAJOR | Mobile header buried the page title | Five wrapped rows reduced to two |
+| 7 | MAJOR | Next-step block had no CTA | Leads with the contact route; NOT_CONFIGURED notice kept beneath, not replaced |
+| 8 | MAJOR | Service detail: dead left column, no CTA | Restructured into two real columns; next-step block added |
+| 9 | MAJOR | Plates reused across records | Nine plates, nine record slots, no repeat |
+| 10 | MINOR | Three identical "Next record" labels | Labelled by relationship: related / next in register / previous |
+| 11 | MINOR | Placeholder plate captions ("Detail") | Captions now carried in client data and say what each drawing shows |
+| 12 | MINOR | Plate numbers ran 01, 03, 04 | Counted as the reader meets them, not from the story index |
+| 13 | MINOR | Register scope column printed raw service IDs | Resolved to titles through the profile |
+| 14 | MINOR | Notes plate stretched below its caption | `align-self: start` |
 
-**Known media constraint:** there is no photography and I cannot produce any.
-If the founder judges that this business needs photographic proof, the direction
-must change and real assets must be sourced through WEB-01E.
+Confirmed STRENGTHs from the same review, retained: disclosure discipline is
+clean with no fabricated proof anywhere, and the record route is genuinely
+designed rather than assembled.
 
-### Phase 12 — not started
+### Phase 12 — in progress
 
-Blocked behind the Creative Gate for the creative rows. The automated rows
-(artifact matrix, no-tax, route/metadata) are already evidenced in
-`evidence/phase08` and `evidence/phase09`.
+**Done.**
+
+- Final artifact matrix, flagship and same-profile variation, assembled and run
+  outside the workspace with no Factory packages on disk. `install`,
+  `verify:handoff`, `typecheck`, `test` and `build` all pass for both.
+  Flagship: 13 authored source files, 160 handoff files. Variation: 5 authored
+  source files, 152 handoff files. Zero external runtime dependencies beyond
+  next / react / react-dom / resend / zod. The only `@proportion` reference is
+  the authoring alias, mapped to a file inside the artifact.
+- Two handoff defects found by that matrix and fixed (`7767982`): the shipped
+  verifier failed after `npm install` because a second lock file looked like
+  tampering, and the artifact's own test suite was a single trivial assertion.
+  It is now five real invariants and still needs no install to run.
+- Route screenshots at 1440 and 390 for all ten routes, no horizontal overflow
+  at either width. Capture tool kept at `evidence/tools/capture-routes.mjs`.
+- Workspace `pnpm check`: **786 tests, exit 0**.
+
+**Outstanding.**
+
+- `pnpm --filter …/managed-web test:e2e`.
+- Bundle / no-tax comparison for the flagship (Search ON vs OFF).
+- Constrained CPU + network runtime evidence.
+- Variation screenshots refreshed after the shared-contract changes.
+- Vercel Preview deployment of the generated artifact, if existing
+  authentication permits. Production promotion is **not** authorised.
+- `15_ACCEPTANCE_MATRIX.md` filled for the exact candidate.
+- Human, device and independent review gates — cannot be self-certified.
 
 ## Implementation decisions applied
 
