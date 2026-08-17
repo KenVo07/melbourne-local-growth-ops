@@ -232,7 +232,17 @@ export function composeManagedWebsite(
     template,
     assetContext,
   );
-  const assets = Object.freeze([...(templateComposition.assets ?? [])]);
+  /*
+   * Template-selected image slots are a legacy-adapter concern. They hard-code
+   * asset IDs and template-authored alt text, which is exactly the v1 media
+   * limitation v2 exists to remove. An authored client owns its media through
+   * validated media references and the asset manifest, so the authored path
+   * carries no template slots at all and cannot silently inherit a legacy hero.
+   */
+  const assets =
+    authored === undefined
+      ? Object.freeze([...(templateComposition.assets ?? [])])
+      : Object.freeze([]);
   const regions = resolveRegions(templateComposition, resolvedById);
   const orderedModules = regions.flatMap((region) => region.modules);
 
