@@ -197,6 +197,44 @@ describe("authored client source receives no private data", () => {
     ]);
   });
 
+  it("projects the configured client brand so authored source need not hard-code it", () => {
+    const snapshot = generateClientWebsiteSnapshot(
+      authoredInput(),
+      publicDirectory,
+      { clientExperienceManifest: manifest() },
+    );
+    if (snapshot.pageGraph === undefined || snapshot.projects === undefined) {
+      throw new Error("Fixture must produce an authored snapshot.");
+    }
+
+    const projection = createClientExperiencePublicProjection({
+      configuration: snapshot.configuration,
+      pageGraph: snapshot.pageGraph,
+      profile: snapshot.profile,
+      projects: snapshot.projects,
+      media: [],
+    });
+
+    /*
+     * Gate A reported that configured brand colour never reached the rendered
+     * page. It does reach authored source — through `profile.brand` — and the
+     * neutral fixture simply never reads it. Pinning that here so the contract
+     * cannot regress into the defect the diagnostic assumed: a client author
+     * must be able to express the client's palette without hard-coding it or
+     * reaching into a private snapshot.
+     */
+    expect(projection.profile.brand).toBeDefined();
+    for (const key of [
+      "accentColor",
+      "accentContrastColor",
+      "surfaceColor",
+      "textColor",
+    ] as const) {
+      expect(typeof projection.profile.brand[key]).toBe("string");
+      expect(projection.profile.brand[key].length).toBeGreaterThan(0);
+    }
+  });
+
   it("omits every secret value from the serialized route props", () => {
     const snapshot = generateClientWebsiteSnapshot(
       authoredInput(),
