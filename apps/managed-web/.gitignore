@@ -5,3 +5,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Generated search index, written into public/ by the Pagefind build step.
+public/pagefind/
