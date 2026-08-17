@@ -11,7 +11,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
 import { afterEach, describe, expect, it } from "vitest";
+
+const run = promisify(execFile);
 
 import { assembleClientSourceArtifact } from "../../../apps/managed-web/src/generation";
 
@@ -227,6 +232,40 @@ describe("authored client artifact assembly", () => {
     ]) {
       expect(manifest.files.some(({ path }) => path === generated)).toBe(false);
     }
+
+    // The script has to actually pass on the artifact it was written for.
+    // Asserting only that the file exists let a broken verifier ship.
+    const clean = await run(process.execPath, ["scripts/verify-handoff.mjs"], {
+      cwd: artifact.sourceDirectory,
+    });
+    expect(clean.stdout).toContain("handoff integrity PASS");
+
+    // The first command in the handoff runbook is an install. A recipient using
+    // npm or yarn gets a second lock file beside the pnpm one the artifact
+    // ships, and that must not read as tampering — otherwise verification fails
+    // for everyone who follows the runbook in order.
+    await writeFile(
+      join(artifact.sourceDirectory, "package-lock.json"),
+      '{"lockfileVersion":3}\n',
+    );
+    const afterInstall = await run(
+      process.execPath,
+      ["scripts/verify-handoff.mjs"],
+      { cwd: artifact.sourceDirectory },
+    );
+    expect(afterInstall.stdout).toContain("handoff integrity PASS");
+    expect(afterInstall.stdout).toContain("package-lock.json");
+
+    // Anything else genuinely unexpected still fails.
+    await writeFile(
+      join(artifact.sourceDirectory, "src/smuggled.ts"),
+      "export const payload = 1;\n",
+    );
+    await expect(
+      run(process.execPath, ["scripts/verify-handoff.mjs"], {
+        cwd: artifact.sourceDirectory,
+      }),
+    ).rejects.toThrow(/unexpected: src\/smuggled\.ts/);
   });
 
   it("ships a legacy artifact with no authored source and no experience provenance", async () => {
