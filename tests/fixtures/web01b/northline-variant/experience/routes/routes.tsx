@@ -3,6 +3,7 @@ import {
   navigationHref,
   relatedProjects,
   serviceById,
+  type ClientExperienceNotFoundProps,
   type ClientExperienceRouteProps,
 } from "@proportion/client-experience";
 
@@ -369,5 +370,65 @@ export function ContactRoute(props: ClientExperienceRouteProps) {
         </div>
       </div>
     </Shell>
+  );
+}
+
+/**
+ * Not found. The variation answers a missing page the way it answers everything
+ * else: one oversized line on the dark ground, then the routes that do exist.
+ *
+ * It proves the same point the rest of this experience does — the 404 is part of
+ * the authored surface, so two sites on one Kernel can disagree about it
+ * completely. Like the flagship's, it is told nothing about the requested path.
+ */
+export function NotFoundRoute({
+  site,
+  pageGraph,
+  platform,
+}: ClientExperienceNotFoundProps) {
+  return (
+    <div className="nsh" data-page-kind="NOT_FOUND">
+      <div className="nsh-shell">
+        <header className="nsh-header">
+          <p className="nsh-wordmark">{site.businessName}</p>
+        </header>
+      </div>
+
+      <main className="nsh-main">
+        <div className="nsh-shell">
+          <p className="nsh-eyebrow">No record at this address</p>
+          <h1 className="nsh-title">Nothing was filed here.</h1>
+          <p className="nsh-lede">
+            That page is not part of this site. These are the ones that are.
+          </p>
+          <ul className="nsh-list">
+            {pageGraph.navigation.primary.map((item) => (
+              <li key={item.navigationId}>
+                <platform.Link href={navigationHref(pageGraph, item.target)}>
+                  <h2 className="nsh-entry-title">{item.label}</h2>
+                </platform.Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </main>
+
+      <div className="nsh-shell">
+        <footer className="nsh-footer">
+          <nav aria-label="Footer">
+            <ul>
+              {pageGraph.navigation.footer.map((item) => (
+                <li key={item.navigationId}>
+                  <platform.Link href={navigationHref(pageGraph, item.target)}>
+                    {item.label}
+                  </platform.Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <p>Fictional business · Demonstration content only</p>
+        </footer>
+      </div>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   AboutRoute,
   ContactRoute,
   HomeRoute,
+  NotFoundRoute,
   ProjectDetailRoute,
   ProjectsIndexRoute,
   ServiceDetailRoute,
@@ -32,6 +33,7 @@ export const authoredClientExperience = defineClientExperience({
     about: AboutRoute,
     contact: ContactRoute,
   },
+  notFound: NotFoundRoute,
 });
 
 export default authoredClientExperience;
