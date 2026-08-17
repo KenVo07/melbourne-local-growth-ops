@@ -66,11 +66,22 @@ export interface ClientExperienceActionProps {
   readonly className?: string;
 }
 
+/**
+ * Renders the Platform search entry point. It renders nothing at all when the
+ * validated snapshot resolved Foundation Search to disabled, so an authored
+ * route may place it unconditionally and a disabled site still ships no search
+ * markup, controller or request.
+ */
+export interface ClientExperienceSearchProps {
+  readonly className?: string;
+}
+
 export interface ClientExperiencePlatformComponents {
   readonly Link: ComponentType<ClientExperienceLinkProps>;
   readonly Image: ComponentType<ClientExperienceImageProps>;
   readonly Region: ComponentType<ClientExperienceRegionProps>;
   readonly Action: ComponentType<ClientExperienceActionProps>;
+  readonly Search: ComponentType<ClientExperienceSearchProps>;
 }
 
 export interface ClientExperienceRouteProps {

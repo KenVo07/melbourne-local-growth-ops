@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type {
   ClientExperienceManifest,
+  ResolvedFoundationSearch,
   WebsiteMediaReference,
   WebsiteNavigationItem,
   WebsitePageDefinition,
@@ -13,6 +14,7 @@ import type {
 } from "@melbourne-local-growth-ops/site-core";
 import type {
   RuntimeClientExperienceManifest,
+  RuntimeFoundationSearch,
   RuntimeMediaReference,
   RuntimeNavigationItem,
   RuntimePageDefinition,
@@ -48,9 +50,11 @@ type Conformance = [
   AssertAssignable<WebsiteProjectCollection, RuntimeProjectCollection>,
   AssertAssignable<WebsiteProfileContent, RuntimeWebsiteProfileContent>,
   AssertAssignable<ClientExperienceManifest, RuntimeClientExperienceManifest>,
+  AssertAssignable<ResolvedFoundationSearch, RuntimeFoundationSearch>,
 ];
 
 const conformance: Conformance = [
+  true,
   true,
   true,
   true,
@@ -66,7 +70,7 @@ describe("portable runtime type mirror", () => {
   it("accepts every validated site-core contract", () => {
     // The real assertion is the type annotation above; this keeps the file a
     // runnable test so a broken mirror surfaces in the suite as well as in tsc.
-    expect(conformance).toHaveLength(9);
+    expect(conformance).toHaveLength(10);
     expect(conformance.every(Boolean)).toBe(true);
   });
 });

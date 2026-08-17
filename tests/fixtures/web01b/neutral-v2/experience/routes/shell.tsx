@@ -37,6 +37,8 @@ export function NeutralShell({
             ))}
           </ul>
         </nav>
+        {/* Placed unconditionally: it renders nothing when search is disabled. */}
+        <platform.Search />
         {pageGraph.navigation.primaryAction === undefined ? null : (
           <platform.Link
             href={navigationHref(

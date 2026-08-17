@@ -94,6 +94,7 @@ function renderPath(path: string): string {
     actions,
     knownRegionIds: new Set(snapshot.regions.map(({ regionId }) => regionId)),
     renderRegion: (regionId) => `[region:${regionId}]`,
+    search: { enabled: true, businessName: "Harbour Electrical & Air" },
   });
 
   return renderToStaticMarkup(

@@ -9,6 +9,9 @@ import type {
   WebsiteProfileContent,
   WebsiteProfileSection,
 } from "./profile-content.js";
+import type { WebsitePageGraph } from "./page-graph.js";
+import type { WebsiteProjectCollection } from "./project-content.js";
+import { projectPageGraphSearchRecords } from "./page-graph-search.js";
 
 const sectionId = z
   .string()
@@ -34,11 +37,51 @@ const scopedSectionIds = z
     }
   });
 
-export const FoundationSearchConfigSchema = z.strictObject({
+const scopedPageIds = z
+  .array(sectionId)
+  .min(1)
+  .max(128)
+  .superRefine((ids, context) => {
+    const seen = new Set<string>();
+    for (const [index, id] of ids.entries()) {
+      if (seen.has(id)) {
+        context.addIssue({
+          code: "custom",
+          path: [index],
+          message: `Page ID "${id}" is duplicated.`,
+        });
+      }
+      seen.add(id);
+    }
+  });
+
+/**
+ * Legacy one-page search scope. Section anchors on a single document.
+ */
+const legacyFoundationSearchConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
   mode: z.enum(["OFF", "AUTO", "ON"]),
   includeSectionIds: scopedSectionIds.optional(),
 });
+
+/**
+ * Page-aware search scope for an authored multi-route site. Scope is expressed
+ * in page IDs because a v2 record's URL is a real route, not a fragment on one
+ * shared document.
+ */
+const pageGraphFoundationSearchConfigSchema = z.strictObject({
+  schemaVersion: z.literal(2),
+  mode: z.enum(["OFF", "AUTO", "ON"]),
+  includePageIds: scopedPageIds.optional(),
+});
+
+export const FoundationSearchConfigSchema = z.discriminatedUnion(
+  "schemaVersion",
+  [
+    legacyFoundationSearchConfigSchema,
+    pageGraphFoundationSearchConfigSchema,
+  ],
+);
 
 export type FoundationSearchConfig = z.infer<
   typeof FoundationSearchConfigSchema
@@ -69,10 +112,16 @@ export interface FoundationSearchRecord {
 export interface FoundationSearchContext {
   readonly businessName: string;
   readonly profile: WebsiteProfileContent;
+  /**
+   * Present only for an authored definition. When supplied, records are
+   * projected from real routes instead of one-page section anchors.
+   */
+  readonly pageGraph?: WebsitePageGraph;
+  readonly projects?: WebsiteProjectCollection;
 }
 
 export interface ResolvedFoundationSearch {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
   readonly mode: FoundationSearchConfig["mode"];
   readonly enabled: boolean;
   readonly reason: FoundationSearchResolutionReason;
@@ -131,20 +180,22 @@ export function resolveFoundationSearch(
     };
   }
 
-  const scopeIssues = validateScope(config, context.profile);
+  const scopeIssues = validateScope(config, context);
   if (scopeIssues.length > 0) {
     return { success: false, issues: Object.freeze(scopeIssues) };
   }
 
-  const records = projectProfileSearchRecords(
-    context,
-    config.includeSectionIds,
-  );
+  const records =
+    config.schemaVersion === 2
+      ? projectRouteSearchRecords(context, config.includePageIds)
+      : projectProfileSearchRecords(context, config.includeSectionIds);
+  const schemaVersion = config.schemaVersion;
+
   if (config.mode === "ON") {
     return {
       success: true,
       data: deepFreeze({
-        schemaVersion: 1,
+        schemaVersion,
         mode: "ON" as const,
         enabled: true,
         reason: "EXPLICIT_ON" as const,
@@ -163,7 +214,7 @@ export function resolveFoundationSearch(
   return {
     success: true,
     data: deepFreeze({
-      schemaVersion: 1,
+      schemaVersion,
       mode: "AUTO" as const,
       enabled,
       reason: enabled
@@ -172,6 +223,60 @@ export function resolveFoundationSearch(
       records: enabled ? records : Object.freeze([]),
     }),
   };
+}
+
+/**
+ * Projects one record per included Page Graph page, so every result URL is a
+ * real route rather than a fragment on one document, and a Project result lands
+ * directly on that Project's route.
+ */
+function projectRouteSearchRecords(
+  context: FoundationSearchContext,
+  includePageIds: readonly string[] | undefined,
+): readonly FoundationSearchRecord[] {
+  if (context.pageGraph === undefined || context.projects === undefined) {
+    throw new Error(
+      "Page-aware Foundation Search requires a validated page graph and project collection.",
+    );
+  }
+  const included =
+    includePageIds === undefined ? undefined : new Set(includePageIds);
+  const scoped =
+    included === undefined
+      ? context.pageGraph
+      : {
+          ...context.pageGraph,
+          pages: context.pageGraph.pages.filter(({ pageId }) =>
+            included.has(pageId),
+          ),
+        };
+
+  return deepFreeze(
+    projectPageGraphSearchRecords({
+      businessName: context.businessName,
+      profile: context.profile,
+      pageGraph: scoped,
+      projects: context.projects,
+    }).map((record) =>
+      deepFreeze({
+        url: record.url,
+        content: record.content,
+        language: record.language,
+        meta: {
+          title: record.meta.title,
+          businessName: record.meta.businessName,
+          // Page identity, so a result can be grouped and attributed without a
+          // second lookup. The field name is retained for index compatibility.
+          sectionId: record.meta.pageId,
+          profile: record.meta.profile,
+        },
+        filters: {
+          profile: [...record.filters.profile],
+          sectionType: [...record.filters.pageKind],
+        },
+      }),
+    ),
+  );
 }
 
 export function projectProfileSearchRecords(
@@ -212,10 +317,48 @@ export function projectProfileSearchRecords(
 
 function validateScope(
   config: FoundationSearchConfig,
-  profile: WebsiteProfileContent,
+  context: FoundationSearchContext,
 ): ValidationIssue[] {
+  if (config.schemaVersion === 2) {
+    if (context.pageGraph === undefined || context.projects === undefined) {
+      return [
+        validationIssue(
+          "REFERENCE_NOT_FOUND",
+          ["foundationSearch"],
+          "Page-aware Foundation Search requires an authored definition with a validated page graph and project collection.",
+        ),
+      ];
+    }
+    if (config.includePageIds === undefined) return [];
+    const knownPages = new Set(
+      context.pageGraph.pages.map(({ pageId }) => pageId),
+    );
+    const unknownPages = config.includePageIds.filter(
+      (id) => !knownPages.has(id),
+    );
+    return unknownPages.length === 0
+      ? []
+      : [
+          validationIssue(
+            "REFERENCE_NOT_FOUND",
+            ["foundationSearch", "includePageIds"],
+            `Foundation Search scope references unknown pages: ${unknownPages.join(", ")}.`,
+          ),
+        ];
+  }
+
+  if (context.pageGraph !== undefined) {
+    return [
+      validationIssue(
+        "INVALID_INPUT",
+        ["foundationSearch", "schemaVersion"],
+        "An authored definition must use schemaVersion 2 Foundation Search so records target real routes rather than one-page section anchors.",
+      ),
+    ];
+  }
+
   if (config.includeSectionIds === undefined) return [];
-  const known = new Set(profile.sections.map(({ sectionId: id }) => id));
+  const known = new Set(context.profile.sections.map(({ sectionId: id }) => id));
   const unknown = config.includeSectionIds.filter((id) => !known.has(id));
   return unknown.length === 0
     ? []

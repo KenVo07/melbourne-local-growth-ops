@@ -51,7 +51,8 @@ export interface RuntimeWebsiteExperience {
 }
 
 export interface RuntimeFoundationSearch {
-  readonly schemaVersion: 1;
+  /** 1 projects one-page section anchors; 2 projects real Page Graph routes. */
+  readonly schemaVersion: 1 | 2;
   readonly mode: "OFF" | "AUTO" | "ON";
   readonly enabled: boolean;
   readonly reason:

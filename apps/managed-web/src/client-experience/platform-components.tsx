@@ -6,6 +6,7 @@ import type {
   RuntimeExternalAction,
   RuntimeMediaReference,
 } from "../runtime-types";
+import { FoundationSearch } from "../rendering/search/FoundationSearch";
 import type {
   ClientExperienceActionProps,
   ClientExperienceImageProps,
@@ -13,6 +14,7 @@ import type {
   ClientExperiencePlatformComponents,
   ClientExperienceRegionProps,
   ClientExperienceResolvedMedia,
+  ClientExperienceSearchProps,
 } from "./contract";
 
 interface PlatformMediaStyle extends CSSProperties {
@@ -32,6 +34,8 @@ export interface CreateClientExperiencePlatformComponentsOptions {
   readonly knownRegionIds: ReadonlySet<string>;
   /** Validated external actions declared by the profile, keyed by action ID. */
   readonly actions: ReadonlyMap<string, RuntimeExternalAction>;
+  /** Resolved Foundation Search state for this client. */
+  readonly search: Readonly<{ enabled: boolean; businessName: string }>;
 }
 
 /**
@@ -180,11 +184,25 @@ export function createClientExperiencePlatformComponents(
     );
   }
 
+  /**
+   * Renders nothing when search resolved to disabled, so an authored route can
+   * place it unconditionally without a disabled site paying any search cost.
+   */
+  function PlatformSearch({ className }: ClientExperienceSearchProps) {
+    if (!options.search.enabled) return null;
+    return (
+      <div className={className} data-platform-search="">
+        <FoundationSearch businessName={options.search.businessName} />
+      </div>
+    );
+  }
+
   return Object.freeze({
     Link: PlatformLink,
     Image: PlatformImage,
     Region: PlatformRegion,
     Action: PlatformAction,
+    Search: PlatformSearch,
   });
 }
 

@@ -79,6 +79,7 @@ function platformComponents(
     actions,
     knownRegionIds: new Set(["contact"]),
     renderRegion: (regionId) => <span>{regionId} module</span>,
+    search: { enabled: true, businessName: "Northline Electric" },
     ...overrides,
   });
 }
@@ -190,6 +191,26 @@ describe("PlatformRegion", () => {
     expect(
       renderToStaticMarkup(<second.Region regionId="contact" />),
     ).toContain("contact module");
+  });
+});
+
+describe("PlatformSearch", () => {
+  it("renders the search entry point when search is enabled", () => {
+    const platform = platformComponents();
+    const markup = renderToStaticMarkup(<platform.Search />);
+
+    expect(markup).toContain("data-platform-search");
+    expect(markup).toContain("Search this website");
+  });
+
+  it("renders nothing at all when search is disabled", () => {
+    const platform = platformComponents({
+      search: { enabled: false, businessName: "Northline Electric" },
+    });
+
+    // An authored route may place search unconditionally; a disabled site must
+    // still ship no search markup, controller or request.
+    expect(renderToStaticMarkup(<platform.Search />)).toBe("");
   });
 });
 

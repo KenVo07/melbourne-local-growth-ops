@@ -852,5 +852,19 @@
       "width": 1672,
       "height": 941
     }
-  ]
+  ],
+  "foundationSearch": {
+    "schemaVersion": 2,
+    "mode": "ON",
+    "includePageIds": [
+      "home",
+      "services",
+      "service-lighting",
+      "projects",
+      "project-northcote-residence",
+      "project-brighton-house",
+      "project-kew-renovation",
+      "about"
+    ]
+  }
 }

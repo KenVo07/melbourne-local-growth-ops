@@ -108,6 +108,10 @@ export function authoredClientExperienceContext(): AuthoredClientExperienceConte
         actions,
         knownRegionIds,
         renderRegion,
+        search: {
+          enabled: clientWebsite.foundationSearch.enabled,
+          businessName: clientWebsite.configuration.display.businessName,
+        },
       });
     },
   });

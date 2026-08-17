@@ -85,6 +85,7 @@ describe("renderClientRoute", () => {
           Image: () => null,
           Region: () => null,
           Action: () => null,
+          Search: () => null,
         },
       }),
     );
@@ -110,6 +111,7 @@ describe("renderClientRoute", () => {
           Image: () => null,
           Region: () => null,
           Action: () => null,
+          Search: () => null,
         },
       }),
     ).toThrow(/requires experience route/);

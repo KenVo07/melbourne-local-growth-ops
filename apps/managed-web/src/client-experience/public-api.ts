@@ -15,6 +15,7 @@ export type {
   ClientExperienceResolvedMedia,
   ClientExperienceRouteComponent,
   ClientExperienceRouteProps,
+  ClientExperienceSearchProps,
   ClientExperienceSignatureComponent,
   ClientExperienceSignatureProps,
   ClientExperienceSiteIdentity,

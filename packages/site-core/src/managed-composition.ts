@@ -194,6 +194,11 @@ export function composeManagedWebsite(
   }
   const authored = v2Validation.data;
 
+  /*
+   * Search resolves after the authored model, so an authored definition
+   * projects records from real routes while a legacy definition keeps its
+   * one-page section anchors.
+   */
   const foundationSearchValidation = resolveFoundationSearch(
     definition.foundationSearch,
     profileValidation?.data === undefined
@@ -201,6 +206,12 @@ export function composeManagedWebsite(
       : {
           businessName: validation.data.display.businessName,
           profile: profileValidation.data,
+          ...(authored === undefined
+            ? {}
+            : {
+                pageGraph: authored.pageGraph,
+                projects: authored.projects,
+              }),
         },
   );
   if (!foundationSearchValidation.success) {
