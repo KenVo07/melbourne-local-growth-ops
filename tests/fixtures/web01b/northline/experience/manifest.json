@@ -5,7 +5,15 @@
   "experienceVersion": "0.1.0",
   "entrypoint": "index.tsx",
   "designDnaPath": "design-dna.json",
-  "routeIds": ["home", "projects-index", "project-detail"],
+  "routeIds": [
+    "home",
+    "services-index",
+    "service-detail",
+    "projects-index",
+    "project-detail",
+    "about",
+    "contact"
+  ],
   "signatureIds": ["conductor"],
   "publicDependencies": [],
   "runtime": {

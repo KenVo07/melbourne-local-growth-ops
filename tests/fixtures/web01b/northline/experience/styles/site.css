@@ -582,3 +582,546 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ------------------------------------------------- services: specification */
+
+.hea-spec {
+  padding: calc(var(--unit) * 8) 0 calc(var(--unit) * 6);
+}
+
+.hea-spec-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: calc(var(--unit) * 7);
+  align-items: center;
+  padding: calc(var(--unit) * 8) 0;
+  border-top: 2px solid var(--ink);
+}
+
+/* Alternating so the list has a rhythm instead of a repeated block. */
+.hea-spec-entry[data-flip="true"] .hea-spec-body {
+  order: 2;
+}
+
+.hea-spec-title {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  font-weight: 640;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin: calc(var(--unit) * 1.5) 0 0;
+}
+
+.hea-spec-text {
+  margin: calc(var(--unit) * 3) 0 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.hea-spec-plate {
+  margin: 0;
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  overflow: hidden;
+}
+
+.hea-spec-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+/* -------------------------------------------- service detail: an argument */
+
+.hea-argument {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: calc(var(--unit) * 8);
+  align-items: start;
+  padding: calc(var(--unit) * 9) 0 calc(var(--unit) * 6);
+}
+
+.hea-argument-lede {
+  margin: calc(var(--unit) * 4) 0 0;
+  max-width: var(--measure);
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+.hea-argument-rail {
+  border-top: 2px solid var(--ink);
+  padding-top: calc(var(--unit) * 2.5);
+}
+
+.hea-rail-list {
+  list-style: none;
+  margin: calc(var(--unit) * 2) 0 0;
+  padding: 0;
+}
+
+.hea-rail-list li {
+  padding: calc(var(--unit) * 1.75) 0;
+  border-bottom: var(--rule-width) solid var(--rule);
+  font-size: 0.9375rem;
+}
+
+.hea-rail-numbered {
+  counter-reset: rail;
+}
+
+.hea-rail-numbered li {
+  counter-increment: rail;
+  display: grid;
+  gap: calc(var(--unit) * 0.5);
+}
+
+.hea-rail-numbered li::before {
+  content: counter(rail, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  color: var(--brass);
+}
+
+.hea-rail-numbered strong {
+  font-family: var(--display);
+  font-weight: 620;
+}
+
+.hea-rail-numbered span {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.hea-argument-evidence {
+  grid-column: 1 / -1;
+  border-top: 2px solid var(--ink);
+  margin-top: calc(var(--unit) * 4);
+  padding-top: calc(var(--unit) * 2);
+}
+
+.hea-evidence-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: calc(var(--unit) * 3);
+  padding: calc(var(--unit) * 3) 0;
+  border-bottom: var(--rule-width) solid var(--rule);
+}
+
+.hea-argument-evidence a {
+  text-decoration: none;
+}
+
+.hea-argument-evidence a:hover .hea-schedule-title {
+  color: var(--brass);
+}
+
+/* ----------------------------------------------------- about: drawing notes */
+
+.hea-notes {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
+  grid-template-areas:
+    "head   head"
+    "body   margin"
+    "plate  margin";
+  gap: calc(var(--unit) * 4) calc(var(--unit) * 8);
+  padding: calc(var(--unit) * 9) 0 calc(var(--unit) * 6);
+}
+
+.hea-notes-head {
+  grid-area: head;
+  margin-bottom: calc(var(--unit) * 4);
+}
+
+.hea-notes-body {
+  grid-area: body;
+  max-width: var(--measure);
+}
+
+.hea-notes-body p {
+  margin: 0 0 calc(var(--unit) * 3);
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+.hea-notes-body p:first-child {
+  /* The opening paragraph is set larger, the way a drawing note leads. */
+  font-size: 1.25rem;
+  color: var(--ink);
+}
+
+.hea-notes-margin {
+  grid-area: margin;
+  border-left: 2px solid var(--ink);
+  padding-left: calc(var(--unit) * 3);
+  display: grid;
+  gap: calc(var(--unit) * 5);
+  align-content: start;
+}
+
+.hea-note-caveat {
+  margin: calc(var(--unit) * 2) 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+.hea-notes-plate {
+  grid-area: plate;
+  margin: calc(var(--unit) * 2) 0 0;
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  overflow: hidden;
+  max-width: 26rem;
+}
+
+.hea-notes-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* ---------------------------------------------------- contact: one panel */
+
+.hea-contact {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: calc(var(--unit) * 8);
+  align-items: start;
+  padding: calc(var(--unit) * 9) 0 calc(var(--unit) * 10);
+}
+
+.hea-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 2);
+  margin-top: calc(var(--unit) * 5);
+}
+
+.hea-contact-actions [data-platform-action] {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  padding: calc(var(--unit) * 1.75) calc(var(--unit) * 3);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hea-contact-actions [data-action-state="NOT_CONFIGURED"] {
+  display: block;
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--rule);
+  font-family: var(--body);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  max-width: 22rem;
+}
+
+.hea-contact-form {
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  padding: calc(var(--unit) * 5);
+}
+
+/* ------------------------------------------------- related / next records */
+
+.hea-related {
+  border-top: 2px solid var(--ink);
+  margin-top: calc(var(--unit) * 6);
+  padding-top: calc(var(--unit) * 2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: calc(var(--unit) * 4);
+}
+
+.hea-related a {
+  text-decoration: none;
+  display: block;
+  padding: calc(var(--unit) * 3) 0;
+}
+
+.hea-related a:hover .hea-schedule-title {
+  color: var(--brass);
+}
+
+@media (max-width: 60rem) {
+  .hea-spec-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--unit) * 4);
+    padding: calc(var(--unit) * 5) 0;
+  }
+
+  /* On mobile the plate always leads: the drawing is the proof. */
+  .hea-spec-entry[data-flip="true"] .hea-spec-body,
+  .hea-spec-body {
+    order: 2;
+  }
+
+  .hea-spec-plate img {
+    aspect-ratio: 2 / 1;
+  }
+
+  .hea-argument,
+  .hea-contact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--unit) * 5);
+  }
+
+  .hea-notes {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "body" "margin" "plate";
+    gap: calc(var(--unit) * 5);
+  }
+
+  .hea-notes-margin {
+    border-left: 0;
+    border-top: 2px solid var(--ink);
+    padding-left: 0;
+    padding-top: calc(var(--unit) * 3);
+  }
+
+  .hea-notes-plate {
+    max-width: none;
+  }
+
+  .hea-notes-plate img {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* ------------------------------------------- Platform primitives, restyled */
+
+/*
+ * PlatformSearch and PlatformRegion render Kernel components that carry the
+ * profile's own default styling. Left alone they arrive in an unrelated palette
+ * and read as a component library dropped into the page — the exact "generic
+ * component smell" the gate names. The experience owns its surface, so it
+ * restyles them here rather than accepting the default.
+ *
+ * Only appearance is overridden. Structure, labelling, focus behaviour and the
+ * safe-failure states stay exactly as the Kernel renders them.
+ */
+
+.hea [data-platform-search] .foundation-search-trigger,
+.hea .foundation-search-trigger {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2.5);
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.hea .foundation-search-trigger:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hea .foundation-search-dialog {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: calc(var(--unit) * 4);
+  max-width: 44rem;
+}
+
+.hea .foundation-search-heading {
+  font-family: var(--display);
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+
+.hea .foundation-search-controls input {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  padding: calc(var(--unit) * 1.75) calc(var(--unit) * 2);
+  font-family: var(--body);
+  width: 100%;
+}
+
+.hea .lead-form,
+.hea .lead-form-fields {
+  font-family: var(--body);
+}
+
+.hea .lead-form-heading {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-top: 0;
+}
+
+.hea .lead-form label {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hea .lead-form input,
+.hea .lead-form textarea {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1rem;
+  padding: calc(var(--unit) * 1.75) calc(var(--unit) * 2);
+  width: 100%;
+  box-shadow: none;
+}
+
+.hea .lead-form input:focus-visible,
+.hea .lead-form textarea:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.hea .lead-form button {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 3.5);
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.hea .lead-form button:hover {
+  background: var(--brass);
+  border-color: var(--brass);
+}
+
+.hea .lead-form-status,
+.hea .lead-form-field-error {
+  font-family: var(--body);
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+/* The eyebrow the Kernel emits above modules, matched to the label style. */
+.hea .site-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hea-argument-plate {
+  grid-column: 1;
+  margin: calc(var(--unit) * 5) 0 0;
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+  overflow: hidden;
+}
+
+.hea-argument-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+@media (max-width: 60rem) {
+  .hea-argument-plate {
+    grid-column: 1 / -1;
+  }
+}
+
+/*
+ * Remaining Kernel module defaults. The booking CTA and the lead-form heading
+ * arrive in the profile stylesheet's own palette and typeface; both are pulled
+ * onto the experience's surface. Specificity is raised deliberately because the
+ * profile stylesheet is loaded after this one.
+ */
+.hea .module-slot .booking-cta,
+.hea a.booking-cta {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 3);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: none;
+}
+
+.hea .module-slot .booking-cta:hover,
+.hea a.booking-cta:hover {
+  background: var(--brass);
+  border-color: var(--brass);
+}
+
+.hea .lead-form .lead-form-heading,
+.hea h2.lead-form-heading,
+.hea h3.lead-form-heading {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 calc(var(--unit) * 3);
+}
+
+.hea .module-slot {
+  margin: 0 0 calc(var(--unit) * 4);
+}
+
+.hea .module-slot:last-child {
+  margin-bottom: 0;
+}
+
+/* The lead-form heading is a wrapper div; the serif comes from the global
+   element rule on the heading inside it. */
+.hea .lead-form-heading h1,
+.hea .lead-form-heading h2,
+.hea .lead-form-heading h3,
+.hea .lead-form-heading p {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+/* NOT_CONFIGURED actions put a label and a message adjacent; give them space. */
+.hea [data-action-state="NOT_CONFIGURED"] strong {
+  display: block;
+  margin-bottom: calc(var(--unit) * 0.75);
+}

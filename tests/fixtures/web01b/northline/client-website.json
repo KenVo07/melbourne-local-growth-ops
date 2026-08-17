@@ -117,13 +117,23 @@
       {
         "type": "SERVICES",
         "sectionId": "services",
-        "heading": "Illustrative Services & Proposed Coverage",
+        "heading": "What we do",
         "eyebrow": "Proposed Services",
         "items": [
           {
             "serviceId": "rewiring",
             "title": "Full and partial rewiring",
-            "description": "Documented rewiring of older homes, sequenced so the house stays usable."
+            "description": "Older homes where the wiring has been added to for decades. We survey and draw what is there before quoting, then sequence the work so you keep using the house."
+          },
+          {
+            "serviceId": "switchboards",
+            "title": "Switchboards and sub-mains",
+            "description": "Board replacement with a protective device per final circuit, and sub-mains sized from load we have actually measured rather than from a nameplate."
+          },
+          {
+            "serviceId": "lighting",
+            "title": "Lighting design and switching",
+            "description": "Lighting planned from how a room is used and where people stand, marked on the plan before any circuit is worked out."
           }
         ]
       },
@@ -250,6 +260,88 @@
         }
       },
       {
+        "pageId": "services",
+        "path": "/services",
+        "kind": "SERVICES_INDEX",
+        "experienceRouteId": "services-index",
+        "title": "What we do",
+        "metadata": {
+          "title": "What we do",
+          "description": "Rewiring, switchboards and lighting design for older inner-Melbourne homes, each documented as drawings you keep."
+        },
+        "content": {
+          "kind": "SERVICES_INDEX"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        }
+      },
+      {
+        "pageId": "service-rewiring",
+        "path": "/services/rewiring",
+        "kind": "SERVICE_DETAIL",
+        "experienceRouteId": "service-detail",
+        "title": "Full and partial rewiring",
+        "metadata": {
+          "title": "Full and partial rewiring",
+          "description": "Documented rewiring of older homes, sequenced so the house stays usable while the work proceeds."
+        },
+        "content": {
+          "kind": "SERVICE",
+          "serviceId": "rewiring"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "services"
+      },
+      {
+        "pageId": "service-switchboards",
+        "path": "/services/switchboards",
+        "kind": "SERVICE_DETAIL",
+        "experienceRouteId": "service-detail",
+        "title": "Switchboards and sub-mains",
+        "metadata": {
+          "title": "Switchboards and sub-mains",
+          "description": "Board replacement and sub-mains sized from measured load rather than from a nameplate."
+        },
+        "content": {
+          "kind": "SERVICE",
+          "serviceId": "switchboards"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "services"
+      },
+      {
+        "pageId": "service-lighting",
+        "path": "/services/lighting",
+        "kind": "SERVICE_DETAIL",
+        "experienceRouteId": "service-detail",
+        "title": "Lighting design and switching",
+        "metadata": {
+          "title": "Lighting design and switching",
+          "description": "Lighting planned from how a room is used, then wired to match the drawing."
+        },
+        "content": {
+          "kind": "SERVICE",
+          "serviceId": "lighting"
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "services"
+      },
+      {
         "pageId": "projects",
         "path": "/projects",
         "kind": "PROJECTS_INDEX",
@@ -257,7 +349,7 @@
         "title": "Record of works",
         "metadata": {
           "title": "Record of works",
-          "description": "Demonstration records showing how Harbour Electrical & Air documents a job."
+          "description": "Demonstration records showing how Harbour Electrical & Air documents a job from survey to as built."
         },
         "content": {
           "kind": "PROJECTS_INDEX"
@@ -269,34 +361,145 @@
         }
       },
       {
-        "pageId": "project-northcote",
+        "pageId": "project-northcote-terrace",
         "path": "/projects/northcote-terrace",
         "kind": "PROJECT_DETAIL",
         "experienceRouteId": "project-detail",
         "title": "Northcote terrace, full rewire",
         "metadata": {
           "title": "Northcote terrace, full rewire",
-          "description": "A demonstration record of a full rewire in an 1890s single-fronted terrace, documented before opening up and as built."
+          "description": "A single-fronted 1890s terrace with four decades of additions behind the plaster. Documented before opening up, rewired, then documented again as built."
         },
         "content": {
           "kind": "PROJECT",
           "projectId": "northcote-terrace"
         },
         "anchors": [],
+        "relatedPageIds": [
+          "project-brunswick-workshop"
+        ],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "projects"
+      },
+      {
+        "pageId": "project-brunswick-workshop",
+        "path": "/projects/brunswick-workshop",
+        "kind": "PROJECT_DETAIL",
+        "experienceRouteId": "project-detail",
+        "title": "Brunswick workshop, sub-main and supply",
+        "metadata": {
+          "title": "Brunswick workshop, sub-main and supply",
+          "description": "A detached brick workshop running off a domestic circuit it was never sized for. A new sub-main, its own board, and a trench drawn before anyone lifted a paver."
+        },
+        "content": {
+          "kind": "PROJECT",
+          "projectId": "brunswick-workshop"
+        },
+        "anchors": [],
+        "relatedPageIds": [
+          "project-kew-lighting"
+        ],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "projects"
+      },
+      {
+        "pageId": "project-kew-lighting",
+        "path": "/projects/kew-lighting",
+        "kind": "PROJECT_DETAIL",
+        "experienceRouteId": "project-detail",
+        "title": "Kew renovation, lighting design and switching",
+        "metadata": {
+          "title": "Kew renovation, lighting design and switching",
+          "description": "A rear extension where the lighting had been laid out around the wiring rather than the rooms. Re-planned from the plan up, then wired to match the drawing."
+        },
+        "content": {
+          "kind": "PROJECT",
+          "projectId": "kew-lighting"
+        },
+        "anchors": [],
+        "relatedPageIds": [
+          "project-northcote-terrace"
+        ],
+        "search": {
+          "include": true
+        },
+        "parentPageId": "projects"
+      },
+      {
+        "pageId": "about",
+        "path": "/about",
+        "kind": "ABOUT",
+        "experienceRouteId": "about",
+        "title": "How we work",
+        "metadata": {
+          "title": "How we work",
+          "description": "Why every job is drawn before it is cut, what that costs, and what you are left holding at the end."
+        },
+        "content": {
+          "kind": "PROFILE_SECTIONS",
+          "sectionIds": [
+            "trust",
+            "process"
+          ]
+        },
+        "anchors": [],
         "relatedPageIds": [],
         "search": {
           "include": true
+        }
+      },
+      {
+        "pageId": "contact",
+        "path": "/contact",
+        "kind": "CONTACT",
+        "experienceRouteId": "contact",
+        "title": "Start a conversation",
+        "metadata": {
+          "title": "Start a conversation",
+          "description": "Send the address and what you are planning. We quote from drawings, not from a phone call in a hallway."
+        },
+        "content": {
+          "kind": "PROFILE_SECTIONS",
+          "sectionIds": [
+            "contact",
+            "primary"
+          ]
+        },
+        "anchors": [],
+        "relatedPageIds": [],
+        "search": {
+          "include": false
         }
       }
     ],
     "navigation": {
       "primary": [
         {
+          "navigationId": "nav-services",
+          "label": "What we do",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "services"
+          }
+        },
+        {
           "navigationId": "nav-work",
-          "label": "Work",
+          "label": "Record of works",
           "target": {
             "kind": "ROUTE",
             "pageId": "projects"
+          }
+        },
+        {
+          "navigationId": "nav-about",
+          "label": "How we work",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "about"
           }
         }
       ],
@@ -311,11 +514,27 @@
           }
         },
         {
+          "navigationId": "foot-services",
+          "label": "What we do",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "services"
+          }
+        },
+        {
           "navigationId": "foot-work",
           "label": "Record of works",
           "target": {
             "kind": "ROUTE",
             "pageId": "projects"
+          }
+        },
+        {
+          "navigationId": "foot-contact",
+          "label": "Contact",
+          "target": {
+            "kind": "ROUTE",
+            "pageId": "contact"
           }
         }
       ],
@@ -324,7 +543,7 @@
         "label": "Request a quote",
         "target": {
           "kind": "ROUTE",
-          "pageId": "projects"
+          "pageId": "contact"
         }
       }
     }
@@ -339,7 +558,7 @@
         "title": "Northcote terrace, full rewire",
         "summary": "A single-fronted 1890s terrace with four decades of additions behind the plaster. Documented before opening up, rewired, then documented again as built.",
         "truthMode": "DEMONSTRATION",
-        "demonstrationDisclosure": "This record describes a fictional job created to demonstrate how work would be documented. It is not a completed project, the house does not exist, and no outcome, timeframe, cost or compliance claim here has been verified.",
+        "demonstrationDisclosure": "This record describes a fictional job created to demonstrate how work would be documented. It is not a completed project, the property does not exist, and no outcome, timeframe, cost or compliance claim here has been verified.",
         "serviceIds": [
           "rewiring"
         ],
@@ -348,7 +567,7 @@
           "assetId": "plate-facade",
           "role": "PROJECT",
           "decorative": false,
-          "alt": "Orthographic elevation of a single-fronted terrace facade, with the supply run from the meter box to the roof space marked in brass",
+          "alt": "Orthographic elevation of a single-fronted terrace facade with the supply run from the meter box to the roof space marked in brass",
           "presentation": {
             "aspect": "LANDSCAPE",
             "fit": "COVER",
@@ -428,10 +647,10 @@
             "body": "We worked room by room from the rear so the family could keep the front of the house in use, and we kept the old board live until the new one was proven. Each circuit was terminated, tested and labelled before the next was pulled, which is slower on paper and considerably faster in practice than chasing faults at the end.",
             "media": [
               {
-                "assetId": "plate-junction-detail",
+                "assetId": "plate-roof-space",
                 "role": "CONTENT",
                 "decorative": false,
-                "alt": "Close orthographic detail of a terminal block with eight terminals, screw heads and conductor terminations, with the feed entering from the left",
+                "alt": "Axonometric drawing of the roof space showing rafters and the new cable run pulled across the joists with junctions marked",
                 "presentation": {
                   "aspect": "LANDSCAPE",
                   "fit": "COVER",
@@ -451,14 +670,276 @@
             ]
           },
           {
+            "blockId": "delivery",
+            "type": "DELIVERY",
+            "heading": "What went back on the wall",
+            "body": "A replacement board with an RCBO per final circuit, each labelled to the room it serves rather than to a number nobody remembers. The old board was left in place, isolated and tagged, until the owners had lived with the new one for a fortnight.",
+            "media": [
+              {
+                "assetId": "plate-board-detail",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Close orthographic elevation of a single residual current breaker showing its label window, toggle, test button and terminations",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.5,
+                      "y": 0.4
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
             "blockId": "outcome",
             "type": "OUTCOME",
             "heading": "What the owners were left with",
-            "body": "A replaced board with every circuit labelled to the room it serves, and a drawing set showing both what was there and what is there now. If they sell, the next owner inherits the record. If they renovate again, nobody has to open a wall to find out what is behind it.",
+            "body": "A drawing set showing both what was there and what is there now. If they sell, the next owner inherits the record. If they renovate again, nobody has to open a wall to find out what is behind it.",
             "media": []
           }
         ],
-        "relatedProjectIds": []
+        "relatedProjectIds": [
+          "brunswick-workshop"
+        ]
+      },
+      {
+        "schemaVersion": 1,
+        "projectId": "brunswick-workshop",
+        "slug": "brunswick-workshop",
+        "title": "Brunswick workshop, sub-main and supply",
+        "summary": "A detached brick workshop running off a domestic circuit it was never sized for. A new sub-main, its own board, and a trench drawn before anyone lifted a paver.",
+        "truthMode": "DEMONSTRATION",
+        "demonstrationDisclosure": "This record describes a fictional job created to demonstrate how work would be documented. It is not a completed project, the property does not exist, and no outcome, timeframe, cost or compliance claim here has been verified.",
+        "serviceIds": [
+          "switchboards"
+        ],
+        "locationLabel": "Brunswick, Victoria",
+        "hero": {
+          "assetId": "plate-site-plan",
+          "role": "PROJECT",
+          "decorative": false,
+          "alt": "Site plan showing the dwelling, a detached workshop and the sub-main trench drawn between them with the meter position marked",
+          "presentation": {
+            "aspect": "LANDSCAPE",
+            "fit": "COVER",
+            "focalPoint": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "mobile": {
+              "aspect": "SQUARE",
+              "focalPoint": {
+                "x": 0.55,
+                "y": 0.5
+              }
+            }
+          }
+        },
+        "gallery": [],
+        "facts": [
+          {
+            "label": "Structure",
+            "value": "Detached brick"
+          },
+          {
+            "label": "Sub-main",
+            "value": "New"
+          },
+          {
+            "label": "Trench",
+            "value": "Drawn first"
+          },
+          {
+            "label": "Board",
+            "value": "Dedicated"
+          }
+        ],
+        "story": [
+          {
+            "blockId": "brief",
+            "type": "BRIEF",
+            "heading": "A workshop on an extension lead",
+            "body": "The owner had been running a bench saw and a dust extractor from a socket circuit inside the house, via a lead through a window. Nothing had failed yet. That is usually the point at which someone calls, and it is the right time to call.",
+            "media": []
+          },
+          {
+            "blockId": "load",
+            "type": "CHALLENGE",
+            "heading": "Sizing it honestly",
+            "body": "The interesting question was not the trench, it was the load. We measured what the tools actually draw when they start rather than what the plates claim, then sized the sub-main for the workshop the owner described wanting in five years, not the one standing there.",
+            "media": [
+              {
+                "assetId": "plate-schematic",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Single-line schematic showing the supply, main switch, a busbar and eight final circuits terminating in lighting, socket and fixed-appliance symbols",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.5,
+                    "y": 0.42
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.4,
+                      "y": 0.45
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "blockId": "route",
+            "type": "APPROACH",
+            "heading": "Where the trench went, and why",
+            "body": "The shortest line crossed the only part of the garden the owner cared about. We took the longer route along the fence, which cost more in cable and less in goodwill, and drew it so the position is recoverable in twenty years when somebody wants to plant a tree.",
+            "media": []
+          },
+          {
+            "blockId": "outcome",
+            "type": "OUTCOME",
+            "heading": "A workshop that is its own building",
+            "body": "Its own board, its own protection, and a documented trench position. The window is closed.",
+            "media": [
+              {
+                "assetId": "plate-cable-schedule",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Drawn cable schedule plate: a ruled table of circuit rows with reference, description, rating and protection columns",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.5,
+                      "y": 0.5
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "relatedProjectIds": [
+          "kew-lighting"
+        ]
+      },
+      {
+        "schemaVersion": 1,
+        "projectId": "kew-lighting",
+        "slug": "kew-lighting",
+        "title": "Kew renovation, lighting design and switching",
+        "summary": "A rear extension where the lighting had been laid out around the wiring rather than the rooms. Re-planned from the plan up, then wired to match the drawing.",
+        "truthMode": "DEMONSTRATION",
+        "demonstrationDisclosure": "This record describes a fictional job created to demonstrate how work would be documented. It is not a completed project, the property does not exist, and no outcome, timeframe, cost or compliance claim here has been verified.",
+        "serviceIds": [
+          "lighting"
+        ],
+        "locationLabel": "Kew, Victoria",
+        "hero": {
+          "assetId": "plate-circuit-plan",
+          "role": "PROJECT",
+          "decorative": false,
+          "alt": "Orthographic floor plan with the lighting circuit traced in brass across four rooms, showing junction positions and ceiling fittings on drops",
+          "presentation": {
+            "aspect": "LANDSCAPE",
+            "fit": "COVER",
+            "focalPoint": {
+              "x": 0.42,
+              "y": 0.5
+            },
+            "mobile": {
+              "aspect": "SQUARE",
+              "focalPoint": {
+                "x": 0.3,
+                "y": 0.55
+              }
+            }
+          }
+        },
+        "gallery": [],
+        "facts": [
+          {
+            "label": "Rooms",
+            "value": "Six"
+          },
+          {
+            "label": "Switching",
+            "value": "Re-planned"
+          },
+          {
+            "label": "Circuits",
+            "value": "4 lighting"
+          },
+          {
+            "label": "Drawing",
+            "value": "Led the wiring"
+          }
+        ],
+        "story": [
+          {
+            "blockId": "brief",
+            "type": "BRIEF",
+            "heading": "Switches in the wrong places",
+            "body": "The extension was finished and the lighting worked, which is not the same as the lighting being right. Every switch was beside the door the electrician had reached first, and the kitchen bench was lit from behind whoever stood at it.",
+            "media": []
+          },
+          {
+            "blockId": "plan",
+            "type": "APPROACH",
+            "heading": "Planning from the room, not the cable",
+            "body": "We started from how each room is used and where people stand, marked the switch positions on the plan before any circuit was considered, and only then worked out how to reach them. This is the reverse of the usual order and it is the whole job.",
+            "media": [
+              {
+                "assetId": "plate-wall-section",
+                "role": "CONTENT",
+                "decorative": false,
+                "alt": "Vertical section through a stud wall showing the cable chase, studs drawn in hatch, and three outlet positions taken off the run",
+                "presentation": {
+                  "aspect": "LANDSCAPE",
+                  "fit": "COVER",
+                  "focalPoint": {
+                    "x": 0.42,
+                    "y": 0.5
+                  },
+                  "mobile": {
+                    "aspect": "SQUARE",
+                    "focalPoint": {
+                      "x": 0.42,
+                      "y": 0.45
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "blockId": "outcome",
+            "type": "OUTCOME",
+            "heading": "Lighting that matches the room",
+            "body": "Four lighting circuits, switching where people actually walk, and a plan that says why each position is where it is. The bench is lit from in front.",
+            "media": []
+          }
+        ],
+        "relatedProjectIds": [
+          "northcote-terrace"
+        ]
       }
     ]
   },
@@ -469,7 +950,19 @@
   },
   "foundationSearch": {
     "schemaVersion": 2,
-    "mode": "OFF"
+    "mode": "ON",
+    "includePageIds": [
+      "home",
+      "services",
+      "service-rewiring",
+      "service-switchboards",
+      "service-lighting",
+      "projects",
+      "project-northcote-terrace",
+      "project-brunswick-workshop",
+      "project-kew-lighting",
+      "about"
+    ]
   },
   "template": {
     "templateId": "contractor",
@@ -518,6 +1011,54 @@
       "assetId": "plate-junction-detail",
       "kind": "IMAGE",
       "sourcePath": "assets/plates/junction-detail.png",
+      "mediaType": "image/png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "assetId": "plate-wall-section",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/wall-section.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-schematic",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/schematic.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-roof-space",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/roof-space.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-site-plan",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/site-plan.png",
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "assetId": "plate-cable-schedule",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/cable-schedule.png",
+      "mediaType": "image/png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "assetId": "plate-board-detail",
+      "kind": "IMAGE",
+      "sourcePath": "assets/plates/board-detail.png",
       "mediaType": "image/png",
       "width": 1100,
       "height": 1100

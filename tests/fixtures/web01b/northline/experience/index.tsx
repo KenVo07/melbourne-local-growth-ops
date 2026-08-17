@@ -1,16 +1,22 @@
 import { defineClientExperience } from "@proportion/client-experience";
 
 import { Conductor } from "./components/Conductor";
+import { AboutRoute, ContactRoute } from "./routes/AboutContactRoutes";
 import { HomeRoute } from "./routes/HomeRoute";
 import { ProjectDetailRoute } from "./routes/ProjectDetailRoute";
 import { ProjectsIndexRoute } from "./routes/ProjectsIndexRoute";
+import {
+  ServiceDetailRoute,
+  ServicesIndexRoute,
+} from "./routes/ServicesRoutes";
 
 /**
  * Harbour Electrical & Air — "Drawn to code".
  *
- * SIGNATURE SLICE ONLY. This covers Home, the record register and one project
- * document: enough to judge the direction before the remaining routes are
- * built. It is proposed for the founder Creative Gate and is not approved.
+ * The direction passed the founder Creative Gate with named fixes on
+ * 2026-08-17 (see acceptance/creative-gate-decision.md) and is scaled here to
+ * the full route set. That PASS authorises scaling only; it is not final
+ * WEB-01B acceptance.
  */
 export const authoredClientExperience = defineClientExperience({
   schemaVersion: 1,
@@ -18,8 +24,12 @@ export const authoredClientExperience = defineClientExperience({
   experienceVersion: "0.1.0",
   routes: {
     home: HomeRoute,
+    "services-index": ServicesIndexRoute,
+    "service-detail": ServiceDetailRoute,
     "projects-index": ProjectsIndexRoute,
     "project-detail": ProjectDetailRoute,
+    about: AboutRoute,
+    contact: ContactRoute,
   },
   signatures: {
     conductor: () => <Conductor nodeCount={4} />,

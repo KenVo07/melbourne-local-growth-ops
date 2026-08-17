@@ -1,4 +1,8 @@
-import type { ClientExperienceRouteProps } from "@proportion/client-experience";
+import {
+  relatedProjects,
+  siblingProjects,
+  type ClientExperienceRouteProps,
+} from "@proportion/client-experience";
 
 import { Chrome } from "../components/Chrome";
 import { Conductor } from "../components/Conductor";
@@ -13,10 +17,16 @@ import { Conductor } from "../components/Conductor";
  * materially a different shape from Home and from the register.
  */
 export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
-  const { project, platform, profile } = props;
+  const { project, platform, profile, projects } = props;
   if (project === undefined) {
     throw new Error("Project detail route requires a resolved project.");
   }
+  const related = relatedProjects(projects, project);
+  const { previous, next } = siblingProjects(projects, project);
+  const onward = related.length > 0 ? related : [next, previous].filter(
+    (candidate): candidate is NonNullable<typeof candidate> =>
+      candidate !== undefined,
+  );
 
   const contact = profile.sections.flatMap((section) =>
     section.type === "ACTIONS" ? section.actions : [],
@@ -127,6 +137,33 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
               ))}
             </div>
           </section>
+
+          {onward.length === 0 ? null : (
+            <nav aria-label="Other records" className="hea-related">
+              {onward.map((candidate) => (
+                <platform.Link
+                  href={`/projects/${candidate.slug}`}
+                  key={candidate.projectId}
+                >
+                  <span>
+                    <span className="hea-label">Next record</span>
+                    <span
+                      className="hea-schedule-title"
+                      style={{ display: "block", marginTop: "0.5rem" }}
+                    >
+                      {candidate.title}
+                    </span>
+                    <span
+                      className="hea-label"
+                      style={{ display: "block", marginTop: "0.75rem" }}
+                    >
+                      {candidate.locationLabel ?? "—"}
+                    </span>
+                  </span>
+                </platform.Link>
+              ))}
+            </nav>
+          )}
         </div>
       </div>
     </Chrome>
