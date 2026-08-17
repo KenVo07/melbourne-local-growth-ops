@@ -53,7 +53,7 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 9 — multi-route Foundation Search | **COMPLETE** (`dbf1b2d`) |
 | 10 — optional motion substrate | **COMPLETE** — concluded *no library needed* |
 | 11 — production Signature Slice + Creative Gate | **COMPLETE** — founder gate returned **PASS WITH NAMED FIXES** 2026-08-17; all seven fixes closed |
-| 12 — full proof, artifacts, deploy, acceptance | **IN PROGRESS** — artifact matrix green; e2e, runtime evidence, Preview and acceptance matrix outstanding |
+| 12 — full proof, artifacts, deploy, acceptance | **COMPLETE for everything automatable.** Milestone verdict is **BLOCKED on human gates**, not PASS |
 
 ### Phase 2 subtask ledger — DONE
 
@@ -226,35 +226,74 @@ Confirmed STRENGTHs from the same review, retained: disclosure discipline is
 clean with no fabricated proof anywhere, and the record route is genuinely
 designed rather than assembled.
 
-### Phase 12 — in progress
+### Phase 12 — complete for everything automatable
+
+Evidence: `evidence/phase12/final-matrix.md` and
+`evidence/phase12/acceptance-matrix.md`. Tools kept at `evidence/tools/`.
 
 **Done.**
 
-- Final artifact matrix, flagship and same-profile variation, assembled and run
-  outside the workspace with no Factory packages on disk. `install`,
-  `verify:handoff`, `typecheck`, `test` and `build` all pass for both.
-  Flagship: 13 authored source files, 160 handoff files. Variation: 5 authored
-  source files, 152 handoff files. Zero external runtime dependencies beyond
-  next / react / react-dom / resend / zod. The only `@proportion` reference is
-  the authoring alias, mapped to a file inside the artifact.
-- Two handoff defects found by that matrix and fixed (`7767982`): the shipped
-  verifier failed after `npm install` because a second lock file looked like
-  tampering, and the artifact's own test suite was a single trivial assertion.
-  It is now five real invariants and still needs no install to run.
-- Route screenshots at 1440 and 390 for all ten routes, no horizontal overflow
-  at either width. Capture tool kept at `evidence/tools/capture-routes.mjs`.
-- Workspace `pnpm check`: **786 tests, exit 0**.
+- Final artifact matrix for flagship and variation, outside the workspace, run
+  through **both** package managers: `pnpm install --frozen-lockfile` then npm
+  from a clean tree, with `verify:handoff` after each. All green.
+- Route audit of all 12 routes of **both** experiences: unique title,
+  description and canonical everywhere; one h1 and one `<main>` per route; valid
+  structured data; no heading jumps; no broken links or images; no console
+  errors; **zero axe violations** across wcag2a/2aa/21a/21aa.
+- Search no-tax on the flagship: client JS byte-identical between ON and OFF
+  (669,023 bytes, 14 chunks); 10 records, all targeting real routes.
+- `pnpm check`: **787 tests, exit 0**. `test:e2e`: **43 passed, 5 skipped**
+  (skips are deliberate project scoping).
+- `pnpm audit` and `pnpm audit --prod`: **no known vulnerabilities**, in the
+  workspace and inside the generated artifact.
+- Vercel **Preview** deployed and Ready: `dpl_3KfwZaCVkS8vnHSL6bzkqJiXroKT`.
+  Not promoted to production. Gated by the team's existing Deployment
+  Protection, which was left as configured.
 
-**Outstanding.**
+**Nine defects this phase found and fixed**, most in what the client receives:
 
-- `pnpm --filter …/managed-web test:e2e`.
-- Bundle / no-tax comparison for the flagship (Search ON vs OFF).
-- Constrained CPU + network runtime evidence.
-- Variation screenshots refreshed after the shared-contract changes.
-- Vercel Preview deployment of the generated artifact, if existing
-  authentication permits. Production promotion is **not** authorised.
-- `15_ACCEPTANCE_MATRIX.md` filled for the exact candidate.
-- Human, device and independent review gates — cannot be self-certified.
+1. The shipped verifier failed after `npm install` (a second lock file read as
+   tampering).
+2. The artifact's test suite was one trivial assertion; now five real
+   invariants.
+3. `engines.node` pinned to an exact patch, making the artifact refuse to
+   install on Vercel.
+4. Install scripts not allowlisted, so pnpm — the manager it ships a lockfile
+   for — could not install it at all.
+5. Five known-vulnerable transitive versions inherited from Next and not fixable
+   by upgrading it.
+6. No `<main>` landmark or skip link on any content route of either experience.
+7. Structured data on the home route only.
+8. Colour contrast below WCAG AA on both experiences.
+9. Heading order jumping h1 → h3 on two variation routes.
+
+Defects 3–5 were invisible while the matrix used npm instead of the artifact's
+declared package manager. Defects 6–9 were invisible until the routes were
+audited with axe rather than by eye.
+
+**Two Kernel improvements were forced by these findings**, both good:
+
+- `platform.Main` and `platform.SkipLink`, sharing one Kernel-owned id, so an
+  experience cannot ship a skip link pointing nowhere or a landmark nothing can
+  reach. This was forced by the source policy correctly refusing a raw `<a>` —
+  the boundary held and pointed at the right fix.
+- An optional authored `notFound` route, so a mistyped URL stays inside the
+  client's art direction, plus real styling for the Kernel fallback that every
+  client without one would otherwise have shipped.
+
+**Outstanding — human gates only. These cannot be self-certified.**
+
+- Fresh independent craft review of **this** candidate. The earlier review ran
+  against the pre-fix candidate; all its findings are closed but it has not
+  re-reviewed. This blocks H-04, H-05, H-06, I-02, I-05 and I-06.
+- Founder acceptance of the exact deployed candidate (I-01).
+- Unfamiliar user completing Contractor tasks with Search OFF (I-03, D-06).
+- Lower or mid-range physical phone (I-04, and the device half of C-06, E-07).
+
+**Milestone verdict: BLOCKED, not PASS.** Every automatable A–H row passes for
+`a9a779abb35304bad188f0fc16d3597b67d55301`. Section I is untouched, and the
+matrix rule is explicit that a blocked human gate stays blocked rather than
+becoming a technical pass.
 
 ## Implementation decisions applied
 
