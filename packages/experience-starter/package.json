@@ -1,0 +1,27 @@
+{
+  "name": "@melbourne-local-growth-ops/experience-starter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "generate:starter": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --project tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@melbourne-local-growth-ops/contracts": "workspace:*",
+    "@melbourne-local-growth-ops/site-core": "workspace:*",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  }
+}
