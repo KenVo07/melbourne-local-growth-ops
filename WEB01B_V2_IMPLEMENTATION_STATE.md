@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-6 complete and green; Phase 7 starting)
+Last updated: 2026-08-17 (Phases 0-8 complete and green; Phase 9 starting)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `fce7b3e` — see Git section |
+| HEAD now | `503e613` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -48,9 +48,9 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 4 — trusted source-policy scanner | **COMPLETE** (`99e061a`, hardened by `dcf0695` after adversarial review) |
 | 5 — public runtime contract + registry | **COMPLETE** (commit `cff8b13`) |
 | 6 — static multi-route App Router | **COMPLETE** (`e415ed4`, `d2e85ad`, `fce7b3e`) |
-| 7 — Projects + client-owned media | **IN PROGRESS** |
-| 8 — standalone artifact generation | not started |
-| 9 — multi-route Foundation Search | not started |
+| 7 — Projects + client-owned media | **COMPLETE** (`47d82fe`) |
+| 8 — standalone artifact generation | **COMPLETE** (`503e613`) |
+| 9 — multi-route Foundation Search | **IN PROGRESS** |
 | 10 — optional motion substrate | not started |
 | 11 — production Signature Slice + Creative Gate | not started |
 | 12 — full proof, artifacts, deploy, acceptance | not started |
@@ -123,33 +123,44 @@ All three scanner changes are in `packages/deployment/src/handoff-scanner.ts`
 with regression tests both ways (real threats still refused, ordinary source
 accepted). deployment 73 → 93 tests.
 
-### Phase 7 subtask ledger — CURRENT
+### Phases 7 and 8 — DONE
 
-Runbook §7. Much of this landed early while proving Phase 6; confirm rather than
-rebuild, then close the gaps.
+Phase 7 (`47d82fe`): template asset slots are now legacy-only, so an authored
+client owns its media outright and cannot inherit a legacy hero. Arbitrary asset
+IDs resolve; missing project, service, media and Open Graph references all fail
+generation naming the exact reference; site JSON-LD is asserted to carry no
+review, rating, credential, licence, award, price or offer claim.
 
-Already done and covered by `tests/integration/site-core/authored-route-rendering.test.tsx`:
+Phase 8 (`503e613`): full artifact matrix passing. Evidence in
+`evidence/phase08/artifact-matrix.md`.
 
-- [x] project detail resolves by `projectId` from the page content reference
-- [x] service detail resolves an exact stable `serviceId`, no title/slug fallback
-- [x] arbitrary validated asset IDs render; alt is client-owned
-- [x] per-viewport focal points reach CSS custom properties
-- [x] relationship helpers (related, previous/next, service by ID)
-- [x] DEMONSTRATION disclosure always visible
-- [x] three distinct project routes
+Two real defects were found by actually running the gate rather than assuming it:
 
-Remaining for Phase 7:
+| Defect | Fix |
+|---|---|
+| every artifact declared `verify:handoff`, which three runbooks and the governance DoD tell clients to run, but the script was never written into the artifact | artifacts now ship `handoff-manifest.json`, `handoff-manifest.sha256` and a dependency-free `scripts/verify-handoff.mjs` |
+| Pagefind output is content-hash named per build, so hash-pinning it fails on any honest rebuild | search verified by posture (enabled ⇒ output present, disabled ⇒ absent); handoff-process files excluded from the inventory, matching what `isSafeExportPath` already classified them as |
 
-- [ ] **CURRENT** 7.2 audit the legacy Contractor template for hard-coded asset
-      slot assumptions and confirm they are reachable only from the legacy
-      adapter, never from the v2 path
-- [ ] 7.4 add the negative cases: a missing project reference and a missing
-      media asset must fail **generation**, with the exact reference named,
-      rather than producing broken browser output. `resolveClientExperienceMedia`
-      already throws `ClientExperienceMediaError`; it needs test cover.
-- [ ] 7.4 assert no fabricated review/rating/licence/result structured data is
-      emitted for a DEMONSTRATION project
-- [ ] gate + commit
+### Phase 9 subtask ledger — CURRENT
+
+Runbook §9. Adapt, do not rewrite, the working v1 Pagefind implementation.
+
+- [ ] **CURRENT** 9.1 confirm the v1 invariants still hold: OFF/AUTO/ON, legacy
+      default OFF, stale output deletion, enabled-only browser runtime, no
+      server search dependency, one index per client
+- [ ] 9.2 page-aware record projection. `packages/site-core/src/page-graph-search.ts`
+      already exists and is exported but is **not yet wired into
+      `resolveFoundationSearch`**. `FoundationSearchConfigSchema` still only
+      accepts `schemaVersion: 1` + `includeSectionIds`; the reference fixture's
+      `foundationSearch` block uses `schemaVersion: 2` + `includePageIds`, which
+      is currently rejected. Add the v2 config shape and route it to the page
+      graph projector while leaving the legacy section path untouched.
+- [ ] 9.3 validate navigation: route/anchor URLs, project results landing on the
+      project route, keyboard/Escape/focus return, OFF core tasks
+- [ ] 9.4 no-tax comparison: v2 static Search OFF vs an equivalent build with
+      search capability absent — client chunks, transferred JS, requests,
+      `public/pagefind`, search markup
+- [ ] 9.5 gate + commit
 
 ## Implementation decisions applied
 
