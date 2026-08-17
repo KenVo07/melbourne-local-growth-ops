@@ -171,7 +171,9 @@ export function buildManagedRouteMetadata(
   const openGraphImageUrl = resolveRouteImageUrl(runtime, page, siteUrl);
 
   return {
-    title,
+    // Absolute, because the layout applies a site-wide title template and the
+    // page title already carries the business name exactly once.
+    title: { absolute: title },
     description: page.metadata.description,
     ...(canonicalUrl === undefined
       ? {}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "kind": "AUTHORED_CLIENT_EXPERIENCE",
+  "experienceId": "neutral-functional",
+  "experienceVersion": "1.0.0",
+  "entrypoint": "index.tsx",
+  "designDnaPath": "design-dna.json",
+  "routeIds": [
+    "home",
+    "services-index",
+    "service-detail",
+    "projects-index",
+    "project-detail",
+    "about",
+    "contact"
+  ],
+  "signatureIds": [],
+  "publicDependencies": [],
+  "runtime": {
+    "clientJavaScript": "NONE",
+    "motion": "NONE",
+    "reducedMotion": "REQUIRED"
+  }
+}

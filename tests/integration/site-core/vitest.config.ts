@@ -8,6 +8,14 @@ export default defineConfig({
   root: repositoryRoot,
   resolve: {
     alias: {
+      // The sanctioned authoring alias must resolve identically in the app,
+      // the generated artifact and the test runner.
+      "@proportion/client-experience": fileURLToPath(
+        new URL(
+          "../../../apps/managed-web/src/client-experience/public-api.ts",
+          import.meta.url,
+        ),
+      ),
       "@melbourne-local-growth-ops/asset-pipeline": fileURLToPath(
         new URL("../../../packages/asset-pipeline/src/index.ts", import.meta.url),
       ),

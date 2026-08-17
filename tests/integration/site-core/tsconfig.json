@@ -8,8 +8,15 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "lib": ["ES2024", "DOM"],
-    "types": ["node", "react", "vitest/globals"],
+    "lib": [
+      "ES2024",
+      "DOM"
+    ],
+    "types": [
+      "node",
+      "react",
+      "vitest/globals"
+    ],
     "paths": {
       "@melbourne-local-growth-ops/asset-pipeline": [
         "../../../packages/asset-pipeline/src/index.ts"
@@ -31,6 +38,9 @@
       ],
       "@melbourne-local-growth-ops/templates": [
         "../../../packages/templates/src/index.ts"
+      ],
+      "@proportion/client-experience": [
+        "../../../apps/managed-web/src/client-experience/public-api.ts"
       ]
     }
   },

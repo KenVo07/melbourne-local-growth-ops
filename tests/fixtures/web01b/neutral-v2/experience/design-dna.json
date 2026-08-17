@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "designDnaId": "neutral-functional",
+  "designDnaVersion": "1.0.0",
+  "creativeThesis": "Deliberately undesigned. This fixture exists to prove routing, content resolution and metadata in isolation, so that a later creative failure cannot be mistaken for a routing failure.",
+  "perceptionTargets": ["Plain", "Legible", "Obviously a test fixture"],
+  "antiTargets": ["Anything that could be mistaken for the reference-class proof"],
+  "typography": {
+    "intent": "System fonts only, so no typographic decision is implied.",
+    "principles": ["Use the browser default stack.", "Do not set a display face."]
+  },
+  "colour": {
+    "intent": "No palette. Default rendering only.",
+    "principles": ["Introduce no brand colour.", "Rely on default contrast."]
+  },
+  "composition": {
+    "intent": "One column, source order, no art direction.",
+    "principles": ["Every route uses the same plain structure.", "Difference between routes must come from data, not styling."]
+  },
+  "imagery": {
+    "intent": "Prove that arbitrary client media resolves and that focal points reach CSS.",
+    "principles": ["Render each referenced asset once.", "Carry client-owned alt text unchanged."]
+  },
+  "interaction": {
+    "intent": "Navigation only.",
+    "principles": ["No interactive behaviour beyond links.", "No hover-dependent meaning."]
+  },
+  "motion": {
+    "intent": "None at all.",
+    "principles": ["Ship no animation.", "Ship no client JavaScript."],
+    "reducedMotionIntent": "Nothing to reduce: the fixture has no motion in any mode."
+  },
+  "responsive": {
+    "intent": "Reflow only. This fixture is explicitly not art-directed for mobile.",
+    "principles": ["Single column at every width.", "Do not treat this as evidence of responsive art direction."]
+  },
+  "signatureIntent": {
+    "name": "None",
+    "purpose": "The neutral fixture declares no Signature; a Signature belongs to the reference-class proof."
+  }
+}
