@@ -1,5 +1,5 @@
 /**
- * The only module client-authored source may import from the Platform.
+ * The only module authored client source may import from the Platform.
  * Keep this surface narrow, public and free of private runtime/configuration
  * types. The generated standalone artifact maps the same authoring alias to
  * this local file through tsconfig paths.

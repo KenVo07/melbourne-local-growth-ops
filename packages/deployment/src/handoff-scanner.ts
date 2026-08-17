@@ -39,6 +39,14 @@ const forbiddenSegments = new Set([
 ]);
 const windowsReserved = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const safeSegment = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+/**
+ * Next App Router dynamic segment directories: `[id]`, `[...segments]` and
+ * `[[...segments]]`. A multi-route client site cannot be handed off without
+ * them. The inner name is restricted to word characters, so a bracketed segment
+ * can never express traversal, a separator or whitespace.
+ */
+const nextDynamicSegment =
+  /^\[(?:\[\.\.\.[A-Za-z0-9_]+\]|\.\.\.[A-Za-z0-9_]+|[A-Za-z0-9_]+)\]$/;
 const environmentReference =
   /process\.env(?:\.([A-Z][A-Z0-9_]*)|\[['"]([A-Z][A-Z0-9_]*)['"]\])/g;
 const builtInEnvironmentNames = new Set(["NODE_ENV"]);
@@ -59,13 +67,20 @@ const secretPatterns: readonly RegExp[] = [
 
 const privateDependencyPatterns: readonly RegExp[] = [
   /\bworkspace:/i,
-  /\b(?:link|file):/i,
+  // A `link:` or `file:` dependency protocol is always followed by a path with
+  // no intervening whitespace. Requiring that keeps ordinary source identifiers
+  // such as a `Link:` property from reading as a private dependency.
+  /(?:^|["'\s,{[])(?:link|file):(?=[^\s"']*[/.])/i,
   /\bgit\+(?:ssh|https?):/i,
   /\bssh:\/\//i,
   /\bgithub:/i,
   /\b@melbourne-local-growth-ops\//i,
   /\b@agency\//i,
-  /\b(?:registry|npmRegistryServer)\s*[:=]\s*(?!https:\/\/registry\.npmjs\.org)/i,
+  // Registry redirection is only meaningful when the value is a URL. Requiring
+  // a scheme or protocol-relative prefix keeps an ordinary `registry:` property
+  // or a `context.registry` member access from reading as configuration.
+  // `.npmrc` itself is refused outright regardless of content.
+  /\b(?:registry|npmRegistryServer)\s*[:=]\s*["']?(?!https:\/\/registry\.npmjs\.org)(?:https?:\/\/|\/\/)/i,
 ];
 
 export function issue(
@@ -111,7 +126,7 @@ export function isSafeExportPath(path: string): boolean {
       segment === ".." ||
       segment.endsWith(".") ||
       segment.endsWith(" ") ||
-      !safeSegment.test(segment) ||
+      !(safeSegment.test(segment) || nextDynamicSegment.test(segment)) ||
       windowsReserved.test(segment)
     )
   ) {

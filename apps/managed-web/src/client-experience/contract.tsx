@@ -9,8 +9,8 @@ import type {
 } from "../runtime-types";
 
 /**
- * Public, non-secret identity exposed to trusted client-authored experience code.
- * Do not add connector secrets, environment bindings, recipient addresses,
+ * Public, non-secret identity exposed to trusted authored client experience
+ * code. Do not add connector secrets, environment bindings, recipient addresses,
  * internal entitlement state, or agency-only operational data to this type.
  */
 export interface ClientExperienceSiteIdentity {

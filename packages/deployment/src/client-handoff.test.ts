@@ -353,6 +353,105 @@ describe("client handoff export", () => {
     });
   });
 
+  it.each([
+    "src/app/[...segments]/page.tsx",
+    "src/app/[id]/page.tsx",
+    "src/app/[[...slug]]/page.tsx",
+  ])("accepts the Next dynamic segment directory %s", (dynamicPath) => {
+    const artifacts = [
+      ...defaultArtifacts(),
+      artifact(dynamicPath, "export default function Page() { return null; }\n", "SOURCE"),
+    ];
+    const result = createClientHandoffExport(baseInput({
+      artifacts,
+      artifactAllowlist: artifacts.map(({ path }) => path),
+    }));
+
+    expect(result.success).toBe(true);
+  });
+
+  it.each([
+    "src/app/[.., ]/page.tsx",
+    "src/app/[../secret]/page.tsx",
+    "src/app/[a b]/page.tsx",
+    "src/app/[unclosed/page.tsx",
+  ])("still rejects a bracketed segment that is not a Next dynamic segment: %s", (unsafePath) => {
+    const artifacts = [
+      ...defaultArtifacts(),
+      artifact(unsafePath, "export {};\n", "SOURCE"),
+    ];
+    const result = createClientHandoffExport(baseInput({
+      artifacts,
+      artifactAllowlist: artifacts.map(({ path }) => path),
+    }));
+
+    expect(result).toMatchObject({
+      success: false,
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: "UNSAFE_EXPORT_PATH" }),
+      ]),
+    });
+  });
+
+  it.each([
+    '{"dependencies":{"pkg":"file:../local"}}',
+    '{"dependencies":{"pkg":"link:./sibling"}}',
+    '{"dependencies":{"pkg":"file:packages/thing"}}',
+  ])("rejects a local dependency protocol %s", (content) => {
+    const artifacts = defaultArtifacts().map((file) =>
+      file.path === "src/index.mjs"
+        ? artifact(file.path, content, "SOURCE")
+        : file,
+    );
+    const result = createClientHandoffExport(baseInput({ artifacts }));
+
+    expect(result).toMatchObject({
+      success: false,
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: "PRIVATE_DEPENDENCY" }),
+      ]),
+    });
+  });
+
+  it.each([
+    'registry=https://npm.internal.example/\n',
+    '@agency:registry=https://npm.pkg.github.com/\n',
+    'npmRegistryServer: "https://npm.internal.example"\n',
+    'registry=//npm.internal.example/\n',
+  ])("rejects registry redirection %s", (content) => {
+    const artifacts = defaultArtifacts().map((file) =>
+      file.path === "src/index.mjs"
+        ? artifact(file.path, content, "SOURCE")
+        : file,
+    );
+    const result = createClientHandoffExport(baseInput({ artifacts }));
+
+    expect(result).toMatchObject({
+      success: false,
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: "PRIVATE_DEPENDENCY" }),
+      ]),
+    });
+  });
+
+  it.each([
+    "export interface Platform { readonly Link: unknown; readonly Image: unknown }\n",
+    "export interface Ctx { readonly registry: unknown }\n",
+    "const value = context.registry;\nexport default value;\n",
+    'const url = "https://registry.npmjs.org/";\nexport default url;\n',
+    "const nav = { link: renderLink };\nexport default nav;\n",
+    "// See the profile: notes below\nexport {};\n",
+  ])("does not read an ordinary source identifier as a private dependency", (content) => {
+    const artifacts = defaultArtifacts().map((file) =>
+      file.path === "src/index.mjs"
+        ? artifact(file.path, content, "SOURCE")
+        : file,
+    );
+    const result = createClientHandoffExport(baseInput({ artifacts }));
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects credential-shaped content without echoing it", () => {
     const marker = "credential-shaped-fixture";
     const artifacts = defaultArtifacts().map((file) =>
