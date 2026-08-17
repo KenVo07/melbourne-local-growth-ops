@@ -11,7 +11,14 @@ import {
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { validateClientExperienceManifest } from "@melbourne-local-growth-ops/site-core";
+
+import { approvedClientExperienceDependencies } from "./approved-client-dependencies";
 import { createIsolatedBuildEnvironment } from "./build-environment";
+import { resolveClientExperienceDependencies } from "./client-experience-dependencies";
+import { inspectClientExperienceSource } from "./client-experience-source-policy";
+import type { InspectedClientExperienceSource } from "./client-experience-source-policy";
+import { createClientRouteInventory } from "./client-route-inventory";
 import { generateClientWebsiteSnapshot } from "./generate-client-website";
 import { buildFoundationSearchIndex } from "../search/build-foundation-search";
 import type {
@@ -124,9 +131,19 @@ export async function assembleClientSourceArtifact(
   options: AssembleClientSourceArtifactOptions,
 ): Promise<AssembledClientSourceArtifact> {
   await assertEmptyDirectory(options.outputDirectory);
+
+  /*
+   * Authored source is inspected before anything is generated or copied. If the
+   * source policy refuses the package, assembly fails with an empty output
+   * directory rather than a partially written artifact.
+   */
+  const authored = await inspectAuthoredSource(options);
   const snapshot = generateClientWebsiteSnapshot(
     options.definition,
     options.publicDirectory,
+    authored === undefined
+      ? {}
+      : { clientExperienceManifest: authored.manifest },
   );
   const sourceDirectory = join(options.outputDirectory, "source");
   const repositoryName = `${snapshot.configuration.clientId}-managed-website`;
@@ -135,7 +152,19 @@ export async function assembleClientSourceArtifact(
   await writeText(
     sourceDirectory,
     "package.json",
-    `${JSON.stringify(portablePackage(repositoryName), null, 2)}\n`,
+    `${JSON.stringify(
+      portablePackage(
+        repositoryName,
+        authored === undefined
+          ? {}
+          : resolveClientExperienceDependencies(
+              authored.manifest,
+              approvedClientExperienceDependencies,
+            ),
+      ),
+      null,
+      2,
+    )}\n`,
   );
   await writeText(
     sourceDirectory,
@@ -187,6 +216,19 @@ export async function assembleClientSourceArtifact(
 
   await copyRuntimeFiles(sourceDirectory);
   await copyVendorPackages(sourceDirectory);
+  await copyAuthoredSource(sourceDirectory, authored);
+
+  if (authored !== undefined && snapshot.pageGraph !== undefined) {
+    await writeText(
+      sourceDirectory,
+      "src/generated/route-inventory.json",
+      `${JSON.stringify(
+        createClientRouteInventory(snapshot.pageGraph, authored.manifest),
+        null,
+        2,
+      )}\n`,
+    );
+  }
 
   for (const asset of snapshot.assetManifest.assets) {
     const destination = join(sourceDirectory, "public", ...asset.sourcePath.split("/"));
@@ -201,6 +243,8 @@ export async function assembleClientSourceArtifact(
     snapshot.foundationSearch,
     join(sourceDirectory, "public", "pagefind"),
   );
+
+  await writeText(sourceDirectory, "scripts/verify-handoff.mjs", portableVerifyScript());
 
   await generatePortableLockfile(sourceDirectory);
   const inventory = await createInventory(
@@ -271,7 +315,73 @@ export async function assembleClientSourceArtifact(
       ),
       optionalDataResources: [],
     },
+    ...(authored === undefined
+      ? {}
+      : {
+          clientExperience: {
+            experienceId: authored.manifest.experienceId,
+            experienceVersion: authored.manifest.experienceVersion,
+            entrypoint: authored.manifest.entrypoint,
+            designDnaPath: authored.manifest.designDnaPath,
+            runtime: authored.manifest.runtime,
+            publicDependencies: authored.inspected.publicDependencies.map(
+              (name) => ({
+                name,
+                version:
+                  authored.manifest.publicDependencies.find(
+                    (dependency) => dependency.name === name,
+                  )?.version ?? "",
+              }),
+            ),
+            source: authored.inspected.files.map((file) => ({
+              path: file.path,
+              sha256: file.sha256,
+              size: file.size,
+              kind: file.kind,
+              clientRuntime: file.clientRuntime,
+            })),
+          },
+        }),
   };
+
+  /*
+   * The integrity manifest travels inside the client repository so a client can
+   * verify what they were given without the Factory descriptor, which lives one
+   * level above and is not part of the handed-off source. It excludes itself,
+   * because a file cannot contain its own hash.
+   */
+  await writeText(
+    sourceDirectory,
+    "handoff-manifest.json",
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        artifactId,
+        clientId: snapshot.configuration.clientId,
+        /*
+         * Whether this artifact was delivered with a search index. Pagefind
+         * filenames are content-hashed per build, so a rebuild legitimately
+         * produces different names. Pinning them would make integrity
+         * verification fail on any honest rebuild, so the index is verified by
+         * posture rather than by hash.
+         */
+        searchEnabled: snapshot.foundationSearch.enabled,
+        files: inventory
+          .filter(({ path }) => !path.startsWith("public/pagefind/"))
+          .map(({ path, sha256, size }) => ({ path, sha256, size })),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  await writeText(
+    sourceDirectory,
+    "handoff-manifest.sha256",
+    `${digestText(
+      await readFile(join(sourceDirectory, "handoff-manifest.json"), "utf8"),
+    )}  handoff-manifest.json\n`,
+  );
 
   await writeFile(
     join(options.outputDirectory, "client-artifact.json"),
@@ -285,12 +395,29 @@ export async function assembleClientSourceArtifact(
   });
 }
 
+/**
+ * Files the handoff contract classifies as products of the handoff process
+ * itself rather than client artifacts. They are written into the repository a
+ * client receives, but `isSafeExportPath` deliberately excludes them from the
+ * export inventory and allowlist, so the assembler must too.
+ */
+const generatedHandoffPaths = new Set([
+  "handoff-manifest.json",
+  "handoff-manifest.sha256",
+  "scripts/verify-handoff.mjs",
+]);
+
 async function createInventory(
   sourceDirectory: string,
   clientId: string,
   version: string,
 ) {
-  const files = await recursiveFiles(sourceDirectory);
+  const files = (await recursiveFiles(sourceDirectory)).filter(
+    (absolutePath) =>
+      !generatedHandoffPaths.has(
+        relative(sourceDirectory, absolutePath).replaceAll("\\", "/"),
+      ),
+  );
   return Promise.all(
     files.sort(compareText).map(async (absolutePath) => {
       const content = await readFile(absolutePath);
@@ -358,7 +485,10 @@ async function writeText(
   await writeFile(destination, content);
 }
 
-function portablePackage(repositoryName: string) {
+function portablePackage(
+  repositoryName: string,
+  clientExperienceDependencies: Readonly<Record<string, string>>,
+) {
   return {
     name: repositoryName,
     version: "1.0.0",
@@ -380,6 +510,10 @@ function portablePackage(repositoryName: string) {
       "react-dom": "19.2.8",
       resend: "6.18.1",
       zod: "4.4.3",
+      // Only exact versions the experience manifest declares and repository
+      // governance approves. An experience that declares none adds none, so a
+      // static site carries no motion or interaction dependency cost.
+      ...clientExperienceDependencies,
     },
     devDependencies: {
       "@types/node": "26.1.1",
@@ -429,6 +563,19 @@ function portableTsconfig(): string {
         verbatimModuleSyntax: true,
         incremental: true,
         plugins: [{ name: "next" }],
+        /*
+         * The sanctioned authoring alias, mapped exactly as the private
+         * workspace maps it. Authored source keeps the imports it was written
+         * and hashed with, so no rewriting is needed and provenance holds.
+         *
+         * No `baseUrl`: TypeScript 7 removed it, and `paths` entries resolve
+         * relative to this tsconfig without it.
+         */
+        paths: {
+          "@proportion/client-experience": [
+            "./src/client-experience/public-api.ts",
+          ],
+        },
       },
       include: [
         "next-env.d.ts",
@@ -588,4 +735,221 @@ function deepFreeze<T>(value: T): T {
     deepFreeze(child);
   }
   return Object.freeze(value);
+}
+
+
+interface AuthoredSourcePackage {
+  readonly manifest: import("@melbourne-local-growth-ops/site-core").ClientExperienceManifest;
+  readonly inspected: InspectedClientExperienceSource;
+  readonly inputDirectory: string;
+}
+
+/**
+ * Loads and inspects the authored client experience for a schemaVersion 2
+ * definition, before any generation or copying happens.
+ *
+ * The definition may only carry the fixed `experience/manifest.json` reference,
+ * so the input directory is derived from the client's public directory rather
+ * than taken from configuration. A legacy definition returns undefined and no
+ * authored source is read at all.
+ */
+async function inspectAuthoredSource(
+  options: AssembleClientSourceArtifactOptions,
+): Promise<AuthoredSourcePackage | undefined> {
+  const definition = options.definition as { readonly schemaVersion?: unknown };
+  if (
+    typeof definition !== "object" ||
+    definition === null ||
+    definition.schemaVersion !== 2
+  ) {
+    return undefined;
+  }
+
+  const inputDirectory = options.inputDirectory ?? dirname(options.publicDirectory);
+  const manifest = validateClientExperienceManifest(
+    JSON.parse(
+      await readFile(
+        join(inputDirectory, "experience", "manifest.json"),
+        "utf8",
+      ),
+    ) as unknown,
+  );
+  if (!manifest.success) {
+    throw new Error(
+      `Client experience manifest is invalid: ${manifest.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("; ")}`,
+    );
+  }
+
+  const inspected = await inspectClientExperienceSource({
+    inputDirectory,
+    manifest: manifest.data,
+    approvedPublicDependencies: approvedClientExperienceDependencies.map(
+      ({ name }) => name,
+    ),
+  });
+
+  return Object.freeze({ manifest: manifest.data, inspected, inputDirectory });
+}
+
+/**
+ * Copies the inspected authored source into the artifact's fixed slot.
+ *
+ * Only files the policy actually inspected are copied, and each is re-read and
+ * hash-verified at copy time so the descriptor's inventory describes the exact
+ * bytes shipped, not the bytes as they were during inspection.
+ */
+async function copyAuthoredSource(
+  sourceDirectory: string,
+  authored: AuthoredSourcePackage | undefined,
+): Promise<void> {
+  const destinationRoot = join(sourceDirectory, "src/client-experience/authored");
+  await mkdir(destinationRoot, { recursive: true });
+
+  if (authored === undefined) {
+    // A legacy artifact ships the placeholder, never authored source.
+    await writeText(
+      sourceDirectory,
+      "src/client-experience/authored/index.tsx",
+      legacyAuthoredPlaceholder,
+    );
+    await writeText(
+      sourceDirectory,
+      "src/client-experience/authored/manifest.json",
+      "null\n",
+    );
+    return;
+  }
+
+  for (const file of authored.inspected.files) {
+    const from = join(authored.inspected.rootDirectory, ...file.path.split("/"));
+    const to = join(destinationRoot, ...file.path.split("/"));
+    const content = await readFile(from);
+    const actual = digestBytes(content);
+    if (actual !== file.sha256) {
+      throw new Error(
+        `Client experience source "${file.path}" changed between inspection and copy.`,
+      );
+    }
+    await mkdir(dirname(to), { recursive: true });
+    await writeFile(to, content);
+  }
+}
+
+const legacyAuthoredPlaceholder = [
+  'import type { ClientExperienceDefinition } from "../contract";',
+  "",
+  "/** A legacy client ships no authored experience. */",
+  "export const authoredClientExperience: ClientExperienceDefinition | undefined =",
+  "  undefined;",
+  "",
+].join("\n");
+
+
+/**
+ * The `verify:handoff` script shipped inside every client artifact.
+ *
+ * Three runbooks and the governance definition of done instruct a client to run
+ * this, so it must exist in the artifact rather than only being declared. It
+ * recomputes every hash in the integrity manifest and reports missing, changed
+ * and unexpected files, using only Node built-ins so it works before any
+ * install.
+ */
+function portableVerifyScript(): string {
+  return [
+    'import { createHash } from "node:crypto";',
+    'import { readFile, readdir, stat } from "node:fs/promises";',
+    'import { dirname, join, relative, resolve } from "node:path";',
+    'import { fileURLToPath } from "node:url";',
+    "",
+    'const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");',
+    'const manifestPath = join(root, "handoff-manifest.json");',
+    'const ignoredDirectories = new Set([',
+    '  "node_modules",',
+    '  ".next",',
+    '  ".git",',
+    '  "build",',
+    '  ".turbo",',
+    "]);",
+    '// Build byproducts, not shipped files. The same set .gitignore covers.',
+    'const ignoredFiles = new Set(["next-env.d.ts", ".DS_Store"]);',
+    'const isBuildByproduct = (name) =>',
+    '  ignoredFiles.has(name) || name.endsWith(".tsbuildinfo");',
+    "",
+    "const manifest = JSON.parse(await readFile(manifestPath, \"utf8\"));",
+    "const expected = new Map(manifest.files.map((file) => [file.path, file]));",
+    "const problems = [];",
+    "",
+    "async function walk(directory) {",
+    "  const entries = await readdir(directory, { withFileTypes: true });",
+    "  const found = [];",
+    "  for (const entry of entries) {",
+    "    if (ignoredDirectories.has(entry.name)) continue;",
+    "    if (!entry.isDirectory() && isBuildByproduct(entry.name)) continue;",
+    "    const absolute = join(directory, entry.name);",
+    "    if (entry.isDirectory()) {",
+    "      found.push(...(await walk(absolute)));",
+    "      continue;",
+    "    }",
+    '    found.push(relative(root, absolute).replaceAll("\\\\", "/"));',
+    "  }",
+    "  return found;",
+    "}",
+    "",
+    "const present = new Set(await walk(root));",
+    '// Products of the handoff process itself, excluded from the inventory by',
+    '// the export contract, so they are not "unexpected" here either.',
+    '// Regenerated with content-hashed names on every build, so verified by',
+    '// posture rather than by hash.',
+    'const searchOutput = join(root, "public", "pagefind");',
+    'let searchFiles = [];',
+    "try {",
+    '  searchFiles = await readdir(searchOutput);',
+    "} catch {",
+    "  searchFiles = [];",
+    "}",
+    "if (manifest.searchEnabled && searchFiles.length === 0) {",
+    '  problems.push("search was delivered enabled but public/pagefind is empty");',
+    "}",
+    "if (!manifest.searchEnabled && searchFiles.length > 0) {",
+    '  problems.push("search was delivered disabled but public/pagefind has output");',
+    "}",
+    'for (const path of [...present]) {',
+    '  if (path.startsWith("public/pagefind/")) present.delete(path);',
+    "}",
+    "",
+    'for (const generated of [',
+    '  "handoff-manifest.json",',
+    '  "handoff-manifest.sha256",',
+    '  "scripts/verify-handoff.mjs",',
+    "]) present.delete(generated);",
+    "",
+    "for (const [path, file] of expected) {",
+    "  if (!present.has(path)) {",
+    "    problems.push(`missing: ${path}`);",
+    "    continue;",
+    "  }",
+    "  const content = await readFile(join(root, path));",
+    '  const actual = createHash("sha256").update(content).digest("hex");',
+    "  if (actual !== file.sha256) problems.push(`changed: ${path}`);",
+    "  const size = (await stat(join(root, path))).size;",
+    "  if (size !== file.size) problems.push(`size changed: ${path}`);",
+    "}",
+    "",
+    "for (const path of present) {",
+    "  if (!expected.has(path)) problems.push(`unexpected: ${path}`);",
+    "}",
+    "",
+    "if (problems.length > 0) {",
+    "  console.error(`handoff integrity FAILED for ${manifest.artifactId}`);",
+    "  for (const problem of problems) console.error(`  ${problem}`);",
+    "  process.exitCode = 1;",
+    "} else {",
+    "  console.log(",
+    "    `handoff integrity PASS: ${expected.size} files match artifact ${manifest.artifactId}`,",
+    "  );",
+    "}",
+    "",
+  ].join("\n");
 }

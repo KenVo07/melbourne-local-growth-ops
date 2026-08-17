@@ -82,6 +82,12 @@ export interface AssembleClientSourceArtifactOptions {
   readonly publicDirectory: string;
   readonly outputDirectory: string;
   readonly factoryRevision: string;
+  /**
+   * Root of the client input package. Defaults to the parent of
+   * `publicDirectory`. Authored source is only ever read from
+   * `<inputDirectory>/experience`, never from a configured path.
+   */
+  readonly inputDirectory?: string;
 }
 
 export type HandoffArtifactCategory =
@@ -155,6 +161,33 @@ export interface ClientArtifactDescriptor {
       readonly owner: "CLIENT";
     }[];
     readonly optionalDataResources: readonly [];
+  };
+  /**
+   * Present only for an authored (`schemaVersion: 2`) artifact. Records what
+   * source actually shipped, by content hash, together with the experience
+   * identity, its declared runtime posture and its exact public dependencies.
+   */
+  readonly clientExperience?: {
+    readonly experienceId: string;
+    readonly experienceVersion: string;
+    readonly entrypoint: string;
+    readonly designDnaPath: string;
+    readonly runtime: {
+      readonly clientJavaScript: "NONE" | "ROUTE_SCOPED" | "COMPONENT_SCOPED";
+      readonly motion: "NONE" | "NATIVE" | "CLIENT_LIBRARY";
+      readonly reducedMotion: "REQUIRED";
+    };
+    readonly publicDependencies: readonly {
+      readonly name: string;
+      readonly version: string;
+    }[];
+    readonly source: readonly {
+      readonly path: string;
+      readonly sha256: string;
+      readonly size: number;
+      readonly kind: "SOURCE" | "STYLE" | "DATA" | "MANIFEST";
+      readonly clientRuntime: boolean;
+    }[];
   };
 }
 
