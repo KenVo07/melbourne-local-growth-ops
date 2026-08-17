@@ -271,6 +271,29 @@ function validateArtifactBoundary(
   return issues;
 }
 
+/**
+ * An engine declaration must name the major version the artifact was built for,
+ * and must not be a wildcard.
+ *
+ * It deliberately accepts a range. This field previously had to equal the exact
+ * patch the Factory built on, which is not what `engines` means: it is a
+ * compatibility statement enforced by the package manager at install time, so an
+ * exact patch makes the artifact refuse to install anywhere that patch level
+ * differs — including Vercel, the hosting target the handoff runbook names.
+ * Build determinism is carried by the committed lockfile and the integrity
+ * manifest, neither of which this relaxes.
+ */
+function declaresEngine(value: unknown, major: number): boolean {
+  if (typeof value !== "string") return false;
+  const declaration = value.trim();
+  if (declaration.length === 0 || declaration.length > 64) return false;
+  // A wildcard states nothing, which is the case this rule exists to prevent.
+  if (/^(?:\*|x|latest|>=?\s*0)/i.test(declaration)) return false;
+  // The declared range must actually mention the built major version.
+  const majors: readonly string[] = declaration.match(/\d+/g) ?? [];
+  return majors.includes(String(major));
+}
+
 function parsePackageJson(
   artifact: HandoffArtifactInput | undefined,
   repository: string,
@@ -315,8 +338,8 @@ function parsePackageJson(
     value.private !== true ||
     value.packageManager !== "pnpm@11.9.0" ||
     !isRecord(engines) ||
-    engines.node !== "24.18.0" ||
-    engines.pnpm !== "11.9.0" ||
+    !declaresEngine(engines.node, 24) ||
+    !declaresEngine(engines.pnpm, 11) ||
     !isRecord(scripts)
   ) {
     issues.push(issue(

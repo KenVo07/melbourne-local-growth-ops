@@ -514,6 +514,39 @@ describe("client handoff export", () => {
     }
   });
 
+  it("accepts an engine range that names the built major, and rejects a wildcard", () => {
+    const withEngines = (engines: Record<string, string>) => {
+      const content = `${JSON.stringify({
+        ...JSON.parse(packageJson) as Record<string, unknown>,
+        engines,
+      }, null, 2)}\n`;
+      return createClientHandoffExport(baseInput({
+        artifacts: defaultArtifacts().map((file) =>
+          file.path === "package.json" ? { ...file, content } : file
+        ),
+      }));
+    };
+
+    // A range is what `engines` is for. Requiring the exact patch the Factory
+    // built on made the artifact refuse to install on any host a patch behind.
+    for (const node of ["^24.0.0", "24.x", ">=24.0.0 <25", "24.18.0"]) {
+      const result = withEngines({ node, pnpm: ">=11.9.0" });
+      expect(result.success).toBe(true);
+    }
+
+    // A declaration that constrains nothing, or names the wrong major, still
+    // fails: the field has to state something true about this artifact.
+    for (const node of ["*", "x", ">=0", "latest", "^22.0.0", ""]) {
+      const result = withEngines({ node, pnpm: "11.9.0" });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.issues).toEqual(expect.arrayContaining([
+          expect.objectContaining({ code: "INVALID_PACKAGE_LAYOUT" }),
+        ]));
+      }
+    }
+  });
+
   it("rejects factory-only files even when explicitly allowlisted", () => {
     const artifacts = [
       ...defaultArtifacts(),

@@ -184,7 +184,11 @@ describe("authored client artifact assembly", () => {
     const artifact = await assembleAuthored(await authoredInput());
     const packageJson = JSON.parse(
       await readFile(join(artifact.sourceDirectory, "package.json"), "utf8"),
-    ) as { dependencies: Record<string, string>; devDependencies: Record<string, string> };
+    ) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+      engines: Record<string, string>;
+    };
 
     // The neutral experience declares no public dependency, so a static site
     // carries no motion or interaction library cost whatsoever.
@@ -197,6 +201,16 @@ describe("authored client artifact assembly", () => {
     for (const version of Object.values(packageJson.dependencies)) {
       expect(version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
     }
+
+    // Engines are a compatibility statement, not a build record. Pinning the
+    // exact patch made the artifact fail to install on any host whose Node
+    // differs by a patch — Vercel included, which the handoff runbook names as
+    // the hosting target. Reproducibility lives in the lockfile and the
+    // integrity manifest instead.
+    const { engines } = packageJson;
+    expect(engines.node).not.toMatch(/^\d+\.\d+\.\d+$/);
+    expect(engines.node).toMatch(/24/);
+    expect(engines.pnpm).not.toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it("ships a working integrity manifest and verify script", async () => {

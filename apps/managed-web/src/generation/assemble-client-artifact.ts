@@ -171,6 +171,32 @@ export async function assembleClientSourceArtifact(
     ".gitignore",
     "node_modules/\n.next/\nbuild/\n.env\n.env.*\n!.env.example\n",
   );
+  /*
+   * pnpm 11 reads its settings from here rather than from package.json, and it
+   * exits non-zero on any dependency whose install script it had to ignore. The
+   * same allowlist is kept in package.json for pnpm 10 hosts; whichever the
+   * recipient runs, the two agree.
+   */
+  await writeText(
+    sourceDirectory,
+    "pnpm-workspace.yaml",
+    [
+      "# Install scripts are refused by default. These two are named because they",
+      "# fetch a required native binary: esbuild for tsx, sharp for Next's image",
+      "# encoder. Anything else attempting to run code at install is still denied.",
+      "#",
+      "# Both spellings are present on purpose. pnpm 11 reads `allowBuilds` and",
+      "# rewrites this file if a needed entry is missing — which would change a",
+      "# file the integrity manifest covers. pnpm 10 reads `onlyBuiltDependencies`.",
+      "allowBuilds:",
+      "  esbuild: true",
+      "  sharp: true",
+      "onlyBuiltDependencies:",
+      "  - esbuild",
+      "  - sharp",
+      "",
+    ].join("\n"),
+  );
   await writeText(
     sourceDirectory,
     "src/generated/managed-website.json",
@@ -458,7 +484,13 @@ function categoryFor(path: string): HandoffArtifactCategory {
   if (path.startsWith("public/assets/") || path.startsWith("public/pagefind/")) {
     return "ASSET";
   }
-  if (path === "package.json" || path === "pnpm-lock.yaml") return "PACKAGE";
+  if (
+    path === "package.json" ||
+    path === "pnpm-lock.yaml" ||
+    path === "pnpm-workspace.yaml"
+  ) {
+    return "PACKAGE";
+  }
   if (path.startsWith("src/generated/") || path === ".gitignore") {
     return "CONFIGURATION";
   }
@@ -495,7 +527,28 @@ function portablePackage(
     private: true,
     type: "module",
     packageManager: "pnpm@11.9.0",
-    engines: { node: "24.18.0", pnpm: "11.9.0" },
+    /*
+     * Ranges, not exact pins. The artifact is built and tested on Node 24.18.0,
+     * but declaring that as the engine made it uninstallable anywhere the patch
+     * level differs — including Vercel, which the handoff runbook names as the
+     * hosting target and which currently offers 24.15.0. Reproducibility comes
+     * from the committed lockfile and the integrity manifest; the engine field
+     * is a compatibility statement and has to be expressed as one.
+     */
+    engines: { node: "^24.0.0", pnpm: ">=11.9.0" },
+    /*
+     * pnpm 10+ refuses to run dependency install scripts unless they are named,
+     * and exits non-zero when it has ignored any. Without this the artifact
+     * cannot be installed with the package manager it declares — which is how
+     * it failed its first real deployment.
+     *
+     * The list is deliberately exhaustive and minimal: `esbuild` is tsx's
+     * platform binary and `sharp` is Next's image encoder, both of which fetch
+     * a native binary at install. Naming them is a stronger posture than the
+     * blanket script execution npm performs, because anything else that tries
+     * to run code at install is still refused.
+     */
+    pnpm: { onlyBuiltDependencies: ["esbuild", "sharp"] },
     scripts: {
       dev: "next dev",
       build: "tsx src/search/build-current-foundation-search.ts && next build",
