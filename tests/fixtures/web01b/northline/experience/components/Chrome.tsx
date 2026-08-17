@@ -30,14 +30,15 @@ export function Chrome({ site, page, pageGraph, platform, children }: ChromeProp
               <span>{site.businessName}</span>
             </h1>
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1.5rem",
-              flexWrap: "wrap",
-            }}
-          >
+          {action === undefined ? null : (
+            <span className="hea-action-slot">
+              <platform.Link href={navigationHref(pageGraph, action.target)}>
+                <span className="hea-action">{action.label}</span>
+              </platform.Link>
+            </span>
+          )}
+
+          <div className="hea-header-controls">
             <nav aria-label="Primary" className="hea-nav">
               <ul>
                 {pageGraph.navigation.primary.map((item) => {
@@ -57,13 +58,6 @@ export function Chrome({ site, page, pageGraph, platform, children }: ChromeProp
               </ul>
             </nav>
             <platform.Search />
-            {action === undefined ? null : (
-              <span className="hea-action-slot">
-                <platform.Link href={navigationHref(pageGraph, action.target)}>
-                  <span className="hea-action">{action.label}</span>
-                </platform.Link>
-              </span>
-            )}
           </div>
         </header>
 

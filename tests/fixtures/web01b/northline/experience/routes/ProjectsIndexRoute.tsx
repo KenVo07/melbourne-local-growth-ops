@@ -1,4 +1,7 @@
-import type { ClientExperienceRouteProps } from "@proportion/client-experience";
+import {
+  serviceById,
+  type ClientExperienceRouteProps,
+} from "@proportion/client-experience";
 
 import { Chrome } from "../components/Chrome";
 
@@ -11,7 +14,17 @@ import { Chrome } from "../components/Chrome";
  * business is making — where a card grid would communicate "portfolio".
  */
 export function ProjectsIndexRoute(props: ClientExperienceRouteProps) {
-  const { projects, platform } = props;
+  const { profile, projects, platform } = props;
+
+  /*
+   * The scope column showed raw service identifiers. They are stable route keys,
+   * not display text, and resolving them through the profile is the same lookup
+   * the service routes use — the register never routes or labels by title.
+   */
+  const scopeOf = (serviceIds: readonly string[]) =>
+    serviceIds
+      .map((serviceId) => serviceById(profile, serviceId)?.title ?? serviceId)
+      .join(" · ");
 
   return (
     <Chrome {...props}>
@@ -53,8 +66,8 @@ export function ProjectsIndexRoute(props: ClientExperienceRouteProps) {
               <span className="hea-label">
                 {project.locationLabel ?? "—"}
               </span>
-              <span className="hea-label">
-                {project.serviceIds.join(" · ")}
+              <span className="hea-schedule-scope">
+                {scopeOf(project.serviceIds)}
               </span>
             </span>
           </platform.Link>

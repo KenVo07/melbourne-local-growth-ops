@@ -23,14 +23,38 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
   }
   const related = relatedProjects(projects, project);
   const { previous, next } = siblingProjects(projects, project);
-  const onward = related.length > 0 ? related : [next, previous].filter(
-    (candidate): candidate is NonNullable<typeof candidate> =>
-      candidate !== undefined,
-  );
+  /*
+   * Onward records are labelled by the relationship that produced them. Every
+   * card previously read "Next record", which made three different kinds of
+   * link — a related job, the next in the register, the previous one — look
+   * like the same repeated button.
+   */
+  const onward: readonly {
+    project: NonNullable<typeof next>;
+    relation: string;
+  }[] =
+    related.length > 0
+      ? related.map((project) => ({ project, relation: "Related record" }))
+      : [
+          ...(next === undefined
+            ? []
+            : [{ project: next, relation: "Next in the register" }]),
+          ...(previous === undefined
+            ? []
+            : [{ project: previous, relation: "Previous record" }]),
+        ];
 
   const contact = profile.sections.flatMap((section) =>
     section.type === "ACTIONS" ? section.actions : [],
   );
+
+  /*
+   * Plates are numbered in the order the reader meets them, across the whole
+   * record. Numbering them from the story index skipped every beat that carries
+   * no drawing, so a record could run 01, 03, 04 and look like a missing sheet.
+   */
+  let plateNumber = 0;
+  const nextPlate = () => String((plateNumber += 1)).padStart(2, "0");
 
   return (
     <Chrome {...props}>
@@ -69,8 +93,10 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
               sizes="(max-width: 60rem) 100vw, 62vw"
             />
             <figcaption className="hea-plate-caption">
-              <span className="hea-label">Plate 01 — As documented</span>
-              <span className="hea-label">1:50</span>
+              <span className="hea-label">Plate {nextPlate()}</span>
+              <span className="hea-plate-note">
+                {project.hero.decorative ? null : project.hero.caption}
+              </span>
             </figcaption>
           </figure>
 
@@ -105,10 +131,10 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
                     sizes="(max-width: 60rem) 100vw, 62vw"
                   />
                   <figcaption className="hea-plate-caption">
-                    <span className="hea-label">
-                      Plate {String(index + 2).padStart(2, "0")}
+                    <span className="hea-label">Plate {nextPlate()}</span>
+                    <span className="hea-plate-note">
+                      {reference.decorative ? null : reference.caption}
                     </span>
-                    <span className="hea-label">Detail</span>
                   </figcaption>
                 </figure>
               ))}
@@ -132,6 +158,16 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
               </p>
             </div>
             <div className="hea-conversion-actions">
+              {/*
+                * The declared phone action is NOT_CONFIGURED and must remain so:
+                * inventing a number for a fictional business is exactly the kind
+                * of fabrication this proof refuses. The panel therefore leads
+                * with the action that is real — the contact route — and keeps
+                * the truthful notice beneath it rather than instead of it.
+                */}
+              <platform.Link href="/contact">
+                <span className="hea-conversion-cta">Start a conversation</span>
+              </platform.Link>
               {contact.map((action) => (
                 <platform.Action actionId={action.actionId} key={action.actionId} />
               ))}
@@ -140,13 +176,13 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
 
           {onward.length === 0 ? null : (
             <nav aria-label="Other records" className="hea-related">
-              {onward.map((candidate) => (
+              {onward.map(({ project: candidate, relation }) => (
                 <platform.Link
                   href={`/projects/${candidate.slug}`}
                   key={candidate.projectId}
                 >
                   <span>
-                    <span className="hea-label">Next record</span>
+                    <span className="hea-label">{relation}</span>
                     <span
                       className="hea-schedule-title"
                       style={{ display: "block", marginTop: "0.5rem" }}

@@ -4,6 +4,7 @@ import { Conductor } from "./components/Conductor";
 import { AboutRoute, ContactRoute } from "./routes/AboutContactRoutes";
 import { HomeRoute } from "./routes/HomeRoute";
 import { ProjectDetailRoute } from "./routes/ProjectDetailRoute";
+import { NotFoundRoute } from "./routes/NotFoundRoute";
 import { ProjectsIndexRoute } from "./routes/ProjectsIndexRoute";
 import {
   ServiceDetailRoute,
@@ -31,6 +32,7 @@ export const authoredClientExperience = defineClientExperience({
     about: AboutRoute,
     contact: ContactRoute,
   },
+  notFound: NotFoundRoute,
   signatures: {
     conductor: () => <Conductor nodeCount={4} />,
   },

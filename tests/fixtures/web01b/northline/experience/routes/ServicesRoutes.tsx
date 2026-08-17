@@ -102,18 +102,27 @@ export function ServiceDetailRoute(props: ClientExperienceRouteProps) {
 
   // Each service leads with the drawing type that job actually produces, so the
   // three detail pages do not share one illustration.
-  const plateByService: Record<string, { assetId: string; alt: string }> = {
+  const plateByService: Record<
+    string,
+    { assetId: string; alt: string; sheet: string; caption: string }
+  > = {
     rewiring: {
       assetId: "plate-wall-section",
-      alt: "Vertical section through a stud wall showing the cable chase, studs in hatch, and three outlet positions taken off the run",
+      alt: "Vertical section through a stud wall showing the cable chase drilled through the studs, studs and plates drawn in hatch, and three outlet positions taken off the run",
+      sheet: "Section",
+      caption: "Where every cable goes, drawn before the lining comes off",
     },
     switchboards: {
       assetId: "plate-schematic",
-      alt: "Single-line schematic showing the supply, main switch, busbar and eight final circuits with their terminating symbols",
+      alt: "Single-line schematic showing the supply, meter, main switch, busbar and eight final circuits with their protective devices and terminating symbols",
+      sheet: "Single line",
+      caption: "The whole board on one sheet, supply through to final circuits",
     },
     lighting: {
       assetId: "plate-circuit-plan",
-      alt: "Floor plan with the lighting circuit traced across four rooms, showing junction positions and ceiling fittings on drops",
+      alt: "Floor plan with the lighting circuit traced across four rooms, showing switch positions on the wall lines, junctions and ceiling fittings on drops",
+      sheet: "Plan",
+      caption: "Switch positions agreed on the plan before any cable is pulled",
     },
   };
   const plate = plateByService[serviceId];
@@ -139,54 +148,78 @@ export function ServiceDetailRoute(props: ClientExperienceRouteProps) {
   return (
     <Chrome {...props}>
       <article className="hea-argument" data-service-id={serviceId}>
-        <div className="hea-argument-body">
-          <p className="hea-label">What we do · {service.title}</p>
-          <h2 className="hea-document-title">{service.title}</h2>
-          <p className="hea-argument-lede">{service.description}</p>
+        {/*
+          * Two real columns rather than four auto-placed cells. Auto-placement
+          * made the left column's first row as tall as the rail beside it, which
+          * left a dead gap between the lede and the plate.
+          */}
+        <div className="hea-argument-main">
+          <div className="hea-argument-body">
+            <p className="hea-label">What we do · {service.title}</p>
+            <h2 className="hea-document-title">{service.title}</h2>
+            <p className="hea-argument-lede">{service.description}</p>
+          </div>
+
+          {plate === undefined ? null : (
+            <figure className="hea-argument-plate">
+              <platform.Image
+                reference={{
+                  assetId: plate.assetId,
+                  role: "CONTENT",
+                  decorative: false,
+                  alt: plate.alt,
+                  presentation: {
+                    aspect: "LANDSCAPE",
+                    fit: "COVER",
+                    focalPoint: { x: 0.5, y: 0.5 },
+                    mobile: {
+                      aspect: "LANDSCAPE",
+                      focalPoint: { x: 0.45, y: 0.5 },
+                    },
+                  },
+                }}
+                sizes="(max-width: 60rem) 100vw, 58vw"
+              />
+              <figcaption className="hea-plate-caption">
+                <span className="hea-label">{plate.sheet}</span>
+                <span className="hea-plate-note">{plate.caption}</span>
+              </figcaption>
+            </figure>
+          )}
         </div>
 
-        <aside className="hea-argument-rail">
-          <p className="hea-label">Always included</p>
-          <ul className="hea-rail-list">
-            <li>A survey drawing before the quote</li>
-            <li>Written scope tied to that drawing</li>
-            <li>An as-built set when we finish</li>
-            <li>Labels that name rooms, not numbers</li>
-          </ul>
+        <div className="hea-argument-aside">
+          <aside className="hea-argument-rail">
+            <p className="hea-label">Always included</p>
+            <ul className="hea-rail-list">
+              <li>A survey drawing before the quote</li>
+              <li>Written scope tied to that drawing</li>
+              <li>An as-built set when we finish</li>
+              <li>Labels that name rooms, not numbers</li>
+            </ul>
 
-          <p className="hea-label" style={{ marginTop: "2.5rem" }}>
-            What it asks of you
-          </p>
-          <ul className="hea-rail-list">
-            {(effort[serviceId] ?? []).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </aside>
+            <p className="hea-label" style={{ marginTop: "2.5rem" }}>
+              What it asks of you
+            </p>
+            <ul className="hea-rail-list">
+              {(effort[serviceId] ?? []).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </aside>
 
-        {plate === undefined ? null : (
-          <figure className="hea-argument-plate">
-            <platform.Image
-              reference={{
-                assetId: plate.assetId,
-                role: "CONTENT",
-                decorative: false,
-                alt: plate.alt,
-                presentation: {
-                  aspect: "LANDSCAPE",
-                  fit: "COVER",
-                  focalPoint: { x: 0.5, y: 0.5 },
-                  mobile: { aspect: "LANDSCAPE", focalPoint: { x: 0.45, y: 0.5 } },
-                },
-              }}
-              sizes="(max-width: 60rem) 100vw, 58vw"
-            />
-            <figcaption className="hea-plate-caption">
-              <span className="hea-label">What this job produces</span>
-              <span className="hea-label">Drawing type</span>
-            </figcaption>
-          </figure>
-        )}
+          <aside className="hea-argument-next">
+            <p className="hea-label">Next step</p>
+            <p className="hea-argument-next-text">
+              Send the address and what you are planning. We will tell you what
+              we would need to see on site before quoting{" "}
+              {service.title.toLowerCase()}.
+            </p>
+            <platform.Link href="/contact">
+              <span className="hea-action">Start a conversation</span>
+            </platform.Link>
+          </aside>
+        </div>
 
         {evidence.length === 0 ? null : (
           <div className="hea-argument-evidence">

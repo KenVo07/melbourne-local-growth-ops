@@ -54,8 +54,19 @@
   outline-offset: 3px;
 }
 
+/*
+ * Links carry no underline anywhere on this site. That is a decision the
+ * grammar can afford: there are no links inside running prose. Every link is a
+ * block — a register row, a nav item, a plate — with its own hover, focus and
+ * rule affordance.
+ *
+ * It has to be set on the anchor. `text-decoration: none` on a descendant does
+ * not cancel the line the ancestor <a> paints, which is why the register rows
+ * were underlined despite the rule on `.hea-schedule-row`.
+ */
 .hea a {
   color: inherit;
+  text-decoration: none;
 }
 
 /* ---------------------------------------------------------------- labels */
@@ -83,13 +94,32 @@
   padding: 0 calc(var(--unit) * 3);
 }
 
+/*
+ * Three children in one row on desktop: identity, controls, action. The action
+ * is a direct grid child rather than a flex item inside the controls so mobile
+ * can lift it up beside the wordmark without reordering the nav.
+ */
 .hea-header {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "identity controls action";
   align-items: end;
-  gap: calc(var(--unit) * 2);
+  gap: calc(var(--unit) * 2) calc(var(--unit) * 3);
   padding: calc(var(--unit) * 3) 0 calc(var(--unit) * 2);
   border-bottom: var(--rule-width) solid var(--ink);
+}
+
+.hea-header > :first-child {
+  grid-area: identity;
+  min-width: 0;
+}
+
+.hea-header .hea-header-controls {
+  grid-area: controls;
+}
+
+.hea-header .hea-action-slot {
+  grid-area: action;
 }
 
 .hea-wordmark {
@@ -103,6 +133,13 @@
 
 .hea-wordmark span {
   display: block;
+}
+
+.hea-header-controls {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 3);
+  flex-wrap: wrap;
 }
 
 .hea-nav ul {
@@ -215,10 +252,30 @@
 .hea-plate-caption {
   display: flex;
   justify-content: space-between;
-  gap: calc(var(--unit) * 2);
+  align-items: baseline;
+  gap: calc(var(--unit) * 3);
   border-top: var(--rule-width) solid var(--rule);
   padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
   background: var(--paper);
+}
+
+/*
+ * The caption carries what the drawing actually shows, so it is set as prose
+ * beside the plate number rather than as a second all-caps label. Two labels
+ * facing each other read as a placeholder; one label and one sentence reads as
+ * a captioned plate.
+ */
+.hea-plate-note {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  text-align: right;
+  max-width: 30rem;
+}
+
+.hea-plate-caption .hea-label {
+  flex: none;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------- schedule */
@@ -406,8 +463,8 @@
   padding: calc(var(--unit) * 7);
   margin: calc(var(--unit) * 4) 0 calc(var(--unit) * 10);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: calc(var(--unit) * 5);
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+  gap: calc(var(--unit) * 6);
   align-items: center;
 }
 
@@ -434,6 +491,28 @@
   display: flex;
   flex-direction: column;
   gap: calc(var(--unit) * 2);
+}
+
+.hea-conversion-cta {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 2px solid var(--paper);
+  background: var(--paper);
+  color: var(--ink);
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 3);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hea-conversion-cta:hover {
+  background: var(--brass-bright);
+  border-color: var(--brass-bright);
+  color: var(--paper);
 }
 
 .hea-conversion-actions [data-platform-action] {
@@ -468,6 +547,15 @@
   letter-spacing: 0;
   font-size: 0.875rem;
   text-align: left;
+  /*
+   * A configured action is one short label and may not wrap. This is a whole
+   * sentence and must. Without the reset it inherited `nowrap` from the rule
+   * above and ran straight out of the panel, giving every record page a
+   * sideways scroll on a phone.
+   */
+  white-space: normal;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .hea-conversion-actions [data-action-state="NOT_CONFIGURED"] strong {
@@ -531,9 +619,57 @@
     object-fit: cover;
   }
 
+  /*
+   * The header was stacking into five wrapped rows on a phone — eyebrow,
+   * wordmark, three nav items, search, action — which pushed the page's own
+   * title off the first screen. It is now two short rows: identity opposite the
+   * action, then the nav on one line that may scroll rather than wrap.
+   */
   .hea-header {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity action"
+      "controls controls";
+    align-items: center;
+    gap: calc(var(--unit) * 2) calc(var(--unit) * 3);
+    padding-top: calc(var(--unit) * 2);
+  }
+
+  .hea-header-controls {
+    flex-wrap: nowrap;
+    gap: calc(var(--unit) * 2);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hea-nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .hea-nav ul {
+    flex-wrap: nowrap;
+    gap: calc(var(--unit) * 2.5);
+  }
+
+  .hea-nav a {
+    white-space: nowrap;
+    padding-block: calc(var(--unit) * 1);
+  }
+
+  /*
+   * The header action moves up beside the wordmark; the nav row keeps search.
+   * Ordering the action first in the controls flex would separate it from the
+   * identity it belongs with, so it is placed by grid instead.
+   */
+  .hea-header .hea-action-slot {
+    justify-self: end;
+  }
+
+  .hea-action {
+    padding: calc(var(--unit) * 1.25) calc(var(--unit) * 1.75);
+    font-size: 0.6875rem;
   }
 
   .hea-schedule-head {
@@ -695,6 +831,39 @@
   font-size: 0.875rem;
 }
 
+/*
+ * The service argument used to end on evidence and leave the left column empty
+ * below the plate. The next-step block fills that column and gives the route the
+ * one thing it lacked: somewhere to go.
+ */
+.hea-argument-main {
+  min-width: 0;
+}
+
+.hea-argument-aside {
+  min-width: 0;
+  display: grid;
+  gap: calc(var(--unit) * 7);
+  align-content: start;
+}
+
+.hea-argument-next {
+  border-top: 2px solid var(--ink);
+  padding-top: calc(var(--unit) * 3);
+}
+
+.hea-argument-next-text {
+  margin: calc(var(--unit) * 2) 0 calc(var(--unit) * 4);
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.hea-schedule-scope {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
 .hea-argument-evidence {
   grid-column: 1 / -1;
   border-top: 2px solid var(--ink);
@@ -771,6 +940,8 @@
 
 .hea-notes-plate {
   grid-area: plate;
+  /* Grid stretch left a band of panel colour below the caption. */
+  align-self: start;
   margin: calc(var(--unit) * 2) 0 0;
   border: 2px solid var(--ink);
   background: var(--paper-deep);
@@ -820,6 +991,8 @@
 
 .hea-contact-actions [data-action-state="NOT_CONFIGURED"] {
   display: block;
+  white-space: normal;
+  overflow-wrap: break-word;
   background: transparent;
   color: var(--ink-soft);
   border-color: var(--rule);
@@ -879,6 +1052,7 @@
     grid-template-columns: minmax(0, 1fr);
     gap: calc(var(--unit) * 5);
   }
+
 
   .hea-notes {
     grid-template-columns: minmax(0, 1fr);
@@ -1036,7 +1210,6 @@
 }
 
 .hea-argument-plate {
-  grid-column: 1;
   margin: calc(var(--unit) * 5) 0 0;
   border: 2px solid var(--ink);
   background: var(--paper-deep);
@@ -1049,12 +1222,6 @@
   height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-}
-
-@media (max-width: 60rem) {
-  .hea-argument-plate {
-    grid-column: 1 / -1;
-  }
 }
 
 /*
@@ -1124,4 +1291,70 @@
 .hea [data-action-state="NOT_CONFIGURED"] strong {
   display: block;
   margin-bottom: calc(var(--unit) * 0.75);
+}
+
+/* ------------------------------------------------------- not found: a blank sheet */
+
+.hea-missing {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: calc(var(--unit) * 8);
+  align-items: center;
+  padding: calc(var(--unit) * 12) 0 calc(var(--unit) * 14);
+}
+
+.hea-missing-nav ul {
+  list-style: none;
+  margin: calc(var(--unit) * 6) 0 0;
+  padding: 0;
+  border-top: 2px solid var(--ink);
+}
+
+.hea-missing-nav li {
+  border-bottom: var(--rule-width) solid var(--rule);
+}
+
+.hea-missing-link {
+  display: block;
+  padding: calc(var(--unit) * 3) 0;
+  font-family: var(--display);
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
+
+.hea-missing-nav a:hover .hea-missing-link {
+  color: var(--brass);
+}
+
+.hea-missing-plate {
+  margin: 0;
+  border: 2px solid var(--ink);
+  background: var(--paper-deep);
+}
+
+/* The empty plate: the sheet grid continues, but nothing is drawn on it. */
+.hea-missing-plate-field {
+  aspect-ratio: 4 / 3;
+  background-image:
+    linear-gradient(to right, var(--rule) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+  background-size: calc(var(--unit) * 5) calc(var(--unit) * 5);
+  opacity: 0.55;
+}
+
+@media (max-width: 60rem) {
+  .hea-missing {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--unit) * 6);
+    padding: calc(var(--unit) * 7) 0 calc(var(--unit) * 9);
+  }
+
+  .hea-missing-plate {
+    order: -1;
+  }
+
+  .hea-missing-plate-field {
+    aspect-ratio: 16 / 9;
+  }
 }

@@ -140,14 +140,14 @@
       {
         "type": "TRUST_SIGNALS",
         "sectionId": "trust",
-        "heading": "Proposed Verification Checklist",
-        "eyebrow": "Onboarding Requirements",
+        "heading": "What this site does not claim",
+        "eyebrow": "Stated plainly",
         "items": [
-          "Verify current electrical licences and any relevant trade credentials before publishing this profile",
-          "Confirm current public liability insurance status and approve any public wording before publishing",
-          "Agree and approve any quoting, pricing, scope, or service-result statements before publishing"
+          "No licence, registration, accreditation or insurance is asserted anywhere on this site.",
+          "No price, timeframe or result shown here has been quoted, delivered or verified. Every record is a demonstration.",
+          "Every image is an original technical illustration. None is a photograph, none shows completed work, and no person is depicted."
         ],
-        "disclaimer": "Harbour Electrical & Air is a fictional demonstration profile. These are onboarding verification requirements only; this demo asserts no licence, qualification, insurance, pricing, standards, or service-result claim."
+        "disclaimer": "Harbour Electrical & Air is a fictional business built to demonstrate a website. Before a real contractor published anything resembling this page, their licences, insurance and service claims would each have to be verified and approved."
       },
       {
         "type": "GALLERY",
@@ -170,24 +170,24 @@
       {
         "type": "PROCESS",
         "sectionId": "process",
-        "heading": "Illustrative Service Process",
-        "eyebrow": "Proposed Workflow",
+        "heading": "How a job runs",
+        "eyebrow": "Method",
         "items": [
           {
-            "title": "Enquiry & Initial Contact",
-            "description": "Illustrative process step: submit a basic enquiry through the demonstration contact form. Confirm live contact channels during onboarding."
+            "title": "Survey and draw",
+            "description": "We measure and draw what is actually there before pricing anything: existing runs, the state of the board, what earlier work left behind the plaster."
           },
           {
-            "title": "Site Assessment & Proposed Quote",
-            "description": "Proposed process copy: a site assessment would inform a written scope and quote. Confirm the real client's quoting and pricing policy before publishing."
+            "title": "Scope tied to the drawing",
+            "description": "Every line in the scope points at something on the drawing. If it is not drawn it is not in the price, and neither of us has to remember what was said on site."
           },
           {
-            "title": "Trade Delivery Requirements",
-            "description": "Proposed process copy only. Verify the real client's trade qualifications and approve any safety or standards claims before publishing."
+            "title": "Sequenced so you can stay",
+            "description": "Work is ordered room by room and the outage plan is agreed in advance. Power comes off one circuit at a time rather than the whole dwelling."
           },
           {
-            "title": "Testing & Customer Handover",
-            "description": "Illustrative process copy for testing, clean-up, and handover. Confirm the real client's actual procedure and approved result wording before publishing."
+            "title": "As-built set at handover",
+            "description": "We draw it again once it is closed up and label the board by room rather than by number. Both sets are yours to keep."
           }
         ]
       },
@@ -567,7 +567,7 @@
           "assetId": "plate-facade",
           "role": "PROJECT",
           "decorative": false,
-          "alt": "Orthographic elevation of a single-fronted terrace facade with the supply run from the meter box to the roof space marked in brass",
+          "alt": "Orthographic street elevation of a single-fronted terrace, with the supply run drawn in brass from the meter box up to roof level and dashed where it enters the fabric",
           "presentation": {
             "aspect": "LANDSCAPE",
             "fit": "COVER",
@@ -582,7 +582,8 @@
                 "y": 0.4
               }
             }
-          }
+          },
+          "caption": "Street elevation with the supply run and meter position marked"
         },
         "gallery": [],
         "facts": [
@@ -636,7 +637,8 @@
                       "y": 0.5
                     }
                   }
-                }
+                },
+                "caption": "Ground-floor plan, existing circuits traced as found"
               }
             ]
           },
@@ -650,7 +652,7 @@
                 "assetId": "plate-roof-space",
                 "role": "CONTENT",
                 "decorative": false,
-                "alt": "Axonometric drawing of the roof space showing rafters and the new cable run pulled across the joists with junctions marked",
+                "alt": "Section through the roof void showing rafters, collar tie and ceiling joists, with the new run carried on saddles over the joists and dropping to a fitting",
                 "presentation": {
                   "aspect": "LANDSCAPE",
                   "fit": "COVER",
@@ -665,7 +667,8 @@
                       "y": 0.45
                     }
                   }
-                }
+                },
+                "caption": "Section through the roof void: the run carried on saddles over the joists"
               }
             ]
           },
@@ -679,7 +682,7 @@
                 "assetId": "plate-board-detail",
                 "role": "CONTENT",
                 "decorative": false,
-                "alt": "Close orthographic elevation of a single residual current breaker showing its label window, toggle, test button and terminations",
+                "alt": "Close detail of the board interior: incoming tails, three-pole main switch, comb busbar feeding two rails of protective devices, and neutral and earth bars below",
                 "presentation": {
                   "aspect": "LANDSCAPE",
                   "fit": "COVER",
@@ -694,7 +697,8 @@
                       "y": 0.4
                     }
                   }
-                }
+                },
+                "caption": "Board interior as left: two rails, comb busbar, neutral and earth bars"
               }
             ]
           },
@@ -741,7 +745,8 @@
                 "y": 0.5
               }
             }
-          }
+          },
+          "caption": "Site plan with the buried run between dwelling and workshop"
         },
         "gallery": [],
         "facts": [
@@ -795,7 +800,8 @@
                       "y": 0.45
                     }
                   }
-                }
+                },
+                "caption": "Single-line schematic of the new board, supply to final circuits"
               }
             ]
           },
@@ -831,7 +837,8 @@
                       "y": 0.5
                     }
                   }
-                }
+                },
+                "caption": "Cable schedule as issued at handover"
               }
             ]
           }
@@ -853,10 +860,10 @@
         ],
         "locationLabel": "Kew, Victoria",
         "hero": {
-          "assetId": "plate-circuit-plan",
+          "assetId": "plate-wall-section",
           "role": "PROJECT",
           "decorative": false,
-          "alt": "Orthographic floor plan with the lighting circuit traced in brass across four rooms, showing junction positions and ceiling fittings on drops",
+          "alt": "Vertical section through a stud wall showing top and bottom plates and studs drawn in hatch, the drilled cable chase running through them, and three outlet positions taken off the run",
           "presentation": {
             "aspect": "LANDSCAPE",
             "fit": "COVER",
@@ -871,7 +878,8 @@
                 "y": 0.55
               }
             }
-          }
+          },
+          "caption": "Section through the stud wall: the chase and three outlet positions"
         },
         "gallery": [],
         "facts": [
@@ -907,10 +915,10 @@
             "body": "We started from how each room is used and where people stand, marked the switch positions on the plan before any circuit was considered, and only then worked out how to reach them. This is the reverse of the usual order and it is the whole job.",
             "media": [
               {
-                "assetId": "plate-wall-section",
+                "assetId": "plate-junction-detail",
                 "role": "CONTENT",
                 "decorative": false,
-                "alt": "Vertical section through a stud wall showing the cable chase, studs drawn in hatch, and three outlet positions taken off the run",
+                "alt": "Square close detail of a terminal block: nine terminals with screw heads, conductors entering from below through a gland plate, and the feed arriving from the left",
                 "presentation": {
                   "aspect": "LANDSCAPE",
                   "fit": "COVER",
@@ -925,7 +933,8 @@
                       "y": 0.45
                     }
                   }
-                }
+                },
+                "caption": "Junction detail where the lighting circuit splits"
               }
             ]
           },
