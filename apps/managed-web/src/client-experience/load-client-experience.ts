@@ -6,7 +6,11 @@ import type {
   RuntimePageDefinition,
 } from "../runtime-types";
 import { authoredClientExperience } from "./authored";
-import type { ClientExperiencePlatformComponents } from "./contract";
+import type {
+  ClientExperienceDefinition,
+  ClientExperienceNotFoundComponent,
+  ClientExperiencePlatformComponents,
+} from "./contract";
 import { createClientExperiencePlatformComponents } from "./platform-components";
 import { createClientExperienceRegistry } from "./registry";
 import type { ClientExperienceRegistry } from "./registry";
@@ -26,6 +30,8 @@ export interface AuthoredClientExperienceContext {
   readonly registry: ClientExperienceRegistry;
   readonly pages: readonly RuntimePageDefinition[];
   readonly homePageId: string;
+  /** Present only when the authored experience registers one. */
+  readonly notFound: ClientExperienceNotFoundComponent | undefined;
   createPlatform(
     renderRegion: (regionId: string) => ReactNode,
   ): ClientExperiencePlatformComponents;
@@ -102,6 +108,9 @@ export function authoredClientExperienceContext(): AuthoredClientExperienceConte
     registry,
     pages: pageGraph.pages,
     homePageId: pageGraph.homePageId,
+    // Read through the wider contract: `defineClientExperience` narrows to the
+    // exact literal definition, which omits keys the experience did not set.
+    notFound: (authoredClientExperience as ClientExperienceDefinition).notFound,
     createPlatform(renderRegion: (regionId: string) => ReactNode) {
       return createClientExperiencePlatformComponents({
         media,

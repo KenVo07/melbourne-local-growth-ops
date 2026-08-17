@@ -112,11 +112,32 @@ export type ClientExperienceSignatureComponent = ComponentType<
   ClientExperienceSignatureProps
 >;
 
+/**
+ * Props for the not-found route. There is no resolved page, because the
+ * requested path matched none — deliberately, the component is not told what
+ * was requested, so a 404 cannot leak the route table or the attempted URL.
+ */
+export interface ClientExperienceNotFoundProps {
+  readonly site: ClientExperienceSiteIdentity;
+  readonly pageGraph: RuntimePageGraph;
+  readonly platform: ClientExperiencePlatformComponents;
+}
+
+export type ClientExperienceNotFoundComponent = ComponentType<
+  ClientExperienceNotFoundProps
+>;
+
 export interface ClientExperienceDefinition {
   readonly schemaVersion: 1;
   readonly experienceId: string;
   readonly experienceVersion: string;
   readonly routes: Readonly<Record<string, ClientExperienceRouteComponent>>;
+  /**
+   * Optional. When present, an unknown path renders this instead of the
+   * Kernel's neutral fallback, so a mistyped URL still lands inside the
+   * client's own art direction rather than on a differently styled page.
+   */
+  readonly notFound?: ClientExperienceNotFoundComponent;
   readonly signatures?: Readonly<
     Record<string, ClientExperienceSignatureComponent>
   >;

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { createElement, type ReactElement } from "react";
 
 import {
   composeCurrentManagedWebsite,
@@ -10,16 +10,15 @@ import { authoredClientExperienceContext } from "./load-client-experience";
 import { renderClientRoute } from "./render-client-route";
 
 /**
- * Renders one validated page through its authored route component.
+ * Builds the platform primitives for one render pass.
  *
- * Root and catch-all segments share this function so both paths resolve
- * content, media and regions identically. Region rendering stays here in the
- * Kernel: authored source receives a callback, never module or connector data.
+ * Region rendering stays here in the Kernel: authored source receives a
+ * callback, never module or connector data.
  */
-export function renderAuthoredPage(page: RuntimePageDefinition): ReactElement {
+function createPlatformForRender() {
   const context = authoredClientExperienceContext();
   const composition = composeCurrentManagedWebsite();
-  const platform = context.createPlatform((regionId) => {
+  return context.createPlatform((regionId) => {
     const region = composition.regions.find(
       (candidate) => candidate.regionId === regionId,
     );
@@ -28,13 +27,41 @@ export function renderAuthoredPage(page: RuntimePageDefinition): ReactElement {
     }
     return renderManagedRegion(region, managedWebsiteRenderers);
   });
+}
 
+/**
+ * Renders the authored not-found route, when the experience registers one.
+ *
+ * Returns undefined otherwise, so the Kernel can fall back to its own neutral
+ * page rather than inventing a layout the client never authored. The component
+ * is deliberately not told which path was requested.
+ */
+export function renderAuthoredNotFound(): ReactElement | undefined {
+  const context = authoredClientExperienceContext();
+  if (context.notFound === undefined) {
+    return undefined;
+  }
+  return createElement(context.notFound, {
+    site: context.projection.site,
+    pageGraph: context.projection.pageGraph,
+    platform: createPlatformForRender(),
+  });
+}
+
+/**
+ * Renders one validated page through its authored route component.
+ *
+ * Root and catch-all segments share this function so both paths resolve
+ * content, media and regions identically.
+ */
+export function renderAuthoredPage(page: RuntimePageDefinition): ReactElement {
+  const context = authoredClientExperienceContext();
   return renderClientRoute({
     routeId: page.experienceRouteId,
     pageId: page.pageId,
     projection: context.projection,
     registry: context.registry,
-    platform,
+    platform: createPlatformForRender(),
   });
 }
 

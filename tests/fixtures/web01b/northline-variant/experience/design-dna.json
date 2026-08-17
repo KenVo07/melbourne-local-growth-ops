@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "designDnaId": "night-shift",
+  "designDnaVersion": "0.1.0",
+  "creativeThesis": "The same business told as a field record rather than a drawing sheet: dark ground, one column, oversized light type, full-bleed inverted plates. It exists to prove the platform imposes no house style.",
+  "perceptionTargets": [
+    "Quiet",
+    "Nocturnal",
+    "Editorial",
+    "Unhurried"
+  ],
+  "antiTargets": [
+    "The flagship's paper-and-grid language",
+    "Cards",
+    "Framed plates with captions",
+    "Condensed uppercase labels used as structure"
+  ],
+  "typography": {
+    "intent": "One light display weight at large size, doing the work the flagship's condensed labels do.",
+    "principles": [
+      "Light weights only; the flagship is semibold.",
+      "No uppercase tracked labels as structure.",
+      "Long measure, generous leading."
+    ]
+  },
+  "colour": {
+    "intent": "Inverted: dark ground, warm signal accent.",
+    "principles": [
+      "Ground is near-black, not grey.",
+      "One accent, used for action and emphasis only.",
+      "Contrast meets WCAG AA on the dark ground."
+    ]
+  },
+  "composition": {
+    "intent": "A single centred column with full-bleed media interruptions. No grid.",
+    "principles": [
+      "No visible grid at all.",
+      "Media breaks the measure; text never does.",
+      "Rules are replaced by space."
+    ]
+  },
+  "imagery": {
+    "intent": "The same plates, inverted and cropped panoramic so they read as photography-scale interruptions.",
+    "principles": [
+      "Full-bleed, never framed.",
+      "Inverted for the dark ground.",
+      "Panoramic on desktop, taller on mobile so the drawing survives."
+    ]
+  },
+  "interaction": {
+    "intent": "Underlines and colour only.",
+    "principles": [
+      "No borders on navigation.",
+      "Accent on hover and focus.",
+      "Targets at least 44px."
+    ]
+  },
+  "motion": {
+    "intent": "None.",
+    "principles": [
+      "This variation ships no motion at all.",
+      "It proves the Signature is client-owned, not a platform feature."
+    ],
+    "reducedMotionIntent": "Nothing to reduce: there is no motion in any mode."
+  },
+  "responsive": {
+    "intent": "The single column is already the mobile layout; only media crops change.",
+    "principles": [
+      "Media takes a taller crop on mobile.",
+      "Fact rows wrap rather than scroll.",
+      "No layout is hidden at any width."
+    ]
+  },
+  "signatureIntent": {
+    "name": "None",
+    "purpose": "This variation deliberately declares no Signature, proving a Signature is a client choice rather than something the platform imposes."
+  }
+}

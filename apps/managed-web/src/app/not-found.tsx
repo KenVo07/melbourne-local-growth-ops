@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { isAuthoredClientWebsite } from "../client-experience/load-client-experience";
 import { authoredClientExperienceContext } from "../client-experience/load-client-experience";
+import { renderAuthoredNotFound } from "../client-experience/render-authored-page";
 import { composeCurrentManagedWebsite } from "../managed-website";
 
 /**
@@ -13,6 +14,14 @@ import { composeCurrentManagedWebsite } from "../managed-website";
  * visitor outcome, not a diagnostic surface.
  */
 export default function NotFound() {
+  if (isAuthoredClientWebsite()) {
+    // An authored 404 keeps a mistyped URL inside the client's own art
+    // direction instead of dropping the visitor onto a differently styled page.
+    const authored = renderAuthoredNotFound();
+    if (authored !== undefined) {
+      return authored;
+    }
+  }
   const { businessName } = composeCurrentManagedWebsite().configuration.display;
   const recovery = isAuthoredClientWebsite()
     ? authoredRecoveryLinks()
