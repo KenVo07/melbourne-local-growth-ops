@@ -2,56 +2,22 @@ import { spawnSync } from "node:child_process";
 
 const blockingSeverities = new Set(["critical", "high"]);
 
-const deferrals = new Map([
-  [
-    "GHSA-6g55-p6wh-862q",
-    {
-      moduleName: "postcss",
-      severity: "high",
-      version: "8.4.31",
-      paths: new Set([
-        ".>next>postcss",
-        "apps__managed-web>next>postcss",
-        "apps__ops-console>next>postcss",
-      ]),
-      reviewBy: "2026-08-17",
-      reason:
-        "Next 16.2.12 pins postcss 8.4.31 exactly and no newer compatible Next release is currently available.",
-    },
-  ],
-  [
-    "GHSA-f88m-g3jw-g9cj",
-    {
-      moduleName: "sharp",
-      severity: "high",
-      version: "0.34.5",
-      paths: new Set([
-        ".>next>sharp",
-        "apps__managed-web>next>sharp",
-        "apps__ops-console>next>sharp",
-      ]),
-      reviewBy: "2026-08-17",
-      reason:
-        "Next 16.2.12 constrains sharp to ^0.34.5; the patched 0.35.x line is outside that compatibility range.",
-    },
-  ],
-  [
-    "GHSA-r28c-9q8g-f849",
-    {
-      moduleName: "postcss",
-      severity: "high",
-      version: "8.4.31",
-      paths: new Set([
-        ".>next>postcss",
-        "apps__managed-web>next>postcss",
-        "apps__ops-console>next>postcss",
-      ]),
-      reviewBy: "2026-08-17",
-      reason:
-        "Next 16.2.12 pins postcss 8.4.31 exactly and no newer compatible Next release is currently available.",
-    },
-  ],
-]);
+/*
+ * Live deferral register.
+ *
+ * Empty, and it should stay that way. The three advisories that used to sit
+ * here — GHSA-6g55-p6wh-862q and GHSA-r28c-9q8g-f849 (postcss 8.4.31) and
+ * GHSA-f88m-g3jw-g9cj (sharp 0.34.5) — were deferred on the grounds that Next
+ * pinned those versions and no compatible upgrade existed. That reasoning was
+ * wrong in one respect: pnpm overrides can lift a transitive past its parent's
+ * pin, and both packages are build-time only. The overrides are now in
+ * pnpm-workspace.yaml and in every generated client artifact, and `pnpm audit`
+ * reports nothing in either place.
+ *
+ * A deferral is a promise to come back. Add one only with a real review date
+ * and a reason that survives being read aloud.
+ */
+const deferrals = new Map([]);
 
 function fail(message) {
   console.error(`[dependency-audit] ${message}`);
@@ -111,7 +77,7 @@ function isDeferralValid(advisory, deferral, now) {
   return true;
 }
 
-function evaluateReport(report, now = new Date()) {
+function evaluateReport(report, now = new Date(), register = deferrals) {
   const blocked = [];
   const deferred = [];
 
@@ -120,7 +86,7 @@ function evaluateReport(report, now = new Date()) {
       continue;
     }
 
-    const deferral = deferrals.get(advisory.github_advisory_id);
+    const deferral = register.get(advisory.github_advisory_id);
     const findingPaths = advisory.findings.flatMap((finding) =>
       isRecord(finding) && Array.isArray(finding.paths) ? finding.paths : [],
     );
@@ -145,6 +111,25 @@ function evaluateReport(report, now = new Date()) {
 
   return { blocked, deferred };
 }
+
+/** A synthetic register, so the mechanism stays tested with nothing waived. */
+const selfTestDeferrals = new Map([
+  [
+    "GHSA-f88m-g3jw-g9cj",
+    {
+      moduleName: "sharp",
+      severity: "high",
+      version: "0.34.5",
+      paths: new Set([
+        ".>next>sharp",
+        "apps__managed-web>next>sharp",
+        "apps__ops-console>next>sharp",
+      ]),
+      reviewBy: "2026-08-17",
+      reason: "Self-test fixture only. Not a live deferral.",
+    },
+  ],
+]);
 
 function runSelfTest() {
   const finding = (id, severity, moduleName, version, paths) => ({
@@ -297,6 +282,9 @@ function runSelfTest() {
     const result = evaluateReport(
       testCase.report,
       testCase.now ?? new Date("2026-08-03T00:00:00Z"),
+      // The live register is empty, so the self-test supplies its own to keep
+      // exercising the deferral mechanism itself.
+      selfTestDeferrals,
     );
     if (
       result.blocked.length !== testCase.expectedBlocked ||

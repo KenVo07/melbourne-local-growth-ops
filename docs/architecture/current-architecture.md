@@ -40,23 +40,27 @@ interfaces.
 | `packages/deployment` | Deployment and handoff contracts |
 | `packages/observability` | Bounded operational event contracts |
 
-## Target architecture — WEB-01B v2 (in progress, not yet as-built)
+## WEB-01B v2 architecture — built on this branch, not yet on `main`
 
-> **Status.** Everything from here to the end of "Client source artifacts" is the
-> approved *target* architecture for WEB-01B v2. It is being implemented on
-> `feature/web-01b-premium-experience` and is **not** current as-built behavior.
+> **Status.** Everything from here to the end of "Client source artifacts" is
+> implemented, tested and deployed as a Preview on
+> `feature/web-01b-premium-experience`. It is **not** yet on `main`, so it is not
+> as-built for the default branch.
 >
-> As built today: `apps/managed-web` renders exactly one root route through
-> `ManagedWebsiteShell`; the generator accepts only `schemaVersion: 1`; there is
-> no authored client experience runtime, source-policy scanner, Page Graph
-> routing or Platform component surface; Foundation Search projects only legacy
-> profile-section records at `/#section` anchors; and artifacts copy only the
-> finite renderer/search source. Those legacy behaviors are described below as
-> the `schemaVersion: 1` adapter and remain current. Every v2 addition described
-> alongside them is pending.
+> What exists on this branch: `apps/managed-web` serves a bounded multi-route
+> site from a validated Page Graph with `dynamicParams = false`; the generator
+> accepts `schemaVersion: 1 | 2` and dispatches on `renderingMode`; the authored
+> client experience runtime, the fail-closed source-policy scanner, the Platform
+> component surface and the standalone artifact assembler are all in place;
+> Foundation Search projects multi-route records at real route paths.
 >
-> Remove this banner only when the described behavior is implemented, tested and
-> merged. Track progress in `WEB01B_V2_IMPLEMENTATION_STATE.md`.
+> The `schemaVersion: 1` adapter described below is not superseded. A legacy
+> single-page client still renders through `ManagedWebsiteShell`, still keeps its
+> template asset slots, and still generates exactly one route. Both paths are
+> current and both are covered by tests.
+>
+> Change this banner to plain as-built only when the branch reaches `main`.
+> Track state in `WEB01B_V2_IMPLEMENTATION_STATE.md`.
 
 ### Client website layers
 
