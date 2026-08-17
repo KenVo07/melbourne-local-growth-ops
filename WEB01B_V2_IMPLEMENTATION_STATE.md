@@ -4,7 +4,7 @@
 > A fresh agent session must be able to resume from this file plus Git history
 > plus the handoff package. Keep it current; do not create a second handoff file.
 
-Last updated: 2026-08-17 (Phases 0-9 complete and green; Phase 10 starting)
+Last updated: 2026-08-17 (Phases 0-10 complete; Phase 11 AWAITING FOUNDER CREATIVE GATE)
 
 ## Workspace paths
 
@@ -28,7 +28,7 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 |---|---|
 | Branch | `feature/web-01b-premium-experience` |
 | HEAD at session start | `99df6c2450d940f922ee34600c44098511510b73` (v1 candidate) |
-| HEAD now | `dbf1b2d` — see Git section |
+| HEAD now | `156c544` — see Git section |
 | v1 safety ref | local branch `archive/web01b-v1-99df6c2` → `99df6c2…` (created, not pushed) |
 | `origin/main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
 | Draft PR | #14 (untouched) |
@@ -51,8 +51,8 @@ Runbook: `17_IMPLEMENTATION_RUNBOOK.md` (authoritative phase order).
 | 7 — Projects + client-owned media | **COMPLETE** (`47d82fe`) |
 | 8 — standalone artifact generation | **COMPLETE** (`503e613`) |
 | 9 — multi-route Foundation Search | **COMPLETE** (`dbf1b2d`) |
-| 10 — optional motion substrate | **IN PROGRESS** |
-| 11 — production Signature Slice + Creative Gate | not started |
+| 10 — optional motion substrate | **COMPLETE** — concluded *no library needed* |
+| 11 — production Signature Slice + Creative Gate | **SLICE BUILT** (`156c544`); **BLOCKED on founder Creative Gate** |
 | 12 — full proof, artifacts, deploy, acceptance | not started |
 
 ### Phase 2 subtask ledger — DONE
@@ -160,28 +160,50 @@ when disabled.
 
 Root e2e suite still 43 passed / 5 skipped, unchanged from the v1 baseline.
 
-### Phase 10 subtask ledger — CURRENT
+### Phase 10 — DONE, and the outcome is "no library"
 
-Runbook §10. **Do not adopt a motion library speculatively.**
+The Conductor Signature was built with native CSS scroll-driven animation plus a
+single IntersectionObserver fallback. No motion dependency was needed, so
+`approvedClientExperienceDependencies` stays empty and no client site pays a
+motion cost. Next `experimental.viewTransition` and React Canary
+`<ViewTransition>` were not used, as required.
 
-- [ ] 10.1 do NOT enable Next `experimental.viewTransition` or depend on React
-      Canary `<ViewTransition>` — explicitly excluded from milestone acceptance
-- [ ] 10.2 select a dependency **only from a concrete Signature need**, and only
-      after trying CSS/WAAPI. `approvedClientExperienceDependencies` is
-      deliberately empty; adding an entry requires an OSS adoption register
-      entry first, then NOTICE regeneration.
-- [ ] 10.3 required runtime properties: no global scroll listener on static or
-      legacy sites; no per-frame work while offscreen; cleanup on unmount and
-      route change; no hydration mismatch; reduced-motion equivalent preserves
-      comprehension; touch does not depend on hover; dependency chunk absent
-      from experiences that do not declare it
-- [ ] 10.4 gate against `tests/MOTION_PERFORMANCE_BUDGET.md`. **Do not commit
-      final choreography before the Signature Slice passes the Creative Gate.**
+Runtime properties met: no global scroll listener, no per-frame JavaScript on
+the supported path, observers disconnected on unmount, no hydration mismatch
+(the island is `"use client"` and renders identical initial markup), designed
+reduced-motion state, and touch never depends on hover.
 
-Phase 10 is deliberately thin until Phase 11 reveals what the Signature actually
-needs. The Kernel already provides the seams: `PlatformSearch`-style opt-in
-primitives, per-experience dependency declaration, and a manifest that records
-`clientJavaScript` and `motion` posture and is cross-validated for coherence.
+### Phase 11 — slice built, gate is the founder's
+
+Built and committed as `156c544`. Screenshots in `evidence/phase11/shots`.
+Creative Contract in `tests/fixtures/web01b/northline/acceptance/`.
+
+**This is where the machine work stops and human judgement starts.** The
+Creative Gate is explicitly the founder's decision and cannot be self-certified.
+Do not scale the remaining routes until it passes.
+
+My own assessment, offered as input rather than as a verdict:
+
+*Working:* identity, offer and action share the first viewport, which was the
+precise v1 failure; route grammars differ materially; the Signature is specific
+to the trade rather than decorative; reduced motion is a designed state; mobile
+recomposes rather than stacks.
+
+*Weakest points, honestly:* the direction is drawn rather than photographic, and
+whether that clears the reference-class bar for a *contractor* is exactly the
+judgement I cannot make. The palette is restrained to the point where a reviewer
+may read it as austere. Only one project record exists, so PRJ-04 related/next
+is unproven. There is no About or Contact route yet.
+
+**Known media constraint:** there is no photography and I cannot produce any.
+If the founder judges that this business needs photographic proof, the direction
+must change and real assets must be sourced through WEB-01E.
+
+### Phase 12 — not started
+
+Blocked behind the Creative Gate for the creative rows. The automated rows
+(artifact matrix, no-tax, route/metadata) are already evidenced in
+`evidence/phase08` and `evidence/phase09`.
 
 ## Implementation decisions applied
 
