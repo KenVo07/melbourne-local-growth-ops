@@ -270,16 +270,22 @@ export async function readJsonFile(path, label) {
 }
 
 /**
- * Drops write permission on a published tree, best effort.
+ * Drops write permission on the published files a caller names as immutable,
+ * best effort.
  *
- * A failure here is not fatal and is reported to the caller instead: a
- * filesystem that cannot express the permission does not invalidate a workspace
- * whose real guarantee is its hashes.
+ * Files only, never directories: the operator still has to be able to delete
+ * the workspace, and the nine creative artifacts still have to be editable, so
+ * `keepWritable` prefixes are skipped. A failure here is reported rather than
+ * thrown, because a filesystem that cannot express the permission does not
+ * invalidate a workspace whose real guarantee is its hashes.
  */
-export async function makeReadOnly(root) {
+export async function makeReadOnly(root, keepWritable = []) {
   const failures = [];
   const paths = await listFiles(root);
   for (const path of paths) {
+    if (keepWritable.some((prefix) => path === prefix || path.startsWith(prefix))) {
+      continue;
+    }
     try {
       await chmod(join(root, ...path.split("/")), 0o444);
     } catch (error) {

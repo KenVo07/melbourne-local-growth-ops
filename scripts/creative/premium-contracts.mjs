@@ -37,6 +37,12 @@ export const REFUSALS = Object.freeze({
   UNSUPPORTED_FILE: "A symlink, hardlink, device or socket was found where a regular file is required.",
   ATOMIC_PUBLICATION_REQUIRED: "Publication could not complete atomically; the output was not created.",
 
+  /* --- the Factory's own validators, reported through this vocabulary ---- */
+  DEFINITION_INVALID: "client-website.json is not a definition the Factory accepts.",
+  MANIFEST_INVALID: "experience/manifest.json is not a manifest site-core accepts.",
+  SOURCE_POLICY_REFUSED: "The client experience source policy refused this source.",
+  SNAPSHOT_GENERATION_FAILED: "The Factory could not generate a public snapshot from this definition.",
+
   /* --- source identity -------------------------------------------------- */
   ARTIFACT_KIND: "The artifact is not a MANAGED_WEBSITE_SOURCE descriptor.",
   AUTHORED_SOURCE_REQUIRED: "The artifact carries no authored client experience. Premium delivery needs schemaVersion 2 source.",
