@@ -9,6 +9,7 @@ import {
   emitDisclosure,
   emitMediaViewer,
   emitMotionPreference,
+  emitMenu,
   emitReveal,
 } from "./emit/interaction-runtime.js";
 import { emitPieces } from "./emit/pieces.js";
@@ -124,7 +125,7 @@ export function generateExperienceStarter(
     file("design-dna.json", emitDesignDna(design)),
     file("index.tsx", emitEntrypoint(design, facts.routeIds)),
     file("content/site-content.ts", emitSiteContent(brief)),
-    file("components/Shell.tsx", emitShell(design)),
+    file("components/Shell.tsx", emitShell(design, plan)),
     file("components/Pieces.tsx", emitPieces(design, plan)),
     file("styles/site.css", emitStylesheet(design, plan)),
   ];
@@ -152,8 +153,11 @@ export function generateExperienceStarter(
    * Interaction helpers. Each is client-local source over native browser APIs,
    * emitted only when this client's plan actually uses it.
    */
-  if (plan.usesReveal || plan.usesDisclosure) {
+  if (plan.usesReveal || plan.usesDisclosure || plan.usesMenuMotion) {
     files.push(file("components/motion.ts", emitMotionPreference()));
+  }
+  if (plan.usesMenuMotion) {
+    files.push(file("components/Menu.tsx", emitMenu(design)));
   }
   if (plan.usesReveal) {
     files.push(file("components/Reveal.tsx", emitReveal()));

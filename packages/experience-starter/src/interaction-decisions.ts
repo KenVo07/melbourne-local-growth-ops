@@ -203,6 +203,16 @@ export interface InteractionPlan {
   readonly usesDisclosure: boolean;
   readonly usesMediaExplorer: boolean;
   readonly usesReveal: boolean;
+  /**
+   * Whether the collapsed navigation gets a close that moves.
+   *
+   * Tied to the same appetite that buys its *open*, so the two are symmetric at
+   * every value a client can author: a client that buys no navigation feedback
+   * gets a menu that snaps both ways, which is a coherent expression, and one
+   * that buys it gets movement both ways. What is not available is the
+   * accidental middle — arriving with movement and leaving without it.
+   */
+  readonly usesMenuMotion: boolean;
   /** Whether a composition's reveal opportunity of this role is taken. */
   readonly reveals: (role: RevealRole) => boolean;
   /** Whether this client buys this kind of optional pointer/focus feedback. */
@@ -292,11 +302,20 @@ export function planInteractions(input: {
     usesDisclosure,
     usesMediaExplorer,
     usesReveal: interaction.reveals,
+    /*
+     * Structured briefs only. A legacy brief asked for the A3 entrance floor,
+     * and regenerating one of those approved clients has to produce the site
+     * that was approved — a new client chunk it never shipped is exactly the
+     * kind of drift that pin exists to prevent. A client that wants a menu
+     * which closes as it opened says so in a Motion & Interaction Language.
+     */
+    usesMenuMotion:
+      interaction.source === "STRUCTURED" &&
+      feedsBack(interaction.appetite.pointerFeedback, "NAVIGATION"),
     reveals: (role: RevealRole) =>
       revealsRole(interaction.appetite.entrance, role),
     feedback: (role: FeedbackRole) =>
       feedsBack(interaction.appetite.pointerFeedback, role),
-    animates:
-      interaction.enabled || usesDisclosure || usesMediaExplorer,
+    animates: interaction.enabled || usesDisclosure || usesMediaExplorer,
   });
 }

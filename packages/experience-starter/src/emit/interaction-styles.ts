@@ -118,9 +118,17 @@ export function disclosureStyles(design: ResolvedDesign): string {
 }
 
 /*
- * The body fades on its own schedule alongside the height, so the panel reads
+ * The body arrives on its own schedule alongside the height, so the panel reads
  * as making space and then filling it rather than as a block of text
  * stretching. Opening and closing use their own curves.
+ *
+ * The entrance is an animation on the opening state rather than a transition
+ * out of the closed one, and that is a correctness requirement rather than a
+ * preference: \`data-disclosure\` is only ever set to "opening" by the helper, so
+ * giving the *closed* state an opacity would leave a reader without JavaScript
+ * opening a native <details> onto invisible text. Here, no helper means no
+ * animation and the body is simply visible, which is the behaviour that has to
+ * survive.
  */
 .${ns}-detail-body {
   color: var(--ink-muted);
@@ -145,6 +153,23 @@ export function disclosureStyles(design: ResolvedDesign): string {
 .${ns}-detail[data-disclosure="open"] .${ns}-detail-body {
   opacity: 1;
   transition: opacity var(--motion-state) var(--motion-ease);
+}
+
+/*
+ * Held at nothing for the first third, so the space is visibly made before
+ * anything moves into it. The whole thing is over inside the state duration
+ * this client's tempo already resolved; it is one property on one element and
+ * it is meant to be noticed only in its absence.
+ */
+.${ns}-detail[data-disclosure="opening"] .${ns}-detail-body {
+  animation: ${ns}-detail-body-in var(--motion-state) var(--motion-ease);
+}
+
+@keyframes ${ns}-detail-body-in {
+  0%,
+  32% {
+    opacity: 0;
+  }
 }
 
 .${ns}-detail[data-disclosure="closing"] .${ns}-detail-body {
@@ -364,6 +389,15 @@ export function interactionReducedMotion(
     blocks.push(`
   .${ns}-detail-mark {
     transition-duration: var(--motion-duration);
+  }
+
+  /*
+   * The body's entrance is expression rather than state — the panel being open
+   * is already said by the height and by the mark — so reduction removes it
+   * outright instead of compressing it into a flicker.
+   */
+  .${ns}-detail[data-disclosure="opening"] .${ns}-detail-body {
+    animation: none;
   }
 `);
   }

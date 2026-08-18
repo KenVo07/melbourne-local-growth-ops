@@ -440,6 +440,33 @@ describe("interaction capability emission", () => {
     },
   };
 
+  /*
+   * The same client, with the project routes its page graph would carry. The
+   * media explorer is a capability of a route, so it cannot be proved on a
+   * fixture that has no projects.
+   */
+  const projectDefinition = {
+    ...withFaq,
+    pageGraph: {
+      ...testDefinition.pageGraph,
+      pages: [
+        ...testDefinition.pageGraph.pages,
+        {
+          pageId: "projects",
+          path: "/projects",
+          kind: "PROJECTS_INDEX",
+          experienceRouteId: "projects-index",
+        },
+        {
+          pageId: "project-one",
+          path: "/projects/one",
+          kind: "PROJECT_DETAIL",
+          experienceRouteId: "project-detail",
+        },
+      ],
+    },
+  };
+
   const language: StarterInteraction = {
     tempo: "MEASURED",
     attack: "EASED",
@@ -639,6 +666,87 @@ describe("interaction capability emission", () => {
     const stillCss = fileNamed(genuinelyStill, "styles/site.css");
     expect(stillCss).not.toContain("--motion-state:");
     expect(stillCss).not.toContain("prefers-reduced-motion");
+  });
+
+  /*
+   * FINDING 5 — the body entrance has to exist, and it has to be impossible for
+   * it to hide content from a reader without JavaScript.
+   */
+  it("gives the disclosure body an entrance only the helper can trigger", () => {
+    const css = fileNamed(
+      generate(briefWith({ disclosure: "WHEN_LONG" }), withFaq),
+      "styles/site.css",
+    );
+    expect(css).toContain("-detail-body-in");
+    // The entrance is on the opening state, which only the helper ever sets.
+    expect(css).toMatch(
+      /\[data-disclosure="opening"\] \.[a-z-]+-detail-body \{\s*animation:/,
+    );
+    // And never on the closed state, which is what a no-JS reader is left in.
+    expect(css).not.toMatch(/\[data-disclosure="closed"\] \.[a-z-]+-detail-body/);
+  });
+
+  /*
+   * FINDING 6 — stepping between photographs is a movement, and it must not be
+   * bought with a frame loop, a remount or a delay before the content changes.
+   */
+  it("moves between photographs without a frame loop or a remounted image", () => {
+    const withProjects = generate(
+      briefWith({ mediaExploration: "PREFERRED" }),
+      projectDefinition,
+    );
+    const viewer = fileNamed(withProjects, "components/MediaViewer.tsx");
+    expect(viewer).toContain("STEP_MS");
+    expect(viewer).toContain("figure.animate(");
+    // Swapped first, animated second: no reader waits for a departure.
+    expect(viewer).toMatch(/direction\.current = delta/);
+    expect(viewer).not.toContain("requestAnimationFrame");
+    // The figure is never keyed on the active index, so the photograph stays.
+    expect(viewer).not.toMatch(/<figure[^>]*key=/);
+  });
+
+  /*
+   * FINDING 8 — Escape and the Close control have to answer the same way. The
+   * native behaviour returns focus to whatever had it when showModal() ran,
+   * which is the trigger the reader opened, not the one they ended on.
+   */
+  it("returns focus through one handler that both exits reach", () => {
+    const viewer = fileNamed(
+      generate(briefWith({ mediaExploration: "PREFERRED" }), projectDefinition),
+      "components/MediaViewer.tsx",
+    );
+    expect(viewer).toContain("onClose={onClose}");
+    expect(viewer).toContain("triggers.current.get(active)?.focus()");
+    // The Close button asks the dialog to close; it does not return focus
+    // itself, or Escape would take a different path to a different answer.
+    expect(viewer).toContain("onClick={() => dialogRef.current?.close()}");
+    expect(viewer.match(/triggers\.current\.get\(active\)\?\.focus\(\)/g)).toHaveLength(1);
+  });
+
+  /*
+   * FINDING 7 — the menu must not arrive with movement and leave without it.
+   * Both directions are bought by one appetite, so every authorable value gives
+   * a symmetric menu.
+   */
+  it("keeps the collapsed navigation symmetric at every appetite", () => {
+    const moving = generate(briefWith({ pointerFeedback: "ESSENTIAL" }), withFaq);
+    expect(moving.files.map((file) => file.path)).toContain("components/Menu.tsx");
+    const menu = fileNamed(moving, "components/Menu.tsx");
+    expect(menu).toContain("CLOSE_MS");
+    expect(menu).toContain("details.animate(");
+    // It enhances the client's own markup and gives up quietly if it is absent.
+    expect(menu).toContain("-menu-toggle");
+    expect(menu).not.toContain("requestAnimationFrame");
+    const movingCss = fileNamed(moving, "styles/site.css");
+    expect(movingCss).toContain("-menu-in");
+    expect(movingCss).toContain('[data-menu="closing"]');
+
+    // A client that buys no navigation feedback gets neither direction.
+    const still = generate(briefWith({ pointerFeedback: "NONE" }), withFaq);
+    expect(still.files.map((file) => file.path)).not.toContain(
+      "components/Menu.tsx",
+    );
+    expect(fileNamed(still, "styles/site.css")).not.toContain("-menu-in");
   });
 
   it("keeps generated interaction source free of the generator", () => {

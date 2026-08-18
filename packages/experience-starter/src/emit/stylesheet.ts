@@ -1802,6 +1802,15 @@ function motion(design: ResolvedDesign, plan: InteractionPlan): string {
   animation: ${ns}-menu-in calc(var(--motion-duration) * 1.4) var(--motion-ease);
 }
 
+/*
+ * While the helper animates the menu closed the element is still \`[open]\` —
+ * it has to be, or there would be no height to animate — so without this the
+ * panel would play its entrance again on the way out.
+ */
+.${ns}-menu[data-menu="closing"] .${ns}-menu-panel {
+  animation: none;
+}
+
 @keyframes ${ns}-menu-in {
   from {
     opacity: 0;
@@ -2149,7 +2158,8 @@ function reducedMotion(
     --motion-reveal-floor: 1;
   }
 
-  .${ns}-menu[open] .${ns}-menu-panel {
+  .${ns}-menu[open] .${ns}-menu-panel,
+  .${ns}-menu[data-menu] .${ns}-menu-panel {
     animation: none;
   }
 

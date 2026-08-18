@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../decisions.js";
+import type { InteractionPlan } from "../interaction-decisions.js";
 import { titleCase } from "./content.js";
 
 /**
@@ -8,7 +9,7 @@ import { titleCase } from "./content.js";
  * route shares — a shared body shell is exactly what makes a multi-page site
  * read as one repeated template, so each route composes its own body.
  */
-export function emitShell(design: ResolvedDesign): string {
+export function emitShell(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, brief } = design;
   return `import type { CSSProperties, ReactNode } from "react";
 import {
@@ -18,7 +19,7 @@ import {
   type RuntimeWebsiteProfileContent,
 } from "@proportion/client-experience";
 
-import { COPY } from "../content/site-content";
+${plan.usesMenuMotion ? 'import { Menu } from "./Menu";\n' : ""}import { COPY } from "../content/site-content";
 import "../styles/site.css";
 
 type Platform = ClientExperienceRouteProps["platform"];
@@ -111,6 +112,7 @@ function Header({
           * in the accessibility tree. This client chooses where the swap
           * happens, in site.css.
           */}
+        ${plan.usesMenuMotion ? "<Menu>" : "<>"}
         <platform.Disclosure
           className="${ns}-menu"
           panelClassName="${ns}-menu-panel"
@@ -120,6 +122,7 @@ function Header({
         >
           {navigation}
         </platform.Disclosure>
+        ${plan.usesMenuMotion ? "</Menu>" : "</>"}
 
         <div className="${ns}-header-actions">
           <platform.Search />

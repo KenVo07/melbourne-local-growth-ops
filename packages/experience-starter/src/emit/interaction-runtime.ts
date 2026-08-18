@@ -239,7 +239,7 @@ export function Detail({
  * something already visible, never the only way to see it.
  */
 export function emitMediaViewer(design: ResolvedDesign): string {
-  const { ns } = design;
+  const { ns, interaction } = design;
   return `"use client";
 
 import {
@@ -271,6 +271,20 @@ interface ViewerApi {
 
 const ViewerContext = createContext<ViewerApi | null>(null);
 
+/*
+ * Moving between photographs, resolved from this client's brief. Ordinary
+ * constants in ordinary client source, on the same tempo and the same curve as
+ * every other state change on the site — a viewer that moved on its own timing
+ * would read as a component borrowed from somewhere else.
+ *
+ * The step is deliberately shorter than the overlay's own entrance: opening is
+ * an arrival and deserves the full duration, whereas stepping is a continuation
+ * and should not make a reader wait to see where they now are.
+ */
+const STEP_MS = ${Math.round(interaction.duration.overlay * 0.7)};
+const STEP_EASE = "${interaction.easing.enter}";
+const STEP_TRAVEL = "${interaction.travel.overlay}";
+
 /**
  * Presents a project's photographs as one sequence, each openable at a larger
  * size.
@@ -296,11 +310,58 @@ export function MediaExplorer({
   readonly children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const figureRef = useRef<HTMLElement | null>(null);
+  const stepAnimation = useRef<Animation | null>(null);
+  /* Which way the reader last moved, so the next photograph enters from the
+     side they came from. Reset after use, so opening the overlay does not
+     animate: the dialog's own entrance is already carrying that moment. */
+  const direction = useRef(0);
   const triggers = useRef(new Map<number, HTMLButtonElement>());
   const previousRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const [active, setActive] = useState(0);
+
+  /*
+   * Moving between photographs.
+   *
+   * The content is swapped immediately and the *new* photograph is animated in
+   * — never the old one out. A reader who holds an arrow key gets every press
+   * honoured at once rather than queued behind a departure, and there is no
+   * moment where the overlay shows neither photograph.
+   *
+   * Same discipline as the disclosure: the Web Animations API on two properties
+   * of one element, cancelled by the next gesture and on unmount. No frame loop,
+   * no state written per frame, no remounted image — the <figure> keeps its
+   * children, so stepping never re-requests a photograph the browser has.
+   */
+  useEffect(() => {
+    const figure = figureRef.current;
+    const from = direction.current;
+    direction.current = 0;
+    if (figure === null || from === 0 || prefersReducedMotion()) return;
+
+    stepAnimation.current?.cancel();
+    const animation = figure.animate(
+      [
+        {
+          opacity: 0,
+          transform: "translateX(" + (from > 0 ? "" : "-") + STEP_TRAVEL + ")",
+        },
+        { opacity: 1, transform: "none" },
+      ],
+      { duration: STEP_MS, easing: STEP_EASE },
+    );
+    stepAnimation.current = animation;
+    animation.finished
+      .then(() => {
+        if (stepAnimation.current === animation) stepAnimation.current = null;
+      })
+      .catch(() => {
+        /* Cancelled by a newer step or by unmount. Expected. */
+      });
+    return () => animation.cancel();
+  }, [active]);
 
   /*
    * Reaching either end of the sequence disables the control that got you
@@ -348,14 +409,27 @@ export function MediaExplorer({
    * Focus returns to the photograph the reader is now looking at, which is not
    * always the one they opened. Landing back on the first thumbnail after
    * stepping to the third photograph loses a keyboard reader's place.
+   *
+   * This is bound to the dialog's own \`close\` event rather than to the Close
+   * button, because Escape closes a modal dialog without going anywhere near
+   * that button. Handling it there would have returned a reader who opened the
+   * first photograph, stepped to the third and pressed Escape back to the first
+   * thumbnail — the native behaviour, which restores focus to whatever had it
+   * when showModal() was called. One handler, both exits, same answer.
    */
-  const close = () => {
-    dialogRef.current?.close();
+  const onClose = () => {
+    stepAnimation.current?.cancel();
+    stepAnimation.current = null;
+    direction.current = 0;
     triggers.current.get(active)?.focus();
   };
 
   const step = (delta: number) => {
-    setActive((index) => Math.min(items.length - 1, Math.max(0, index + delta)));
+    setActive((index) => {
+      const next = Math.min(items.length - 1, Math.max(0, index + delta));
+      if (next !== index) direction.current = delta;
+      return next;
+    });
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDialogElement>) => {
@@ -375,11 +449,12 @@ export function MediaExplorer({
         <dialog
           aria-label={label}
           className="${ns}-viewer"
+          onClose={onClose}
           onKeyDown={onKeyDown}
           ref={dialogRef}
         >
           <div className="${ns}-viewer-frame">
-            <figure className="${ns}-viewer-figure">
+            <figure className="${ns}-viewer-figure" ref={figureRef}>
               {current.full}
               <figcaption className="${ns}-viewer-caption">
                 {current.caption}
@@ -411,7 +486,7 @@ export function MediaExplorer({
                 <button
                   autoFocus
                   className="${ns}-viewer-button"
-                  onClick={close}
+                  onClick={() => dialogRef.current?.close()}
                   ref={closeRef}
                   type="button"
                 >
@@ -550,6 +625,139 @@ export function Reveal({
 
   return (
     <div className={className} data-reveal-as={as} ref={ref}>
+      {children}
+    </div>
+  );
+}
+`;
+}
+
+/**
+ * Closing continuity for the collapsed navigation.
+ *
+ * The menu is a native `<details>` the Platform renders — the Platform owns
+ * disclosure and truthful-state mechanics, and this does not take that back.
+ * What it adds is the movement CSS cannot do: no cross-browser rule can
+ * interpolate a `<details>` to or from its intrinsic height today, so the open
+ * was a keyframe and the close was nothing. A menu that arrives and then
+ * vanishes reads as a dropped frame rather than as restraint.
+ *
+ * The enhancement attaches to the client's *own* class names, the ones the
+ * Shell passed to the primitive, and does nothing at all if it cannot find
+ * them. So: no Platform change, no forked primitive, no second navigation in
+ * the accessibility tree, and a reader without JavaScript keeps exactly the
+ * native open and close they had before.
+ */
+export function emitMenu(design: ResolvedDesign): string {
+  const { ns, interaction } = design;
+  return `"use client";
+
+import { useEffect, useRef, type ReactNode } from "react";
+
+import { prefersReducedMotion } from "./motion";
+
+const OPEN_MS = ${interaction.duration.state};
+const CLOSE_MS = ${Math.round(interaction.duration.state * 0.85)};
+const OPEN_EASE = "${interaction.easing.enter}";
+const CLOSE_EASE = "${interaction.easing.exit}";
+
+/**
+ * Gives the collapsed navigation a close that moves, matching its open.
+ *
+ * \`display: contents\` because this wrapper is a place to hold a ref and
+ * nothing else: the header's own layout has to reach the navigation exactly as
+ * it did before this element existed.
+ */
+export function Menu({ children }: { readonly children: ReactNode }) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<Animation | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null) return;
+    const details = host.querySelector<HTMLDetailsElement>(".${ns}-menu");
+    const summary = details?.querySelector<HTMLElement>(".${ns}-menu-toggle");
+    /*
+     * The primitive is free to change its markup; this is an enhancement, not a
+     * contract. If the shape is not what this expects, the native behaviour is
+     * already correct and this simply does not run.
+     */
+    if (details === null || details === undefined || summary === null || summary === undefined) {
+      return;
+    }
+
+    const settle = (open: boolean) => {
+      details.open = open;
+      details.style.removeProperty("height");
+      details.style.removeProperty("overflow");
+      animationRef.current?.cancel();
+      animationRef.current = null;
+      details.dataset.menu = open ? "open" : "closed";
+    };
+
+    const toggle = (event: MouseEvent) => {
+      event.preventDefault();
+
+      const running = animationRef.current;
+      const closing = details.dataset.menu === "closing";
+      const shouldOpen = closing || !details.open;
+      running?.cancel();
+      animationRef.current = null;
+
+      if (prefersReducedMotion()) {
+        settle(shouldOpen);
+        return;
+      }
+
+      // Measured after the cancel, so an interrupted toggle starts from where
+      // the menu actually is rather than from where it was going.
+      const startHeight = details.getBoundingClientRect().height;
+      details.open = false;
+      const closedHeight = details.getBoundingClientRect().height;
+      details.open = true;
+      const openHeight = details.scrollHeight;
+      const endHeight = shouldOpen ? openHeight : closedHeight;
+
+      if (Math.abs(endHeight - startHeight) < 1) {
+        settle(shouldOpen);
+        return;
+      }
+
+      details.style.overflow = "clip";
+      details.style.height = startHeight + "px";
+      details.dataset.menu = shouldOpen ? "opening" : "closing";
+
+      const animation = details.animate(
+        [{ height: startHeight + "px" }, { height: endHeight + "px" }],
+        {
+          duration: shouldOpen ? OPEN_MS : CLOSE_MS,
+          easing: shouldOpen ? OPEN_EASE : CLOSE_EASE,
+          fill: "both",
+        },
+      );
+      animationRef.current = animation;
+      animation.finished
+        .then(() => {
+          if (animationRef.current !== animation) return;
+          settle(shouldOpen);
+        })
+        .catch(() => {
+          /* Cancelled by a newer toggle or by unmount. Expected. */
+        });
+    };
+
+    summary.addEventListener("click", toggle);
+    return () => {
+      summary.removeEventListener("click", toggle);
+      animationRef.current?.cancel();
+      animationRef.current = null;
+      details.style.removeProperty("height");
+      details.style.removeProperty("overflow");
+    };
+  }, []);
+
+  return (
+    <div ref={hostRef} style={{ display: "contents" }}>
       {children}
     </div>
   );
