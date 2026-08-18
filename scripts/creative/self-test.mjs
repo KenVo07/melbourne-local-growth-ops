@@ -115,11 +115,37 @@ function gate(overrides = {}, bodyOverrides = {}) {
       candidate: "signature-slice.md",
       ...overrides,
     },
-    body: sections(["Decision", "Named fixes", "Evidence reviewed"], bodyOverrides),
+    body: sections(["Decision", "Named fixes", "Evidence reviewed"], {
+      "Named fixes": "- Raise the 390px conversion above the fold",
+      ...bodyOverrides,
+    }),
   };
 }
 
-function handoff(overrides = {}) {
+const PROBE_HASH = "a".repeat(64);
+
+/** One complete Production delta row, as an operator would fill it. */
+function deltaRow(overrides = {}) {
+  return {
+    Disposition: "EVOLVE",
+    Scope: "experience/routes/HomeRoute.tsx opening sequence",
+    Intent: "Replace the static hero with the drawn-ground opening",
+    Why: "The thesis is that the ground is surveyed before it is built on, and a static hero states nothing about that",
+    "Production home": "experience/routes/HomeRoute.tsx",
+    ...overrides,
+  };
+}
+
+function deltaTable(rows) {
+  const columns = ["Disposition", "Scope", "Intent", "Why", "Production home"];
+  return [
+    `| ${columns.join(" | ")} |`,
+    `|${columns.map(() => "---").join("|")}|`,
+    ...rows.map((row) => `| ${columns.map((column) => row[column] ?? "").join(" | ")} |`),
+  ].join("\n");
+}
+
+function handoff(overrides = {}, deltaRows = [deltaRow()]) {
   return {
     name: "production-handoff.md",
     kind: "production-handoff",
@@ -134,21 +160,57 @@ function handoff(overrides = {}) {
       prototype_fakes: ["placeholder project photography"],
       gate: "creative-gate.md",
       slice: "signature-slice.md",
+      named_fixes: ["Raise the 390px conversion above the fold"],
+      workspace_manifest: "../premium-workspace.json",
+      source_artifact_id: PROBE_HASH,
+      source_set_id: "b".repeat(64),
       ...overrides,
     },
-    body: sections([
-      "Creative intent carried forward",
-      "Signature thesis",
-      "Behaviour and movement intent",
-      "Responsive intent",
-      "Media provenance",
-      "Production constraints",
-      "P1 capabilities to reuse",
-      "Client-local bespoke work",
-      "Performance, accessibility and reduced motion",
-      "What the prototype fakes",
-      "Acceptance evidence",
-    ]),
+    body: sections(
+      [
+        "Creative intent carried forward",
+        "Signature thesis",
+        "Production delta",
+        "Behaviour and movement intent",
+        "Responsive intent",
+        "Media provenance",
+        "Production constraints",
+        "P1 capabilities to reuse",
+        "Client-local bespoke work",
+        "Performance, accessibility and reduced motion",
+        "What the prototype fakes",
+        "Acceptance evidence",
+      ],
+      { "Production delta": deltaTable(deltaRows) },
+    ),
+  };
+}
+
+function finalGate(overrides = {}, bodyOverrides = {}) {
+  return {
+    name: "final-creative-gate.md",
+    kind: "final-creative-gate",
+    frontMatter: {
+      kind: "final-creative-gate",
+      client: "probe-client",
+      decision: "PASS",
+      decided_by: "Khoa Vo",
+      decided_on: "2026-08-19",
+      candidate_commit: "abc1234",
+      validation_report: "objective-validation-report.json",
+      validation_report_sha256: PROBE_HASH,
+      source_artifact_id: "c".repeat(64),
+      ...overrides,
+    },
+    body: sections(
+      [
+        "Decision",
+        "Named fixes",
+        "Objective evidence reviewed",
+        "Creative evidence reviewed",
+      ],
+      bodyOverrides,
+    ),
   };
 }
 
@@ -292,7 +354,7 @@ const cases = [
   {
     name: "a PASS with no reviewed evidence is caught",
     documents: [gate({ decision: "PASS" }, { "Evidence reviewed": "[ ]" })],
-    expect: "no evidence reviewed",
+    expect: 'records a PASS with "## Evidence reviewed" empty',
   },
   {
     name: "PASS_WITH_NAMED_FIXES naming no fixes is caught",
@@ -371,6 +433,117 @@ const cases = [
       ledger([["conductor", "northline", "-", "client-local", "PROMOTE_IT", "why not"]]),
     ],
     expect: "it must be one of",
+  },
+
+  // ---- The premium bridge's source binding and production delta ----------
+  {
+    name: "a handoff that is not bound to a prepared source set is caught",
+    documents: [handoff({ source_artifact_id: "not-a-hash" })],
+    expect: "is not a SHA-256",
+  },
+  {
+    name: "a handoff naming a workspace on one machine is caught",
+    documents: [handoff({ workspace_manifest: "/home/operator/work/premium-workspace.json" })],
+    expect: "names one machine",
+  },
+  {
+    name: "an empty production delta is caught",
+    documents: [handoff({}, [])],
+    expect: "no rows",
+  },
+  {
+    name: "a production delta row with no reason is caught",
+    documents: [handoff({}, [deltaRow({ Why: "" })])],
+    expect: "trace the picture instead",
+  },
+  {
+    name: "a reason that says to reproduce the picture is caught",
+    documents: [handoff({}, [deltaRow({ Why: "Match the design exactly" })])],
+    expect: "instruction to reproduce a picture",
+  },
+  {
+    name: "a reason too short to be one is caught",
+    documents: [handoff({}, [deltaRow({ Why: "it is better" })])],
+    expect: "too short to be one",
+  },
+  {
+    name: "a production delta row with no intent is caught",
+    documents: [handoff({}, [deltaRow({ Intent: "" })])],
+    expect: "does not say what changes",
+  },
+  {
+    name: "an unknown disposition is caught",
+    documents: [handoff({}, [deltaRow({ Disposition: "REFRESH" })])],
+    expect: "it must be one of KEEP, EVOLVE, REWRITE, NEW_SIGNATURE",
+  },
+  {
+    name: "production work sent into Core is caught",
+    documents: [
+      handoff({}, [deltaRow({ "Production home": "packages/site-core/src/render.ts" })]),
+    ],
+    expect: "P1, Core, root configuration, another client",
+  },
+  {
+    name: "production work sent to an absolute path is caught",
+    documents: [
+      handoff({}, [deltaRow({ "Production home": "/srv/other-client/experience/Home.tsx" })]),
+    ],
+    expect: "Production home is P1_REUSE",
+  },
+  {
+    name: "production work sent outside this client's experience tree is caught",
+    documents: [
+      handoff({}, [deltaRow({ "Production home": "experience/../../other-client/Home.tsx" })]),
+    ],
+    expect: "Production home is P1_REUSE",
+  },
+  {
+    name: "a new Signature with no client-local ledger entry is caught",
+    documents: [
+      handoff({}, [deltaRow({ Disposition: "NEW_SIGNATURE" })]),
+      ledger([["conductor", "northline, stone-line", "scroll progress", "core", "FACTORY_CANDIDATE", "repeated"]]),
+    ],
+    expect: "starts client-local",
+  },
+  {
+    name: "named fixes left behind in the gate are caught",
+    documents: [gate(), handoff({ named_fixes: [] })],
+    expect: "Every acceptance condition must reach production",
+  },
+  {
+    name: "a handoff carrying fewer fixes than the gate named is caught",
+    documents: [
+      gate({}, { "Named fixes": "- Raise the 390px conversion\n- Restore focus visibility on the disclosure" }),
+      handoff({ named_fixes: ["Raise the 390px conversion"] }),
+    ],
+    expect: "carries 1 of the 2 named fix(es)",
+  },
+
+  // ---- The post-verification ship gate is the same human act -------------
+  {
+    name: "an agent signing the ship gate is caught",
+    documents: [finalGate({ decided_by: "Opus 5" })],
+    expect: "reserved for a named human",
+  },
+  {
+    name: "a ship gate PASS with no objective evidence reviewed is caught",
+    documents: [finalGate({}, { "Objective evidence reviewed": "[ ]" })],
+    expect: 'records a PASS with "## Objective evidence reviewed" empty',
+  },
+  {
+    name: "a ship gate PASS with no creative evidence reviewed is caught",
+    documents: [finalGate({}, { "Creative evidence reviewed": "[ ]" })],
+    expect: 'records a PASS with "## Creative evidence reviewed" empty',
+  },
+  {
+    name: "a ship gate that does not name the exact report it decided on is caught",
+    documents: [finalGate({ validation_report_sha256: "reviewed-the-latest-one" })],
+    expect: "must name the exact report",
+  },
+  {
+    name: "a ship gate with no decision is caught",
+    documents: [finalGate({ decision: [] })],
+    expect: 'missing "decision"',
   },
 ];
 

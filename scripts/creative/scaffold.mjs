@@ -93,15 +93,28 @@ const PROMPTS = {
   "production-handoff": {
     "Creative intent carried forward": "The business truth and anti-targets a production agent must not lose.",
     "Signature thesis": "What the Signature means, so it is rebuilt rather than traced.",
+    "Production delta":
+      "One row per meaningful source disposition. Explain why it changes and where production owns it; do not trace screenshots into selectors.",
     "Behaviour and movement intent": "What should feel how, and what relationships must hold.",
     "Responsive intent": "How the idea is meant to recompose, not a breakpoint table.",
     "Media provenance": "Which assets, which provenance class, what each may substantiate.",
     "Production constraints": "Budgets and boundaries this build must respect.",
     "P1 capabilities to reuse": "What must not be rebuilt bespoke.",
     "Client-local bespoke work": "What is expected to be new client-local source.",
+    "Translation delta":
+      "What changed while translating the approved slice into the existing P1 Experience substrate, and why the intent still holds.",
     "Performance, accessibility and reduced motion": "The expectations acceptance will be measured against.",
     "What the prototype fakes": "Everything production must not inherit from the prototype.",
     "Acceptance evidence": "What must exist before this is called done.",
+  },
+  "final-creative-gate": {
+    Decision:
+      "PASS / PASS WITH NAMED FIXES / FAIL, made by the named human after objective validation.",
+    "Named fixes": "Blocking acceptance conditions, each checkable.",
+    "Objective evidence reviewed":
+      "The immutable validation report and candidate revision reviewed for this decision.",
+    "Creative evidence reviewed":
+      "The viewports, interactions and states the decider personally reviewed.",
   },
   "media-plan": {
     Assets: `One row per asset. Only REAL_CLIENT_EVIDENCE may substantiate completed work, team, premises, measured results or certifications; everything else carries atmosphere only. Write "atmosphere" or "none" when an asset asserts no fact.\n\nProvenance classes: ${PROVENANCE_CLASSES.join(" · ")}`,
@@ -124,6 +137,10 @@ const SKELETONS = {
     References:
       "| Reference | Quality admired | Applicability | Deliberate delta | Must not copy |\n|---|---|---|---|---|\n|  |  |  |  |  |",
   },
+  "production-handoff": {
+    "Production delta":
+      "| Disposition | Scope | Intent | Why | Production home |\n|---|---|---|---|---|\n| KEEP |  |  |  | P1_REUSE |",
+  },
   "media-plan": {
     Assets:
       "| Asset | Provenance class | Substantiates | Approved by |\n|---|---|---|---|\n|  |  |  |  |",
@@ -138,7 +155,16 @@ const SKELETONS = {
 function frontMatterFor(kind, client) {
   const definition = ARTIFACTS[kind];
   const lines = [`kind: ${kind}`];
+  /* Keys with their own hint below are skipped here so each appears once. */
+  const hinted = new Set([
+    "workspace_manifest",
+    "source_artifact_id",
+    "source_set_id",
+    "validation_report",
+    "validation_report_sha256",
+  ]);
   for (const key of definition.required) {
+    if (hinted.has(key)) continue;
     if (key === "client") lines.push(`client: ${client}`);
     else if (key === "decided_on") lines.push(`decided_on: # YYYY-MM-DD`);
     else lines.push(`${key}:${enumHint(definition, key)}`);
@@ -148,6 +174,26 @@ function frontMatterFor(kind, client) {
   }
   for (const key of Object.keys(definition.links ?? {})) {
     lines.push(`${key}: # filename of the ${definition.links[key]} this derives from`);
+  }
+  for (const key of Object.keys(definition.conditionalLists ?? {})) {
+    lines.push(
+      `${key}: # required when the gate is PASS_WITH_NAMED_FIXES; one entry per fix`,
+      `  - `,
+    );
+  }
+  if (kind === "production-handoff") {
+    lines.push(
+      `workspace_manifest: # relative path to the workspace's premium-workspace.json`,
+      `source_artifact_id: # sourceBinding.artifactId from that manifest`,
+      `source_set_id: # sourceBinding.sourceSetId from that manifest`,
+    );
+  }
+  if (kind === "final-creative-gate") {
+    lines.push(
+      `validation_report: # relative path to objective-validation-report.json`,
+      `validation_report_sha256: # its SHA-256, as creative:verify printed it`,
+      `source_artifact_id: # the artifact this candidate was built from`,
+    );
   }
   if (kind === "creative-territory") {
     lines.push(
@@ -179,7 +225,10 @@ export function renderCreativeArtifact(kind, client) {
    * but not written still fails validation, which is the point -- prose left as
    * instructions is the most common way an artifact looks finished and is not.
    */
-  const body = (definition.sections ?? [])
+  const body = [
+    ...(definition.sections ?? []),
+    ...(definition.postProductionSections ?? []),
+  ]
     .map((heading) => {
       const guidance = prompts[heading];
       const skeleton = skeletons[heading];
@@ -220,10 +269,20 @@ const FILENAMES = {
   "promotion-ledger": ["promotion-ledger.md"],
 };
 
-export async function emitCreativeArtifacts(directory, client) {
+/*
+ * The post-verification ship gate. It is a template an operator reads and the
+ * form `creative:verify` emits, and it is deliberately not in `FILENAMES`: a
+ * blank ship gate sitting in a delivery from day one invites someone to sign it
+ * before the objective evidence it decides on exists.
+ */
+const TEMPLATE_ONLY_FILENAMES = {
+  "final-creative-gate": ["final-creative-gate.md"],
+};
+
+export async function emitCreativeArtifacts(directory, client, kinds = FILENAMES) {
   await mkdir(directory, { recursive: true });
   const written = [];
-  for (const [kind, names] of Object.entries(FILENAMES)) {
+  for (const [kind, names] of Object.entries(kinds)) {
     for (const name of names) {
       const path = join(directory, name);
       await writeFile(path, renderCreativeArtifact(kind, client), "utf8");
@@ -236,7 +295,10 @@ export async function emitCreativeArtifacts(directory, client) {
 export async function runScaffoldCli(args = process.argv.slice(2)) {
   if (args.includes("--templates")) {
     const directory = resolve(repositoryRoot, "docs/creative/templates");
-    const written = await emitCreativeArtifacts(directory, "<client-id>");
+    const written = await emitCreativeArtifacts(directory, "<client-id>", {
+      ...FILENAMES,
+      ...TEMPLATE_ONLY_FILENAMES,
+    });
     process.stdout.write(
       `Regenerated ${written.length} template(s) in docs/creative/templates:\n  ${written.join("\n  ")}\n`,
     );

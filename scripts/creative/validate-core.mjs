@@ -7,13 +7,17 @@
  */
 import {
   ARTIFACTS,
+  CLIENT_EXPERIENCE_HOME,
   EVIDENCE_CLASS,
   FACTORY_CANDIDATE_MIN_CLIENTS,
   NON_HUMAN_DECIDERS,
   NON_SUBSTANTIATING,
+  P1_REUSE_HOME,
+  PRODUCTION_DISPOSITIONS,
   PROMOTION_DECISIONS,
   PROVENANCE_CLASSES,
   REQUIRED_SLICE_COVERAGE,
+  TRACING_LANGUAGE,
 } from "./artifact-model.mjs";
 
 /**
@@ -73,6 +77,148 @@ function unquote(value) {
     return trimmed.slice(1, -1);
   }
   return trimmed;
+}
+
+/**
+ * Counts the acceptance conditions a gate recorded.
+ *
+ * Bullets when the operator wrote a list, otherwise one, because a gate with
+ * filled prose under "Named fixes" has named at least one thing even if it did
+ * not format it. The count is what is checked; matching the prose across two
+ * documents would be string comparison pretending to be a contract.
+ */
+function countNamedFixes(body) {
+  const fixes = sectionBody(body, "Named fixes");
+  if (fixes === null || isUnfilled(stripScaffolding(fixes))) return 0;
+  const bullets = fixes
+    .split("\n")
+    .filter((line) => /^\s*(?:[-*+]|\d+\.)\s+\S/.test(line));
+  return bullets.length > 0 ? bullets.length : 1;
+}
+
+/**
+ * The handoff's binding to the exact source it was written against.
+ *
+ * Without it a handoff is a document about a site in general. With it, a
+ * production agent and `creative:launch` can both prove the intent was formed
+ * against the source that is about to be modified.
+ */
+function validateSourceBinding(handoff, fail) {
+  const manifestPath = handoff.frontMatter.workspace_manifest;
+  if (!isUnfilled(manifestPath)) {
+    const path = String(manifestPath);
+    if (path.startsWith("/") || /^[A-Za-z]:/.test(path) || path.includes("\\")) {
+      fail(
+        handoff.name,
+        `records workspace_manifest "${path}". Use a path relative to this artifact; an absolute path names one machine.`,
+      );
+    }
+  }
+  for (const key of ["source_artifact_id", "source_set_id"]) {
+    const value = handoff.frontMatter[key];
+    if (!isUnfilled(value) && !/^[0-9a-f]{64}$/.test(String(value))) {
+      fail(
+        handoff.name,
+        `records ${key} "${value}", which is not a SHA-256. Copy it from the workspace manifest's sourceBinding.`,
+      );
+    }
+  }
+}
+
+/**
+ * The coarse disposition of the current source under the approved direction.
+ *
+ * Four values, because the useful question for a production agent is what to do
+ * with what already exists -- not a component tree, and not a selector recipe.
+ * Every row needs a reason, and a reason that says "match the design" is the
+ * failure this table replaced.
+ */
+function validateProductionDelta(handoff, byKind, fail) {
+  const definition = ARTIFACTS["production-handoff"];
+  const heading = definition.productionDeltaTable.heading;
+  const rows = parseTable(sectionBody(handoff.body, heading));
+  if (rows.length === 0) {
+    fail(
+      handoff.name,
+      `has no rows in its "## ${heading}" table. Name what production keeps, evolves, rewrites or adds.`,
+    );
+    return;
+  }
+
+  let newSignatures = 0;
+  for (const row of rows) {
+    const disposition = (row["Disposition"] ?? "").trim();
+    const scope = (row["Scope"] ?? "").trim();
+    const label = scope === "" ? "(unnamed scope)" : scope;
+
+    if (!PRODUCTION_DISPOSITIONS.includes(disposition)) {
+      fail(
+        handoff.name,
+        `row "${label}" has disposition "${disposition || "(blank)"}"; it must be one of ${PRODUCTION_DISPOSITIONS.join(", ")}.`,
+      );
+      continue;
+    }
+    if (disposition === "NEW_SIGNATURE") newSignatures += 1;
+
+    if (isUnfilled(scope)) {
+      fail(handoff.name, `has a ${disposition} row with no scope. Name the source it applies to.`);
+    }
+    if (isUnfilled(row["Intent"])) {
+      fail(handoff.name, `row "${label}" does not say what changes.`);
+    }
+
+    const why = (row["Why"] ?? "").trim();
+    if (isUnfilled(why)) {
+      fail(
+        handoff.name,
+        `row "${label}" has no reason. A production agent that is not told why will trace the picture instead.`,
+      );
+    } else {
+      const lowered = why.toLowerCase();
+      const tracing = TRACING_LANGUAGE.find((phrase) => lowered.includes(phrase));
+      if (tracing !== undefined) {
+        fail(
+          handoff.name,
+          `row "${label}" gives "${why}" as its reason. "${tracing}" is an instruction to reproduce a picture, not a reason the intent requires this.`,
+        );
+      } else if (why.replaceAll(/[^A-Za-z]/g, "").length < 12) {
+        fail(
+          handoff.name,
+          `row "${label}" gives "${why}" as its reason, which is too short to be one.`,
+        );
+      }
+    }
+
+    const home = (row["Production home"] ?? "").trim();
+    if (isUnfilled(home)) {
+      fail(handoff.name, `row "${label}" does not say where production owns this.`);
+    } else if (home !== P1_REUSE_HOME && !CLIENT_EXPERIENCE_HOME.test(home)) {
+      fail(
+        handoff.name,
+        `row "${label}" sends work to "${home}". Production home is ${P1_REUSE_HOME} or a path under this client's "experience/"; P1, Core, root configuration, another client and a provider runtime are all out of scope.`,
+      );
+    }
+  }
+
+  /*
+   * A new Signature defaults to client-local and has to say so somewhere a
+   * later delivery will read. The ledger is that place, and requiring the entry
+   * here is what stops "promote it later" from becoming the default.
+   */
+  if (newSignatures > 0) {
+    const ledgers = byKind.get("promotion-ledger") ?? [];
+    const clientLocal = ledgers.flatMap((ledger) =>
+      parseTable(sectionBody(ledger.body, "Ledger")).filter(
+        (row) => (row["Decision"] ?? "").trim() === "CLIENT_LOCAL_SIGNATURE",
+      ),
+    );
+    if (ledgers.length > 0 && clientLocal.length < newSignatures) {
+      fail(
+        handoff.name,
+        `declares ${newSignatures} NEW_SIGNATURE row(s) but the promotion ledger records ${clientLocal.length} client-local mechanic(s). Every new Signature starts client-local and is recorded as such.`,
+      );
+    }
+  }
 }
 
 /** Returns the text under a `## Heading`, or null when the heading is absent. */
@@ -292,7 +438,12 @@ export function validateArtifacts(documents, envelope) {
   }
 
   // ---- The gate is a human act ------------------------------------------
-  for (const gate of byKind.get("creative-gate") ?? []) {
+  /* Both gates. The ship gate is decided later and on different evidence, but
+   * the rule that an agent cannot pass its own work is the same rule. */
+  for (const gate of [
+    ...(byKind.get("creative-gate") ?? []),
+    ...(byKind.get("final-creative-gate") ?? []),
+  ]) {
     const decider = String(gate.frontMatter.decided_by ?? "").trim().toLowerCase();
     if (
       decider !== "" &&
@@ -308,14 +459,36 @@ export function validateArtifacts(documents, envelope) {
     /* An unanswered field parses as an empty list, so coerce before testing. */
     const decision =
       typeof gate.frontMatter.decision === "string" ? gate.frontMatter.decision : "";
-    const evidence = sectionBody(gate.body, "Evidence reviewed");
-    if (decision.startsWith("PASS") && (evidence === null || isUnfilled(evidence))) {
-      fail(gate.name, `records a ${decision} with no evidence reviewed. Name what was looked at.`);
+    const evidenceHeadings =
+      gate.kind === "final-creative-gate"
+        ? ["Objective evidence reviewed", "Creative evidence reviewed"]
+        : ["Evidence reviewed"];
+    for (const heading of evidenceHeadings) {
+      const evidence = sectionBody(gate.body, heading);
+      if (decision.startsWith("PASS") && (evidence === null || isUnfilled(evidence))) {
+        fail(
+          gate.name,
+          `records a ${decision} with "## ${heading}" empty. Name what was looked at.`,
+        );
+      }
     }
     if (decision === "PASS_WITH_NAMED_FIXES") {
       const fixes = sectionBody(gate.body, "Named fixes");
       if (fixes === null || isUnfilled(fixes)) {
         fail(gate.name, `is PASS_WITH_NAMED_FIXES but names no fixes.`);
+      }
+    }
+    if (gate.kind === "final-creative-gate") {
+      const digest = gate.frontMatter.validation_report_sha256;
+      if (!isUnfilled(digest) && !/^[0-9a-f]{64}$/.test(String(digest))) {
+        fail(
+          gate.name,
+          `records validation_report_sha256 "${digest}", which is not a SHA-256. The ship decision must name the exact report it was made against.`,
+        );
+      }
+      const artifactId = gate.frontMatter.source_artifact_id;
+      if (!isUnfilled(artifactId) && !/^[0-9a-f]{64}$/.test(String(artifactId))) {
+        fail(gate.name, `records source_artifact_id "${artifactId}", which is not a SHA-256.`);
       }
     }
   }
@@ -331,6 +504,24 @@ export function validateArtifacts(documents, envelope) {
           `descends from a gate that FAILED. A failed direction does not go to production.`,
         );
       }
+      /*
+       * A named fix is an acceptance condition, not a suggestion. If it lives
+       * only in the gate, the production agent never sees it, and the fix is
+       * discovered missing at the ship gate -- which is the point at which it is
+       * most expensive. So the handoff must carry one entry per fix.
+       */
+      if (gate.frontMatter.decision === "PASS_WITH_NAMED_FIXES") {
+        const carried = (handoff.frontMatter.named_fixes ?? []).filter(
+          (fix) => !isUnfilled(fix),
+        );
+        const required = countNamedFixes(gate.body);
+        if (carried.length < required) {
+          fail(
+            handoff.name,
+            `carries ${carried.length} of the ${required} named fix(es) from ${gate.name}. Every acceptance condition must reach production; copy each one into "named_fixes".`,
+          );
+        }
+      }
     }
     for (const technique of handoff.frontMatter.techniques ?? []) {
       if (!isUnfilled(technique) && envelope.refused.has(technique)) {
@@ -340,6 +531,8 @@ export function validateArtifacts(documents, envelope) {
         );
       }
     }
+    validateSourceBinding(handoff, fail);
+    validateProductionDelta(handoff, byKind, fail);
   }
 
   // ---- Media truth ------------------------------------------------------

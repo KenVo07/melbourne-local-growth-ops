@@ -13,6 +13,11 @@ prototype_fakes:
   - 
 gate: # filename of the creative-gate this derives from
 slice: # filename of the signature-slice this derives from
+named_fixes: # required when the gate is PASS_WITH_NAMED_FIXES; one entry per fix
+  - 
+workspace_manifest: # relative path to the workspace's premium-workspace.json
+source_artifact_id: # sourceBinding.artifactId from that manifest
+source_set_id: # sourceBinding.sourceSetId from that manifest
 ---
 
 # Production Handoff
@@ -29,6 +34,14 @@ slice: # filename of the signature-slice this derives from
 ## Signature thesis
 
 <!-- What the Signature means, so it is rebuilt rather than traced. -->
+
+## Production delta
+
+<!-- One row per meaningful source disposition. Explain why it changes and where production owns it; do not trace screenshots into selectors. -->
+
+| Disposition | Scope | Intent | Why | Production home |
+|---|---|---|---|---|
+| KEEP |  |  |  | P1_REUSE |
 
 ## Behaviour and movement intent
 
@@ -65,3 +78,7 @@ slice: # filename of the signature-slice this derives from
 ## Acceptance evidence
 
 <!-- What must exist before this is called done. -->
+
+## Translation delta
+
+<!-- What changed while translating the approved slice into the existing P1 Experience substrate, and why the intent still holds. -->

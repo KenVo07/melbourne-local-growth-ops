@@ -48,6 +48,48 @@ export const PROMOTION_DECISIONS = Object.freeze([
   "REJECTED",
 ]);
 
+/** Coarse source dispositions for the approved design-to-production delta. */
+export const PRODUCTION_DISPOSITIONS = Object.freeze([
+  "KEEP",
+  "EVOLVE",
+  "REWRITE",
+  "NEW_SIGNATURE",
+]);
+
+/**
+ * The only two places approved production work may live: a Platform capability
+ * that is reused rather than rebuilt, or a path inside this client's own
+ * experience tree. Anything else is P1, Core, another client, or a provider
+ * runtime, and none of those is a premium delivery's business.
+ */
+export const P1_REUSE_HOME = "P1_REUSE";
+export const CLIENT_EXPERIENCE_HOME = /^experience\/[A-Za-z0-9][A-Za-z0-9._-]*(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/;
+
+/**
+ * Phrases that mean "reproduce the picture" rather than "build the intent".
+ *
+ * A handoff exists so a production agent rebuilds a thesis rather than tracing
+ * a screenshot; a rationale that says "match the design" has recorded no
+ * reason, and the next reviewer cannot tell whether the built page is right.
+ */
+export const TRACING_LANGUAGE = Object.freeze([
+  "match design",
+  "match the design",
+  "match the mock",
+  "match the prototype",
+  "match the screenshot",
+  "as per the design",
+  "as per the mock",
+  "as in the export",
+  "pixel perfect",
+  "pixel-perfect",
+  "1:1 with",
+  "copy the design",
+  "copy the prototype",
+  "same as figma",
+  "same as the canvas",
+]);
+
 /** A Signature Slice must cover at least these four moments. */
 export const REQUIRED_SLICE_COVERAGE = Object.freeze([
   "navigation",
@@ -167,17 +209,31 @@ export const ARTIFACTS = Object.freeze({
     title: "Production Handoff",
     purpose:
       "What a production agent needs so it builds the intent rather than copying a picture.",
-    required: ["client", "selected_territory", "prototype_tool"],
+    required: [
+      "client",
+      "selected_territory",
+      "prototype_tool",
+      "workspace_manifest",
+      "source_artifact_id",
+      "source_set_id",
+    ],
     lists: {
       prototype_artifacts: 1,
       techniques: 1,
       p1_capabilities_reused: 1,
       prototype_fakes: 1,
     },
+    /*
+     * Not in `lists`, because a PASS gate legitimately names no fixes. It is
+     * required only when the gate this handoff descends from is
+     * PASS_WITH_NAMED_FIXES, which the validator checks across the two.
+     */
+    conditionalLists: { named_fixes: "gate:PASS_WITH_NAMED_FIXES" },
     links: { gate: "creative-gate", slice: "signature-slice" },
     sections: [
       "Creative intent carried forward",
       "Signature thesis",
+      "Production delta",
       "Behaviour and movement intent",
       "Responsive intent",
       "Media provenance",
@@ -187,6 +243,43 @@ export const ARTIFACTS = Object.freeze({
       "Performance, accessibility and reduced motion",
       "What the prototype fakes",
       "Acceptance evidence",
+    ],
+    /*
+     * Sections the scaffold renders and the artifact must carry, but which a
+     * delivery cannot fill before the work exists. `creative:validate` does not
+     * require content in them, `creative:launch` requires the heading to be
+     * present, and `creative:verify` requires it filled. Requiring the
+     * Translation delta at gate time would only teach operators to write
+     * "pending" in it.
+     */
+    postProductionSections: ["Translation delta"],
+    productionDeltaTable: {
+      heading: "Production delta",
+      columns: ["Disposition", "Scope", "Intent", "Why", "Production home"],
+    },
+  },
+  "final-creative-gate": {
+    title: "Final Creative Ship Gate",
+    purpose:
+      "The named human decision after objective implementation validation.",
+    required: [
+      "client",
+      "decision",
+      "decided_by",
+      "decided_on",
+      "candidate_commit",
+      "validation_report",
+      "validation_report_sha256",
+      "source_artifact_id",
+    ],
+    enums: { decision: GATE_DECISIONS },
+    lists: {},
+    links: {},
+    sections: [
+      "Decision",
+      "Named fixes",
+      "Objective evidence reviewed",
+      "Creative evidence reviewed",
     ],
   },
   "media-plan": {
