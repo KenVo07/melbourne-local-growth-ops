@@ -46,7 +46,13 @@ export function parseFrontMatter(text) {
     const pair = /^([A-Za-z0-9_]+):\s*(.*)$/.exec(rawLine);
     if (pair === null) continue;
     const [, key, rawValue] = pair;
-    const value = rawValue.trim();
+    /*
+     * ` #` starts a comment, as in YAML proper. Scaffolded files carry their
+     * enum hints and link hints that way, so an unanswered field reads as empty
+     * rather than as the hint text -- which otherwise surfaces to the operator
+     * as `"status" is "# DRAFT | READY..."`, blaming them for the template.
+     */
+    const value = rawValue.replace(/(^|\s)#.*$/, "").trim();
     if (value === "") {
       frontMatter[key] = [];
       currentListKey = key;
@@ -106,6 +112,21 @@ export function parseTable(text) {
     .map((row) =>
       Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])),
     );
+}
+
+/**
+ * Removes everything a template supplies for free -- HTML-comment guidance and
+ * empty table scaffolding -- so a section is judged on what the operator wrote.
+ */
+export function stripScaffolding(content) {
+  return content
+    .replaceAll(/<!--[\s\S]*?-->/g, "")
+    .split("\n")
+    .filter((line) => !/^\s*\|[\s|:-]*\|\s*$/.test(line))
+    .join("\n")
+    .replaceAll(/\|/g, "")
+    .replaceAll(/-/g, "")
+    .trim();
 }
 
 /** A placeholder an operator left unfilled. Templates ship full of these. */
@@ -195,7 +216,7 @@ export function validateArtifacts(documents, envelope) {
       const content = sectionBody(body, heading);
       if (content === null) {
         fail(name, `is missing the "## ${heading}" section.`);
-      } else if (isUnfilled(content.replaceAll(/\|/g, "").replaceAll(/-/g, "").trim())) {
+      } else if (isUnfilled(stripScaffolding(content))) {
         fail(name, `left "## ${heading}" unfilled.`);
       }
     }
@@ -209,8 +230,11 @@ export function validateArtifacts(documents, envelope) {
       `has ${territories.length} creative territories; the standard is exactly 3 materially different ones.`,
     );
   }
+  /* An unanswered `territory:` parses as an empty list, which is truthy. */
   const territoryIds = new Set(
-    territories.map(({ frontMatter }) => frontMatter.territory).filter(Boolean),
+    territories
+      .map(({ frontMatter }) => frontMatter.territory)
+      .filter((id) => typeof id === "string" && id !== ""),
   );
   for (const territory of territories) {
     const others = [...territoryIds].filter(
@@ -281,9 +305,11 @@ export function validateArtifacts(documents, envelope) {
         `records "${gate.frontMatter.decided_by}" as the decider. The Creative Gate is reserved for a named human; an agent cannot pass its own work.`,
       );
     }
-    const decision = gate.frontMatter.decision;
+    /* An unanswered field parses as an empty list, so coerce before testing. */
+    const decision =
+      typeof gate.frontMatter.decision === "string" ? gate.frontMatter.decision : "";
     const evidence = sectionBody(gate.body, "Evidence reviewed");
-    if (decision?.startsWith("PASS") && (evidence === null || isUnfilled(evidence))) {
+    if (decision.startsWith("PASS") && (evidence === null || isUnfilled(evidence))) {
       fail(gate.name, `records a ${decision} with no evidence reviewed. Name what was looked at.`);
     }
     if (decision === "PASS_WITH_NAMED_FIXES") {

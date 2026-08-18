@@ -12,6 +12,8 @@
     "build": "pnpm --recursive --if-present run build",
     "check": "pnpm build && pnpm test && pnpm typecheck",
     "creative:envelope": "tsx scripts/creative/envelope-probe.ts",
+    "creative:new": "node scripts/creative/scaffold.mjs",
+    "creative:templates": "node scripts/creative/scaffold.mjs --templates",
     "creative:validate": "node scripts/creative/validate.mjs",
     "creative:validate:self-test": "node scripts/creative/validate.mjs --self-test",
     "governance:audit": "node scripts/governance/check-audit.mjs",

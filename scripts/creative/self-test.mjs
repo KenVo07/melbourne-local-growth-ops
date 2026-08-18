@@ -343,6 +343,24 @@ const cases = [
     expect: "no stated invariant substrate",
   },
   {
+    /*
+     * A scaffolded artifact leaves every field unanswered, which the parser
+     * yields as an empty list rather than a string. The validator has to report
+     * that as a missing field, not crash on it -- the first thing any operator
+     * does is validate a half-filled delivery.
+     */
+    name: "an entirely unanswered artifact reports rather than crashes",
+    documents: [
+      {
+        name: "creative-gate.md",
+        kind: "creative-gate",
+        frontMatter: { kind: "creative-gate", decision: [], decided_by: [], candidate: [] },
+        body: "",
+      },
+    ],
+    expect: 'missing "decision"',
+  },
+  {
     name: "an unknown promotion decision is caught",
     documents: [
       ledger([["conductor", "northline", "-", "client-local", "PROMOTE_IT", "why not"]]),
