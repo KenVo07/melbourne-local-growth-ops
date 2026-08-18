@@ -16,16 +16,28 @@ export {
 export {
   validateStarterBrief,
   StarterBriefSchema,
+  StarterInteractionSchema,
   type StarterBrief,
   type StarterComposition,
   type StarterCopy,
+  type StarterInteraction,
   type StarterMediaPlacement,
   type StarterMotion,
   type StarterServiceNarrative,
 } from "./brief.js";
 export {
   resolveDesign,
+  resolveInteraction,
   contrastRatio,
   type ResolvedDesign,
+  type ResolvedInteraction,
 } from "./decisions.js";
+export {
+  decideContactFaqTreatment,
+  decideProjectMediaTreatment,
+  decideServiceQuestionTreatment,
+  type DisclosureTreatment,
+  type InteractionDecision,
+  type MediaTreatment,
+} from "./interaction-decisions.js";
 export { KNOWN_ROUTES } from "./emit/entrypoint.js";

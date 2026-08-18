@@ -156,6 +156,75 @@ export const StarterCompositionSchema = z.strictObject({
 
 export const StarterMotionSchema = z.enum(["NONE", "MICRO", "ENTRANCE"]);
 
+/**
+ * The client's Motion & Interaction Language.
+ *
+ * This describes *character and rules* — how state changes should feel and how
+ * willing the site is to fold detail away — in the same vocabulary the rest of
+ * this brief uses. It is deliberately **not** a timeline, a per-element script,
+ * or a set of engine values: nothing here is a millisecond, a cubic-bezier
+ * control point or a pixel. A trained delivery specialist (or AWOS) writing a
+ * brief should be describing a client's temperament, not tuning an animation.
+ *
+ * `decisions.ts` resolves these into the concrete durations, curves and travel
+ * distances the emitters write, exactly as it already does for typography,
+ * spacing, colour and media. Two clients on one Profile can therefore differ in
+ * *kind* — one folds its questions away and explores media in an overlay, the
+ * other keeps everything visible and still — rather than differing by a
+ * constant.
+ */
+export const StarterInteractionSchema = z.strictObject({
+  /** The pace of every state change. Sets the tempo the whole site keeps. */
+  tempo: z.enum(["BRISK", "MEASURED", "UNHURRIED"]),
+  /**
+   * How a movement begins and resolves. IMMEDIATE responds the instant it is
+   * asked and stops crisply; EASED is the familiar considered curve; SETTLED
+   * takes its time leaving and arrives slowly, which reads as weight.
+   */
+  attack: z.enum(["IMMEDIATE", "EASED", "SETTLED"]),
+  /**
+   * How far things move when they move. 0 is a site that changes state without
+   * travelling at all; 1 is generous movement. Also scales how much a revealed
+   * element fades, because something that travels far should arrive rather than
+   * simply appear.
+   */
+  travel: z.number().min(0).max(1),
+  /**
+   * Tolerance for a movement passing its destination and returning. 0 never
+   * overshoots. Higher values read as springy and suit a livelier client; they
+   * are applied only to entering and state movement, never to exits.
+   */
+  overshoot: z.number().min(0).max(1),
+  /** How much of the site responds to a pointer or to focus. */
+  interactionDensity: z.number().min(0).max(1),
+  /**
+   * How much of a page arrives rather than simply being present. Low values
+   * reveal only the compositions that carry a page's argument, which is what
+   * keeps a site from reading as generic fade-up on every section.
+   */
+  revealDensity: z.number().min(0).max(1),
+  /**
+   * Appetite for folding secondary detail away in place. ALWAYS_VISIBLE never
+   * collapses content; WHEN_LONG collapses only where the run of content is
+   * genuinely long enough that scanning beats reading; PREFERRED collapses
+   * wherever the semantics permit it.
+   */
+  disclosure: z.enum(["ALWAYS_VISIBLE", "WHEN_LONG", "PREFERRED"]),
+  /**
+   * Appetite for focused media exploration. EDITORIAL_ONLY leaves photographs
+   * as composed; the others add an optional overlay *in addition to* the
+   * visible media, never instead of it.
+   */
+  mediaExploration: z.enum(["EDITORIAL_ONLY", "WHEN_PLURAL", "PREFERRED"]),
+  /**
+   * What a reader who asks for reduced motion is left with. INSTANT changes
+   * state with no travel and no duration; BRIEF_FADE keeps a short opacity
+   * acknowledgement so a change still registers. Neither hides content, and
+   * both preserve open/closed/selected/submitted meaning.
+   */
+  reducedMotion: z.enum(["INSTANT", "BRIEF_FADE"]),
+});
+
 export const StarterNavigationSchema = z.strictObject({
   /** Width in rem below which primary navigation collapses into a disclosure. */
   collapseAt: z.number().min(30).max(80),
@@ -238,6 +307,13 @@ export const StarterBriefSchema = z.strictObject({
   media: StarterMediaSchema,
   composition: StarterCompositionSchema,
   motion: StarterMotionSchema,
+  /**
+   * Optional. A brief written before WEB-01C carries only `motion`, and every
+   * such brief stays valid: `resolveInteraction` normalises the three legacy
+   * values into the same resolved language this field produces, so an old
+   * client regenerates unchanged.
+   */
+  interaction: StarterInteractionSchema.optional(),
   navigation: StarterNavigationSchema,
   copy: StarterCopySchema,
   mediaPlan: z.strictObject({
@@ -270,6 +346,7 @@ export type StarterColour = z.infer<typeof StarterColourSchema>;
 export type StarterMedia = z.infer<typeof StarterMediaSchema>;
 export type StarterComposition = z.infer<typeof StarterCompositionSchema>;
 export type StarterMotion = z.infer<typeof StarterMotionSchema>;
+export type StarterInteraction = z.infer<typeof StarterInteractionSchema>;
 export type StarterNavigation = z.infer<typeof StarterNavigationSchema>;
 export type StarterMediaPlacement = z.infer<typeof StarterMediaPlacementSchema>;
 export type StarterCopy = z.infer<typeof StarterCopySchema>;

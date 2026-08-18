@@ -1,4 +1,9 @@
-import type { StarterBrief, StarterTypeFamily } from "./brief.js";
+import type {
+  StarterBrief,
+  StarterInteraction,
+  StarterMotion,
+  StarterTypeFamily,
+} from "./brief.js";
 
 /**
  * Resolves the brief's design decisions into the concrete values the emitters
@@ -92,6 +97,66 @@ export interface ResolvedBreakpoints {
   readonly narrow: string;
 }
 
+/**
+ * The client's Motion & Interaction Language, resolved into the concrete values
+ * the emitters write.
+ *
+ * Everything here is arithmetic on the brief's character decisions, in exactly
+ * the way `resolveType` turns a modular ratio into `clamp()` expressions. The
+ * brief never carries a millisecond or a control point; this does, because CSS
+ * needs them. Keeping the two apart is what lets a delivery specialist describe
+ * a client's temperament and still get a considered, coherent result.
+ */
+export interface ResolvedInteraction {
+  /** Where the language came from, so the generation report can say so. */
+  readonly source:
+    | "STRUCTURED"
+    | "LEGACY_NONE"
+    | "LEGACY_MICRO"
+    | "LEGACY_ENTRANCE";
+  /** Milliseconds, one per interaction channel. */
+  readonly duration: {
+    readonly micro: number;
+    readonly state: number;
+    readonly reveal: number;
+    readonly overlay: number;
+  };
+  /** CSS timing functions. Exits are never given overshoot. */
+  readonly easing: {
+    readonly enter: string;
+    readonly exit: string;
+    readonly state: string;
+  };
+  /** CSS lengths, plus the unitless scale delta an overlay uses. */
+  readonly travel: {
+    readonly reveal: string;
+    readonly hover: string;
+    readonly overlay: string;
+    readonly scale: number;
+  };
+  /** The opacity a pending reveal starts from. */
+  readonly revealFloor: number;
+  readonly density: {
+    readonly interaction: number;
+    readonly reveal: number;
+  };
+  /** Rules the interaction-opportunity decisions read. */
+  readonly appetite: {
+    readonly disclosure: StarterInteraction["disclosure"];
+    readonly mediaExploration: StarterInteraction["mediaExploration"];
+  };
+  readonly reduced: {
+    readonly duration: number;
+    readonly travel: string;
+    /** Whether a short opacity acknowledgement survives reduction. */
+    readonly fade: boolean;
+  };
+  /** False when the client asked for a completely still site. */
+  readonly enabled: boolean;
+  /** Whether anything is revealed on entrance at all. */
+  readonly reveals: boolean;
+}
+
 export interface ResolvedDesign {
   readonly ns: string;
   /** The validated client Profile, so emitted source can restate it truthfully. */
@@ -101,6 +166,7 @@ export interface ResolvedDesign {
   readonly colour: ResolvedColour;
   readonly media: ResolvedMedia;
   readonly breakpoints: ResolvedBreakpoints;
+  readonly interaction: ResolvedInteraction;
   readonly brief: StarterBrief;
 }
 
@@ -153,8 +219,174 @@ export function resolveDesign(options: ResolveDesignOptions): ResolvedDesign {
     colour: resolveColour(brief, options.brandSurfaceColour),
     media: resolveMedia(brief),
     breakpoints: resolveBreakpoints(brief),
+    interaction: resolveInteraction(brief),
     brief,
   });
+}
+
+/* --------------------------------------------------- motion and interaction */
+
+/**
+ * The three legacy motion values, expressed as briefs.
+ *
+ * They are *inputs* to the same resolver rather than a second set of resolved
+ * constants, so a legacy client and a structured client cannot drift apart as
+ * the arithmetic is tuned. The ENTRANCE preset is calibrated to reproduce the
+ * A3 floor exactly — 180ms, `cubic-bezier(0.22, 0.61, 0.36, 1)`, 0.75rem of
+ * reveal travel from zero opacity — so regenerating an approved site changes
+ * nothing.
+ */
+const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
+  NONE: {
+    tempo: "BRISK",
+    attack: "IMMEDIATE",
+    travel: 0,
+    overshoot: 0,
+    interactionDensity: 0,
+    revealDensity: 0,
+    disclosure: "ALWAYS_VISIBLE",
+    mediaExploration: "EDITORIAL_ONLY",
+    reducedMotion: "INSTANT",
+  },
+  MICRO: {
+    tempo: "MEASURED",
+    attack: "EASED",
+    travel: 0.3,
+    overshoot: 0,
+    interactionDensity: 0.55,
+    revealDensity: 0,
+    disclosure: "WHEN_LONG",
+    mediaExploration: "EDITORIAL_ONLY",
+    reducedMotion: "INSTANT",
+  },
+  ENTRANCE: {
+    tempo: "MEASURED",
+    attack: "EASED",
+    travel: 0.5,
+    overshoot: 0,
+    interactionDensity: 0.6,
+    revealDensity: 0.55,
+    disclosure: "WHEN_LONG",
+    mediaExploration: "WHEN_PLURAL",
+    reducedMotion: "INSTANT",
+  },
+};
+
+/** The pace of the shortest channel, in milliseconds. Everything else scales. */
+const tempoBase: Readonly<Record<StarterInteraction["tempo"], number>> = {
+  BRISK: 130,
+  MEASURED: 180,
+  UNHURRIED: 250,
+};
+
+/**
+ * Curve families.
+ *
+ * An entering movement decelerates into place; an exit accelerates away, which
+ * is what makes closing feel resolved rather than reluctant. IMMEDIATE front-
+ * loads almost all of its progress, SETTLED holds back and arrives slowly.
+ */
+const attackCurves: Readonly<
+  Record<
+    StarterInteraction["attack"],
+    {
+      enter: readonly [number, number, number, number];
+      exit: readonly [number, number, number, number];
+      state: readonly [number, number, number, number];
+    }
+  >
+> = {
+  IMMEDIATE: {
+    enter: [0.16, 0.84, 0.28, 1],
+    exit: [0.5, 0, 0.9, 0.4],
+    state: [0.2, 0.7, 0.3, 1],
+  },
+  EASED: {
+    enter: [0.22, 0.61, 0.36, 1],
+    exit: [0.4, 0, 0.85, 0.45],
+    state: [0.22, 0.61, 0.36, 1],
+  },
+  SETTLED: {
+    enter: [0.34, 0.4, 0.16, 1],
+    exit: [0.32, 0, 0.7, 0.5],
+    state: [0.3, 0.35, 0.2, 1],
+  },
+};
+
+export function resolveInteraction(brief: StarterBrief): ResolvedInteraction {
+  const language = brief.interaction ?? legacyInteraction[brief.motion];
+  const source =
+    brief.interaction === undefined
+      ? (`LEGACY_${brief.motion}` as const)
+      : ("STRUCTURED" as const);
+
+  const base = tempoBase[language.tempo];
+  const curves = attackCurves[language.attack];
+
+  return Object.freeze({
+    source,
+    duration: Object.freeze({
+      micro: base,
+      state: Math.round(base * 1.25),
+      overlay: Math.round(base * 1.5),
+      reveal: Math.round(base * 3),
+    }),
+    easing: Object.freeze({
+      enter: bezier(overshot(curves.enter, language.overshoot)),
+      // An exit never overshoots: a panel that bounces as it leaves reads as a
+      // mistake rather than as character.
+      exit: bezier(curves.exit),
+      state: bezier(overshot(curves.state, language.overshoot)),
+    }),
+    travel: Object.freeze({
+      reveal: `${round(language.travel * 1.5, 3)}rem`,
+      hover: `${round(language.travel * 0.4, 3)}rem`,
+      overlay: `${round(language.travel * 1.2, 3)}rem`,
+      scale: round(language.travel * 0.045, 4),
+    }),
+    /*
+     * Something that travels far should arrive rather than simply appear, so a
+     * generous travel fades in from nothing while a restrained one only lifts
+     * out of a light haze. At zero travel this is a pure fade, which is the one
+     * honest entrance available to a client that does not want movement.
+     */
+    revealFloor: round(Math.max(0, 0.45 - language.travel * 0.9), 3),
+    density: Object.freeze({
+      interaction: round(language.interactionDensity, 3),
+      reveal: round(language.revealDensity, 3),
+    }),
+    appetite: Object.freeze({
+      disclosure: language.disclosure,
+      mediaExploration: language.mediaExploration,
+    }),
+    reduced: Object.freeze({
+      duration: language.reducedMotion === "BRIEF_FADE" ? 90 : 1,
+      // Reduction removes travel entirely in both modes; what differs is
+      // whether a short opacity acknowledgement survives it.
+      travel: "0rem",
+      fade: language.reducedMotion === "BRIEF_FADE",
+    }),
+    enabled: language.interactionDensity > 0 || language.revealDensity > 0,
+    reveals: language.revealDensity > 0,
+  });
+}
+
+/**
+ * Pushes a curve's final control point past its destination.
+ *
+ * Only the y2 handle moves, so the movement still ends where it should and only
+ * the approach acquires spring.
+ */
+function overshot(
+  curve: readonly [number, number, number, number],
+  overshoot: number,
+): readonly [number, number, number, number] {
+  if (overshoot === 0) return curve;
+  return [curve[0], curve[1], curve[2], round(1 + overshoot * 0.4, 3)];
+}
+
+function bezier(curve: readonly [number, number, number, number]): string {
+  return `cubic-bezier(${curve.map((value) => round(value, 3)).join(", ")})`;
 }
 
 /* ------------------------------------------------------------ typography */
