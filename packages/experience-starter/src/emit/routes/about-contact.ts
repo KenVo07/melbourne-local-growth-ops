@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import type { InteractionPlan } from "../../interaction-decisions.js";
 import { quote } from "../content.js";
 
 /**
@@ -11,7 +12,10 @@ import { quote } from "../content.js";
  * states the direct channels first across the full measure and puts the form on
  * a reading column beneath.
  */
-export function emitAboutContactRoutes(design: ResolvedDesign): string {
+export function emitAboutContactRoutes(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
   const { ns, brief } = design;
   const arrive = design.interaction.reveals;
   const open = arrive ? "<Arrive>" : "<>";
@@ -24,7 +28,7 @@ export function emitAboutContactRoutes(design: ResolvedDesign): string {
   type ClientExperienceRouteProps,
 } from "@proportion/client-experience";
 
-import { RouteShell, Shell } from "../components/Shell";
+${plan.contactFaq.treatment === "PROGRESSIVE_DISCLOSURE" ? 'import { Detail } from "../components/Disclosure";\n' : ""}import { RouteShell, Shell } from "../components/Shell";
 import {
 ${arrive ? "  Arrive,\n" : ""}  Label,
   NextStep,
@@ -154,14 +158,7 @@ ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panel
               {faq.heading}
             </h2>
           </div>
-          <dl className="${ns}-faq">
-            {faq.items.map((item) => (
-              <div key={item.question}>
-                <dt>{item.question}</dt>
-                <dd>{item.answer}</dd>
-              </div>
-            ))}
-          </dl>
+          ${faqBody(design, plan)}
         </section>
       )}
       ${close}
@@ -169,7 +166,25 @@ ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panel
   );
 }
 
-/**
+${
+  plan.contactFaq.treatment === "PROGRESSIVE_DISCLOSURE"
+    ? `/**
+ * A stable anchor for one question, derived from its text so a link to a
+ * specific answer survives the questions being reordered.
+ */
+function questionId(question: string): string {
+  return (
+    "${ns}-q-" +
+    question
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+  );
+}
+
+`
+    : ""
+}/**
  * Not found. Same chrome, same palette, and a route list rather than a dead end.
  * It is told nothing about the requested path, so a 404 cannot leak the route
  * table.
@@ -372,4 +387,36 @@ function stackedDirect(design: ResolvedDesign): string {
           </div>
         </div>
       </div>`;
+}
+
+/**
+ * The client's questions, in the treatment its content and language chose.
+ *
+ * Both treatments put every question and every answer in the page: the folded
+ * one is a native `<details>`, so an answer is present for a reader without
+ * JavaScript and for a crawler, and a link to a specific question opens it.
+ */
+function faqBody(design: ResolvedDesign, plan: InteractionPlan): string {
+  const { ns } = design;
+  if (plan.contactFaq.treatment !== "PROGRESSIVE_DISCLOSURE") {
+    return `<dl className="${ns}-faq">
+            {faq.items.map((item) => (
+              <div key={item.question}>
+                <dt>{item.question}</dt>
+                <dd>{item.answer}</dd>
+              </div>
+            ))}
+          </dl>`;
+  }
+  return `<div className="${ns}-faq ${ns}-faq-folded">
+            {faq.items.map((item) => (
+              <Detail
+                id={questionId(item.question)}
+                key={item.question}
+                summary={item.question}
+              >
+                <p>{item.answer}</p>
+              </Detail>
+            ))}
+          </div>`;
 }

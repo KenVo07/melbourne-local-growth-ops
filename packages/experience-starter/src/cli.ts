@@ -43,6 +43,18 @@ process.stdout.write(
       sourceHash: generated.sourceHash,
       routeIds: generated.routeIds,
       totalLines: generated.totalLines,
+      /*
+       * Why this client got the interactions it got. An operator reading the
+       * report can see that the questions folded because there were five of
+       * them and the brief permits folding — not because the Factory has an
+       * opinion about FAQs.
+       */
+      interaction: {
+        language: generated.design.interaction.source,
+        contactFaq: generated.interactions.contactFaq,
+        serviceQuestions: generated.interactions.serviceQuestions,
+        projectMedia: generated.interactions.projectMedia,
+      },
       files: generated.files.map(({ path, lines, sha256 }) => ({
         path,
         lines,

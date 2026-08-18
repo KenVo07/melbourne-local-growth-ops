@@ -149,7 +149,7 @@ export function generateExperienceStarter(
   }
   // Always emitted: it carries the not-found route, which every experience uses.
   files.push(
-    file("routes/AboutContactRoutes.tsx", emitAboutContactRoutes(design)),
+    file("routes/AboutContactRoutes.tsx", emitAboutContactRoutes(design, plan)),
   );
   /*
    * Interaction helpers. Each is client-local source over native browser APIs,

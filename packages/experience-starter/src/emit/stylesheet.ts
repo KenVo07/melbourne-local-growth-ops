@@ -1803,7 +1803,7 @@ function motion(design: ResolvedDesign): string {
 }
 
 .${ns}-menu[open] .${ns}-menu-panel {
-  animation: ${ns}-menu-in var(--motion-state) var(--motion-ease);
+  animation: ${ns}-menu-in calc(var(--motion-duration) * 1.4) var(--motion-ease);
 }
 
 @keyframes ${ns}-menu-in {

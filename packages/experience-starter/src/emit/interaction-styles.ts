@@ -59,12 +59,13 @@ export function disclosureStyles(design: ResolvedDesign): string {
 
 .${ns}-detail-summary {
   align-items: baseline;
+  color: var(--ink);
   cursor: pointer;
   display: flex;
   gap: var(--stack-tight);
   justify-content: space-between;
   list-style: none;
-  padding: calc(var(--unit) * 2) 0;
+  padding-block: calc(var(--unit) * 3.5);
   transition: color var(--motion-duration) var(--motion-ease);
 }
 
@@ -86,10 +87,19 @@ export function disclosureStyles(design: ResolvedDesign): string {
   outline-offset: 0.25rem;
 }
 
+/*
+ * The folded question is typeset exactly as the static one: the same display
+ * face, weight, tracking and measure. Folding is a change of interaction, not
+ * an excuse for a different design.
+ */
 .${ns}-detail-title {
+  color: var(--ink);
   font-family: var(--display);
   font-size: ${design.type.itemTitle};
+  font-weight: ${design.type.displayWeight};
+  letter-spacing: ${design.type.displayTracking};
   line-height: 1.25;
+  max-width: var(--measure-display);
 }
 
 /*
@@ -107,9 +117,17 @@ export function disclosureStyles(design: ResolvedDesign): string {
   transform: rotate(45deg);
 }
 
+/*
+ * The body fades on its own schedule alongside the height, so the panel reads
+ * as making space and then filling it rather than as a block of text
+ * stretching. Opening and closing use their own curves.
+ */
 .${ns}-detail-body {
-  padding-bottom: calc(var(--unit) * 2);
+  color: var(--ink-muted);
+  line-height: 1.6;
   max-width: var(--measure);
+  padding-bottom: calc(var(--unit) * 3);
+  transition: opacity var(--motion-state) var(--motion-exit-ease);
 }
 
 /*
@@ -121,15 +139,6 @@ export function disclosureStyles(design: ResolvedDesign): string {
 .${ns}-detail[data-disclosure="opening"],
 .${ns}-detail[data-disclosure="closing"] {
   overflow: clip;
-}
-
-/*
- * The body fades on its own schedule, offset from the height so the panel
- * reads as making space and then filling it, rather than as a block of text
- * stretching. Opening and closing use their own curves.
- */
-.${ns}-detail-body {
-  transition: opacity var(--motion-state) var(--motion-exit-ease);
 }
 
 .${ns}-detail[data-disclosure="opening"] .${ns}-detail-body,
@@ -200,11 +209,6 @@ export function overlayStyles(design: ResolvedDesign): string {
   width: 100%;
 }
 
-.${ns}-viewer[open] {
-  opacity: 1;
-  transform: none;
-}
-
 .${ns}-viewer {
   opacity: 0;
   transform: translateY(var(--motion-overlay-travel))
@@ -216,7 +220,15 @@ export function overlayStyles(design: ResolvedDesign): string {
     overlay var(--motion-overlay) allow-discrete;
 }
 
+/*
+ * Entering uses the enter curve, leaving the exit curve. The dialog keeps its
+ * transition while closed as well, because that is the one that runs on the way
+ * out: allow-discrete on display and overlay is what lets a dialog animate
+ * closed at all rather than vanishing.
+ */
 .${ns}-viewer[open] {
+  opacity: 1;
+  transform: none;
   transition:
     opacity var(--motion-overlay) var(--motion-ease),
     transform var(--motion-overlay) var(--motion-ease),

@@ -261,7 +261,7 @@ const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
     overshoot: 0,
     interactionDensity: 0.55,
     revealDensity: 0,
-    disclosure: "WHEN_LONG",
+    disclosure: "ALWAYS_VISIBLE",
     mediaExploration: "EDITORIAL_ONLY",
     reducedMotion: "INSTANT",
   },
@@ -272,8 +272,14 @@ const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
     overshoot: 0,
     interactionDensity: 0.6,
     revealDensity: 0.55,
-    disclosure: "WHEN_LONG",
-    mediaExploration: "WHEN_PLURAL",
+    /*
+     * A legacy brief asked for entrance motion, not for its questions to be
+     * folded away or its photographs to open. Regenerating an approved client
+     * has to produce the site that was approved, so the structural capabilities
+     * stay off until a brief asks for them.
+     */
+    disclosure: "ALWAYS_VISIBLE",
+    mediaExploration: "EDITORIAL_ONLY",
     reducedMotion: "INSTANT",
   },
 };
