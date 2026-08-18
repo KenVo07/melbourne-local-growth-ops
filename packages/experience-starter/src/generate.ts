@@ -145,7 +145,7 @@ export function generateExperienceStarter(
     facts.routeIds.includes("projects-index") ||
     facts.routeIds.includes("project-detail")
   ) {
-    files.push(file("routes/ProjectsRoutes.tsx", emitProjectsRoutes(design)));
+    files.push(file("routes/ProjectsRoutes.tsx", emitProjectsRoutes(design, plan)));
   }
   // Always emitted: it carries the not-found route, which every experience uses.
   files.push(

@@ -199,13 +199,20 @@ export function planInteractions(input: {
         reason: "This client has no service detail route.",
       } as const);
 
+  /*
+   * A capability decision rather than a count decision: how many photographs a
+   * given project carries is only known at render time, so the emitted source
+   * applies the threshold per project.
+   */
   const threshold = projectMediaThreshold(interaction);
-  const projectMedia = has("project-detail")
-    ? decideProjectMediaTreatment({ mediaCount: threshold ?? 0, interaction })
-    : ({
-        treatment: "STATIC",
-        reason: "This client has no project detail route.",
-      } as const);
+  const projectMedia: InteractionDecision<MediaTreatment> = !has("project-detail")
+    ? { treatment: "STATIC", reason: "This client has no project detail route." }
+    : threshold === null
+      ? decideProjectMediaTreatment({ mediaCount: 0, interaction })
+      : {
+          treatment: "DIALOG_EXPLORER",
+          reason: `Projects offer focused exploration alongside their visible media, for any project carrying ${threshold} photograph${threshold === 1 ? "" : "s"} or more.`,
+        };
 
   return Object.freeze({
     contactFaq,

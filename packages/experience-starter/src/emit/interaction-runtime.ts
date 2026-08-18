@@ -243,6 +243,10 @@ export function emitMediaViewer(design: ResolvedDesign): string {
   return `"use client";
 
 import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -251,56 +255,80 @@ import {
 
 export interface ViewerItem {
   readonly id: string;
-  /** The photograph as it is composed on the page. */
-  readonly figure: ReactNode;
-  /** The same photograph, at the size the overlay shows it. */
+  /** The photograph at the size the overlay shows it. */
   readonly full: ReactNode;
   /** Provenance travels with the image; it is not page decoration. */
   readonly caption: string;
 }
 
+interface ViewerApi {
+  readonly open: (index: number) => void;
+  readonly register: (index: number, element: HTMLButtonElement | null) => void;
+  readonly openLabel: string;
+  readonly captions: readonly string[];
+}
+
+const ViewerContext = createContext<ViewerApi | null>(null);
+
 /**
- * Presents a sequence of photographs, each openable at a larger size.
+ * Presents a project's photographs as one sequence, each openable at a larger
+ * size.
  *
- * The controls are visible buttons rather than a swipe gesture, so a touch
- * reader and a keyboard reader use the same affordance; Arrow keys work as well
- * once the overlay is open. The position indicator is what makes it a sequence
- * rather than a stack — a reader can tell where they are and how much is left.
+ * The photographs stay exactly where the composition put them — this wraps the
+ * route rather than collecting them into a grid, so Explore can mark one in
+ * place wherever it sits. The route itself stays a server component; only the
+ * triggers and the overlay are client code.
+ *
+ * Native dialog.showModal() does the hard parts correctly and for free: the
+ * top layer, Escape, and making the rest of the page inert. Writing a focus trap
+ * here would be re-implementing all of that worse.
  */
-export function MediaViewer({
+export function MediaExplorer({
   items,
   label,
   openLabel,
+  children,
 }: {
   readonly items: readonly ViewerItem[];
   readonly label: string;
   readonly openLabel: string;
+  readonly children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const triggers = useRef(new Map<string, HTMLButtonElement>());
+  const triggers = useRef(new Map<number, HTMLButtonElement>());
   const [active, setActive] = useState(0);
 
-  if (items.length === 0) return null;
+  const register = useCallback(
+    (index: number, element: HTMLButtonElement | null) => {
+      if (element === null) triggers.current.delete(index);
+      else triggers.current.set(index, element);
+    },
+    [],
+  );
 
-  const current = items[active] ?? items[0];
-  if (current === undefined) return null;
-
-  const open = (index: number) => {
+  const open = useCallback((index: number) => {
     setActive(index);
     const dialog = dialogRef.current;
     if (dialog !== null && !dialog.open) dialog.showModal();
-  };
+  }, []);
+
+  const captions = useMemo(() => items.map((item) => item.caption), [items]);
+
+  const api = useMemo<ViewerApi>(
+    () => ({ open, register, openLabel, captions }),
+    [open, register, openLabel, captions],
+  );
+
+  const current = items[active];
 
   /*
-   * Focus goes back to the photograph the reader is now looking at, which is
-   * not always the one they opened. Landing back on the third thumbnail after
-   * stepping to the third photograph is the only version that does not lose a
-   * keyboard reader's place.
+   * Focus returns to the photograph the reader is now looking at, which is not
+   * always the one they opened. Landing back on the first thumbnail after
+   * stepping to the third photograph loses a keyboard reader's place.
    */
   const close = () => {
     dialogRef.current?.close();
-    const target = items[active];
-    if (target !== undefined) triggers.current.get(target.id)?.focus();
+    triggers.current.get(active)?.focus();
   };
 
   const step = (delta: number) => {
@@ -318,69 +346,86 @@ export function MediaViewer({
   };
 
   return (
-    <>
-      {items.map((item, index) => (
-        <button
-          aria-label={openLabel + ": " + item.caption}
-          className="${ns}-explore"
-          key={item.id}
-          onClick={() => open(index)}
-          ref={(element) => {
-            if (element === null) triggers.current.delete(item.id);
-            else triggers.current.set(item.id, element);
-          }}
-          type="button"
+    <ViewerContext.Provider value={api}>
+      {children}
+      {items.length === 0 || current === undefined ? null : (
+        <dialog
+          aria-label={label}
+          className="${ns}-viewer"
+          onKeyDown={onKeyDown}
+          ref={dialogRef}
         >
-          {item.figure}
-        </button>
-      ))}
-      <dialog
-        aria-label={label}
-        className="${ns}-viewer"
-        onKeyDown={onKeyDown}
-        ref={dialogRef}
-      >
-        <div className="${ns}-viewer-frame">
-          <figure className="${ns}-viewer-figure">
-            {current.full}
-            <figcaption className="${ns}-viewer-caption">
-              {current.caption}
-            </figcaption>
-          </figure>
-          <div className="${ns}-viewer-bar">
-            <p className="${ns}-viewer-count">
-              {active + 1} / {items.length}
-            </p>
-            <div className="${ns}-viewer-controls">
-              <button
-                className="${ns}-viewer-button"
-                disabled={active === 0}
-                onClick={() => step(-1)}
-                type="button"
-              >
-                Previous
-              </button>
-              <button
-                className="${ns}-viewer-button"
-                disabled={active === items.length - 1}
-                onClick={() => step(1)}
-                type="button"
-              >
-                Next
-              </button>
-              <button
-                autoFocus
-                className="${ns}-viewer-button"
-                onClick={close}
-                type="button"
-              >
-                Close
-              </button>
+          <div className="${ns}-viewer-frame">
+            <figure className="${ns}-viewer-figure">
+              {current.full}
+              <figcaption className="${ns}-viewer-caption">
+                {current.caption}
+              </figcaption>
+            </figure>
+            <div className="${ns}-viewer-bar">
+              <p className="${ns}-viewer-count">
+                {active + 1} / {items.length}
+              </p>
+              <div className="${ns}-viewer-controls">
+                <button
+                  className="${ns}-viewer-button"
+                  disabled={active === 0}
+                  onClick={() => step(-1)}
+                  type="button"
+                >
+                  Previous
+                </button>
+                <button
+                  className="${ns}-viewer-button"
+                  disabled={active === items.length - 1}
+                  onClick={() => step(1)}
+                  type="button"
+                >
+                  Next
+                </button>
+                <button
+                  autoFocus
+                  className="${ns}-viewer-button"
+                  onClick={close}
+                  type="button"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </dialog>
-    </>
+        </dialog>
+      )}
+    </ViewerContext.Provider>
+  );
+}
+
+/**
+ * Marks one photograph, in place, as the way into the sequence at its position.
+ *
+ * Outside an explorer it renders its child untouched, so a composition that
+ * places a photograph the client's language did not make explorable still
+ * renders exactly as composed.
+ */
+export function Explore({
+  index,
+  children,
+}: {
+  readonly index: number;
+  readonly children: ReactNode;
+}) {
+  const viewer = useContext(ViewerContext);
+  if (viewer === null) return <>{children}</>;
+  return (
+    <button
+      aria-label={viewer.openLabel + ": " + (viewer.captions[index] ?? "")}
+      className="${ns}-explore"
+      onClick={() => viewer.open(index)}
+      ref={(element) => viewer.register(index, element)}
+      type="button"
+    >
+      {children}
+    </button>
   );
 }
 `;

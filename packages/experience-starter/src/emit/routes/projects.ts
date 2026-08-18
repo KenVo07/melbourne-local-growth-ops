@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import type { InteractionPlan } from "../../interaction-decisions.js";
 
 /**
  * Emits the projects index and the project detail routes.
@@ -9,7 +10,10 @@ import type { ResolvedDesign } from "../../decisions.js";
  * facts band, then the story — or as staggered beats where the photograph and
  * the copy trade sides down the page and the facts land mid-narrative.
  */
-export function emitProjectsRoutes(design: ResolvedDesign): string {
+export function emitProjectsRoutes(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
   const { ns, brief } = design;
   const arrive = design.interaction.reveals;
   const open = arrive ? "<Arrive>" : "<>";
@@ -22,7 +26,7 @@ export function emitProjectsRoutes(design: ResolvedDesign): string {
   type ClientExperienceRouteProps,
 } from "@proportion/client-experience";
 
-import { RouteShell } from "../components/Shell";
+${plan.usesMediaExplorer ? 'import { Explore, MediaExplorer } from "../components/MediaViewer";\n' : ""}import { RouteShell } from "../components/Shell";
 import {
 ${arrive ? "  Arrive,\n" : ""}  Label,
   NextStep,
@@ -89,7 +93,34 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
             ? []
             : [{ project: previous, relation: COPY.relatedRecordLabel }]),
         ];
-
+${
+  plan.usesMediaExplorer
+    ? `
+  /*
+   * Every photograph this project carries, in the order a reader meets them:
+   * the hero, then each story beat's media. The overlay steps through this
+   * sequence, so "next" means the next photograph of the project rather than
+   * the next one in some beat.
+   */
+  const exploreOrder = [
+    project.hero,
+    ...project.story.flatMap((block) => block.media),
+  ];
+  const exploreIndex = (reference: (typeof exploreOrder)[number]) =>
+    exploreOrder.indexOf(reference);
+  const exploreItems = exploreOrder.map((reference) => ({
+    id: reference.assetId,
+    caption: reference.caption ?? reference.alt,
+    full: (
+      <platform.Image
+        reference={reference}
+        sizes="(max-width: 60rem) 92vw, 72rem"
+      />
+    ),
+  }));
+`
+    : ""
+}
   return (
     <RouteShell props={props}>
       <PageHead
@@ -110,7 +141,19 @@ export function ProjectDetailRoute(props: ClientExperienceRouteProps) {
         title={project.title}
       />
 
-${brief.composition.projectDetail === "STAGGERED_BEATS" ? staggeredBeats(design) : documentRecord(design)}
+${
+  plan.usesMediaExplorer
+    ? `      <MediaExplorer
+        items={exploreItems}
+        label={\`\${project.title} — photographs\`}
+        openLabel="Open photograph"
+      >
+${indent(brief.composition.projectDetail === "STAGGERED_BEATS" ? staggeredBeats(design, plan) : documentRecord(design, plan))}
+      </MediaExplorer>`
+    : brief.composition.projectDetail === "STAGGERED_BEATS"
+      ? staggeredBeats(design, plan)
+      : documentRecord(design, plan)
+}
 
       <NextStep
         body={COPY.nextStepBody}
@@ -280,11 +323,15 @@ function onwardNav(design: ResolvedDesign): string {
         )}`;
 }
 
-function documentRecord(design: ResolvedDesign): string {
+function documentRecord(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, breakpoints } = design;
   return `      <div className="${ns}-shell">
         <div className="${ns}-hero-record">
-          <Plate
+          ${explorable(
+            plan,
+            "0",
+            null,
+            `<Plate
             platform={platform}
             priority
             ratio={ratioFor(media, project.hero.assetId, {
@@ -293,7 +340,9 @@ function documentRecord(design: ResolvedDesign): string {
             })}
             reference={project.hero}
             sizes="100vw"
-          />
+          />`,
+            "          ",
+          )}
         </div>
 
 ${factsAndOnward(design)}
@@ -311,16 +360,21 @@ ${factsAndOnward(design)}
               {block.media.length === 0 ? null : (
                 <div className="${ns}-beat-media">
                   {block.media.map((reference) => (
-                    <Plate
-                      key={reference.assetId}
-                      platform={platform}
-                      ratio={ratioFor(media, reference.assetId, {
-                        portrait: "tall",
-                        landscape: "wide",
-                      })}
-                      reference={reference}
-                      sizes="(max-width: ${breakpoints.wide}) 100vw, 62vw"
-                    />
+                    ${explorable(
+                      plan,
+                      "exploreIndex(reference)",
+                      "reference.assetId",
+                      `<Plate
+                        platform={platform}
+                        ratio={ratioFor(media, reference.assetId, {
+                          portrait: "tall",
+                          landscape: "wide",
+                        })}
+                        reference={reference}
+                        sizes="(max-width: ${breakpoints.wide}) 100vw, 62vw"
+                      />`,
+                      "                    ",
+                    )}
                   ))}
                 </div>
               )}
@@ -332,17 +386,23 @@ ${onwardNav(design)}
       </div>`;
 }
 
-function staggeredBeats(design: ResolvedDesign): string {
+function staggeredBeats(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, breakpoints } = design;
   return `      <div className="${ns}-shell">
         <div className="${ns}-hero-record">
-          <Plate
+          ${explorable(
+            plan,
+            "0",
+            null,
+            `<Plate
             platform={platform}
             priority
             ratio="panorama"
             reference={project.hero}
             sizes="100vw"
-          />
+          />`,
+            "          ",
+          )}
         </div>
 
         {project.story.map((block, index) => {
@@ -371,16 +431,21 @@ function staggeredBeats(design: ResolvedDesign): string {
               {illustrated ? (
                 <div className="${ns}-beat-media">
                   {block.media.map((reference) => (
-                    <Plate
-                      key={reference.assetId}
-                      platform={platform}
-                      ratio={ratioFor(media, reference.assetId, {
-                        portrait: "tall",
-                        landscape: "wide",
-                      })}
-                      reference={reference}
-                      sizes="(max-width: ${breakpoints.wide}) 100vw, 52vw"
-                    />
+                    ${explorable(
+                      plan,
+                      "exploreIndex(reference)",
+                      "reference.assetId",
+                      `<Plate
+                        platform={platform}
+                        ratio={ratioFor(media, reference.assetId, {
+                          portrait: "tall",
+                          landscape: "wide",
+                        })}
+                        reference={reference}
+                        sizes="(max-width: ${breakpoints.wide}) 100vw, 52vw"
+                      />`,
+                      "                    ",
+                    )}
                   ))}
                 </div>
               ) : (
@@ -396,4 +461,54 @@ ${factsAndOnward(design)}
 
 ${onwardNav(design)}
       </div>`;
+}
+
+/**
+ * Wraps a photograph so it becomes the way into the project's sequence at its
+ * own position, when this client's language opens media at all.
+ *
+ * The photograph itself is untouched either way: exploration is added around
+ * composed media, never substituted for it.
+ */
+function explorable(
+  plan: InteractionPlan,
+  indexExpression: string,
+  keyExpression: string | null,
+  plate: string,
+  indent: string,
+): string {
+  const key = keyExpression === null ? "" : ` key={${keyExpression}}`;
+  if (!plan.usesMediaExplorer) {
+    // The key belongs on the outermost element either way.
+    return key === "" ? plate : plate.replace("<Plate", `<Plate${key}`);
+  }
+  /*
+   * The plate template carries whatever indentation it had where it was
+   * written, which is not where it lands once it is nested inside a trigger.
+   * Its own shape is preserved and the whole block is re-anchored, so generated
+   * source stays readable rather than stair-stepping.
+   */
+  const lines = plate.split("\n");
+  const rest = lines.slice(1).filter((line) => line.trim().length > 0);
+  const base = Math.min(
+    ...rest.map((line) => line.length - line.trimStart().length),
+  );
+  const body = lines
+    .map((line, position) =>
+      line.trim().length === 0
+        ? line
+        : position === 0
+          ? `${indent}  ${line}`
+          : `${indent}  ${line.slice(base)}`,
+    )
+    .join("\n");
+  return `<Explore${key} index={${indexExpression}}>\n${body}\n${indent}</Explore>`;
+}
+
+/** Indents an emitted block by one level, so nesting it stays readable. */
+function indent(block: string): string {
+  return block
+    .split("\n")
+    .map((line) => (line.trim().length === 0 ? line : `  ${line}`))
+    .join("\n");
 }
