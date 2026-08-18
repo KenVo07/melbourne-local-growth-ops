@@ -386,6 +386,26 @@ dependency added, no lockfile change.
 
 `pnpm check` (build + test + typecheck) passes green at HEAD.
 
+## Phase 8 — Independent red team — COMPLETE
+
+`WEB01D_CREATIVE_PROOF/RED_TEAM_REPORT.md`. Four findings changed the system; four
+were deliberately left and stated.
+
+The finding that mattered: the capability probe's `dynamic-code-execution`
+candidate was refused with `SOURCE_PARSE_ERROR` rather than
+`EXECUTION_PRIMITIVE_FORBIDDEN`, because its body was passed as an array to a
+helper expecting a string and got comma-joined into malformed source. It was a
+green result that looked like evidence and was not. Fixed, and candidates may now
+declare the exact refusal code they expect. Also tightened: a media row with an
+empty "Substantiates" cell no longer validates clean.
+
+## Phase 9 — Final validation and packaging — COMPLETE
+
+Review ZIP built, checksummed, extracted to a clean room with no repository
+present, and independently reverified: 79 checksums match, the 23-case validator
+self-test passes, the northline delivery revalidates, and the deliberately broken
+copy still fails on all three critical rules. `CLEAN-ROOM VERIFICATION: PASS`.
+
 ## Phase status
 
 | Phase | Status |
@@ -398,10 +418,16 @@ dependency added, no lockfile change.
 | 5 — Controlled proof | COMPLETE |
 | 6 — Production translation + evidence tooling | COMPLETE |
 | 7 — Proportion kickoff package | COMPLETE |
-| 8 — Independent red team | NOT STARTED |
-| 9 — Final validation and packaging | NOT STARTED |
+| 8 — Independent red team | COMPLETE |
+| 9 — Final validation and packaging | COMPLETE |
 
 ## Boundaries honoured so far
 
 No P1 Factory source has been modified. No push, no merge, no PR #14 change, no
 Notion update, no production promotion. Only this state file has been added.
+
+## Outcome
+
+**WEB01D_CREATIVE_SYSTEM_READY_FOR_FOUNDER_REVIEW**
+
+Review package: `/home/khoa/Projects/web01b-implementation/WEB01D_CREATIVE_SYSTEM_REVIEW_PACKAGE.zip`
