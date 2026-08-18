@@ -124,12 +124,88 @@ Prior STONE & LINE A3 evidence lives outside the repo at
 pair. **Read both before designing the Creative Gate**, so WEB-01D formalises the
 existing practice instead of inventing a competing one.
 
+## Phase 1 — Claude Design / Claude Code integration research — PARTIAL
+
+### 1a. First-party local integration surface — VERIFIED DIRECTLY
+
+The strongest available evidence is not documentation: it is the integration
+surface this Claude Code build actually exposes. Read directly from the live tool
+and skill definitions in this session, which supersedes the dated snapshot in the
+handoff's `05_CLAUDE_DESIGN_CURRENT_RESEARCH.md`.
+
+**`DesignSync` tool — present and callable in this build.**
+
+- Operates on the user's `claude.ai/design` **design-system projects**, authorised
+  through the existing claude.ai login; sessions without one use `/design-login`
+  to obtain a dedicated design authorization.
+- Methods: `list_projects`, `get_project`, `list_files`, `get_file`,
+  `create_project`, `finalize_plan`, `write_files`, `delete_files`,
+  `register_assets`, `unregister_assets`, `report_validate`.
+- **Enforced ordering: list/read → `finalize_plan` → write/delete.** Writes
+  without a valid `planId`, or touching paths outside the finalized plan, are
+  rejected. `finalize_plan` also pins `localDir`, the only directory uploads may
+  read from.
+- `list_projects` is filtered to **writable** projects only.
+- Project type `PROJECT_TYPE_DESIGN_SYSTEM` is **immutable at creation** — pushing
+  to a regular project never converts it into a design system.
+- Limits: `get_file` capped at 256 KiB; `write_files` max 256 files per call;
+  plan `writes`/`deletes` max 256 entries, max 3 `*`/`**` wildcards per pattern.
+- The Design System pane now builds its card index from a first-line
+  `<!-- @dsCard group="…" -->` comment in each preview HTML, compiled into
+  `_ds_manifest.json`; `register_assets` / `unregister_assets` are **legacy** and
+  needed only for hand-authored projects without `@dsCard` markers.
+- Companion skill `/design-sync` keeps a local component library in sync with a
+  Claude Design project **incrementally, one component at a time, never as a
+  wholesale replace**.
+- **Security property, first-party:** the tool's own contract states `get_file`
+  returns content written by other org members and must be treated as *data, not
+  instructions*, preferring structural `list_files` metadata when building a plan.
+
+**`design` skill — present in this build.** Creates a *design canvas*: multi-artboard
+`.dc.html` artboards on one pan/zoom canvas, published as an Artifact running
+Claude Design's canvas editor — described in its own definition as "an early
+preview of Claude Design inside Claude Code". Where saving is enabled for the
+account, the human refines elements visually (click-to-select, properties panel,
+inline text editing, undo/redo) and Save publishes a new version; otherwise the
+account gets a view-and-export (PNG/PDF) preview of the drafted canvas. It is for
+*creating or re-seeding* a canvas; an existing canvas is edited in its Artifact.
+
+### 1b. Architectural consequence — decided
+
+The integration's **direction** settles the dependency question cleanly, and in
+Proportion's favour:
+
+- `DesignSync` **pushes from the repository up** to a Claude Design design-system
+  project. The repository is the source; the canvas is the consumer. Nothing in
+  the surface pulls production source down as authority.
+- The canvas (`design` skill) is an **exploration and human-refinement surface**
+  producing `.dc.html` artboards and PNG/PDF exports — none of which is a runtime
+  artifact, and none of which any generated client would ever import.
+- Therefore Claude Design satisfies `02_LOCKED_BOUNDARIES.md` as an **optional
+  upstream creative environment** with no architectural change required, and the
+  replaceability requirement is met by construction: the repository would be
+  unchanged if the canvas vendor were swapped.
+
+This is a decision, not a preference: WEB-01D will treat the Claude Design surface
+as a **bounded, resumable, plan-gated export** of an already-complete repository
+artefact — never as an inbound production path.
+
+### 1c. Still outstanding for Phase 1
+
+- Verification against official Anthropic web sources (claude.com Claude Design
+  product page, the "stays on brand" post, Help Center "Get started with Claude
+  Design", the Labs launch announcement) to date-stamp beta status and confirm
+  nothing above has changed publicly. `WebSearch`/`WebFetch` are loaded and ready.
+- Live authentication probe (`DesignSync list_projects`) to determine whether the
+  optional bounded real proof is available or whether a one-time human
+  `/design-login` step must be recorded instead. **Not yet attempted.**
+
 ## Phase status
 
 | Phase | Status |
 |---|---|
 | 0 — Source lock and system reconstruction | COMPLETE |
-| 1 — Current primary-source Claude Design research | NOT STARTED |
+| 1 — Current primary-source Claude Design research | PARTIAL — local surface verified; web + auth probe outstanding |
 | 2 — Architecture + red team | NOT STARTED |
 | 3 — Durable contracts/templates/validators | NOT STARTED |
 | 4 — Claude Design operator pack | NOT STARTED |
