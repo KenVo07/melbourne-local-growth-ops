@@ -20,3 +20,9 @@ coverage/
 /.mlgo-local/
 __pycache__/
 *.pyc
+
+# Interaction evidence harnesses are run from here because Playwright lives
+# here; none of them is application code.
+apps/managed-web/.web01c-*.mjs
+apps/managed-web/.axecheck.mjs
+apps/managed-web/.dbg.mjs
