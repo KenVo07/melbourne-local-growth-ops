@@ -80,8 +80,8 @@ interface DefinitionFacts {
   readonly routeIds: readonly string[];
   readonly serviceIds: readonly string[];
   readonly assetIds: ReadonlySet<string>;
-  /** Questions the client's own FAQ section carries. */
-  readonly faqCount: number;
+  /** The client's validated profile sections, in authored order. */
+  readonly sections: readonly { readonly type?: unknown }[];
 }
 
 export function generateExperienceStarter(
@@ -116,7 +116,7 @@ export function generateExperienceStarter(
   const plan = planInteractions({
     interaction: design.interaction,
     routeIds: facts.routeIds,
-    faqCount: facts.faqCount,
+    sections: facts.sections,
   });
 
   const files: GeneratedExperienceFile[] = [
@@ -125,18 +125,18 @@ export function generateExperienceStarter(
     file("index.tsx", emitEntrypoint(design, facts.routeIds)),
     file("content/site-content.ts", emitSiteContent(brief)),
     file("components/Shell.tsx", emitShell(design)),
-    file("components/Pieces.tsx", emitPieces(design)),
+    file("components/Pieces.tsx", emitPieces(design, plan)),
     file("styles/site.css", emitStylesheet(design, plan)),
   ];
 
   if (facts.routeIds.includes("home")) {
-    files.push(file("routes/HomeRoute.tsx", emitHomeRoute(design)));
+    files.push(file("routes/HomeRoute.tsx", emitHomeRoute(design, plan)));
   }
   if (
     facts.routeIds.includes("services-index") ||
     facts.routeIds.includes("service-detail")
   ) {
-    files.push(file("routes/ServicesRoutes.tsx", emitServicesRoutes(design)));
+    files.push(file("routes/ServicesRoutes.tsx", emitServicesRoutes(design, plan)));
   }
   if (
     facts.routeIds.includes("projects-index") ||
@@ -235,9 +235,6 @@ function readDefinition(definition: unknown): DefinitionFacts {
     .flatMap((section) => section.items ?? [])
     .map((item) => (item as { serviceId?: unknown }).serviceId)
     .filter((value): value is string => typeof value === "string");
-  const faqSection = (root.profile?.sections ?? []).find(
-    (section) => section.type === "FAQ",
-  );
   const assetIds = new Set(
     (root.assets ?? [])
       .map(({ assetId }) => assetId)
@@ -249,7 +246,7 @@ function readDefinition(definition: unknown): DefinitionFacts {
     routeIds: Object.freeze(routeIds),
     serviceIds: Object.freeze(serviceIds),
     assetIds,
-    faqCount: faqSection?.items?.length ?? 0,
+    sections: Object.freeze(root.profile?.sections ?? []),
   });
 }
 

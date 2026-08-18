@@ -4,6 +4,7 @@ import { validateStarterBrief, type StarterInteraction } from "./brief.js";
 import { contrastRatio } from "./decisions.js";
 import { loudBrief, quietBrief, testDefinition } from "./fixtures.js";
 import { generateExperienceStarter, StarterGenerationError } from "./generate.js";
+import { foldsAway } from "./interaction-decisions.js";
 
 function generate(brief: unknown, definition: unknown = testDefinition) {
   return generateExperienceStarter({ definition, brief });
@@ -328,15 +329,101 @@ describe("refusals", () => {
 });
 
 describe("interaction capability emission", () => {
+  /*
+   * Answers a reader would actually have to read. The earlier fixture answered
+   * every question with a single letter, which made the disclosure rules look
+   * as though they only counted items — a run of one-word answers is a table,
+   * and the generator is supposed to refuse to fold a table.
+   */
   const faqSection = {
     type: "FAQ",
     sectionId: "faq",
     heading: "Questions",
     items: [
-      { question: "One?", answer: "A." },
-      { question: "Two?", answer: "B." },
-      { question: "Three?", answer: "C." },
-      { question: "Four?", answer: "D." },
+      {
+        question: "Which areas do you work in?",
+        answer:
+          "We work across the inner north and inner east, and travel further for stonework that warrants the trip. Anything outside that is quoted with the travel stated separately.",
+      },
+      {
+        question: "How are quotes calculated?",
+        answer:
+          "From the measured drawing rather than from a rate card, because the same square metre of wall costs differently depending on what it is holding up and how the stone has to be cut.",
+      },
+      {
+        question: "How do I request a visit?",
+        answer:
+          "Send the address and a photograph of what you are looking at. We will tell you before visiting whether it is something we take on, so nobody spends a morning on a job we would decline.",
+      },
+      {
+        question: "Do you take emergency call-outs?",
+        answer:
+          "For structural failure in something we built, yes, at any hour. For everything else we schedule properly, because rushed stonework is the thing we are most often called to replace.",
+      },
+    ],
+  };
+
+  /*
+   * A contractor's terms. Structurally identical to the questions above — a run
+   * of titled prose — and used the same way, so it must fold under exactly the
+   * same rule. This is the second semantic context that proves the capability
+   * is general rather than an FAQ feature under a general name.
+   */
+  const policiesSection = {
+    type: "POLICIES",
+    sectionId: "policies",
+    heading: "Terms and guarantees",
+    items: [
+      {
+        title: "Workmanship guarantee",
+        body: "Structural stonework carries a ten-year guarantee on the work itself. It covers the setting and the cut, and it does not cover movement in ground we did not prepare.",
+      },
+      {
+        title: "Deposit and payment",
+        body: "A third on acceptance of the drawing, a third at the halfway inspection, the balance at handover. Nothing is invoiced for work that has not been done and inspected.",
+      },
+      {
+        title: "Cancellation",
+        body: "Cancel before the stone is cut and the deposit is returned less the drawing. Once a piece is cut to your dimensions it cannot go back, so from that point the deposit is retained.",
+      },
+      {
+        title: "Insurance",
+        body: "Public liability is carried to twenty million and the certificate is sent with every quote. Subcontracted crane work carries its own cover, named on the same certificate.",
+      },
+    ],
+  };
+
+  /*
+   * An ordered method. The same structural shape as both runs above — titled
+   * items carrying prose — which is exactly why it is the useful control: if
+   * the generator folded this too, it would be reasoning about structure rather
+   * than about how a reader uses the content.
+   */
+  const processSection = {
+    type: "PROCESS",
+    sectionId: "process",
+    heading: "How a job runs",
+    items: [
+      {
+        title: "Survey and draw",
+        description:
+          "We measure the site ourselves and draw what is actually there, because the drawing is what the quote is tied to and a wrong dimension is expensive in stone.",
+      },
+      {
+        title: "Scope tied to the drawing",
+        description:
+          "Every line of the quote points at something on the drawing. If the scope changes the drawing changes first, and the revised figure follows from it.",
+      },
+      {
+        title: "Sequenced so you can stay",
+        description:
+          "Work is staged so that the parts of the building you live in stay usable. It takes longer and it is the reason most of our work is in occupied houses.",
+      },
+      {
+        title: "As-built set at handover",
+        description:
+          "You receive the drawings as the work was actually built, not as it was planned, so the next trade to open the wall knows what is behind it.",
+      },
     ],
   };
 
@@ -344,7 +431,12 @@ describe("interaction capability emission", () => {
     ...testDefinition,
     profile: {
       ...testDefinition.profile,
-      sections: [...testDefinition.profile.sections, faqSection],
+      sections: [
+        ...testDefinition.profile.sections,
+        faqSection,
+        policiesSection,
+        processSection,
+      ],
     },
   };
 
@@ -353,8 +445,8 @@ describe("interaction capability emission", () => {
     attack: "EASED",
     travel: 0.5,
     overshoot: 0,
-    interactionDensity: 0.6,
-    revealDensity: 0.5,
+    pointerFeedback: "GENEROUS",
+    entrance: "EVERY_SECTION",
     disclosure: "WHEN_LONG",
     mediaExploration: "WHEN_PLURAL",
     reducedMotion: "INSTANT",
@@ -367,7 +459,13 @@ describe("interaction capability emission", () => {
 
   it("emits no interaction helper a client did not ask for", () => {
     const still = generate(
-      briefWith({ interactionDensity: 0, revealDensity: 0, travel: 0, disclosure: "ALWAYS_VISIBLE" }),
+      briefWith({
+        pointerFeedback: "NONE",
+        entrance: "NONE",
+        travel: 0,
+        disclosure: "ALWAYS_VISIBLE",
+        mediaExploration: "EDITORIAL_ONLY",
+      }),
       withFaq,
     );
     const paths = still.files.map((file) => file.path);
@@ -386,16 +484,14 @@ describe("interaction capability emission", () => {
 
   it("emits the disclosure helper only where content and language agree", () => {
     const folded = generate(briefWith({ disclosure: "WHEN_LONG" }), withFaq);
-    expect(folded.interactions.contactFaq.treatment).toBe(
-      "PROGRESSIVE_DISCLOSURE",
-    );
+    expect(foldsAway(folded.interactions, "FAQ")).toBe(true);
     expect(folded.files.map((file) => file.path)).toContain(
       "components/Disclosure.tsx",
     );
 
     // Same content, a client that keeps things open.
     const open = generate(briefWith({ disclosure: "ALWAYS_VISIBLE" }), withFaq);
-    expect(open.interactions.contactFaq.treatment).toBe("STATIC");
+    expect(foldsAway(open.interactions, "FAQ")).toBe(false);
     expect(open.files.map((file) => file.path)).not.toContain(
       "components/Disclosure.tsx",
     );
@@ -414,11 +510,135 @@ describe("interaction capability emission", () => {
   it("explains every decision it made", () => {
     const generated = generate(briefWith({}), withFaq);
     for (const decision of [
-      generated.interactions.contactFaq,
+      ...generated.interactions.disclosures,
       generated.interactions.projectMedia,
     ]) {
       expect(decision.reason.length).toBeGreaterThan(20);
     }
+    // Every run the content offered was considered, including the ones refused.
+    expect(
+      generated.interactions.disclosures.map((decision) => decision.run.sectionType),
+    ).toEqual(["SERVICES", "FAQ", "POLICIES", "PROCESS"]);
+  });
+
+  /*
+   * FINDING 2 — the capability has to be usable somewhere other than the place
+   * it was built for. Two runs of the same structure, on the same page, both
+   * folded; and the ordered method beside them left alone.
+   */
+  it("folds two semantically distinct runs and refuses the sequence between them", () => {
+    const generated = generate(briefWith({ disclosure: "WHEN_LONG" }), withFaq);
+    const byType = new Map(
+      generated.interactions.disclosures.map((decision) => [
+        decision.run.sectionType,
+        decision,
+      ]),
+    );
+    expect(byType.get("FAQ")?.treatment).toBe("PROGRESSIVE_DISCLOSURE");
+    expect(byType.get("POLICIES")?.treatment).toBe("PROGRESSIVE_DISCLOSURE");
+    expect(byType.get("PROCESS")?.treatment).toBe("STATIC");
+
+    const route = fileNamed(generated, "routes/AboutContactRoutes.tsx");
+    // Both folded runs reach the emitted source, and the method stays a list.
+    expect((route.match(/<Detail/g) ?? []).length).toBe(2);
+    expect(route).toContain("<ol className=");
+  });
+
+  /*
+   * FINDING 3 — the entrance control has to mean something. Identical content
+   * and identical everything else; only the authored value differs.
+   */
+  it("gives materially different entrance values materially different pages", () => {
+    const countArrive = (interaction: Partial<StarterInteraction>) => {
+      const generated = generate(briefWith(interaction), withFaq);
+      return generated.files
+        .filter((file) => file.path.startsWith("routes/"))
+        .reduce(
+          (total, file) => total + (file.contents.match(/<Arrive/g) ?? []).length,
+          0,
+        );
+    };
+    const none = countArrive({ entrance: "NONE" });
+    const key = countArrive({ entrance: "KEY_MOMENTS" });
+    const every = countArrive({ entrance: "EVERY_SECTION" });
+
+    expect(none).toBe(0);
+    expect(key).toBeGreaterThan(none);
+    expect(every).toBeGreaterThan(key);
+  });
+
+  /*
+   * FINDING 10 — and the pointer control likewise, without ever buying or
+   * selling an accessibility affordance.
+   */
+  it("varies optional feedback by appetite and never the focus affordance", () => {
+    const css = (pointerFeedback: StarterInteraction["pointerFeedback"]) =>
+      fileNamed(
+        generate(briefWith({ pointerFeedback, entrance: "NONE" }), withFaq),
+        "styles/site.css",
+      );
+    const none = css("NONE");
+    const essential = css("ESSENTIAL");
+    const generous = css("GENEROUS");
+
+    // Optional expression genuinely differs at each step.
+    expect(essential.length).toBeGreaterThan(none.length);
+    expect(generous.length).toBeGreaterThan(essential.length);
+    expect(none).not.toContain("-menu-in");
+    expect(essential).toContain("-menu-in");
+    expect(generous).toContain("-plate img {");
+    expect(essential).not.toContain("-plate img {\n  transition");
+
+    // The affordance a reader needs to operate the page never moves.
+    const rings = (source: string) => (source.match(/focus-visible/g) ?? []).length;
+    expect(rings(none)).toBe(rings(generous));
+    expect(rings(none)).toBeGreaterThan(0);
+  });
+
+  /*
+   * FINDING 4 — the manifest describes the artifact, not one subset of the
+   * inputs that produced it. A client can want no entrance and no pointer
+   * response and still receive two animated capabilities from its content.
+   */
+  it("declares motion whenever the artifact actually animates", () => {
+    const foldingButStill = generate(
+      briefWith({
+        pointerFeedback: "NONE",
+        entrance: "NONE",
+        disclosure: "PREFERRED",
+        mediaExploration: "PREFERRED",
+      }),
+      withFaq,
+    );
+    expect(foldingButStill.design.interaction.enabled).toBe(false);
+    expect(foldingButStill.interactions.usesDisclosure).toBe(true);
+    const runtime = JSON.parse(
+      fileNamed(foldingButStill, "manifest.json"),
+    ).runtime;
+    expect(runtime.motion).toBe("NATIVE");
+    expect(runtime.clientJavaScript).toBe("COMPONENT_SCOPED");
+    // And the stylesheet it shipped really does carry the durations it needs.
+    expect(fileNamed(foldingButStill, "styles/site.css")).toContain(
+      "--motion-state:",
+    );
+
+    const genuinelyStill = generate(
+      briefWith({
+        pointerFeedback: "NONE",
+        entrance: "NONE",
+        disclosure: "ALWAYS_VISIBLE",
+        mediaExploration: "EDITORIAL_ONLY",
+      }),
+      withFaq,
+    );
+    const stillRuntime = JSON.parse(
+      fileNamed(genuinelyStill, "manifest.json"),
+    ).runtime;
+    expect(stillRuntime.motion).toBe("NONE");
+    // A still site carries no motion variables and no reduced-motion overrides.
+    const stillCss = fileNamed(genuinelyStill, "styles/site.css");
+    expect(stillCss).not.toContain("--motion-state:");
+    expect(stillCss).not.toContain("prefers-reduced-motion");
   });
 
   it("keeps generated interaction source free of the generator", () => {
@@ -464,10 +684,8 @@ describe("interaction capability emission", () => {
 
     // And a different answer to what the content should even do — which is the
     // variation that matters, because it is structural rather than numeric.
-    expect(patient.interactions.contactFaq.treatment).toBe("STATIC");
-    expect(brisk.interactions.contactFaq.treatment).toBe(
-      "PROGRESSIVE_DISCLOSURE",
-    );
+    expect(foldsAway(patient.interactions, "FAQ")).toBe(false);
+    expect(foldsAway(brisk.interactions, "FAQ")).toBe(true);
     expect(patient.sourceHash).not.toBe(brisk.sourceHash);
   });
 });

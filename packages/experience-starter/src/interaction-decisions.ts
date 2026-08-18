@@ -1,24 +1,33 @@
 import type { ResolvedInteraction } from "./decisions.js";
+import {
+  feedsBack,
+  readDetailRuns,
+  revealsRole,
+  type DetailRun,
+  type FeedbackRole,
+  type RevealRole,
+} from "./semantic-opportunities.js";
 
 /**
  * Which interaction a piece of content is *allowed* to become.
  *
- * Three things decide, in order: the semantics say what is valid, the shape of
- * the actual content says whether it would help, and the client's Motion &
- * Interaction Language says whether this client wants it. No rule here maps a
- * content type to a fixed component, and none of them reads the Profile — a
- * CONTRACTOR site does not get an accordion because it is a CONTRACTOR site.
+ * Three things decide, in order: the semantics say what shape the content is
+ * and how a reader uses it, the shape of the actual content says whether an
+ * interaction would help, and the client's Motion & Interaction Language says
+ * whether this client wants it. No rule here maps a section type to a fixed
+ * component, and none of them reads the Profile — a CONTRACTOR site does not
+ * get an accordion because it is a CONTRACTOR site.
+ *
+ * The decisions are taken over *opportunities* read from the semantic model
+ * (`semantic-opportunities.ts`) rather than over a fixed list of named places.
+ * Adding FAQ folding as a special case would have been a third of the code; it
+ * would also have meant that the next client whose content wants folding gets
+ * nothing, and that the Factory's capability is really a Contact-page feature
+ * wearing a general name.
  *
  * Every decision carries the sentence that justifies it, which goes into the
- * generation report so an operator can see why a site folded its questions away
- * and another did not.
- *
- * There is deliberately no rule for the per-service question rail. That rail is
- * a list of the questions a customer arrives with — `questions: string[]`, with
- * no answers behind them — so there is nothing to disclose, and folding it would
- * produce controls that open onto nothing. Semantics decide what is valid before
- * any client preference is consulted; if service narratives ever carry answers,
- * that is when the rule becomes possible.
+ * generation report so an operator can see why a site folded one run away and
+ * left another in the open.
  */
 
 export type DisclosureTreatment = "STATIC" | "PROGRESSIVE_DISCLOSURE";
@@ -29,47 +38,93 @@ export interface InteractionDecision<T extends string> {
   readonly reason: string;
 }
 
+/** A disclosure decision, kept alongside the opportunity that produced it. */
+export interface DisclosureDecision
+  extends InteractionDecision<DisclosureTreatment> {
+  readonly run: DetailRun;
+}
+
 /**
- * How long a run of collapsible items has to be before folding it away earns
- * its keep, per appetite. A disclosure trades one glance for one click, so a
- * short list is simply worse closed.
+ * How long a run has to be before folding it away earns its keep, per appetite.
+ * A disclosure trades one glance for one click, so a short run is simply worse
+ * closed however a reader uses it.
  */
 const disclosureThreshold = {
   WHEN_LONG: 3,
   PREFERRED: 2,
 } as const;
 
-function decideDisclosure(
-  label: string,
-  itemCount: number,
+/**
+ * How much prose an item needs to carry before hiding it is worth a click. A
+ * run of one-line answers is a table; folding a table produces a column of
+ * controls that each reveal a sentence, which is worse than the table.
+ */
+const disclosureBodyFloor = {
+  WHEN_LONG: 90,
+  PREFERRED: 40,
+} as const;
+
+/**
+ * Decides one run.
+ *
+ * Semantics first: a SEQUENCE or a BROWSE run is refused before the client's
+ * appetite is consulted at all, because no amount of client preference makes
+ * folding an ordered method or a comparison table into an improvement. Only
+ * once the content is known to be the kind a reader dips into does length,
+ * substance and appetite get a say.
+ */
+export function decideDisclosure(
+  run: DetailRun,
   interaction: ResolvedInteraction,
-): InteractionDecision<DisclosureTreatment> {
+): DisclosureDecision {
   const appetite = interaction.appetite.disclosure;
+
+  if (run.access === "SEQUENCE") {
+    return {
+      run,
+      treatment: "STATIC",
+      reason: `${run.label} stays visible: its items are an ordered sequence a reader follows through, and folding each step behind a control would cost a click per step to destroy the continuity that is the content.`,
+    };
+  }
+  if (run.access === "BROWSE") {
+    return {
+      run,
+      treatment: "STATIC",
+      reason: `${run.label} stays visible: a reader is comparing these against each other, which cannot be done one at a time.`,
+    };
+  }
+
   if (appetite === "ALWAYS_VISIBLE") {
     return {
+      run,
       treatment: "STATIC",
-      reason: `${label} stays visible: this client's interaction language keeps content in the open.`,
+      reason: `${run.label} stays visible: this client's interaction language keeps content in the open.`,
     };
   }
-  const threshold = disclosureThreshold[appetite];
-  if (itemCount < threshold) {
-    return {
-      treatment: "STATIC",
-      reason: `${label} stays visible: ${itemCount} item${itemCount === 1 ? "" : "s"} reads better in place than behind ${itemCount === 1 ? "a control" : "controls"} (this client folds at ${threshold}).`,
-    };
-  }
-  return {
-    treatment: "PROGRESSIVE_DISCLOSURE",
-    reason: `${label} folds away: ${itemCount} items are long enough that scanning beats reading, and this client's language permits disclosure.`,
-  };
-}
 
-/** Contact-page questions: the concrete gap A3 left behind. */
-export function decideContactFaqTreatment(input: {
-  readonly itemCount: number;
-  readonly interaction: ResolvedInteraction;
-}): InteractionDecision<DisclosureTreatment> {
-  return decideDisclosure("Contact questions", input.itemCount, input.interaction);
+  const threshold = disclosureThreshold[appetite];
+  if (run.itemCount < threshold) {
+    return {
+      run,
+      treatment: "STATIC",
+      reason: `${run.label} stays visible: ${run.itemCount} item${run.itemCount === 1 ? "" : "s"} reads better in place than behind ${run.itemCount === 1 ? "a control" : "controls"} (this client folds at ${threshold}).`,
+    };
+  }
+
+  const floor = disclosureBodyFloor[appetite];
+  if (run.medianBodyLength < floor) {
+    return {
+      run,
+      treatment: "STATIC",
+      reason: `${run.label} stays visible: its items carry about ${run.medianBodyLength} characters each, which is less than it costs a reader to open them.`,
+    };
+  }
+
+  return {
+    run,
+    treatment: "PROGRESSIVE_DISCLOSURE",
+    reason: `${run.label} folds away: ${run.itemCount} items of around ${run.medianBodyLength} characters each are a run a reader dips into rather than reads through, so scanning beats reading, and this client's language permits disclosure.`,
+  };
 }
 
 /**
@@ -135,18 +190,47 @@ export function decideProjectMediaTreatment(input: {
  * Everything the emitters need to know about this client's interaction, decided
  * once.
  *
- * Emission is conditional on this plan: a client whose language selects nothing
- * receives no helper source, no helper CSS and no client JavaScript, so a still
- * site pays nothing for the existence of the capability.
+ * Emission is conditional on this plan: a client whose language and content
+ * select nothing receives no helper source, no helper CSS and no client
+ * JavaScript, so a still site pays nothing for the existence of the capability.
  */
 export interface InteractionPlan {
-  readonly contactFaq: InteractionDecision<DisclosureTreatment>;
+  /** Every detail run the client's content offered, decided, in section order. */
+  readonly disclosures: readonly DisclosureDecision[];
   readonly projectMedia: InteractionDecision<MediaTreatment>;
   /** Photographs a project beat needs before the overlay is offered. */
   readonly projectMediaThreshold: number;
   readonly usesDisclosure: boolean;
   readonly usesMediaExplorer: boolean;
   readonly usesReveal: boolean;
+  /** Whether a composition's reveal opportunity of this role is taken. */
+  readonly reveals: (role: RevealRole) => boolean;
+  /** Whether this client buys this kind of optional pointer/focus feedback. */
+  readonly feedback: (role: FeedbackRole) => boolean;
+  /**
+   * Whether anything this client received actually animates.
+   *
+   * Read by the manifest. Disclosure and media exploration carry their own
+   * movement and are decided from content semantics, so a client can select no
+   * entrance and no pointer feedback and still be a site that animates. The
+   * artifact has to say so.
+   */
+  readonly animates: boolean;
+}
+
+/** The disclosure decision for one section type, if that run was offered. */
+export function disclosureFor(
+  plan: InteractionPlan,
+  sectionType: string,
+): DisclosureDecision | undefined {
+  return plan.disclosures.find(
+    (decision) => decision.run.sectionType === sectionType,
+  );
+}
+
+/** Whether the run from this section type folds. */
+export function foldsAway(plan: InteractionPlan, sectionType: string): boolean {
+  return disclosureFor(plan, sectionType)?.treatment === "PROGRESSIVE_DISCLOSURE";
 }
 
 export function planInteractions(input: {
@@ -157,18 +241,30 @@ export function planInteractions(input: {
    * dead source and a dead client chunk into the artifact.
    */
   readonly routeIds: readonly string[];
-  /** Questions the client's own FAQ section carries, 0 when it has none. */
-  readonly faqCount: number;
+  /** The client's validated profile sections, in their authored order. */
+  readonly sections: readonly { readonly type?: unknown }[];
 }): InteractionPlan {
   const { interaction } = input;
   const has = (routeId: string) => input.routeIds.includes(routeId);
 
-  const contactFaq = has("contact")
-    ? decideContactFaqTreatment({ itemCount: input.faqCount, interaction })
-    : ({
-        treatment: "STATIC",
-        reason: "This client has no contact route.",
-      } as const);
+  /*
+   * A run whose route does not exist is not an opportunity: folding a section
+   * nobody can navigate to would emit a helper and a client chunk for a page
+   * that is not in the artifact.
+   */
+  const routeForSection: Readonly<Record<string, string>> = {
+    FAQ: "contact",
+    POLICIES: "contact",
+    PROCESS: "about",
+    SERVICES: "services-index",
+  };
+  const disclosures = readDetailRuns(input.sections)
+    .filter((run) => {
+      const routeId = routeForSection[run.sectionType];
+      return routeId === undefined ? false : has(routeId);
+    })
+    .map((run) => decideDisclosure(run, interaction));
+
   /*
    * A capability decision rather than a count decision: how many photographs a
    * given project carries is only known at render time, so the emitted source
@@ -184,12 +280,23 @@ export function planInteractions(input: {
           reason: `Projects offer focused exploration alongside their visible media, for any project carrying ${threshold} photograph${threshold === 1 ? "" : "s"} or more.`,
         };
 
+  const usesDisclosure = disclosures.some(
+    (decision) => decision.treatment === "PROGRESSIVE_DISCLOSURE",
+  );
+  const usesMediaExplorer = projectMedia.treatment === "DIALOG_EXPLORER";
+
   return Object.freeze({
-    contactFaq,
+    disclosures: Object.freeze(disclosures),
     projectMedia,
     projectMediaThreshold: threshold ?? 0,
-    usesDisclosure: contactFaq.treatment === "PROGRESSIVE_DISCLOSURE",
-    usesMediaExplorer: projectMedia.treatment === "DIALOG_EXPLORER",
+    usesDisclosure,
+    usesMediaExplorer,
     usesReveal: interaction.reveals,
+    reveals: (role: RevealRole) =>
+      revealsRole(interaction.appetite.entrance, role),
+    feedback: (role: FeedbackRole) =>
+      feedsBack(interaction.appetite.pointerFeedback, role),
+    animates:
+      interaction.enabled || usesDisclosure || usesMediaExplorer,
   });
 }

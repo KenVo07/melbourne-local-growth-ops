@@ -1,4 +1,6 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import type { InteractionPlan } from "../../interaction-decisions.js";
+import { reveal, usesArrive } from "./reveal.js";
 import { quote } from "../content.js";
 
 /**
@@ -12,11 +14,19 @@ import { quote } from "../content.js";
  * rest of the page — the service register and the project preview — is shared,
  * because a home page that changes everything at once has no spine.
  */
-export function emitHomeRoute(design: ResolvedDesign): string {
+export function emitHomeRoute(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
   const { ns, brief } = design;
-  const arrive = design.interaction.reveals;
-  const open = arrive ? "<Arrive>" : "<>";
-  const close = arrive ? "</Arrive>" : "</>";
+  /*
+   * The register of services is why this page exists — it is the argument. The
+   * project preview substantiates it. A client who asked for only its key
+   * moments to arrive gets the first and not the second.
+   */
+  const register = reveal(plan, "ARGUMENT");
+  const preview = reveal(plan, "SUPPORTING");
+  const arrive = usesArrive(plan, ["ARGUMENT", "SUPPORTING"]);
   const imageLedOpening = brief.composition.home === "IMAGE_LED";
 
   return `import {
@@ -45,7 +55,7 @@ ${imageLedOpening ? "  const method = profile.sections.find((section) => section
     <RouteShell props={props}>
 ${imageLedOpening ? imageLed(design) : splitStatement(design)}
 
-      ${open}
+      ${register.open}
       <section
         aria-labelledby="${ns}-services-heading"
         className="${ns}-shell ${ns}-register"
@@ -82,9 +92,9 @@ ${imageLedOpening ? imageLed(design) : splitStatement(design)}
           ))}
         </ul>
       </section>
-      ${close}
+      ${register.close}
 
-      ${open}
+      ${preview.open}
       <section
         aria-labelledby="${ns}-work-heading"
         className="${ns}-shell ${ns}-preview"
@@ -130,7 +140,7 @@ ${imageLedOpening ? imageLed(design) : splitStatement(design)}
           </p>
         </div>
       </section>
-      ${close}
+      ${preview.close}
     </RouteShell>
   );
 }

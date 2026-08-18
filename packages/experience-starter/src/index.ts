@@ -33,10 +33,24 @@ export {
   type ResolvedInteraction,
 } from "./decisions.js";
 export {
-  decideContactFaqTreatment,
+  decideDisclosure,
+  disclosureFor,
+  foldsAway,
   decideProjectMediaTreatment,
+  planInteractions,
+  type DisclosureDecision,
   type DisclosureTreatment,
   type InteractionDecision,
+  type InteractionPlan,
   type MediaTreatment,
 } from "./interaction-decisions.js";
+export {
+  readDetailRuns,
+  revealsRole,
+  feedsBack,
+  type AccessPattern,
+  type DetailRun,
+  type FeedbackRole,
+  type RevealRole,
+} from "./semantic-opportunities.js";
 export { KNOWN_ROUTES } from "./emit/entrypoint.js";

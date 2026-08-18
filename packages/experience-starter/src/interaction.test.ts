@@ -4,18 +4,35 @@ import { validateStarterBrief, type StarterInteraction } from "./brief.js";
 import { resolveInteraction } from "./decisions.js";
 import { quietBrief, loudBrief } from "./fixtures.js";
 import {
-  decideContactFaqTreatment,
+  decideDisclosure,
   decideProjectMediaTreatment,
   planInteractions,
 } from "./interaction-decisions.js";
+import type { AccessPattern, DetailRun } from "./semantic-opportunities.js";
+
+/** A run of the given shape, so a rule can be tested without a whole client. */
+function run(
+  itemCount: number,
+  access: AccessPattern = "LOOKUP",
+  medianBodyLength = 160,
+): DetailRun {
+  return {
+    key: "questions",
+    sectionType: access === "SEQUENCE" ? "PROCESS" : "FAQ",
+    label: "Questions",
+    access,
+    itemCount,
+    medianBodyLength,
+  };
+}
 
 const language: StarterInteraction = {
   tempo: "MEASURED",
   attack: "EASED",
   travel: 0.5,
   overshoot: 0,
-  interactionDensity: 0.6,
-  revealDensity: 0.55,
+  pointerFeedback: "GENEROUS",
+  entrance: "EVERY_SECTION",
   disclosure: "WHEN_LONG",
   mediaExploration: "WHEN_PLURAL",
   reducedMotion: "INSTANT",
@@ -139,17 +156,17 @@ describe("interaction opportunity decisions", () => {
   it("never folds content away for a client that keeps content open", () => {
     const open = resolve({ disclosure: "ALWAYS_VISIBLE" });
     expect(
-      decideContactFaqTreatment({ itemCount: 9, interaction: open }).treatment,
+      decideDisclosure(run(9), open).treatment,
     ).toBe("STATIC");
   });
 
   it("leaves a short run of questions visible", () => {
     const resolved = resolve({ disclosure: "WHEN_LONG" });
     expect(
-      decideContactFaqTreatment({ itemCount: 2, interaction: resolved }).treatment,
+      decideDisclosure(run(2), resolved).treatment,
     ).toBe("STATIC");
     expect(
-      decideContactFaqTreatment({ itemCount: 3, interaction: resolved }).treatment,
+      decideDisclosure(run(3), resolved).treatment,
     ).toBe("PROGRESSIVE_DISCLOSURE");
   });
 
@@ -168,10 +185,10 @@ describe("interaction opportunity decisions", () => {
     const eager = resolve({ disclosure: "PREFERRED" });
     const reticent = resolve({ disclosure: "WHEN_LONG" });
     expect(
-      decideContactFaqTreatment({ itemCount: 2, interaction: eager }).treatment,
+      decideDisclosure(run(2), eager).treatment,
     ).toBe("PROGRESSIVE_DISCLOSURE");
     expect(
-      decideContactFaqTreatment({ itemCount: 2, interaction: reticent }).treatment,
+      decideDisclosure(run(2), reticent).treatment,
     ).toBe("STATIC");
   });
 
@@ -198,16 +215,48 @@ describe("interaction opportunity decisions", () => {
   it("explains every decision it makes", () => {
     const resolved = resolve({});
     for (const decision of [
-      decideContactFaqTreatment({ itemCount: 1, interaction: resolved }),
-      decideContactFaqTreatment({ itemCount: 8, interaction: resolved }),
+      decideDisclosure(run(1), resolved),
+      decideDisclosure(run(8), resolved),
       decideProjectMediaTreatment({ mediaCount: 4, interaction: resolved }),
     ]) {
       expect(decision.reason.length).toBeGreaterThan(20);
     }
   });
 
+  /*
+   * The finding this suite exists to answer: does the generator reason about
+   * how content is *used*, or has it simply learned the word FAQ? Three runs of
+   * identical structure, one of which must be refused.
+   */
+  it("refuses to fold an ordered sequence however long and however eager", () => {
+    const eager = resolve({ disclosure: "PREFERRED" });
+    expect(decideDisclosure(run(9, "SEQUENCE"), eager).treatment).toBe("STATIC");
+    expect(decideDisclosure(run(9, "SEQUENCE"), eager).reason).toMatch(
+      /ordered sequence/,
+    );
+    // Same client, same item count, same body length — only the access differs.
+    expect(decideDisclosure(run(9, "LOOKUP"), eager).treatment).toBe(
+      "PROGRESSIVE_DISCLOSURE",
+    );
+  });
+
+  it("refuses to fold a run a reader is comparing side by side", () => {
+    const eager = resolve({ disclosure: "PREFERRED" });
+    expect(decideDisclosure(run(9, "BROWSE"), eager).treatment).toBe("STATIC");
+  });
+
+  it("refuses to fold a run of one-line items, which is a table", () => {
+    const eager = resolve({ disclosure: "PREFERRED" });
+    expect(decideDisclosure(run(9, "LOOKUP", 12), eager).treatment).toBe(
+      "STATIC",
+    );
+    expect(decideDisclosure(run(9, "LOOKUP", 200), eager).treatment).toBe(
+      "PROGRESSIVE_DISCLOSURE",
+    );
+  });
+
   it("decides from content shape and language, never from the Profile", () => {
-    const source = decideContactFaqTreatment.toString();
+    const source = decideDisclosure.toString();
     expect(source).not.toMatch(/profile/i);
   });
 });

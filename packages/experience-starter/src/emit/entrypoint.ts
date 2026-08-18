@@ -127,7 +127,14 @@ export function emitManifest(
           plan.usesReveal || plan.usesDisclosure || plan.usesMediaExplorer
             ? "COMPONENT_SCOPED"
             : "NONE",
-        motion: design.interaction.enabled ? "NATIVE" : "NONE",
+        /*
+         * What this artifact actually does, not what one subset of its design
+         * inputs asked for. A client can select no entrance and no pointer
+         * feedback and still receive a folding question run or a media overlay,
+         * both of which animate; reading `interaction.enabled` here would have
+         * declared that site still.
+         */
+        motion: plan.animates ? "NATIVE" : "NONE",
         reducedMotion: "REQUIRED",
       },
     },

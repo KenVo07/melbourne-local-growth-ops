@@ -507,9 +507,11 @@ function sharedObserver(): IntersectionObserver | null {
 export function Reveal({
   children,
   className,
+  as,
 }: {
   readonly children: ReactNode;
   readonly className?: string | undefined;
+  readonly as?: "media" | undefined;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -547,7 +549,7 @@ export function Reveal({
   }, []);
 
   return (
-    <div className={className} ref={ref}>
+    <div className={className} data-reveal-as={as} ref={ref}>
       {children}
     </div>
   );

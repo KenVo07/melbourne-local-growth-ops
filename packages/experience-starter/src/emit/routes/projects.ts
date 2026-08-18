@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import { reveal, usesArrive } from "./reveal.js";
 import type { InteractionPlan } from "../../interaction-decisions.js";
 
 /**
@@ -15,9 +16,9 @@ export function emitProjectsRoutes(
   plan: InteractionPlan,
 ): string {
   const { ns, brief } = design;
-  const arrive = design.interaction.reveals;
-  const open = arrive ? "<Arrive>" : "<>";
-  const close = arrive ? "</Arrive>" : "</>";
+  /* The record of built work is this page's argument. */
+  const record = reveal(plan, "ARGUMENT");
+  const arrive = usesArrive(plan, ["ARGUMENT", "MEDIA"]);
 
   return `import {
   relatedProjects,
@@ -50,9 +51,9 @@ export function ProjectsIndexRoute(props: ClientExperienceRouteProps) {
         title={COPY.homeProjectsHeading}
       />
 
-      ${open}
+      ${record.open}
 ${brief.composition.projectsIndex === "STAGGERED_INDEX" ? staggeredIndex(design) : editorialRecords(design)}
-      ${close}
+      ${record.close}
 
       <NextStep
         body={COPY.nextStepBody}
@@ -325,6 +326,7 @@ function onwardNav(design: ResolvedDesign): string {
 
 function documentRecord(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, breakpoints } = design;
+  const beatMedia = reveal(plan, "MEDIA");
   return `      <div className="${ns}-shell">
         <div className="${ns}-hero-record">
           ${explorable(
@@ -358,6 +360,7 @@ ${factsAndOnward(design)}
               <h2 className="${ns}-item-title">{block.heading}</h2>
               <p className="${ns}-beat-body">{block.body}</p>
               {block.media.length === 0 ? null : (
+                ${beatMedia.open}
                 <div className="${ns}-beat-media">
                   {block.media.map((reference) => (
                     ${explorable(
@@ -377,6 +380,7 @@ ${factsAndOnward(design)}
                     )}
                   ))}
                 </div>
+                ${beatMedia.close}
               )}
             </div>
           </section>
@@ -388,6 +392,7 @@ ${onwardNav(design)}
 
 function staggeredBeats(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, breakpoints } = design;
+  const beatMedia = reveal(plan, "MEDIA");
   return `      <div className="${ns}-shell">
         <div className="${ns}-hero-record">
           ${explorable(
@@ -429,6 +434,7 @@ function staggeredBeats(design: ResolvedDesign, plan: InteractionPlan): string {
                 ) : null}
               </div>
               {illustrated ? (
+                ${beatMedia.open}
                 <div className="${ns}-beat-media">
                   {block.media.map((reference) => (
                     ${explorable(
@@ -448,6 +454,7 @@ function staggeredBeats(design: ResolvedDesign, plan: InteractionPlan): string {
                     )}
                   ))}
                 </div>
+                ${beatMedia.close}
               ) : (
                 <div className="${ns}-beat-aside">
                   <p className="${ns}-beat-body">{block.body}</p>

@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../decisions.js";
+import type { InteractionPlan } from "../interaction-decisions.js";
 import { titleCase } from "./content.js";
 
 /**
@@ -9,26 +10,37 @@ import { titleCase } from "./content.js";
  * they carry this client's class names, and an operator is free to rewrite or
  * delete any of them without the Factory having an opinion.
  */
-export function emitPieces(design: ResolvedDesign): string {
-  const { ns, interaction } = design;
-  const revealImport = interaction.reveals
+export function emitPieces(design: ResolvedDesign, plan: InteractionPlan): string {
+  const { ns } = design;
+  const revealImport = plan.usesReveal
       ? `\nimport { Reveal } from "./Reveal";`
       : "";
-  const revealExport = interaction.reveals
+  const revealExport = plan.usesReveal
       ? `
 /**
- * A section that arrives rather than simply being there. Wrapping is opt-in per
- * placement, so a route that wants none pays nothing: the helper is only in the
- * bundle if a route imports it.
+ * A composition that arrives rather than simply being there. Wrapping is opt-in
+ * per placement, so a route that wants none pays nothing: the helper is only in
+ * the bundle if a route imports it.
+ *
+ * \`as\` names what is arriving, not how it should move. Prose lifts the short
+ * distance a reader's eye was travelling anyway; a photograph is already where
+ * it belongs, so it resolves where it stands instead of sliding in. The
+ * stylesheet holds both readings; this only says which one applies.
  */
 export function Arrive({
   children,
   className,
+  as,
 }: {
   readonly children: ReactNode;
   readonly className?: string | undefined;
+  readonly as?: "media" | undefined;
 }) {
-  return <Reveal className={className}>{children}</Reveal>;
+  return (
+    <Reveal as={as} className={className}>
+      {children}
+    </Reveal>
+  );
 }
 `
       : "";

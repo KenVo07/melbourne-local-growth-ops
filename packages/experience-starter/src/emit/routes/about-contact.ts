@@ -1,5 +1,6 @@
 import type { ResolvedDesign } from "../../decisions.js";
-import type { InteractionPlan } from "../../interaction-decisions.js";
+import { reveal, usesArrive } from "./reveal.js";
+import { foldsAway, type InteractionPlan } from "../../interaction-decisions.js";
 import { quote } from "../content.js";
 
 /**
@@ -17,9 +18,15 @@ export function emitAboutContactRoutes(
   plan: InteractionPlan,
 ): string {
   const { ns, brief } = design;
-  const arrive = design.interaction.reveals;
-  const open = arrive ? "<Arrive>" : "<>";
-  const close = arrive ? "</Arrive>" : "</>";
+  /*
+   * Neither of these carries a page's argument: the claims band substantiates
+   * the story told above it, and the question run substantiates the contact
+   * panel. Both are supporting material, and a client that reveals only its key
+   * moments leaves both of them still.
+   */
+  const claims = reveal(plan, "SUPPORTING");
+  const questions = reveal(plan, "SUPPORTING");
+  const arrive = usesArrive(plan, ["SUPPORTING"]);
   const methodLed = brief.composition.about === "METHOD_LED";
 
   return `import {
@@ -28,7 +35,7 @@ export function emitAboutContactRoutes(
   type ClientExperienceRouteProps,
 } from "@proportion/client-experience";
 
-${plan.contactFaq.treatment === "PROGRESSIVE_DISCLOSURE" ? 'import { Detail } from "../components/Disclosure";\n' : ""}import { RouteShell, Shell } from "../components/Shell";
+${plan.usesDisclosure ? 'import { Detail } from "../components/Disclosure";\n' : ""}import { RouteShell, Shell } from "../components/Shell";
 import {
 ${arrive ? "  Arrive,\n" : ""}  Label,
   NextStep,
@@ -64,7 +71,7 @@ export function AboutRoute(props: ClientExperienceRouteProps) {
 
 ${methodLed ? methodLedAbout(design) : proseWithPortrait(design)}
 
-      ${open}
+      ${claims.open}
       {trust?.type !== "TRUST_SIGNALS" ? null : (
         <section
           aria-labelledby="${ns}-claims-heading"
@@ -97,7 +104,7 @@ ${methodLed ? methodLedAbout(design) : proseWithPortrait(design)}
           </div>
         </section>
       )}
-      ${close}
+      ${claims.close}
 
       <NextStep
         body={COPY.nextStepBody}
@@ -131,6 +138,7 @@ export function ContactRoute(props: ClientExperienceRouteProps) {
     section.type === "ACTIONS" ? section.actions : [],
   );
   const faq = sections.find((section) => section.type === "FAQ");
+  const policies = sections.find((section) => section.type === "POLICIES");
 
   return (
     <RouteShell props={props}>
@@ -142,7 +150,7 @@ export function ContactRoute(props: ClientExperienceRouteProps) {
 
 ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panelSplit(design)}
 
-      ${open}
+      ${questions.open}
       {faq?.type !== "FAQ" ? null : (
         <section
           aria-labelledby="${ns}-faq-heading"
@@ -161,21 +169,40 @@ ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panel
           ${faqBody(design, plan)}
         </section>
       )}
-      ${close}
+
+      {policies?.type !== "POLICIES" ? null : (
+        <section
+          aria-labelledby="${ns}-policies-heading"
+          className="${ns}-shell ${ns}-faq-band"
+        >
+          <div className="${ns}-sticky">
+            <Label>{COPY.policiesEyebrow}</Label>
+            <h2
+              className="${ns}-section-title"
+              id="${ns}-policies-heading"
+              style={{ marginTop: "var(--stack-tight)" }}
+            >
+              {policies.heading}
+            </h2>
+          </div>
+          ${policiesBody(design, plan)}
+        </section>
+      )}
+      ${questions.close}
     </RouteShell>
   );
 }
 
 ${
-  plan.contactFaq.treatment === "PROGRESSIVE_DISCLOSURE"
+  plan.usesDisclosure
     ? `/**
- * A stable anchor for one question, derived from its text so a link to a
- * specific answer survives the questions being reordered.
+ * A stable anchor for one folded item, derived from its own title so a link to
+ * a specific answer or term survives the run being reordered.
  */
-function questionId(question: string): string {
+function detailId(title: string): string {
   return (
     "${ns}-q-" +
-    question
+    title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
@@ -397,25 +424,68 @@ function stackedDirect(design: ResolvedDesign): string {
  * JavaScript and for a crawler, and a link to a specific question opens it.
  */
 function faqBody(design: ResolvedDesign, plan: InteractionPlan): string {
+  return detailRunBody(design, {
+    folds: foldsAway(plan, "FAQ"),
+    source: "faq",
+    title: "question",
+    body: "answer",
+  });
+}
+
+/**
+ * A contractor's terms — warranty, insurance, cancellation, payment. Read the
+ * same way questions are: a customer arrives holding the one that applies to
+ * them, so the run folds under exactly the same rule and for exactly the same
+ * reason. Nothing here names POLICIES as a foldable thing; `decideDisclosure`
+ * decided that from the shape of the content, and this emitter only asks what
+ * it decided.
+ */
+function policiesBody(design: ResolvedDesign, plan: InteractionPlan): string {
+  return detailRunBody(design, {
+    folds: foldsAway(plan, "POLICIES"),
+    source: "policies",
+    title: "title",
+    body: "body",
+  });
+}
+
+/**
+ * One run of titled detail, in whichever of the two treatments was decided.
+ *
+ * Both treatments put every title and every body in the page: the folded one is
+ * a native `<details>`, so the content is present for a reader without
+ * JavaScript and for a crawler, and a link to a specific item opens it. That
+ * equivalence is why the choice between them can be left to a judgement about
+ * reading rather than being an accessibility question.
+ */
+function detailRunBody(
+  design: ResolvedDesign,
+  run: {
+    readonly folds: boolean;
+    readonly source: string;
+    readonly title: string;
+    readonly body: string;
+  },
+): string {
   const { ns } = design;
-  if (plan.contactFaq.treatment !== "PROGRESSIVE_DISCLOSURE") {
+  if (!run.folds) {
     return `<dl className="${ns}-faq">
-            {faq.items.map((item) => (
-              <div key={item.question}>
-                <dt>{item.question}</dt>
-                <dd>{item.answer}</dd>
+            {${run.source}.items.map((item) => (
+              <div key={item.${run.title}}>
+                <dt>{item.${run.title}}</dt>
+                <dd>{item.${run.body}}</dd>
               </div>
             ))}
           </dl>`;
   }
   return `<div className="${ns}-faq ${ns}-faq-folded">
-            {faq.items.map((item) => (
+            {${run.source}.items.map((item) => (
               <Detail
-                id={questionId(item.question)}
-                key={item.question}
-                summary={item.question}
+                id={detailId(item.${run.title})}
+                key={item.${run.title}}
+                summary={item.${run.title}}
               >
-                <p>{item.answer}</p>
+                <p>{item.${run.body}}</p>
               </Detail>
             ))}
           </div>`;

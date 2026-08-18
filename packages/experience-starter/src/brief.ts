@@ -195,14 +195,35 @@ export const StarterInteractionSchema = z.strictObject({
    * are applied only to entering and state movement, never to exits.
    */
   overshoot: z.number().min(0).max(1),
-  /** How much of the site responds to a pointer or to focus. */
-  interactionDensity: z.number().min(0).max(1),
   /**
-   * How much of a page arrives rather than simply being present. Low values
-   * reveal only the compositions that carry a page's argument, which is what
-   * keeps a site from reading as generic fade-up on every section.
+   * How much *optional* expressive feedback the site gives a pointer or the
+   * keyboard.
+   *
+   * This is a genuine three-way choice, not a dial with two ends: each value
+   * selects a different set of the interactive opportunities a page actually
+   * carries. NONE responds only where a response is information — a control
+   * that is doing something. ESSENTIAL adds the things that navigate, so a row
+   * that is a link says so under the pointer. GENEROUS adds the optional
+   * surface feedback on top of that: photographs that can be opened, secondary
+   * links, plate settling.
+   *
+   * It never governs accessibility. Focus rings, disabled states and every
+   * other piece of feedback a reader *needs* in order to operate the page are
+   * emitted at every value including NONE, because they are usability rather
+   * than expression.
    */
-  revealDensity: z.number().min(0).max(1),
+  pointerFeedback: z.enum(["NONE", "ESSENTIAL", "GENEROUS"]),
+  /**
+   * How much of a page arrives rather than simply being present.
+   *
+   * KEY_MOMENTS reveals only the compositions that carry a page's argument,
+   * which is what keeps a site from reading as generic fade-up on every
+   * section; EVERY_SECTION reveals the supporting material too. Each value
+   * selects a different set of the reveal opportunities the composition
+   * declares, so the count of things that move genuinely differs between them
+   * rather than the choice collapsing into on/off.
+   */
+  entrance: z.enum(["NONE", "KEY_MOMENTS", "EVERY_SECTION"]),
   /**
    * Appetite for folding secondary detail away in place. ALWAYS_VISIBLE never
    * collapses content; WHEN_LONG collapses only where the run of content is
@@ -274,6 +295,12 @@ export const StarterCopySchema = z.strictObject({
   contactChecklist: z.array(shortText).min(1).max(6),
   channelsEyebrow: shortText,
   faqEyebrow: shortText,
+  /*
+   * Only rendered by a client whose profile carries a POLICIES section, so it
+   * carries a default rather than forcing every brief to answer for a section
+   * most clients do not have.
+   */
+  policiesEyebrow: shortText.default("Terms"),
   nextStepEyebrow: shortText,
   nextStepHeading: shortText,
   nextStepBody: longText,

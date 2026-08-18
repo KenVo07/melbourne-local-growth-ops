@@ -1,4 +1,6 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import type { InteractionPlan } from "../../interaction-decisions.js";
+import { reveal, usesArrive } from "./reveal.js";
 
 /**
  * Emits the services index and the service detail routes.
@@ -10,11 +12,17 @@ import type { ResolvedDesign } from "../../decisions.js";
  * before the practical detail resumes. Which pair is written is a design
  * decision; both are ordinary source once written.
  */
-export function emitServicesRoutes(design: ResolvedDesign): string {
+export function emitServicesRoutes(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
   const { ns, brief } = design;
-  const arrive = design.interaction.reveals;
-  const open = arrive ? "<Arrive>" : "<>";
-  const close = arrive ? "</Arrive>" : "</>";
+  /*
+   * The register of services is the whole of this page's argument, so it is the
+   * one thing that arrives even for a client that reveals only key moments.
+   */
+  const register = reveal(plan, "ARGUMENT");
+  const arrive = usesArrive(plan, ["ARGUMENT"]);
   /*
    * Only the bindings the chosen grammar actually reads. The artifact compiles
    * with noUnusedLocals, so an unread destructure would fail the client's own
@@ -59,9 +67,9 @@ export function ServicesIndexRoute(props: ClientExperienceRouteProps) {
         title={COPY.homeServicesHeading}
       />
 
-      ${open}
+      ${register.open}
 ${brief.composition.servicesIndex === "STAGGERED_COLUMNS" ? staggeredColumns(design) : alternatingRows(design)}
-      ${close}
+      ${register.close}
 
       <NextStep
         body={COPY.nextStepBody}

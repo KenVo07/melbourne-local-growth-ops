@@ -98,6 +98,7 @@ const copy = {
   checklistEyebrow: "Checklist",
   contactChecklist: ["One.", "Two."],
   channelsEyebrow: "Channels",
+  policiesEyebrow: "Terms",
   faqEyebrow: "FAQ",
   nextStepEyebrow: "Next step",
   nextStepHeading: "Next step heading.",

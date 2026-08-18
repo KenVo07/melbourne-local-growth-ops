@@ -34,10 +34,9 @@ export function emitStylesheet(
   design: ResolvedDesign,
   plan: InteractionPlan,
 ): string {
-  const { interaction } = design;
   const sections = [
     header(design),
-    root(design),
+    root(design, plan),
     reset(design),
     primitives(design),
     actions(design),
@@ -54,7 +53,7 @@ export function emitStylesheet(
     contactGrammar(design),
     notFound(design),
     platformModules(design),
-    interaction.enabled ? motion(design) : "",
+    plan.animates ? motion(design, plan) : "",
     plan.usesDisclosure ? disclosureStyles(design) : "",
     plan.usesMediaExplorer ? overlayStyles(design) : "",
     responsive(design),
@@ -85,7 +84,7 @@ function header(design: ResolvedDesign): string {
 `;
 }
 
-function root(design: ResolvedDesign): string {
+function root(design: ResolvedDesign, plan: InteractionPlan): string {
   const { ns, type, space, colour, media } = design;
   return `
 .${ns} {
@@ -127,7 +126,7 @@ function root(design: ResolvedDesign): string {
   --text: ${type.textStack};
 
   --media-radius: ${media.radius};
-${interactionVariables(design)}
+${plan.animates ? interactionVariables(design) : ""}
 
   background: var(--paper);
   color: var(--ink);
@@ -1780,22 +1779,19 @@ function platformModules(design: ResolvedDesign): string {
 `;
 }
 
-function motion(design: ResolvedDesign): string {
-  const { ns, interaction } = design;
-  const micro = `
+function motion(design: ResolvedDesign, plan: InteractionPlan): string {
+  const { ns } = design;
+  const header = `
 /* ---------------------------------------------------------------- motion */
+`;
 
-/*
- * Baseline P1 motion only: short, functional feedback on things that respond to
- * a pointer or the keyboard. No library, no scroll spectacle, no per-frame
- * state. Every transition reads from --motion-duration, so the reduced-motion
- * block at the end of this file changes one value rather than fighting rules.
- */
-.${ns}-plate img {
-  transition: opacity var(--motion-duration) var(--motion-ease),
-    transform calc(var(--motion-duration) * 2) var(--motion-ease);
-}
-
+  /*
+   * Feedback on something that navigates. A reader uses this to tell what is
+   * clickable, so it is the first expressive feedback a site buys and the last
+   * it gives up. Bought at ESSENTIAL and above.
+   */
+  const navigationFeedback = plan.feedback("NAVIGATION")
+    ? `
 .${ns} a:hover .${ns}-item-title,
 .${ns} a:hover .${ns}-record-title {
   color: var(--accent);
@@ -1812,23 +1808,58 @@ function motion(design: ResolvedDesign): string {
     transform: translateY(calc(var(--motion-hover-travel) * -2));
   }
 }
-`;
-  if (!interaction.reveals) return micro;
-  return `${micro}
-/*
- * Restrained entrance. An element declares itself revealable; the Reveal helper
- * marks it visible once, on first intersection, then disconnects. There is no
- * scroll listener, no animation frame loop and no React state per frame.
- *
- * The un-revealed state is deliberately *visible* until the helper hydrates and
- * claims it. A reader with JavaScript disabled, or one who arrives before
- * hydration, sees the finished page rather than a blank one.
- */
+`
+    : "";
+
+  /*
+   * Feedback on a surface that is not itself a destination. Pure character: a
+   * site is complete without it, which is precisely why it is the part a client
+   * whose language is ESSENTIAL does not receive.
+   */
+  const surfaceFeedback = plan.feedback("SURFACE")
+    ? `
+.${ns}-plate img {
+  transition: opacity var(--motion-duration) var(--motion-ease),
+    transform calc(var(--motion-duration) * 2) var(--motion-ease);
+}
+`
+    : "";
+
+  if (!plan.usesReveal) {
+    return `${header}${navigationFeedback}${surfaceFeedback}`;
+  }
+
+  /*
+   * Restrained entrance. An element declares itself revealable; the Reveal
+   * helper marks it visible once, on first intersection, then disconnects.
+   * There is no scroll listener, no animation frame loop and no React state per
+   * frame.
+   *
+   * The un-revealed state is deliberately *visible* until the helper hydrates
+   * and claims it. A reader with JavaScript disabled, or one who arrives before
+   * hydration, sees the finished page rather than a blank one.
+   *
+   * Two grammars, not one, and not a library of them. Prose is set in place by
+   * the reader's eye travelling down the page, so it lifts the short distance
+   * it would have travelled and settles. A photograph is already where it
+   * belongs — sliding it says the layout is still deciding — so it resolves
+   * where it stands, on the same duration and the same curve. Same Motion
+   * Language, two readings of it, chosen by what the element *is*.
+   */
+  const media = plan.reveals("MEDIA")
+    ? `
+[data-reveal="pending"][data-reveal-as="media"] {
+  transform: scale(calc(1 - var(--motion-overlay-scale)));
+}
+`
+    : "";
+
+  return `${header}${navigationFeedback}${surfaceFeedback}
 [data-reveal="pending"] {
   opacity: var(--motion-reveal-floor);
   transform: translateY(var(--motion-travel));
 }
-
+${media}
 [data-reveal] {
   transition: opacity var(--motion-reveal) var(--motion-ease),
     transform var(--motion-reveal) var(--motion-ease);
@@ -2071,6 +2102,12 @@ function reducedMotion(
   plan: InteractionPlan,
 ): string {
   const { ns, interaction } = design;
+  /*
+   * A site that animates nothing needs no reduction of it. Emitting the block
+   * anyway would put a media query full of overrides for transitions this
+   * artifact does not contain into every still client's stylesheet.
+   */
+  if (!plan.animates) return "";
   const revealReset = interaction.reveals
       ? `
   /*

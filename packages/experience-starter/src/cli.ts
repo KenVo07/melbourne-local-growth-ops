@@ -46,12 +46,23 @@ process.stdout.write(
       /*
        * Why this client got the interactions it got. An operator reading the
        * report can see that the questions folded because there were five of
-       * them and the brief permits folding — not because the Factory has an
-       * opinion about FAQs.
+       * them, each carrying real prose, and the brief permits folding — and can
+       * see in the same list why the method beside them did not, which is the
+       * part that proves the Factory has no opinion about FAQs.
        */
       interaction: {
         language: generated.design.interaction.source,
-        contactFaq: generated.interactions.contactFaq,
+        entrance: generated.design.interaction.appetite.entrance,
+        pointerFeedback: generated.design.interaction.appetite.pointerFeedback,
+        animates: generated.interactions.animates,
+        disclosures: generated.interactions.disclosures.map((decision) => ({
+          section: decision.run.sectionType,
+          access: decision.run.access,
+          items: decision.run.itemCount,
+          medianBodyLength: decision.run.medianBodyLength,
+          treatment: decision.treatment,
+          reason: decision.reason,
+        })),
         projectMedia: generated.interactions.projectMedia,
       },
       files: generated.files.map(({ path, lines, sha256 }) => ({

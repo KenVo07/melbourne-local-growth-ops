@@ -136,14 +136,12 @@ export interface ResolvedInteraction {
   };
   /** The opacity a pending reveal starts from. */
   readonly revealFloor: number;
-  readonly density: {
-    readonly interaction: number;
-    readonly reveal: number;
-  };
   /** Rules the interaction-opportunity decisions read. */
   readonly appetite: {
     readonly disclosure: StarterInteraction["disclosure"];
     readonly mediaExploration: StarterInteraction["mediaExploration"];
+    readonly pointerFeedback: StarterInteraction["pointerFeedback"];
+    readonly entrance: StarterInteraction["entrance"];
   };
   readonly reduced: {
     readonly duration: number;
@@ -248,8 +246,8 @@ const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
     attack: "EASED",
     travel: 0,
     overshoot: 0,
-    interactionDensity: 0,
-    revealDensity: 0,
+    pointerFeedback: "NONE",
+    entrance: "NONE",
     disclosure: "ALWAYS_VISIBLE",
     mediaExploration: "EDITORIAL_ONLY",
     reducedMotion: "INSTANT",
@@ -259,8 +257,8 @@ const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
     attack: "EASED",
     travel: 0.3,
     overshoot: 0,
-    interactionDensity: 0.55,
-    revealDensity: 0,
+    pointerFeedback: "GENEROUS",
+    entrance: "NONE",
     disclosure: "ALWAYS_VISIBLE",
     mediaExploration: "EDITORIAL_ONLY",
     reducedMotion: "INSTANT",
@@ -270,8 +268,8 @@ const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
     attack: "EASED",
     travel: 0.5,
     overshoot: 0,
-    interactionDensity: 0.6,
-    revealDensity: 0.55,
+    pointerFeedback: "GENEROUS",
+    entrance: "EVERY_SECTION",
     /*
      * A legacy brief asked for entrance motion, not for its questions to be
      * folded away or its photographs to open. Regenerating an approved client
@@ -363,13 +361,11 @@ export function resolveInteraction(brief: StarterBrief): ResolvedInteraction {
      * honest entrance available to a client that does not want movement.
      */
     revealFloor: round(Math.max(0, 0.45 - language.travel * 0.9), 3),
-    density: Object.freeze({
-      interaction: round(language.interactionDensity, 3),
-      reveal: round(language.revealDensity, 3),
-    }),
     appetite: Object.freeze({
       disclosure: language.disclosure,
       mediaExploration: language.mediaExploration,
+      pointerFeedback: language.pointerFeedback,
+      entrance: language.entrance,
     }),
     reduced: Object.freeze({
       duration: language.reducedMotion === "BRIEF_FADE" ? 90 : 1,
@@ -378,8 +374,16 @@ export function resolveInteraction(brief: StarterBrief): ResolvedInteraction {
       travel: "0rem",
       fade: language.reducedMotion === "BRIEF_FADE",
     }),
-    enabled: language.interactionDensity > 0 || language.revealDensity > 0,
-    reveals: language.revealDensity > 0,
+    /*
+     * Whether *this client's design inputs* ask for movement. It is deliberately
+     * not the whole answer to "does this site animate": disclosure and media
+     * exploration are decided from content semantics further down and carry
+     * their own movement. `emitManifest` reads the plan, not this flag, so the
+     * artifact never reports a still site that in fact animates.
+     */
+    enabled:
+      language.pointerFeedback !== "NONE" || language.entrance !== "NONE",
+    reveals: language.entrance !== "NONE",
   });
 }
 
