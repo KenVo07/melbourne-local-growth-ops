@@ -124,7 +124,7 @@ Prior STONE & LINE A3 evidence lives outside the repo at
 pair. **Read both before designing the Creative Gate**, so WEB-01D formalises the
 existing practice instead of inventing a competing one.
 
-## Phase 1 — Claude Design / Claude Code integration research — PARTIAL
+## Phase 1 — Claude Design / Claude Code integration research — COMPLETE
 
 ### 1a. First-party local integration surface — VERIFIED DIRECTLY
 
@@ -190,22 +190,96 @@ This is a decision, not a preference: WEB-01D will treat the Claude Design surfa
 as a **bounded, resumable, plan-gated export** of an already-complete repository
 artefact — never as an inbound production path.
 
-### 1c. Still outstanding for Phase 1
+### 1c. Official-source verification — COMPLETE (checked 2026-08-19)
 
-- Verification against official Anthropic web sources (claude.com Claude Design
-  product page, the "stays on brand" post, Help Center "Get started with Claude
-  Design", the Labs launch announcement) to date-stamp beta status and confirm
-  nothing above has changed publicly. `WebSearch`/`WebFetch` are loaded and ready.
-- Live authentication probe (`DesignSync list_projects`) to determine whether the
-  optional bounded real proof is available or whether a one-time human
-  `/design-login` step must be recorded instead. **Not yet attempted.**
+Verified against Anthropic/Claude primary sources, not the dated handoff snapshot:
+
+- **Beta status confirmed.** "Claude Design is now available in beta to Pro, Max,
+  Team, and Enterprise plans"; reachable at `claude.ai/design` or the Claude
+  Desktop sidebar; **default off for Enterprise plans**. Beta + default-off is by
+  itself sufficient reason to keep it optional in Proportion's architecture.
+- **`/design-login`** authenticates the Claude Design **MCP server** for
+  terminal-based access. Endpoint: `https://api.anthropic.com/v1/design/mcp`.
+- **`/design-sync`** from Claude Code syncs a design system in, "so everything you
+  build in Claude Design starts from your existing components."
+- **Large repositories:** "Consider linking very large repositories from Claude
+  Code to avoid lag or browser issues. To sync a design system, use `/design-sync`
+  from Claude Code." — this repository is a pnpm monorepo and is exactly that case,
+  so the operator pack must specify sync-from-Claude-Code, never wholesale upload.
+- **Design → Code handoff exists** and is explicitly *not* screenshot-based: "When
+  a design is ready to become software, you can hand it off to Claude Code, which
+  continues from your existing work instead of starting over from a screenshot."
+  Export surface includes "Send to local coding agent" and "Send to Claude Code Web".
+- **Export formats:** .zip, PDF, PPTX, standalone HTML, Canva, Adobe, Gamma, Vercel,
+  plus direct Claude Code handoff.
+- Design systems may be sourced from a GitHub repo, linked/uploaded codebases,
+  design files, prototypes/screenshots, or even slide decks; a Claude Design Admin
+  role on Team/Enterprise can approve and lock a standard system.
+
+**Refinement of 1b, stated precisely.** The product *does* have a Design → Code
+direction; the earlier note should not be read as denying it. The accurate
+statement is narrower and is the one WEB-01D relies on: the Design → Code handoff
+carries **design context into an agent that then writes repository source**. It
+never makes the canvas the production artefact. So production authority stays with
+repository source, Factory contracts, tests and the standalone artifact exactly as
+`02_LOCKED_BOUNDARIES.md` requires — and Requirement G's whole purpose is to make
+that handoff carry *intent* rather than pixels.
+
+### 1d. Authentication probe — COMPLETE: AUTH AVAILABLE
+
+`DesignSync list_projects` executed successfully and returned `{"projects":[]}`.
+
+- The call **did not fail on authorization**, so design scopes are granted on this
+  session's claude.ai login. **No human `/design-login` step is required.**
+- The account currently has **no writable design-system projects**, so a live proof
+  requires `create_project` first.
+
+Consequence: `WEB01D_BLOCKED_BY_EXTERNAL_AUTH` is **not** applicable. The optional
+bounded real proof contemplated by `07_ACCEPTANCE_MODEL.md` is available, and the
+handoff explicitly authorises it ("If Claude Design authentication is already
+available, use a bounded real proof").
+
+**Data-use posture for the live proof — decided, and deliberately conservative.**
+Only synthetic fixture material will leave the machine. `northline` is verified
+fictional by its own contract: "The business, its projects, its people and its
+results are fictional… No review, rating, licence, certification, award or
+measured outcome is stated anywhere." No real client data, no production client
+content, and no Proportion business facts will be pushed to the beta service. This
+keeps Requirement I's provider/data-use rule satisfied without needing a founder
+decision.
+
+### 1e. The creative practice that already exists — FORMALISE, DO NOT REINVENT
+
+`tests/fixtures/web01b/northline/acceptance/` already contains a mature worked
+example of exactly what WEB-01D is asked to systematise:
+
+`creative-contract.md` supplies, in prose: business and customer outcome (ranked
+decision needs), a named **creative thesis** ("Drawn to code"), perception target,
+anti-target (framed as "a failure, not a matter of taste"), numbered visual
+principles, imagery philosophy, motion character with explicit duration band,
+a **Signature concept** ("the Conductor") carrying *why this and not a generic
+reveal*, implementation intent, mobile translation, reduced-motion design, targeted
+reference capabilities, an explicit non-copying rule naming the studios used only
+to calibrate, and a truthfulness declaration.
+
+`creative-gate-decision.md` supplies the gate half: dated decision **PASS WITH
+NAMED FIXES** against a named candidate commit and named evidence set; seven fixes
+stated as "acceptance conditions, not suggestions"; scope limits ("authorises
+scaling only"); and the freeze rule — "Any change to thesis, palette, typographic
+roles, composition grammar or Signature intent during scaling requires returning
+to this gate."
+
+→ The WEB-01D Creative Intent / Territory / Signature Slice / Creative Gate assets
+must be the **generalised, client-agnostic, machine-checkable form of this**, and
+must be able to round-trip the northline pair as their worked example. Designing a
+competing vocabulary would strand the one real precedent the repository has.
 
 ## Phase status
 
 | Phase | Status |
 |---|---|
 | 0 — Source lock and system reconstruction | COMPLETE |
-| 1 — Current primary-source Claude Design research | PARTIAL — local surface verified; web + auth probe outstanding |
+| 1 — Current primary-source Claude Design research | COMPLETE — local surface, official sources, auth probe all verified |
 | 2 — Architecture + red team | NOT STARTED |
 | 3 — Durable contracts/templates/validators | NOT STARTED |
 | 4 — Claude Design operator pack | NOT STARTED |
