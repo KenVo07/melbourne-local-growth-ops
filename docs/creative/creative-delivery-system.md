@@ -131,12 +131,36 @@ repositories rather than wholesale upload; and a finished design hands off to
 Claude Code so it "continues from your existing work instead of starting over from
 a screenshot."
 
+**Integration mode is a property of the repository, not a preference.** Live
+operation on 2026-08-19 established that `/design-sync` is a *component library*
+converter — it builds a repository's compiled `dist/` into a bundle the design
+agent renders real components from, and refuses a reimplementation by its own
+stated principle. This repository exposes no such library: every workspace package
+is pure TypeScript with no `.tsx` at all, there is no Storybook, and the Platform
+primitives are produced by `createPlatform(renderRegion)` inside `apps/managed-web`
+and injected as a `platform` prop, so they cannot render standalone. The operator
+pack therefore defines three modes, and names the check that decides between them:
+
+| Mode | Condition | Route |
+|---|---|---|
+| **A** — design system sync | a compatible design system exists | `/design-sync` → Claude Design |
+| **B** — curated creative context | generated / client-local architecture | curated package → Claude Design web |
+| **C** — code canvas | bounded canvas, edit, export | Claude Code `/design` preview |
+
+Proportion's generated architecture is **Mode B**, and that is a correct outcome
+rather than a gap to close. Creating a workspace package to satisfy Mode A would
+destroy the runtime-isolation property in §1; reimplementing the primitives would
+create a second source of truth the Factory would then have to keep in step. The
+Factory is not changed for tool compatibility.
+
 The architectural consequences:
 
-1. **The repository is upstream of the canvas, not downstream of it.** `DesignSync`
-   pushes a bundle built from repository source into a design-system project behind
-   a `finalize_plan` boundary that pins the exact paths and the local directory.
-   Production source is never pulled down as authority.
+1. **The repository is upstream of the canvas, not downstream of it.** In Mode A
+   `DesignSync` pushes a bundle built from repository source into a design-system
+   project behind a `finalize_plan` boundary that pins the exact paths and the
+   local directory. In Mode B the curated context package plays the same role and
+   carries the same direction of authority. Production source is never pulled down
+   as authority in either.
 2. **The Design → Code handoff carries context into an agent that writes repository
    source.** The canvas is never the production artefact. This is exactly why the
    Production Handoff artifact exists: to make that handoff carry *intent and
@@ -200,9 +224,11 @@ craft lives in prose and in the brief. The system got smaller and more honest.
 someone wanted a shared helper.
 **Verdict: real as a trajectory.**
 **Revision.** Docs and scripts only; no package; no build output. Asserted by test
-rather than by intent: `scripts/creative/creative-commands.test.mjs` checks that
-nothing under `docs/creative/` or `scripts/creative/` is referenced by any
-workspace `package.json` or any client artifact file list.
+rather than by intent: `pnpm creative:test`
+(`scripts/creative/creative-commands.test.mjs`) checks that nothing under
+`docs/creative/` or `scripts/creative/` is referenced by any workspace
+`package.json`, imported by any source file, or listed in any client artifact
+manifest — and that neither directory is itself a workspace package.
 
 ### R4 — Duplication with Design DNA and the Motion Brief
 **Attack.** `design-dna.json` is already described by ADR-0006 as "a creative

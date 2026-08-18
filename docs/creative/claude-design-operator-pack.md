@@ -34,39 +34,104 @@ optional rather than load-bearing.
    premises, results or certifications unless real client evidence exists and is
    classified `REAL_CLIENT_EVIDENCE`.
 
-## 1. Environment and design-system sync
+## 1. Environment, and which integration mode you are in
 
 ### One-time setup
 
 If the terminal session has never authenticated, run `/design-login` once. It
 authenticates the Claude Design MCP server (`https://api.anthropic.com/v1/design/mcp`).
-This is a human step and cannot be automated.
+This is a human step and cannot be automated, and neither can `/design-sync`:
+both are reserved for explicit user invocation and refuse to run from an agent.
 
 > **Check whether you need it at all.** Ask Claude Code to list your design-system
 > projects. If it answers without an authorization error, scopes are already
 > granted and `/design-login` is unnecessary.
 
-### Syncing the design system
+### Decide the mode before anything else
 
-**Sync from Claude Code. Do not upload this repository.** Anthropic's own guidance
-is to link large repositories from Claude Code "to avoid lag or browser issues",
-and this is a pnpm monorepo with three apps and nine packages.
+**`/design-sync` is conditional, not a mandatory first step.** It is a *component
+library* converter: it builds the repository's own compiled `dist/` into a bundle
+the design agent renders real components from, and its own core principle is
+"ship what the customer already built — never a reimplementation". A repository
+that has no such library cannot use it, and forcing one into existence is a
+defect, not a workaround.
+
+Establish the mode by asking one question of the repository: **does it expose a
+compatible, resolvable design system — a workspace package that builds React
+components to a `dist/`, or a Storybook?**
+
+| | Mode | When | Route |
+|---|---|---|---|
+| **A** | **Design system sync** | A conventional compatible design system exists | `/design-sync` → Claude Design |
+| **B** | **Curated creative context** | Generated / client-local architecture with no compatible design-system package | curated context and assets → Claude Design web conversational project |
+| **C** | **Code canvas / early preview** | A bounded canvas, edit or export workflow is all that is needed | Claude Code `/design` canvas |
+
+Check it, do not assume it:
 
 ```
-/design-sync
+# any React component in a workspace package?
+find packages -name "*.tsx" -not -path "*/node_modules/*" -not -name "*.test.tsx"
+# any Storybook?
+find . \( -name ".storybook" -o -name "storybook" \) -type d -not -path "*/node_modules/*"
 ```
 
-Sync **the Platform's primitives and the client's own experience**, not the whole
-tree. What is worth having on the canvas:
+Two empty results mean **Mode B**. In this repository both are empty today: every
+workspace package is pure TypeScript, and the Platform primitives (`Link`,
+`Image`, `Region`, `Action`, `Search`, `Disclosure`, `Main`, `SkipLink`) are not a
+library at all — they are produced by `createPlatform(renderRegion)` in
+`apps/managed-web/src/client-experience/platform-components.tsx` and injected into
+a client experience as a `platform` prop, so they cannot render standalone.
 
-- the client-local `experience/` source for the client being explored;
-- `experience/design-dna.json` — the frozen creative contract, if one exists;
-- the Platform primitives a route may use: `Link`, `Image`, `Region`, `Action`,
-  `Search`, `Disclosure`, `Main`, `SkipLink`.
+### Mode A — design system sync
 
-What is **not** worth syncing, and should be excluded: the generation pipeline,
-contracts package, tests, and any other client's experience. A canvas holding
+Run `/design-sync` and follow it. Sync the design system; exclude the generation
+pipeline, contracts, tests, and **any other client's experience**. A canvas holding
 another client's art direction is how one delivery's aesthetic leaks into the next.
+
+### Mode B — curated creative context
+
+This is the mode for a generated, client-local architecture. Assemble a curated
+package by hand and carry it into a Claude Design **web** project. Four things are
+forbidden while doing it, and each of them has been proposed and rejected:
+
+- do **not** create a workspace package merely to satisfy Claude Design — the
+  system's whole runtime-isolation property depends on not having one;
+- do **not** reimplement the Platform primitives — `/design-sync`'s own principle
+  refuses a reimplementation, and a second implementation would drift;
+- do **not** present client-local implementation as a design system it is not;
+- do **not** change P1 Factory architecture for tool compatibility.
+
+The curated context must preserve all of:
+
+| Carries | From |
+|---|---|
+| Client truth | `CREATIVE_CONTEXT.md` |
+| Page Graph — every route by page kind | `CREATIVE_CONTEXT.md` |
+| Actual P1 screenshots | the delivery's existing evidence capture |
+| Real content and media | `CREATIVE_CONTEXT.md` + the client's assets |
+| Design DNA summary | `experience/design-dna.json` |
+| Motion & Interaction Language summary | `design-dna.json` `motion` / `interaction` |
+| Capability envelope | `signature-capability-envelope.md` |
+| Responsive constraints | `design-dna.json` `responsive` |
+| Media provenance | the media plan |
+| Forbidden and fabricated claims | `CREATIVE_CONTEXT.md` truth section |
+| Production constraints | the envelope's refusals |
+
+**No other client's visual source enters this package.** Not as reference, not as
+an example, not as a starting point.
+
+### Mode C — code canvas / early preview
+
+The Claude Code `/design` canvas is a useful optional canvas and transport
+surface for bounded work: laying artboards out, editing them directly, exporting
+PNG/PDF. Use it for what it is.
+
+It is **not** sufficient evidence for the full conversational creative-ceiling
+test. It ships an early preview of the editor with the design-agent iteration loop
+absent — "the 'request tweaks' agent loop [is] not available in this canvas editor"
+— so the divergence and critique prompts in §2–§3 have no interlocutor to answer
+them. Work done there must never be recorded as a conversational Claude Design
+proof.
 
 ### Prompt — orient the design session
 

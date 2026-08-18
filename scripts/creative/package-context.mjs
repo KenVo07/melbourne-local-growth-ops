@@ -27,9 +27,41 @@ function textOf(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+/* Section items are not one shape. A service carries title/description, an FAQ
+ * carries question/answer, a testimonial carries quote/attribution, and a trust
+ * signal is a bare string. Reading only `title` silently drops most of a
+ * client's actual copy, which is the copy a design session is told to build
+ * from. Every shape is read, and anything unrecognised is kept verbatim rather
+ * than discarded. */
+const ITEM_LABEL_KEYS = ["title", "heading", "label", "question", "quote", "name"];
+const ITEM_BODY_KEYS = ["description", "answer", "body", "summary", "attribution", "caption"];
+
+function summariseItem(item) {
+  if (typeof item === "string") {
+    return { label: "", body: item.trim() };
+  }
+  if (item === null || typeof item !== "object") {
+    return { label: "", body: "" };
+  }
+  const label = ITEM_LABEL_KEYS.map((key) => textOf(item[key])).find(
+    (value) => value !== "",
+  );
+  const body = ITEM_BODY_KEYS.map((key) => textOf(item[key])).find(
+    (value) => value !== "",
+  );
+  return {
+    label: label ?? "",
+    body: body ?? "",
+    /* A testimonial's disclosure is the field that stops it being read as
+     * evidence. It must never be dropped on the way to a design session. */
+    disclosure: textOf(item.disclosure),
+  };
+}
+
 /** Pulls readable copy out of a profile section without assuming its shape. */
 function summariseSection(section) {
   const items = Array.isArray(section.items) ? section.items : [];
+  const actions = Array.isArray(section.actions) ? section.actions : [];
   return {
     type: textOf(section.type),
     sectionId: textOf(section.sectionId),
@@ -40,7 +72,32 @@ function summariseSection(section) {
     itemTitles: items
       .map((item) => textOf(item.title) || textOf(item.heading) || textOf(item.label))
       .filter((title) => title !== ""),
+    items: items.map(summariseItem),
+    actions: actions.map((action) => ({
+      kind: textOf(action.kind),
+      state: textOf(action.state),
+      label: textOf(action.label),
+      message: textOf(action.message),
+    })),
     disclaimer: textOf(section.disclaimer),
+  };
+}
+
+/* A project's story blocks are the "substantial proof or content sequence" the
+ * operator pack requires a Signature Slice to be built from. Carrying only a
+ * count guarantees the session invents the narrative it was told not to. */
+function summariseStoryBlock(block) {
+  const media = Array.isArray(block.media) ? block.media : [];
+  return {
+    blockId: textOf(block.blockId),
+    type: textOf(block.type),
+    heading: textOf(block.heading),
+    body: textOf(block.body),
+    media: media.map((asset) => ({
+      assetId: textOf(asset.assetId),
+      alt: textOf(asset.alt),
+      caption: textOf(asset.caption),
+    })),
   };
 }
 
@@ -102,6 +159,20 @@ function buildContext(definition) {
       factCount: (project.facts ?? []).length,
       galleryCount: (project.gallery ?? []).length,
       hasHero: project.hero !== undefined,
+      demonstrationDisclosure: textOf(project.demonstrationDisclosure),
+      facts: (project.facts ?? []).map((fact) => ({
+        label: textOf(fact.label),
+        value: textOf(fact.value),
+      })),
+      story: (project.story ?? []).map(summariseStoryBlock),
+      hero:
+        project.hero === undefined
+          ? null
+          : {
+              assetId: textOf(project.hero.assetId),
+              alt: textOf(project.hero.alt),
+              caption: textOf(project.hero.caption),
+            },
     })),
     media: {
       assetCount: assets.length,
@@ -165,6 +236,61 @@ function renderBrief(context, envelope) {
     )
     .join("\n");
 
+  /* The summary tables above answer "what exists". A design session also has to
+   * be able to *write with* the client's words, so the copy itself follows. */
+  const sectionCopy = context.profileSections
+    .map((section) => {
+      const lines = [`#### ${section.heading || section.type} — \`${section.type}\``];
+      if (section.eyebrow !== "") lines.push(`*${section.eyebrow}*`);
+      if (section.body !== "") lines.push(section.body);
+      for (const item of section.items ?? []) {
+        if (item.label !== "" && item.body !== "") {
+          lines.push(`- **${item.label}** — ${item.body}`);
+        } else if (item.label !== "" || item.body !== "") {
+          lines.push(`- ${item.label || item.body}`);
+        }
+        if (item.disclosure) lines.push(`  - Disclosure: ${item.disclosure}`);
+      }
+      for (const action of section.actions ?? []) {
+        lines.push(`- **${action.label || action.kind}** (${action.state}) — ${action.message}`);
+      }
+      if (section.disclaimer !== "") lines.push(`> ${section.disclaimer}`);
+      return lines.join("\n\n");
+    })
+    .join("\n\n");
+
+  const projectCopy = projects
+    .map((project) => {
+      const lines = [
+        `#### ${project.title} — \`${project.truthMode}\`${project.locationLabel ? ` · ${project.locationLabel}` : ""}`,
+      ];
+      if (project.summary !== "") lines.push(project.summary);
+      if (project.demonstrationDisclosure) {
+        lines.push(`> ${project.demonstrationDisclosure}`);
+      }
+      if (project.hero) {
+        lines.push(
+          `Hero \`${project.hero.assetId}\` — ${project.hero.alt}${project.hero.caption ? ` · ${project.hero.caption}` : ""}`,
+        );
+      }
+      for (const block of project.story ?? []) {
+        lines.push(`**${block.type} · ${block.heading}**`);
+        if (block.body !== "") lines.push(block.body);
+        for (const asset of block.media ?? []) {
+          lines.push(`Media \`${asset.assetId}\` — ${asset.alt}${asset.caption ? ` · ${asset.caption}` : ""}`);
+        }
+      }
+      if ((project.facts ?? []).length > 0) {
+        lines.push(
+          (project.facts ?? [])
+            .map((fact) => `- ${fact.label}: ${fact.value}`)
+            .join("\n"),
+        );
+      }
+      return lines.join("\n\n");
+    })
+    .join("\n\n");
+
   const permitted = envelope.techniques
     .filter((technique) => technique.status === "PERMITTED")
     .map((technique) => technique.id);
@@ -211,11 +337,24 @@ ${Object.entries(pageGraph.navigation)
 |---|---|---|
 ${sectionRows}
 
+### The copy this content actually carries
+
+A design session is required to build with these words rather than plausible
+substitutes. Anything it needs that is not below is a missing input to request.
+
+${sectionCopy || "No profile section copy is carried by this definition."}
+
 ## Projects
 
 | Project | Truth mode | Depth |
 |---|---|---|
 ${projectRows || "| — | — | — |"}
+
+### The project record, in full
+
+These are the story blocks a Signature Slice's proof sequence is built from.
+
+${projectCopy || "This definition carries no projects."}
 
 ## Media that exists
 

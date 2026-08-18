@@ -15,6 +15,7 @@
     "creative:new": "node scripts/creative/scaffold.mjs",
     "creative:package": "node scripts/creative/package-context.mjs",
     "creative:templates": "node scripts/creative/scaffold.mjs --templates",
+    "creative:test": "node --test scripts/creative/creative-commands.test.mjs",
     "creative:validate": "node scripts/creative/validate.mjs",
     "creative:validate:self-test": "node scripts/creative/validate.mjs --self-test",
     "governance:audit": "node scripts/governance/check-audit.mjs",

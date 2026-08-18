@@ -45,6 +45,7 @@ the same runtime as one built without it.
 | `pnpm creative:new <client-id> <dir>` | Scaffolds the seven artifacts, generated from the model that validates them. |
 | `pnpm creative:validate <dir>` | Checks presence, traceability, provenance and consistency. Never taste. |
 | `pnpm creative:validate:self-test` | Proves the validator's own rules still fire. |
+| `pnpm creative:test` | Proves nothing in this system is reachable from a client website's runtime. |
 | `pnpm creative:envelope` | Re-measures what a Signature may do against the live source policy. |
 | `pnpm creative:templates` | Regenerates `docs/creative/templates/`. |
 
