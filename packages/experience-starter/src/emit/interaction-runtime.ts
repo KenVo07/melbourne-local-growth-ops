@@ -246,6 +246,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -296,7 +297,29 @@ export function MediaExplorer({
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const triggers = useRef(new Map<number, HTMLButtonElement>());
+  const previousRef = useRef<HTMLButtonElement | null>(null);
+  const nextRef = useRef<HTMLButtonElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
   const [active, setActive] = useState(0);
+
+  /*
+   * Reaching either end of the sequence disables the control that got you
+   * there, and a disabled button cannot keep focus — the browser drops it to
+   * the document, and the reader's next Arrow press goes nowhere. Whenever a
+   * step leaves focus outside the overlay it is handed to the control that
+   * still has somewhere to go, so stepping by keyboard and by pointer both stay
+   * continuous to the last photograph.
+   */
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog === null || !dialog.open) return;
+    if (dialog.contains(document.activeElement)) return;
+    const rescue =
+      previousRef.current !== null && !previousRef.current.disabled
+        ? previousRef.current
+        : nextRef.current;
+    (rescue ?? closeRef.current)?.focus();
+  }, [active]);
 
   const register = useCallback(
     (index: number, element: HTMLButtonElement | null) => {
@@ -371,6 +394,7 @@ export function MediaExplorer({
                   className="${ns}-viewer-button"
                   disabled={active === 0}
                   onClick={() => step(-1)}
+                  ref={previousRef}
                   type="button"
                 >
                   Previous
@@ -379,6 +403,7 @@ export function MediaExplorer({
                   className="${ns}-viewer-button"
                   disabled={active === items.length - 1}
                   onClick={() => step(1)}
+                  ref={nextRef}
                   type="button"
                 >
                   Next
@@ -387,6 +412,7 @@ export function MediaExplorer({
                   autoFocus
                   className="${ns}-viewer-button"
                   onClick={close}
+                  ref={closeRef}
                   type="button"
                 >
                   Close
