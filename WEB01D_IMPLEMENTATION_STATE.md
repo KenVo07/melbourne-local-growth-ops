@@ -327,13 +327,64 @@ constraint is not the drawing surface — it is that a Signature **cannot fetch
 anything at runtime**. Shaders inline, geometry in source, textures drawn rather
 than loaded, client imagery through the Platform primitive.
 
-## Phase 5 — Controlled proof — IN PROGRESS
+## Phase 5 — Controlled proof — COMPLETE
 
-`pnpm creative:package tests/fixtures/web01b/northline <out>` runs clean against
-the real northline client definition: 11 pages · 7 page kinds · 3 projects · 10
-assets · 3 non-REAL projects, with primary and footer navigation, all eight profile
-sections, and the "what this client may not claim" block derived from actual
-`truthMode` values. Every string is copied from the definition; nothing invented.
+A complete, validated northline delivery lives at
+`/home/khoa/Projects/web01b-implementation/WEB01D_CREATIVE_PROOF/` with
+`PROOF_REPORT.md`.
+
+- **Packaging:** `pnpm creative:package` on the real client definition → 11 pages,
+  7 page kinds, 3 projects, 10 assets, 3 non-REAL projects, primary and footer
+  navigation, all 8 profile sections. Every string copied from the definition.
+- **Three materially different territories:** `drawn-to-code` (the trade's record
+  of its own work), `the-building-speaks` (the customer's building as subject),
+  `plain-dealing` (typographic plainness and open commercial terms, almost no
+  media). Different subjects, not different palettes.
+- **Full chain validated:** intent → 3 territories → slice → gate → handoff, plus
+  media plan and promotion ledger. `CREATIVE DELIVERY VALIDATION: PASS`.
+- **The gate is transcribed, not newly decided.** It records the real founder
+  decision of 2026-08-17 against commit `156c544`, with all seven named fixes and
+  the freeze rule. **No founder creative decision was fabricated during WEB-01D.**
+- **Negative proof:** a broken copy trips all three critical rules — a refused
+  technique (`fetch-runtime-data`), an agent-signed gate (`Claude Code`), and
+  generated media substantiating "our completed switchboard work".
+
+## Phase 4 — Claude Design operator pack — COMPLETE
+
+`docs/creative/claude-design-operator-pack.md`. Prompts split into a
+tool-independent *Intent* half and a thin *Claude Design* wrapper, so a vendor
+change rewrites only the wrappers. Covers sync, territory exploration, forced
+divergence, critique, Signature Slice, responsive refinement, motion refinement,
+production handoff and fresh-eyes red team.
+
+## Phase 6 — Production translation runbook — COMPLETE
+
+`docs/creative/production-translation-runbook.md`, plus
+`media-art-direction.md`, `creative-red-team.md`, `evidence-protocol.md`,
+`creative-gate.md`, `reference-analysis.md` and `README.md`.
+
+## Phase 7 — Proportion kickoff package — COMPLETE
+
+`/home/khoa/Projects/web01b-implementation/PROPORTION_CREATIVE_KICKOFF_PACKAGE/`
+— `00_START_HERE.md`, `01_BUSINESS_INPUTS.md`, and a scaffolded empty `delivery/`.
+STATUS `READY_TO_FILL`; validates as 116 unfilled fields, which is correct. Missing
+factual inputs are listed as requests across offer/positioning, proof, people,
+contact/conversion, brand/media and compliance. **Nothing about Proportion was
+invented.**
+
+## P1 Factory impact — MEASURED, ZERO
+
+`git diff --stat bed25ff..HEAD` → 29 files, 4,973 insertions, **0 deletions**.
+
+Files changed under `apps/`, `packages/`, `tests/`, `docs/architecture`,
+`docs/decisions`, `docs/product`, `docs/runbooks`, `docs/governance`, `.github`,
+`pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tsconfig.base.json`: **0**.
+
+The only change to a pre-existing file is `package.json`, which gained six
+`creative:*` script entries and nothing else. No new workspace package, no
+dependency added, no lockfile change.
+
+`pnpm check` (build + test + typecheck) passes green at HEAD.
 
 ## Phase status
 
@@ -343,10 +394,10 @@ sections, and the "what this client may not claim" block derived from actual
 | 1 — Current primary-source Claude Design research | COMPLETE — local surface, official sources, auth probe all verified |
 | 2 — Architecture + red team | COMPLETE |
 | 3 — Durable contracts/templates/validators | COMPLETE |
-| 4 — Claude Design operator pack | NOT STARTED |
-| 5 — Controlled proof | IN PROGRESS — packager proven on northline |
-| 6 — Production translation + evidence tooling | NOT STARTED |
-| 7 — Proportion kickoff package | NOT STARTED |
+| 4 — Claude Design operator pack | COMPLETE |
+| 5 — Controlled proof | COMPLETE |
+| 6 — Production translation + evidence tooling | COMPLETE |
+| 7 — Proportion kickoff package | COMPLETE |
 | 8 — Independent red team | NOT STARTED |
 | 9 — Final validation and packaging | NOT STARTED |
 
