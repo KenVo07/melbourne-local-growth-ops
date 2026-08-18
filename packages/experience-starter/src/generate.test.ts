@@ -326,3 +326,149 @@ describe("refusals", () => {
       .toThrow(/schemaVersion 2/);
   });
 });
+
+describe("interaction capability emission", () => {
+  const faqSection = {
+    type: "FAQ",
+    sectionId: "faq",
+    heading: "Questions",
+    items: [
+      { question: "One?", answer: "A." },
+      { question: "Two?", answer: "B." },
+      { question: "Three?", answer: "C." },
+      { question: "Four?", answer: "D." },
+    ],
+  };
+
+  const withFaq = {
+    ...testDefinition,
+    profile: {
+      ...testDefinition.profile,
+      sections: [...testDefinition.profile.sections, faqSection],
+    },
+  };
+
+  const language = {
+    tempo: "MEASURED",
+    attack: "EASED",
+    travel: 0.5,
+    overshoot: 0,
+    interactionDensity: 0.6,
+    revealDensity: 0.5,
+    disclosure: "WHEN_LONG",
+    mediaExploration: "WHEN_PLURAL",
+    reducedMotion: "INSTANT",
+  } as const;
+
+  const briefWith = (interaction: Partial<typeof language>) => ({
+    ...loudBrief,
+    interaction: { ...language, ...interaction },
+  });
+
+  it("emits no interaction helper a client did not ask for", () => {
+    const still = generate(
+      briefWith({ interactionDensity: 0, revealDensity: 0, travel: 0, disclosure: "ALWAYS_VISIBLE" }),
+      withFaq,
+    );
+    const paths = still.files.map((file) => file.path);
+    for (const helper of [
+      "components/Reveal.tsx",
+      "components/Disclosure.tsx",
+      "components/MediaViewer.tsx",
+      "components/motion.ts",
+    ]) {
+      expect(paths).not.toContain(helper);
+    }
+    expect(
+      JSON.parse(fileNamed(still, "manifest.json")).runtime.clientJavaScript,
+    ).toBe("NONE");
+  });
+
+  it("emits the disclosure helper only where content and language agree", () => {
+    const folded = generate(briefWith({ disclosure: "WHEN_LONG" }), withFaq);
+    expect(folded.interactions.contactFaq.treatment).toBe(
+      "PROGRESSIVE_DISCLOSURE",
+    );
+    expect(folded.files.map((file) => file.path)).toContain(
+      "components/Disclosure.tsx",
+    );
+
+    // Same content, a client that keeps things open.
+    const open = generate(briefWith({ disclosure: "ALWAYS_VISIBLE" }), withFaq);
+    expect(open.interactions.contactFaq.treatment).toBe("STATIC");
+    expect(open.files.map((file) => file.path)).not.toContain(
+      "components/Disclosure.tsx",
+    );
+    expect(fileNamed(open, "routes/AboutContactRoutes.tsx")).toContain("<dl");
+  });
+
+  it("emits no media explorer for a client whose page graph has no projects", () => {
+    // The fixture carries no project routes, so the capability cannot apply.
+    const generated = generate(briefWith({ mediaExploration: "PREFERRED" }), withFaq);
+    expect(generated.interactions.projectMedia.treatment).toBe("STATIC");
+    expect(generated.files.map((file) => file.path)).not.toContain(
+      "components/MediaViewer.tsx",
+    );
+  });
+
+  it("explains every decision it made", () => {
+    const generated = generate(briefWith({}), withFaq);
+    for (const decision of [
+      generated.interactions.contactFaq,
+      generated.interactions.serviceQuestions,
+      generated.interactions.projectMedia,
+    ]) {
+      expect(decision.reason.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("keeps generated interaction source free of the generator", () => {
+    const generated = generate(briefWith({}), withFaq);
+    for (const file of generated.files) {
+      if (!file.path.startsWith("components/")) continue;
+      expect(file.contents).not.toContain("experience-starter");
+      expect(file.contents).not.toContain("@melbourne-local-growth-ops/");
+    }
+  });
+
+  it("holds no frame loop, scroll listener or persistent browser state", () => {
+    const generated = generate(briefWith({}), withFaq);
+    for (const file of generated.files) {
+      if (!file.path.endsWith(".tsx") && !file.path.endsWith(".ts")) continue;
+      expect(file.contents).not.toContain("requestAnimationFrame");
+      expect(file.contents).not.toContain('addEventListener("scroll"');
+      expect(file.contents).not.toContain("localStorage");
+      expect(file.contents).not.toContain("setInterval");
+    }
+  });
+
+  it("gives two clients on one Profile a different interaction character", () => {
+    const patient = generate(
+      briefWith({ tempo: "UNHURRIED", attack: "SETTLED", travel: 0.8, disclosure: "ALWAYS_VISIBLE" }),
+      withFaq,
+    );
+    const brisk = generate(
+      briefWith({ tempo: "BRISK", attack: "IMMEDIATE", travel: 0.2, overshoot: 0.6, disclosure: "PREFERRED" }),
+      withFaq,
+    );
+
+    // Different tempo, different curves, different distances.
+    expect(patient.design.interaction.duration.state).not.toBe(
+      brisk.design.interaction.duration.state,
+    );
+    expect(patient.design.interaction.easing.enter).not.toBe(
+      brisk.design.interaction.easing.enter,
+    );
+    expect(patient.design.interaction.travel.reveal).not.toBe(
+      brisk.design.interaction.travel.reveal,
+    );
+
+    // And a different answer to what the content should even do — which is the
+    // variation that matters, because it is structural rather than numeric.
+    expect(patient.interactions.contactFaq.treatment).toBe("STATIC");
+    expect(brisk.interactions.contactFaq.treatment).toBe(
+      "PROGRESSIVE_DISCLOSURE",
+    );
+    expect(patient.sourceHash).not.toBe(brisk.sourceHash);
+  });
+});
