@@ -274,16 +274,77 @@ must be the **generalised, client-agnostic, machine-checkable form of this**, an
 must be able to round-trip the northline pair as their worked example. Designing a
 competing vocabulary would strand the one real precedent the repository has.
 
+## Phase 2 — Architecture and red team — COMPLETE
+
+`docs/creative/creative-delivery-system.md`. Ten adversarial attacks recorded with
+what each changed. The load-bearing revision was R2: the first draft gave Territory
+its own typography/spacing/motion fields, which would have created a second source
+of truth beside `StarterBrief` and grown forever. Replaced by the rule that an
+artifact states intent and *names* where a value lives, never both. R10 (the pack
+propagating one house style) survives partially and is recorded as an accepted
+residual risk rather than pretended away.
+
+## Phase 3 — Durable contracts, templates and validators — COMPLETE
+
+| Asset | Path | What it does |
+|---|---|---|
+| Artifact model | `scripts/creative/artifact-model.mjs` | Single source of truth for all 7 artifact kinds, provenance classes, gate/promotion enums. |
+| Validation engine | `scripts/creative/validate-core.mjs` | Pure, filesystem-free, so rules can be exercised on in-memory fixtures. |
+| Validator CLI | `scripts/creative/validate.mjs` | `pnpm creative:validate <dir>` / `--self-test`. |
+| Self-test | `scripts/creative/self-test.mjs` | 21 cases. Verified non-vacuous by negative control. |
+| Envelope probe | `scripts/creative/envelope-probe.ts` | 32 techniques through the real source policy. |
+| Scaffolder | `scripts/creative/scaffold.mjs` | Generates deliveries and templates *from the model*. |
+| Context packager | `scripts/creative/package-context.mjs` | Turns a P1 client definition into creative-exploration input. |
+
+Root `package.json` gained six `creative:*` entries mirroring the `governance:*`
+convention. **No new workspace package.** No runtime impact.
+
+### The capability envelope is measured, not asserted
+
+`pnpm creative:envelope` → **32 techniques probed, 15 permitted, 17 refused, 0
+disagreements.** Generated to `docs/creative/signature-capability-envelope.{json,md}`.
+
+Permitted: CSS transitions/keyframes, CSS scroll-driven animation, WAAPI, rAF,
+IntersectionObserver, ResizeObserver, matchMedia, View Transitions, canvas 2D,
+WebGL with inline shaders, inline SVG, `<video>` with a local source, self-hosted
+`/fonts/` @font-face, percent-encoded inline SVG data URIs, and a
+governance-approved scoped dependency.
+
+Refused: `fetch`, `new Image()`, `new Audio()`, `Worker`, localStorage, raw
+`<a>`/`<img>`/`<iframe>`, `dangerouslySetInnerHTML`, remote webfonts, CSS raster
+`url()`, `@import`, `next/*` imports, undeclared dependencies, `javascript:` URLs,
+`eval`/`Function`.
+
+**The probe found a real constraint on its first run.** Inline SVG data URIs in
+CSS are permitted, but `allowedCssResource` excludes `"`, `'` and `)` from the
+permitted tail — so the form pasted straight out of a design tool is refused while
+the percent-encoded form is accepted. The two are visually identical in a browser.
+Both are now probed separately. This is correct fail-closed behaviour, **not a P1
+defect**, so no Factory change was made.
+
+**Headline for ambitious work:** canvas, WebGL and video are open, so the binding
+constraint is not the drawing surface — it is that a Signature **cannot fetch
+anything at runtime**. Shaders inline, geometry in source, textures drawn rather
+than loaded, client imagery through the Platform primitive.
+
+## Phase 5 — Controlled proof — IN PROGRESS
+
+`pnpm creative:package tests/fixtures/web01b/northline <out>` runs clean against
+the real northline client definition: 11 pages · 7 page kinds · 3 projects · 10
+assets · 3 non-REAL projects, with primary and footer navigation, all eight profile
+sections, and the "what this client may not claim" block derived from actual
+`truthMode` values. Every string is copied from the definition; nothing invented.
+
 ## Phase status
 
 | Phase | Status |
 |---|---|
 | 0 — Source lock and system reconstruction | COMPLETE |
 | 1 — Current primary-source Claude Design research | COMPLETE — local surface, official sources, auth probe all verified |
-| 2 — Architecture + red team | NOT STARTED |
-| 3 — Durable contracts/templates/validators | NOT STARTED |
+| 2 — Architecture + red team | COMPLETE |
+| 3 — Durable contracts/templates/validators | COMPLETE |
 | 4 — Claude Design operator pack | NOT STARTED |
-| 5 — Controlled proof | NOT STARTED |
+| 5 — Controlled proof | IN PROGRESS — packager proven on northline |
 | 6 — Production translation + evidence tooling | NOT STARTED |
 | 7 — Proportion kickoff package | NOT STARTED |
 | 8 — Independent red team | NOT STARTED |
