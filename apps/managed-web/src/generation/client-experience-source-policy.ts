@@ -111,6 +111,16 @@ const browserStateIdentifiers = new Set([
 /** Environment and host access with no legitimate authored use. */
 const environmentIdentifiers = new Set(["process"]);
 
+/**
+ * Forbidden globals whose names are also ordinary website vocabulary.
+ *
+ * A Contractor site has a PROCESS section; a retailer has a `history` of the
+ * business. An author reaching for the obvious variable name collides with a
+ * global, and the refusal has to say so rather than implying the content is at
+ * fault. Purely diagnostic: nothing here changes what is refused.
+ */
+const contentVocabulary = new Set(["process", "history", "location", "status"]);
+
 /** Property names and calls that inject unescaped markup. */
 const unsafeMarkupProperties = new Set([
   "innerHTML",
@@ -546,7 +556,7 @@ function inspectTypeScriptSource(
         // that happens to read `process` is ordinary client content, and
         // refusing it would make a "Our process" section unauthorable.
         if (!isReferencePosition(node, parent)) break;
-        assertAllowedReference(node.name, relativePath);
+        assertAllowedReference(node.name, relativePath, node);
         break;
       }
 
@@ -559,7 +569,7 @@ function inspectTypeScriptSource(
         // `globalThis.eval`. An ordinary property access such as
         // `studio.process` is client content and stays authorable.
         if (isGlobalContainer(node.object)) {
-          assertAllowedReference(propertyName, relativePath);
+          assertAllowedReference(propertyName, relativePath, node);
         }
         if (
           propertyName === "cookie" &&
@@ -705,22 +715,55 @@ function inspectTypeScriptSource(
     }
   };
 
+  /**
+   * Refuses a forbidden name and says *which* thing was refused.
+   *
+   * The policy is deliberately fail-closed: a local binding that merely shadows
+   * a forbidden global is refused too, because a shadow cannot be told from the
+   * real thing without resolving scope. That is the right behaviour and it does
+   * not change here — but it means one message has to serve two operators whose
+   * correct next actions are opposite. Somebody who wrote
+   * `const process = sections.find(…)` to hold a Contractor's PROCESS section
+   * has to rename a variable; somebody who wrote `process.env.SECRET` has to
+   * stop. Telling the first "consume validated public inputs instead" sends
+   * them to delete content they were already consuming validly.
+   *
+   * So the message names the global, gives the position, and states the
+   * collision case for the names that are also ordinary website vocabulary.
+   */
   function assertAllowedReference(
     name: unknown,
     filePath: string,
+    node?: AstNode,
   ): void {
     if (typeof name !== "string") return;
     const code = forbiddenReferenceNames.get(name);
     if (code === undefined) return;
+    const at = sourcePosition(node);
     throw new ClientExperienceSourcePolicyError(
       code,
-      `Client experience source "${filePath}" cannot reference ${name}. Consume validated public inputs and Platform primitives instead.`,
-      { path: filePath },
+      `Client experience source "${filePath}"${at === undefined ? "" : ` (${at})`} cannot use the name ${name}, which is a forbidden global.` +
+        (contentVocabulary.has(name)
+          ? ` If this is a local binding holding client content, rename it — the ${name.toUpperCase()} section itself is authorable, and only the identifier is refused. A local binding is refused because it cannot be told apart from the global.`
+          : "") +
+        " Consume validated public inputs and Platform primitives instead.",
+      { path: filePath, detail: { name, ...(at === undefined ? {} : { at }) } },
     );
   }
 
   visit(program, undefined);
   return clientRuntime;
+}
+
+/** `line:column` of a parsed node, for messages an operator has to act on. */
+function sourcePosition(node: AstNode | undefined): string | undefined {
+  // `loc` is not itself an AST node, so it is read structurally.
+  const start = (node?.loc as { start?: { line?: unknown; column?: unknown } })
+    ?.start;
+  const line = start?.line;
+  const column = start?.column;
+  if (typeof line !== "number" || typeof column !== "number") return undefined;
+  return `line ${line}, column ${column + 1}`;
 }
 
 /** Strips casts and sequence wrappers so `(eval as any)(...)` still names eval. */

@@ -377,6 +377,52 @@ describe("client experience source policy", () => {
       }
     });
 
+    it("says which name was refused, and where, so the operator can act", async () => {
+      const root = await fixture({
+        "routes/Home.tsx":
+          "export const key = 1;\nexport const secret = process.env.SECRET;\n",
+      });
+
+      await expect(
+        inspectClientExperienceSource({
+          inputDirectory: root,
+          manifest: manifest as never,
+          approvedPublicDependencies: ["motion"],
+        }),
+      ).rejects.toMatchObject({
+        code: "ENVIRONMENT_ACCESS_FORBIDDEN",
+        message: expect.stringContaining("line 2"),
+        detail: { name: "process" },
+      });
+    });
+
+    it("does not tell an author with a PROCESS section that their content is at fault", async () => {
+      // The policy refuses a shadowing local binding on purpose, because a
+      // shadow cannot be told from the global. The message must therefore
+      // separate the two cases it serves: this author renames a variable, and
+      // the one reading process.env stops. Behaviour is identical; only the
+      // instruction differs.
+      const root = await fixture({
+        "routes/Home.tsx":
+          'export const Home = ({ sections }: { sections: { type: string; heading: string }[] }) => {\n  const process = sections.find((section) => section.type === "PROCESS");\n  return process?.heading ?? null;\n};\n',
+      });
+
+      try {
+        await inspectClientExperienceSource({
+          inputDirectory: root,
+          manifest: manifest as never,
+          approvedPublicDependencies: ["motion"],
+        });
+        throw new Error("A shadowing binding must still be refused.");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientExperienceSourcePolicyError);
+        const message = (error as Error).message;
+        expect(message).toContain("rename it");
+        expect(message).toContain("PROCESS section itself is authorable");
+        expect(message).toContain("line 2");
+      }
+    });
+
     it("rejects source the parser cannot fully understand", async () => {
       await expectRejectedSource(
         "export const broken = (((;\n",
