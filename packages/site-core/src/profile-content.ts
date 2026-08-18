@@ -321,12 +321,37 @@ export const WebsiteProfileSectionSchema = z.discriminatedUnion("type", [
   actionsSectionSchema,
 ]);
 
+/**
+ * What a Contractor website cannot be built without, as distinct from what a
+ * Contractor website may show.
+ *
+ * Every type in this list is something the business *is* — what it does, on what
+ * terms, how it works, how to reach it. A business that cannot answer those has
+ * no website to generate.
+ *
+ * GALLERY and TESTIMONIALS are deliberately absent, and their absence is the
+ * rule rather than an omission. Both are *evidence*: photographs of finished
+ * work, and words from people who paid for it. A business that has not traded
+ * yet, or has traded privately, or whose customers will not be quoted, has
+ * neither — and requiring the section forced that business to write something
+ * into it. The requirement did not produce evidence; it produced a placeholder
+ * standing where evidence would go, which is worse than the empty space it
+ * filled, because a reader cannot tell the two apart.
+ *
+ * The capability is untouched: `gallerySectionSchema` and
+ * `testimonialSectionSchema` still exist, the renderers still exist, and the
+ * search projector still indexes both. A client with real photographs and real
+ * quotes declares the sections and everything downstream behaves exactly as
+ * before. What changed is only that the client is no longer *made* to.
+ *
+ * Cardinality inside a declared section stays at `.min(1)` for the same reason.
+ * Absence is honest; a heading over nothing is not. A client either has the
+ * evidence and shows it, or does not have it and says nothing.
+ */
 const contractorRequiredSections = Object.freeze([
   "SERVICES",
   "TRUST_SIGNALS",
-  "GALLERY",
   "PROCESS",
-  "TESTIMONIALS",
   "FAQ",
   "CONTACT",
   "ACTIONS",

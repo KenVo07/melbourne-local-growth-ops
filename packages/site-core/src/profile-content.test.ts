@@ -126,6 +126,103 @@ describe("validateWebsiteProfileContent", () => {
     });
   });
 
+  /**
+   * A Contractor is required to describe itself. It is not required to hold
+   * proof it may not have. These four cases fix the line between the two.
+   */
+  describe("evidence a client may not have", () => {
+    it("accepts a Contractor who has no customer willing to be quoted", () => {
+      const input = contractorProfile() as {
+        sections: Array<Record<string, unknown>>;
+      };
+      input.sections = input.sections.filter(
+        ({ type }) => type !== "TESTIMONIALS",
+      );
+
+      const result = validateWebsiteProfileContent(input);
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(
+        result.data.sections.some(({ type }) => type === "TESTIMONIALS"),
+      ).toBe(false);
+    });
+
+    it("accepts a Contractor with no photographs of finished work", () => {
+      const input = contractorProfile() as {
+        sections: Array<Record<string, unknown>>;
+      };
+      input.sections = input.sections.filter(({ type }) => type !== "GALLERY");
+
+      const result = validateWebsiteProfileContent(input);
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.sections.some(({ type }) => type === "GALLERY")).toBe(
+        false,
+      );
+    });
+
+    it("accepts a Contractor who has neither, and still requires what it is", () => {
+      const input = contractorProfile() as {
+        sections: Array<Record<string, unknown>>;
+      };
+      input.sections = input.sections.filter(
+        ({ type }) => type !== "GALLERY" && type !== "TESTIMONIALS",
+      );
+
+      expect(validateWebsiteProfileContent(input).success).toBe(true);
+
+      // The trade it performs is not evidence, and is still required.
+      const withoutServices = contractorProfile() as {
+        sections: Array<Record<string, unknown>>;
+      };
+      withoutServices.sections = withoutServices.sections.filter(
+        ({ type }) => type !== "SERVICES",
+      );
+      const missing = validateWebsiteProfileContent(withoutServices);
+      expect(missing.success).toBe(false);
+      if (missing.success) return;
+      expect(missing.issues).toContainEqual({
+        code: "INVALID_INPUT",
+        path: ["sections"],
+        message: "CONTRACTOR profiles require a SERVICES section.",
+      });
+    });
+
+    it("still refuses a declared evidence section with nothing in it", () => {
+      // Absence is honest. A heading standing over no content is not, so a
+      // client either shows the evidence or does not declare the section.
+      for (const type of ["GALLERY", "TESTIMONIALS"] as const) {
+        const input = contractorProfile() as {
+          sections: Array<Record<string, unknown>>;
+        };
+        const section = input.sections.find((entry) => entry.type === type);
+        if (section === undefined) throw new Error(`Fixture requires ${type}.`);
+        section.items = [];
+
+        expect(validateWebsiteProfileContent(input).success).toBe(false);
+      }
+    });
+
+    it("leaves a Contractor who does hold the evidence exactly as it was", () => {
+      const result = validateWebsiteProfileContent(contractorProfile());
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      const gallery = result.data.sections.find(
+        (section) => section.type === "GALLERY",
+      );
+      const testimonials = result.data.sections.find(
+        (section) => section.type === "TESTIMONIALS",
+      );
+      expect(gallery?.type === "GALLERY" && gallery.items).toHaveLength(1);
+      expect(
+        testimonials?.type === "TESTIMONIALS" && testimonials.items,
+      ).toHaveLength(1);
+    });
+  });
+
   it("keeps configured and not-configured actions truthful and closed", () => {
     const profile = contractorProfile() as {
       sections: Array<Record<string, unknown>>;

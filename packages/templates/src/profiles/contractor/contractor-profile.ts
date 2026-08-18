@@ -163,8 +163,14 @@ if (!validationResult.success) {
 
 /**
  * Canonical default contractor profile content.
- * Complies with ContractorProfileContentSchema and satisfies all 8 required section types:
- * SERVICES, TRUST_SIGNALS, GALLERY, PROCESS, TESTIMONIALS, FAQ, CONTACT, ACTIONS.
+ *
+ * Complies with ContractorProfileContentSchema, which requires SERVICES,
+ * TRUST_SIGNALS, PROCESS, FAQ, CONTACT and ACTIONS. The GALLERY and TESTIMONIALS
+ * sections below are offered rather than required: this demonstration profile
+ * carries both so the sections are exercised, and both are labelled as
+ * illustrative throughout. A real client with no photographs of finished work
+ * and no customer willing to be quoted declares neither, and the pages that
+ * would have carried them are simply not generated.
  */
 export const defaultContractorProfileContent: WebsiteProfileContent = validationResult.data;
 
