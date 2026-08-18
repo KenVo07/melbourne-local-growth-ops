@@ -86,6 +86,30 @@ export function decideServiceQuestionTreatment(input: {
 }
 
 /**
+ * How many photographs a beat needs before the overlay is offered, or `null`
+ * when this client never offers one.
+ *
+ * The count is a *runtime* property — one project detail route serves every
+ * project, and projects do not carry the same number of photographs — so
+ * generation decides the capability and embeds this threshold in the emitted
+ * source, which applies it per project. That split is what keeps the decision
+ * honest: a client with one photograph on one project and six on another gets
+ * exploration where it means something and not where it does not.
+ */
+export function projectMediaThreshold(
+  interaction: ResolvedInteraction,
+): number | null {
+  switch (interaction.appetite.mediaExploration) {
+    case "EDITORIAL_ONLY":
+      return null;
+    case "PREFERRED":
+      return 1;
+    default:
+      return 2;
+  }
+}
+
+/**
  * Project media exploration.
  *
  * The overlay is always an addition. Every photograph stays composed on the
@@ -118,4 +142,80 @@ export function decideProjectMediaTreatment(input: {
         ? `${input.mediaCount} project photographs form a sequence, so the page offers optional focused exploration alongside the visible media.`
         : "This client's language prefers photographs to be openable at full size alongside the visible media.",
   };
+}
+
+/**
+ * Everything the emitters need to know about this client's interaction, decided
+ * once.
+ *
+ * Emission is conditional on this plan: a client whose language selects nothing
+ * receives no helper source, no helper CSS and no client JavaScript, so a still
+ * site pays nothing for the existence of the capability.
+ */
+export interface InteractionPlan {
+  readonly contactFaq: InteractionDecision<DisclosureTreatment>;
+  readonly serviceQuestions: InteractionDecision<DisclosureTreatment>;
+  readonly projectMedia: InteractionDecision<MediaTreatment>;
+  /** Photographs a project beat needs before the overlay is offered. */
+  readonly projectMediaThreshold: number;
+  readonly usesDisclosure: boolean;
+  readonly usesMediaExplorer: boolean;
+  readonly usesReveal: boolean;
+}
+
+export function planInteractions(input: {
+  readonly interaction: ResolvedInteraction;
+  /**
+   * The routes this client's page graph actually carries. A capability whose
+   * route does not exist is not a capability, and emitting its helper would put
+   * dead source and a dead client chunk into the artifact.
+   */
+  readonly routeIds: readonly string[];
+  /** Questions the client's own FAQ section carries, 0 when it has none. */
+  readonly faqCount: number;
+  /**
+   * The *fewest* questions any service carries. One service detail route serves
+   * every service, so a site that folded some rails and not others would read
+   * as inconsistent rather than as considered.
+   */
+  readonly serviceQuestionCount: number;
+}): InteractionPlan {
+  const { interaction } = input;
+  const has = (routeId: string) => input.routeIds.includes(routeId);
+
+  const contactFaq = has("contact")
+    ? decideContactFaqTreatment({ itemCount: input.faqCount, interaction })
+    : ({
+        treatment: "STATIC",
+        reason: "This client has no contact route.",
+      } as const);
+  const serviceQuestions = has("service-detail")
+    ? decideServiceQuestionTreatment({
+        itemCount: input.serviceQuestionCount,
+        interaction,
+      })
+    : ({
+        treatment: "STATIC",
+        reason: "This client has no service detail route.",
+      } as const);
+
+  const threshold = projectMediaThreshold(interaction);
+  const projectMedia = has("project-detail")
+    ? decideProjectMediaTreatment({ mediaCount: threshold ?? 0, interaction })
+    : ({
+        treatment: "STATIC",
+        reason: "This client has no project detail route.",
+      } as const);
+
+  return Object.freeze({
+    contactFaq,
+    serviceQuestions,
+    projectMedia,
+    projectMediaThreshold: threshold ?? 0,
+    usesDisclosure:
+      contactFaq.treatment === "PROGRESSIVE_DISCLOSURE" ||
+      serviceQuestions.treatment === "PROGRESSIVE_DISCLOSURE",
+    usesMediaExplorer: projectMedia.treatment === "DIALOG_EXPLORER",
+    usesReveal: interaction.reveals,
+  });
 }

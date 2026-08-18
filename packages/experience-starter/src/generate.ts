@@ -5,7 +5,12 @@ import { resolveDesign, type ResolvedDesign } from "./decisions.js";
 import { emitSiteContent } from "./emit/content.js";
 import { emitDesignDna } from "./emit/design-dna.js";
 import { emitEntrypoint, emitManifest, KNOWN_ROUTES } from "./emit/entrypoint.js";
-import { emitReveal } from "./emit/motion.js";
+import {
+  emitDisclosure,
+  emitMediaViewer,
+  emitMotionPreference,
+  emitReveal,
+} from "./emit/interaction-runtime.js";
 import { emitPieces } from "./emit/pieces.js";
 import { emitAboutContactRoutes } from "./emit/routes/about-contact.js";
 import { emitHomeRoute } from "./emit/routes/home.js";
@@ -13,6 +18,10 @@ import { emitProjectsRoutes } from "./emit/routes/projects.js";
 import { emitServicesRoutes } from "./emit/routes/services.js";
 import { emitShell } from "./emit/shell.js";
 import { emitStylesheet } from "./emit/stylesheet.js";
+import {
+  planInteractions,
+  type InteractionPlan,
+} from "./interaction-decisions.js";
 
 /**
  * The P1 Experience Starter.
@@ -50,6 +59,8 @@ export interface GeneratedExperienceFile {
 export interface GeneratedExperience {
   readonly files: readonly GeneratedExperienceFile[];
   readonly design: ResolvedDesign;
+  /** Which interactions this client's content and language selected, and why. */
+  readonly interactions: InteractionPlan;
   readonly routeIds: readonly string[];
   /** A digest over every emitted path and its bytes. */
   readonly sourceHash: string;
@@ -69,6 +80,8 @@ interface DefinitionFacts {
   readonly routeIds: readonly string[];
   readonly serviceIds: readonly string[];
   readonly assetIds: ReadonlySet<string>;
+  /** Questions the client's own FAQ section carries. */
+  readonly faqCount: number;
 }
 
 export function generateExperienceStarter(
@@ -94,14 +107,29 @@ export function generateExperienceStarter(
   });
   assertGroundIsLegible(design, facts.surfaceColour);
 
+  /*
+   * Which interactions this client gets, decided once from its content and its
+   * language and then obeyed by every emitter. Emission is conditional on it,
+   * so a client that selects nothing receives no helper source, no helper CSS
+   * and no client JavaScript.
+   */
+  const plan = planInteractions({
+    interaction: design.interaction,
+    routeIds: facts.routeIds,
+    faqCount: facts.faqCount,
+    serviceQuestionCount: Math.min(
+      ...brief.serviceNarratives.map(({ questions }) => questions.length),
+    ),
+  });
+
   const files: GeneratedExperienceFile[] = [
-    file("manifest.json", emitManifest(design, facts.routeIds)),
+    file("manifest.json", emitManifest(design, facts.routeIds, plan)),
     file("design-dna.json", emitDesignDna(design)),
     file("index.tsx", emitEntrypoint(design, facts.routeIds)),
     file("content/site-content.ts", emitSiteContent(brief)),
     file("components/Shell.tsx", emitShell(design)),
     file("components/Pieces.tsx", emitPieces(design)),
-    file("styles/site.css", emitStylesheet(design)),
+    file("styles/site.css", emitStylesheet(design, plan)),
   ];
 
   if (facts.routeIds.includes("home")) {
@@ -123,8 +151,21 @@ export function generateExperienceStarter(
   files.push(
     file("routes/AboutContactRoutes.tsx", emitAboutContactRoutes(design)),
   );
-  if (brief.motion === "ENTRANCE") {
+  /*
+   * Interaction helpers. Each is client-local source over native browser APIs,
+   * emitted only when this client's plan actually uses it.
+   */
+  if (plan.usesReveal || plan.usesDisclosure) {
+    files.push(file("components/motion.ts", emitMotionPreference()));
+  }
+  if (plan.usesReveal) {
     files.push(file("components/Reveal.tsx", emitReveal()));
+  }
+  if (plan.usesDisclosure) {
+    files.push(file("components/Disclosure.tsx", emitDisclosure(design)));
+  }
+  if (plan.usesMediaExplorer) {
+    files.push(file("components/MediaViewer.tsx", emitMediaViewer(design)));
   }
 
   files.sort((left, right) => (left.path < right.path ? -1 : 1));
@@ -132,6 +173,7 @@ export function generateExperienceStarter(
   return Object.freeze({
     files: Object.freeze(files),
     design,
+    interactions: plan,
     routeIds: facts.routeIds,
     sourceHash: digest(
       JSON.stringify(files.map(({ path, sha256 }) => ({ path, sha256 }))),
@@ -196,6 +238,9 @@ function readDefinition(definition: unknown): DefinitionFacts {
     .flatMap((section) => section.items ?? [])
     .map((item) => (item as { serviceId?: unknown }).serviceId)
     .filter((value): value is string => typeof value === "string");
+  const faqSection = (root.profile?.sections ?? []).find(
+    (section) => section.type === "FAQ",
+  );
   const assetIds = new Set(
     (root.assets ?? [])
       .map(({ assetId }) => assetId)
@@ -207,6 +252,7 @@ function readDefinition(definition: unknown): DefinitionFacts {
     routeIds: Object.freeze(routeIds),
     serviceIds: Object.freeze(serviceIds),
     assetIds,
+    faqCount: faqSection?.items?.length ?? 0,
   });
 }
 

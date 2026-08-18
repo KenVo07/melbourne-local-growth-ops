@@ -106,13 +106,17 @@ describe("generation output shape", () => {
 
 describe("standalone portability — the property the whole design rests on", () => {
   it("never imports the generator, a workspace package or a forbidden module", () => {
+    // Counted across the whole tree rather than per file, so the assertions
+    // below cannot pass vacuously — a leaf helper that imports nothing is a
+    // legitimate file, an entire generation that imports nothing is not.
+    let seen = 0;
     for (const brief of [quietBrief, loudBrief]) {
       for (const file of generate(brief).files) {
         if (!file.path.endsWith(".ts") && !file.path.endsWith(".tsx")) continue;
         const specifiers = [
           ...file.contents.matchAll(/from\s+"([^"]+)"/g),
         ].map(([, specifier]) => specifier ?? "");
-        expect(specifiers.length).toBeGreaterThan(0);
+        seen += specifiers.length;
         for (const specifier of specifiers) {
           expect(specifier).not.toContain("experience-starter");
           expect(specifier).not.toContain("@melbourne-local-growth-ops/");
@@ -126,6 +130,7 @@ describe("standalone portability — the property the whole design rests on", ()
         }
       }
     }
+    expect(seen).toBeGreaterThan(0);
   });
 
   it("emits a stylesheet with no remote resource reference", () => {

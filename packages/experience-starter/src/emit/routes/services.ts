@@ -12,7 +12,7 @@ import type { ResolvedDesign } from "../../decisions.js";
  */
 export function emitServicesRoutes(design: ResolvedDesign): string {
   const { ns, brief } = design;
-  const arrive = brief.motion === "ENTRANCE";
+  const arrive = design.interaction.reveals;
   const open = arrive ? "<Arrive>" : "<>";
   const close = arrive ? "</Arrive>" : "</>";
   /*

@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../decisions.js";
+import type { InteractionPlan } from "../interaction-decisions.js";
 import { titleCase } from "./content.js";
 
 /** The route IDs this starter knows how to compose, and where each lives. */
@@ -105,6 +106,7 @@ export default authoredClientExperience;
 export function emitManifest(
   design: ResolvedDesign,
   routeIds: readonly string[],
+  plan: InteractionPlan,
 ): string {
   const { brief } = design;
   return `${JSON.stringify(
@@ -122,8 +124,10 @@ export function emitManifest(
       publicDependencies: [],
       runtime: {
         clientJavaScript:
-          brief.motion === "ENTRANCE" ? "COMPONENT_SCOPED" : "NONE",
-        motion: brief.motion === "NONE" ? "NONE" : "NATIVE",
+          plan.usesReveal || plan.usesDisclosure || plan.usesMediaExplorer
+            ? "COMPONENT_SCOPED"
+            : "NONE",
+        motion: design.interaction.enabled ? "NATIVE" : "NONE",
         reducedMotion: "REQUIRED",
       },
     },

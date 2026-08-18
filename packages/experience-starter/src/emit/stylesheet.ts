@@ -1,4 +1,11 @@
 import type { ResolvedDesign } from "../decisions.js";
+import type { InteractionPlan } from "../interaction-decisions.js";
+import {
+  disclosureStyles,
+  interactionReducedMotion,
+  interactionVariables,
+  overlayStyles,
+} from "./interaction-styles.js";
 
 /**
  * Emits the client's own stylesheet.
@@ -23,8 +30,11 @@ import type { ResolvedDesign } from "../decisions.js";
  *   `--measure-display` so a heading wraps on a considered word rather than at
  *                     the width of whatever column it landed in.
  */
-export function emitStylesheet(design: ResolvedDesign): string {
-  const { brief } = design;
+export function emitStylesheet(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
+  const { interaction } = design;
   const sections = [
     header(design),
     root(design),
@@ -44,9 +54,11 @@ export function emitStylesheet(design: ResolvedDesign): string {
     contactGrammar(design),
     notFound(design),
     platformModules(design),
-    brief.motion === "NONE" ? "" : motion(design),
+    interaction.enabled ? motion(design) : "",
+    plan.usesDisclosure ? disclosureStyles(design) : "",
+    plan.usesMediaExplorer ? overlayStyles(design) : "",
     responsive(design),
-    reducedMotion(design),
+    reducedMotion(design, plan),
   ];
   return `${sections.filter((section) => section.trim().length > 0).join("\n").trimEnd()}\n`;
 }
@@ -115,8 +127,7 @@ function root(design: ResolvedDesign): string {
   --text: ${type.textStack};
 
   --media-radius: ${media.radius};
-  --motion-duration: 180ms;
-  --motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+${interactionVariables(design)}
 
   background: var(--paper);
   color: var(--ink);
@@ -1770,7 +1781,7 @@ function platformModules(design: ResolvedDesign): string {
 }
 
 function motion(design: ResolvedDesign): string {
-  const { ns, brief } = design;
+  const { ns, interaction } = design;
   const micro = `
 /* ---------------------------------------------------------------- motion */
 
@@ -1792,17 +1803,17 @@ function motion(design: ResolvedDesign): string {
 }
 
 .${ns}-menu[open] .${ns}-menu-panel {
-  animation: ${ns}-menu-in calc(var(--motion-duration) * 1.4) var(--motion-ease);
+  animation: ${ns}-menu-in var(--motion-state) var(--motion-ease);
 }
 
 @keyframes ${ns}-menu-in {
   from {
     opacity: 0;
-    transform: translateY(-0.4rem);
+    transform: translateY(calc(var(--motion-hover-travel) * -2));
   }
 }
 `;
-  if (brief.motion !== "ENTRANCE") return micro;
+  if (!interaction.reveals) return micro;
   return `${micro}
 /*
  * Restrained entrance. An element declares itself revealable; the Reveal helper
@@ -1814,13 +1825,13 @@ function motion(design: ResolvedDesign): string {
  * hydration, sees the finished page rather than a blank one.
  */
 [data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(0.75rem);
+  opacity: var(--motion-reveal-floor);
+  transform: translateY(var(--motion-travel));
 }
 
 [data-reveal] {
-  transition: opacity calc(var(--motion-duration) * 3) var(--motion-ease),
-    transform calc(var(--motion-duration) * 3) var(--motion-ease);
+  transition: opacity var(--motion-reveal) var(--motion-ease),
+    transform var(--motion-reveal) var(--motion-ease);
 }
 
 [data-reveal="visible"] {
@@ -2055,15 +2066,19 @@ ${singleColumn.map((selector) => `  ${selector},`).join("\n").replace(/,$/, " {"
 `;
 }
 
-function reducedMotion(design: ResolvedDesign): string {
-  const { ns, brief } = design;
-  const revealReset =
-    brief.motion === "ENTRANCE"
+function reducedMotion(
+  design: ResolvedDesign,
+  plan: InteractionPlan,
+): string {
+  const { ns, interaction } = design;
+  const revealReset = interaction.reveals
       ? `
   /*
-   * Reduced motion is an intentional state, not a broken one. Entrance elements
-   * are simply present — the helper still runs and still marks them, but there
-   * is nothing to travel and nothing to fade.
+   * An entrance has no reduced-motion equivalent worth keeping: the honest
+   * expression of "this arrives as you reach it" is simply that it is already
+   * there. The helper settles every element immediately in this mode, so this
+   * only guarantees the outcome. A brief-fade brief still fades its *state*
+   * changes, which are the ones carrying meaning.
    */
   [data-reveal],
   [data-reveal="pending"] {
@@ -2076,10 +2091,25 @@ function reducedMotion(design: ResolvedDesign): string {
   return `
 /* -------------------------------------------------------- reduced motion */
 
+/*
+ * Reduced motion is a different expression of state, not the absence of one.
+ * Travel goes to zero everywhere and every channel collapses to the one
+ * duration this client's brief asked for — instant, or a brief fade that still
+ * acknowledges the change. Nothing here hides content, and every open, closed,
+ * selected and submitted state stays exactly as legible as it was.
+ */
 @media (prefers-reduced-motion: reduce) {
   .${ns} {
-    /* One value, read by every transition and animation in this file. */
-    --motion-duration: 1ms;
+    /* Every duration and every distance in this file, in one place. */
+    --motion-duration: ${interaction.reduced.duration}ms;
+    --motion-state: ${interaction.reduced.duration}ms;
+    --motion-overlay: ${interaction.reduced.duration}ms;
+    --motion-reveal: ${interaction.reduced.duration}ms;
+    --motion-travel: ${interaction.reduced.travel};
+    --motion-hover-travel: ${interaction.reduced.travel};
+    --motion-overlay-travel: ${interaction.reduced.travel};
+    --motion-overlay-scale: 0;
+    --motion-reveal-floor: 1;
   }
 
   .${ns}-menu[open] .${ns}-menu-panel {
@@ -2089,7 +2119,7 @@ function reducedMotion(design: ResolvedDesign): string {
   .${ns}-onward:hover::after {
     transform: none;
   }
-${revealReset}}
+${revealReset}${interactionReducedMotion(design, plan)}}
 `;
 }
 

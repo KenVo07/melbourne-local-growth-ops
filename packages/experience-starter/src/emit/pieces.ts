@@ -10,13 +10,11 @@ import { titleCase } from "./content.js";
  * delete any of them without the Factory having an opinion.
  */
 export function emitPieces(design: ResolvedDesign): string {
-  const { ns, brief } = design;
-  const revealImport =
-    brief.motion === "ENTRANCE"
+  const { ns, interaction } = design;
+  const revealImport = interaction.reveals
       ? `\nimport { Reveal } from "./Reveal";`
       : "";
-  const revealExport =
-    brief.motion === "ENTRANCE"
+  const revealExport = interaction.reveals
       ? `
 /**
  * A section that arrives rather than simply being there. Wrapping is opt-in per

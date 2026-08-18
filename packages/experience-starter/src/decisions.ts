@@ -237,9 +237,15 @@ export function resolveDesign(options: ResolveDesignOptions): ResolvedDesign {
  * nothing.
  */
 const legacyInteraction: Readonly<Record<StarterMotion, StarterInteraction>> = {
+  /*
+   * NONE still resolves a tempo and a curve. A few always-emitted rules — a
+   * hovered action, a focused field — carry a transition whatever the brief
+   * says, because instant colour changes read as a rendering fault rather than
+   * as restraint. Holding those at the A3 values keeps a still site byte-stable.
+   */
   NONE: {
-    tempo: "BRISK",
-    attack: "IMMEDIATE",
+    tempo: "MEASURED",
+    attack: "EASED",
     travel: 0,
     overshoot: 0,
     interactionDensity: 0,
