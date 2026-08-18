@@ -15,7 +15,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { ARTIFACTS, PROVENANCE_CLASSES } from "./artifact-model.mjs";
 
@@ -169,7 +169,7 @@ function enumHint(definition, key) {
   return values === undefined ? "" : ` # ${values.join(" | ")}`;
 }
 
-function render(kind, client) {
+export function renderCreativeArtifact(kind, client) {
   const definition = ARTIFACTS[kind];
   const prompts = PROMPTS[kind] ?? {};
   const skeletons = SKELETONS[kind] ?? {};
@@ -220,39 +220,54 @@ const FILENAMES = {
   "promotion-ledger": ["promotion-ledger.md"],
 };
 
-async function emit(directory, client) {
+export async function emitCreativeArtifacts(directory, client) {
   await mkdir(directory, { recursive: true });
   const written = [];
   for (const [kind, names] of Object.entries(FILENAMES)) {
     for (const name of names) {
       const path = join(directory, name);
-      await writeFile(path, render(kind, client), "utf8");
+      await writeFile(path, renderCreativeArtifact(kind, client), "utf8");
       written.push(name);
     }
   }
   return written;
 }
 
-const args = process.argv.slice(2);
+export async function runScaffoldCli(args = process.argv.slice(2)) {
+  if (args.includes("--templates")) {
+    const directory = resolve(repositoryRoot, "docs/creative/templates");
+    const written = await emitCreativeArtifacts(directory, "<client-id>");
+    process.stdout.write(
+      `Regenerated ${written.length} template(s) in docs/creative/templates:\n  ${written.join("\n  ")}\n`,
+    );
+    return;
+  }
 
-if (args.includes("--templates")) {
-  const directory = resolve(repositoryRoot, "docs/creative/templates");
-  const written = await emit(directory, "<client-id>");
-  process.stdout.write(
-    `Regenerated ${written.length} template(s) in docs/creative/templates:\n  ${written.join("\n  ")}\n`,
-  );
-} else {
   const [client, target] = args.filter((value) => !value.startsWith("--"));
   if (client === undefined || target === undefined) {
     process.stdout.write(
       "usage: pnpm creative:new <client-id> <directory>\n       pnpm creative:new --templates\n",
     );
     process.exitCode = 1;
-  } else {
-    const directory = resolve(target);
-    const written = await emit(directory, client);
-    process.stdout.write(
-      `Scaffolded a creative delivery for "${client}" in ${directory}:\n  ${written.join("\n  ")}\n\nFill every prompt, then run:\n  pnpm creative:validate ${target}\n`,
-    );
+    return;
   }
+
+  const directory = resolve(target);
+  const written = await emitCreativeArtifacts(directory, client);
+  process.stdout.write(
+    `Scaffolded a creative delivery for "${client}" in ${directory}:\n  ${written.join("\n  ")}\n\nFill every prompt, then run:\n  pnpm creative:validate ${target}\n`,
+  );
+}
+
+/*
+ * The CLI runs only when this file is the process entry point. The premium
+ * bridge imports the builders above so a prepared workspace carries exactly the
+ * same context and scaffold as the commands produce, and an import that wrote to
+ * stdout or set an exit code could not be used that way.
+ */
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  await runScaffoldCli();
 }

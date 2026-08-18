@@ -18,7 +18,7 @@
  */
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(here, "../..");
@@ -101,7 +101,7 @@ function summariseStoryBlock(block) {
   };
 }
 
-function buildContext(definition) {
+export function buildContext(definition) {
   const display = definition.configuration?.display ?? {};
   const pages = definition.pageGraph?.pages ?? [];
   const projects = definition.projects?.projects ?? [];
@@ -209,7 +209,7 @@ function buildContext(definition) {
   };
 }
 
-function renderBrief(context, envelope) {
+export function renderBrief(context, envelope) {
   const { client, pageGraph, projects, media, truth } = context;
   const routeRows = pageGraph.pages
     .map(
@@ -398,15 +398,7 @@ pnpm creative:validate <this directory>
 `;
 }
 
-const args = process.argv.slice(2);
-const [inputArgument, outputArgument] = args.filter((value) => !value.startsWith("--"));
-
-if (inputArgument === undefined || outputArgument === undefined) {
-  process.stdout.write(
-    "usage: pnpm creative:package <client-build-package-or-json> <output-directory>\n",
-  );
-  process.exitCode = 1;
-} else {
+export async function packageCreativeContext(inputArgument, outputArgument) {
   const inputPath = resolve(inputArgument);
   const definitionPath = inputPath.endsWith(".json")
     ? inputPath
@@ -423,21 +415,36 @@ if (inputArgument === undefined || outputArgument === undefined) {
   const outputDirectory = resolve(outputArgument);
   await mkdir(outputDirectory, { recursive: true });
 
-  await writeFile(
-    join(outputDirectory, "creative-context.json"),
-    `${JSON.stringify(context, null, 2)}\n`,
-    "utf8",
-  );
-  await writeFile(
+  const written = [
     join(outputDirectory, "CREATIVE_CONTEXT.md"),
-    renderBrief(context, envelope),
-    "utf8",
-  );
+    join(outputDirectory, "creative-context.json"),
+    join(outputDirectory, "signature-capability-envelope.md"),
+  ];
+  await writeFile(written[1], `${JSON.stringify(context, null, 2)}\n`, "utf8");
+  await writeFile(written[0], renderBrief(context, envelope), "utf8");
   await copyFile(
     resolve(repositoryRoot, "docs/creative/signature-capability-envelope.md"),
-    join(outputDirectory, "signature-capability-envelope.md"),
+    written[2],
   );
 
+  return { context, outputDirectory, written };
+}
+
+export async function runPackageContextCli(args = process.argv.slice(2)) {
+  const [inputArgument, outputArgument] = args.filter((value) => !value.startsWith("--"));
+
+  if (inputArgument === undefined || outputArgument === undefined) {
+    process.stdout.write(
+      "usage: pnpm creative:package <client-build-package-or-json> <output-directory>\n",
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  const { context, outputDirectory } = await packageCreativeContext(
+    inputArgument,
+    outputArgument,
+  );
   process.stdout.write(
     `Packaged ${context.client.businessName || context.client.clientId} for creative exploration:\n` +
       `  ${outputDirectory}/CREATIVE_CONTEXT.md\n` +
@@ -448,4 +455,17 @@ if (inputArgument === undefined || outputArgument === undefined) {
       `Scaffold the creative artifacts alongside it with:\n` +
       `  pnpm creative:new ${context.client.clientId || "<client-id>"} ${outputArgument}\n`,
   );
+}
+
+/*
+ * The CLI runs only when this file is the process entry point. The premium
+ * bridge imports the builders above so a prepared workspace carries exactly the
+ * same context and scaffold as the commands produce, and an import that wrote to
+ * stdout or set an exit code could not be used that way.
+ */
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  await runPackageContextCli();
 }
