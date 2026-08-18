@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { validateStarterBrief } from "./brief.js";
+import { validateStarterBrief, type StarterInteraction } from "./brief.js";
 import { contrastRatio } from "./decisions.js";
 import { loudBrief, quietBrief, testDefinition } from "./fixtures.js";
 import { generateExperienceStarter, StarterGenerationError } from "./generate.js";
@@ -348,7 +348,7 @@ describe("interaction capability emission", () => {
     },
   };
 
-  const language = {
+  const language: StarterInteraction = {
     tempo: "MEASURED",
     attack: "EASED",
     travel: 0.5,
@@ -358,9 +358,9 @@ describe("interaction capability emission", () => {
     disclosure: "WHEN_LONG",
     mediaExploration: "WHEN_PLURAL",
     reducedMotion: "INSTANT",
-  } as const;
+  };
 
-  const briefWith = (interaction: Partial<typeof language>) => ({
+  const briefWith = (interaction: Partial<StarterInteraction>) => ({
     ...loudBrief,
     interaction: { ...language, ...interaction },
   });
