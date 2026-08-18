@@ -33,13 +33,38 @@ libraries are preloaded by absolute path instead.
 
 Verified: `webkit.launch()` → **WebKit 26.5**, page rendered.
 
+### A2 — WebKit targeted coverage
+
+The frozen candidate's artifacts were already built at `4545ecf`; the only
+commits since changed `.gitignore` and deleted the harness, so no product code
+differs and no rebuild was needed. The archived harness was restored from
+`8170d22` into the scratchpad and run unchanged against the same two servers
+(3060 STONE & LINE, 3061 second-disclosure-context) the other two engines used.
+
+**WebKit 26.5: 66/66 passed.** Identical to Chromium and Firefox, check for
+check. Covered: disclosure open, close, rapid retoggle, the second semantic
+disclosure context, media viewer open, next, previous, explicit Close focus
+return, Escape focus return, responsive navigation open and close, normal
+entrance, all three reduced-motion variants, keyboard interaction, 13 axe states
+(WCAG 2.1 AA, 0 violations) and 16 responsive overflow checks at 1440/834/390/320.
+
+| | Chromium | Firefox | WebKit |
+|---|---|---|---|
+| interaction evidence | 66/66 | 66/66 | **66/66** |
+| axe (13 states) | 0 | 0 | **0** |
+| responsive overflow | none | none | **none** |
+
+**No WebKit-specific defect exists.** Nothing was changed for Job A.
+
+Evidence: `../WEB01C_COMPLETION/evidence-webkit/`.
+
 ## Current phase
 
-Job A2 — targeted WEB-01C WebKit smoke coverage.
+Job B — TESTIMONIALS/GALLERY truth-model audit.
 
 ## Findings so far
 
-_(none recorded yet)_
+- **Job A: NO_DEFECT.** Environment resolved, WebKit green.
 
 ## Resume instruction
 
