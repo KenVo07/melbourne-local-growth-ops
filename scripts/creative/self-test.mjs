@@ -324,6 +324,11 @@ const cases = [
     expect: "it must be one of",
   },
   {
+    name: "an asset that does not say what it substantiates is caught",
+    documents: [mediaPlan([["hero", "AI_GENERATED_CREATIVE", "", "Khoa Vo"]])],
+    expect: "does not say what it substantiates",
+  },
+  {
     name: "an asset with no human approver is caught",
     documents: [mediaPlan([["hero", "AI_GENERATED_CREATIVE", "atmosphere", ""]])],
     expect: "no named human approver",

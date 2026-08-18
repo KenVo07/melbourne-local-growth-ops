@@ -359,9 +359,19 @@ export function validateArtifacts(documents, envelope) {
         );
         continue;
       }
-      const claimsAFact =
-        substantiates !== "" &&
-        !NON_SUBSTANTIATING.includes(substantiates.toLowerCase());
+      /*
+       * An empty cell is ambiguous -- it could mean "asserts nothing" or "nobody
+       * decided yet" -- and this is the one place in the system where ambiguity
+       * becomes a false claim on a live page. Require the decision explicitly.
+       */
+      if (substantiates === "") {
+        fail(
+          plan.name,
+          `asset "${asset}" does not say what it substantiates. Write the claim it stands behind, or "none" if it asserts nothing.`,
+        );
+        continue;
+      }
+      const claimsAFact = !NON_SUBSTANTIATING.includes(substantiates.toLowerCase());
       if (claimsAFact && provenance !== EVIDENCE_CLASS) {
         fail(
           plan.name,

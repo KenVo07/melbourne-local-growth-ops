@@ -42,6 +42,12 @@ interface Candidate {
   readonly files: Readonly<Record<string, string>>;
   readonly dependencies?: readonly { name: string; version: string }[];
   readonly approvedDependencies?: readonly string[];
+  /**
+   * Optional. When set, the refusal must arrive by this exact code. A candidate
+   * can otherwise be "refused" for an incidental reason -- malformed source, a
+   * missing file -- and look like proof of a rule it never reached.
+   */
+  readonly expectedCode?: string;
 }
 
 const baselineManifest = {
@@ -88,14 +94,23 @@ const baselineFiles: Readonly<Record<string, string>> = {
   ].join("\n"),
 };
 
-/** A signature module wrapper, so each candidate is shaped like real work. */
-function signature(body: string, imports = ""): string {
+/**
+ * A signature module wrapper, so each candidate is shaped like real work.
+ *
+ * `body` accepts an array because most candidates are multi-line; joining here
+ * rather than at each call site removes a real footgun. An earlier version took
+ * only a string, and a candidate that passed an array was comma-joined into
+ * malformed source -- so the probe reported SOURCE_PARSE_ERROR and appeared to
+ * confirm a refusal it had never actually tested.
+ */
+function signature(body: string | readonly string[], imports = ""): string {
+  const lines = Array.isArray(body) ? body.join("\n") : (body as string);
   return [
     `import type { ClientExperienceSignatureProps } from "@proportion/client-experience";`,
     imports,
     ``,
     `export function ProbeSignature({ platform }: ClientExperienceSignatureProps) {`,
-    body,
+    lines,
     `}`,
     ``,
   ].join("\n");
@@ -565,6 +580,7 @@ const candidates: readonly Candidate[] = [
         `  return <div>{String(make)}</div>;`,
       ]),
     },
+    expectedCode: "EXECUTION_PRIMITIVE_FORBIDDEN",
   },
 ];
 
@@ -625,7 +641,10 @@ async function probe(candidate: Candidate): Promise<ProbeResult> {
         observed: "REFUSED",
         errorCode: policyError.code,
         message: policyError.message,
-        agrees: candidate.expected === "REFUSED",
+        agrees:
+          candidate.expected === "REFUSED" &&
+          (candidate.expectedCode === undefined ||
+            candidate.expectedCode === policyError.code),
       };
     }
   } finally {

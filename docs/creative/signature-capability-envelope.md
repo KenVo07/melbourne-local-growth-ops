@@ -59,7 +59,7 @@ is a different technique or a Platform primitive — never weakening the policy.
 | **css-import** — CSS @import | Splitting stylesheets | `CSS_RESOURCE_REFERENCE_FORBIDDEN` |
 | **next-framework-import** — Importing next/image or next/link | Reaching for framework primitives directly | `IMPORT_FORBIDDEN` |
 | **javascript-url** — A javascript: URL | n/a — probed because it must stay refused | `UNSAFE_URL_FORBIDDEN` |
-| **dynamic-code-execution** — eval / new Function() | n/a — probed because it must stay refused | `SOURCE_PARSE_ERROR` |
+| **dynamic-code-execution** — eval / new Function() | n/a — probed because it must stay refused | `EXECUTION_PRIMITIVE_FORBIDDEN` |
 
 ## What this means for ambitious Signature work
 

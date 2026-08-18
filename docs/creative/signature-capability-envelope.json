@@ -229,7 +229,7 @@
       "summary": "eval / new Function()",
       "creativeUse": "n/a — probed because it must stay refused",
       "status": "REFUSED",
-      "errorCode": "SOURCE_PARSE_ERROR"
+      "errorCode": "EXECUTION_PRIMITIVE_FORBIDDEN"
     }
   ]
 }

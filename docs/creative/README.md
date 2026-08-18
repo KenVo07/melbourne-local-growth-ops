@@ -19,6 +19,8 @@ the same runtime as one built without it.
 | Working out what imagery a delivery may use | [media-art-direction.md](media-art-direction.md) |
 | Finding out what is wrong with a direction | [creative-red-team.md](creative-red-team.md) |
 | Deciding what a Signature can technically do | [signature-capability-envelope.md](signature-capability-envelope.md) |
+| Using references without absorbing them | [reference-analysis.md](reference-analysis.md) |
+| Working out what evidence to capture | [evidence-protocol.md](evidence-protocol.md) |
 
 ## The workflow
 
