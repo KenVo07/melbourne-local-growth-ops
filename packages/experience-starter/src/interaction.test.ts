@@ -142,6 +142,19 @@ describe("resolving the interaction language", () => {
     expect(resolve({ travel: 1 }).revealFloor).toBe(0);
   });
 
+  /*
+   * Every value a pending element can hold has to be one a reader could be
+   * shown. A haze it can read is fine; nothing at all is fine; text rendered at
+   * five percent is the one outcome that is neither, and it is what an axe run
+   * against an unresolved entrance correctly calls a contrast failure.
+   */
+  it("never leaves a pending element at an opacity between absent and legible", () => {
+    for (let travel = 0; travel <= 1.0001; travel += 0.01) {
+      const floor = resolve({ travel: Math.round(travel * 100) / 100 }).revealFloor;
+      expect(floor === 0 || floor >= 0.35).toBe(true);
+    }
+  });
+
   it("removes travel under reduced motion in both intents", () => {
     for (const intent of ["INSTANT", "BRIEF_FADE"] as const) {
       const resolved = resolve({ reducedMotion: intent });

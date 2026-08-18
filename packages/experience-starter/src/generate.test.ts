@@ -733,7 +733,7 @@ describe("interaction capability emission", () => {
     expect(moving.files.map((file) => file.path)).toContain("components/Menu.tsx");
     const menu = fileNamed(moving, "components/Menu.tsx");
     expect(menu).toContain("CLOSE_MS");
-    expect(menu).toContain("details.animate(");
+    expect(menu).toContain("panel.animate(");
     // It enhances the client's own markup and gives up quietly if it is absent.
     expect(menu).toContain("-menu-toggle");
     expect(menu).not.toContain("requestAnimationFrame");

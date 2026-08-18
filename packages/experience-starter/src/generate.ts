@@ -153,7 +153,12 @@ export function generateExperienceStarter(
    * Interaction helpers. Each is client-local source over native browser APIs,
    * emitted only when this client's plan actually uses it.
    */
-  if (plan.usesReveal || plan.usesDisclosure || plan.usesMenuMotion) {
+  if (
+    plan.usesReveal ||
+    plan.usesDisclosure ||
+    plan.usesMenuMotion ||
+    plan.usesMediaExplorer
+  ) {
     files.push(file("components/motion.ts", emitMotionPreference()));
   }
   if (plan.usesMenuMotion) {

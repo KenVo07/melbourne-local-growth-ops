@@ -144,3 +144,56 @@ shipped is exactly the drift that pin exists to prevent.
 Tests: 62 in the starter, 868 across the workspace. Typecheck clean. The
 generated source passes the Platform source policy unmodified, first pass, no
 exemption.
+
+## Phase 8 — browser evidence, and two defects it found
+
+The evidence suite drives the built standalone artifacts and asserts on observed
+behaviour — a height that changed between two frames, a focused element after a
+key press — rather than on the source that produced it. It found two things the
+unit tests could not.
+
+**The menu enhancement was a no-op.** It animated the `<details>`, but this
+composition sets the panel `position: absolute` so it can hang below the header
+without pushing the page down — the element's own box never changes size when it
+opens. The panel is what appears and disappears, so the panel is what is
+animated now, with the `<details>` held open for the whole close and only closed
+at the end. Opening also had to start from zero explicitly: a panel that was
+closed has no height on the screen whatever it measures the instant it renders,
+and opening it from its own full height is a movement of nothing.
+
+**The reveal floor could land between absent and legible.** With `travel: 0.45`
+the old formula gave a pending opacity of `0.045`. axe correctly called that a
+contrast failure on twelve nodes: text rendered, in the accessibility tree, and
+impossible to read. The A3 baseline had passed only because `travel: 0.5`
+happened to resolve to exactly zero. The floor is now snapped to nothing below
+legibility — a pending element is either not presented yet or present and
+readable, and the band between them is not a state anybody could be shown.
+
+### Results
+
+| | Chromium | Firefox |
+|---|---|---|
+| interaction evidence | 65/65 | 65/65 |
+| axe (13 states, WCAG 2.1 AA) | 0 violations | 0 violations |
+| responsive 1440/834/390/320 | no overflow | no overflow |
+
+WebKit could not run: it needs `libavif16`, a root-level system package.
+Recorded as a limitation rather than expanding scope.
+
+### Cost
+
+Same-commit A3 baseline: 201,326 B gzip client JS, 14 chunks.
+WEB-01C completion: 204,833 B gzip client JS, 14 chunks.
+**Delta: +3,507 B = +3.42 KiB gzip** for progressive disclosure in two semantic
+contexts, a media explorer that steps between photographs, a menu that closes as
+it opened, and a two-grammar entrance.
+
+Zero new dependencies (`next`, `react`, `react-dom`, `resend`, `zod` — identical
+to baseline). Zero `requestAnimationFrame`, zero scroll or resize listeners,
+zero timers, zero storage. One shared `IntersectionObserver` that disconnects
+when its last element settles; one `window` listener, scoped to a disclosure
+carrying an id and removed on unmount.
+
+**The A3 baseline artifact ID is byte-identical to the one produced before this
+pass** — `0f980095b09ef119ce5ed42e42a7e6dfd99632c9937c55efc2daa00bb3c6ca69`. A
+legacy brief regenerates the site that was approved.

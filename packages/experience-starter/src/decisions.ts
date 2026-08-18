@@ -359,8 +359,16 @@ export function resolveInteraction(brief: StarterBrief): ResolvedInteraction {
      * generous travel fades in from nothing while a restrained one only lifts
      * out of a light haze. At zero travel this is a pure fade, which is the one
      * honest entrance available to a client that does not want movement.
+     *
+     * The haze is snapped to nothing once it drops below legibility. A pending
+     * element is either not presented yet or it is present and readable; an
+     * opacity of 0.05 is neither, and it is the one value that would leave text
+     * rendered, in the accessibility tree, and impossible to read if the
+     * entrance never resolved. The band is not a rounding convenience — it is
+     * the rule that keeps every intermediate state of the page a state somebody
+     * could actually be shown.
      */
-    revealFloor: round(Math.max(0, 0.45 - language.travel * 0.9), 3),
+    revealFloor: revealFloorFor(language.travel),
     appetite: Object.freeze({
       disclosure: language.disclosure,
       mediaExploration: language.mediaExploration,
@@ -385,6 +393,14 @@ export function resolveInteraction(brief: StarterBrief): ResolvedInteraction {
       language.pointerFeedback !== "NONE" || language.entrance !== "NONE",
     reveals: language.entrance !== "NONE",
   });
+}
+
+/** Below this, a haze is not a haze — it is unreadable text. */
+const legibleHaze = 0.35;
+
+function revealFloorFor(travel: number): number {
+  const raw = Math.max(0, 0.45 - travel * 0.9);
+  return raw < legibleHaze ? 0 : round(raw, 3);
 }
 
 /**

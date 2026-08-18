@@ -254,6 +254,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { prefersReducedMotion } from "./motion";
+
 export interface ViewerItem {
   readonly id: string;
   /** The photograph at the size the overlay shows it. */
@@ -664,9 +666,19 @@ const CLOSE_EASE = "${interaction.easing.exit}";
 /**
  * Gives the collapsed navigation a close that moves, matching its open.
  *
- * \`display: contents\` because this wrapper is a place to hold a ref and
- * nothing else: the header's own layout has to reach the navigation exactly as
- * it did before this element existed.
+ * The *panel* is what is animated, not the \`<details>\`. This composition sets
+ * the panel \`position: absolute\` so it can hang below the header without
+ * pushing the page down, which means the element's own box never changes size
+ * when it opens — animating it would be animating nothing. The panel is what
+ * appears and disappears, so the panel is what has to move.
+ *
+ * The \`<details>\` is held open for the whole of the closing animation and only
+ * closed at the end, because a closed one stops rendering its panel and there
+ * would be nothing left to animate.
+ *
+ * \`display: contents\` on the wrapper because it is a place to hold a ref and
+ * nothing else: the header's layout has to reach the navigation exactly as it
+ * did before this element existed.
  */
 export function Menu({ children }: { readonly children: ReactNode }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -682,14 +694,25 @@ export function Menu({ children }: { readonly children: ReactNode }) {
      * contract. If the shape is not what this expects, the native behaviour is
      * already correct and this simply does not run.
      */
-    if (details === null || details === undefined || summary === null || summary === undefined) {
+    if (
+      details === null ||
+      details === undefined ||
+      summary === null ||
+      summary === undefined
+    ) {
       return;
     }
 
+    const panelOf = () =>
+      details.querySelector<HTMLElement>(".${ns}-menu-panel");
+
     const settle = (open: boolean) => {
+      const panel = panelOf();
+      if (panel !== null) {
+        panel.style.removeProperty("height");
+        panel.style.removeProperty("overflow");
+      }
       details.open = open;
-      details.style.removeProperty("height");
-      details.style.removeProperty("overflow");
       animationRef.current?.cancel();
       animationRef.current = null;
       details.dataset.menu = open ? "open" : "closed";
@@ -701,6 +724,16 @@ export function Menu({ children }: { readonly children: ReactNode }) {
       const running = animationRef.current;
       const closing = details.dataset.menu === "closing";
       const shouldOpen = closing || !details.open;
+
+      /*
+       * Where the panel is *right now*, captured before the cancel: cancelling
+       * a filling animation returns the element to its CSS height, so measuring
+       * afterwards would read where the movement was going rather than where a
+       * reader can see it. An interrupted toggle has to start from what is on
+       * the screen.
+       */
+      const wasOpen = details.open;
+      const inFlight = panelOf()?.getBoundingClientRect().height ?? 0;
       running?.cancel();
       animationRef.current = null;
 
@@ -709,25 +742,33 @@ export function Menu({ children }: { readonly children: ReactNode }) {
         return;
       }
 
-      // Measured after the cancel, so an interrupted toggle starts from where
-      // the menu actually is rather than from where it was going.
-      const startHeight = details.getBoundingClientRect().height;
-      details.open = false;
-      const closedHeight = details.getBoundingClientRect().height;
+      // The panel only exists while the element is open, and the closing
+      // animation needs it, so it is opened first in both directions.
       details.open = true;
-      const openHeight = details.scrollHeight;
-      const endHeight = shouldOpen ? openHeight : closedHeight;
+      const panel = panelOf();
+      if (panel === null) {
+        settle(shouldOpen);
+        return;
+      }
 
+      /*
+       * A panel that was closed has no height on the screen, whatever it
+       * measures the instant it is rendered. Opening from its own full height
+       * would be a movement of nothing.
+       */
+      const startHeight = wasOpen ? inFlight : 0;
+      const openHeight = panel.scrollHeight;
+      const endHeight = shouldOpen ? openHeight : 0;
       if (Math.abs(endHeight - startHeight) < 1) {
         settle(shouldOpen);
         return;
       }
 
-      details.style.overflow = "clip";
-      details.style.height = startHeight + "px";
+      panel.style.overflow = "clip";
+      panel.style.height = startHeight + "px";
       details.dataset.menu = shouldOpen ? "opening" : "closing";
 
-      const animation = details.animate(
+      const animation = panel.animate(
         [{ height: startHeight + "px" }, { height: endHeight + "px" }],
         {
           duration: shouldOpen ? OPEN_MS : CLOSE_MS,
@@ -751,8 +792,11 @@ export function Menu({ children }: { readonly children: ReactNode }) {
       summary.removeEventListener("click", toggle);
       animationRef.current?.cancel();
       animationRef.current = null;
-      details.style.removeProperty("height");
-      details.style.removeProperty("overflow");
+      const panel = panelOf();
+      if (panel !== null) {
+        panel.style.removeProperty("height");
+        panel.style.removeProperty("overflow");
+      }
     };
   }, []);
 
