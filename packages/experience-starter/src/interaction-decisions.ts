@@ -312,8 +312,16 @@ export function planInteractions(input: {
     usesMenuMotion:
       interaction.source === "STRUCTURED" &&
       feedsBack(interaction.appetite.pointerFeedback, "NAVIGATION"),
+    /*
+     * The legacy pin covers the entrance vocabulary as well as the menu. The A3
+     * floor revealed prose and never a beat photograph, so a legacy brief that
+     * asked for entrance motion must not acquire a media entrance it was never
+     * approved with. A client that wants one says so in a language.
+     */
     reveals: (role: RevealRole) =>
-      revealsRole(interaction.appetite.entrance, role),
+      role === "MEDIA" && interaction.source !== "STRUCTURED"
+        ? false
+        : revealsRole(interaction.appetite.entrance, role),
     feedback: (role: FeedbackRole) =>
       feedsBack(interaction.appetite.pointerFeedback, role),
     animates: interaction.enabled || usesDisclosure || usesMediaExplorer,

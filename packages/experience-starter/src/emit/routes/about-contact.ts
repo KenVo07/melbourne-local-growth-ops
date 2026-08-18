@@ -1,6 +1,6 @@
 import type { ResolvedDesign } from "../../decisions.js";
 import { reveal, usesArrive } from "./reveal.js";
-import { foldsAway, type InteractionPlan } from "../../interaction-decisions.js";
+import { disclosureFor, foldsAway, type InteractionPlan } from "../../interaction-decisions.js";
 import { quote } from "../content.js";
 
 /**
@@ -24,6 +24,12 @@ export function emitAboutContactRoutes(
    * panel. Both are supporting material, and a client that reveals only its key
    * moments leaves both of them still.
    */
+  /*
+   * A branch for a section this client does not carry is dead source in
+   * somebody's repository. The plan already noticed every run the content
+   * offered, so the emitter can ask rather than guess.
+   */
+  const offersPolicies = disclosureFor(plan, "POLICIES") !== undefined;
   const claims = reveal(plan, "SUPPORTING");
   const questions = reveal(plan, "SUPPORTING");
   const arrive = usesArrive(plan, ["SUPPORTING"]);
@@ -137,8 +143,7 @@ export function ContactRoute(props: ClientExperienceRouteProps) {
   const actions = sections.flatMap((section) =>
     section.type === "ACTIONS" ? section.actions : [],
   );
-  const faq = sections.find((section) => section.type === "FAQ");
-  const policies = sections.find((section) => section.type === "POLICIES");
+  const faq = sections.find((section) => section.type === "FAQ");${offersPolicies ? '\n  const policies = sections.find((section) => section.type === "POLICIES");' : ""}
 
   return (
     <RouteShell props={props}>
@@ -170,7 +175,7 @@ ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panel
         </section>
       )}
 
-      {policies?.type !== "POLICIES" ? null : (
+      ${offersPolicies ? `{policies?.type !== "POLICIES" ? null : (
         <section
           aria-labelledby="${ns}-policies-heading"
           className="${ns}-shell ${ns}-faq-band"
@@ -187,7 +192,7 @@ ${brief.composition.contact === "STACKED_DIRECT" ? stackedDirect(design) : panel
           </div>
           ${policiesBody(design, plan)}
         </section>
-      )}
+      )}` : ""}
       ${questions.close}
     </RouteShell>
   );

@@ -112,8 +112,7 @@ function Header({
           * in the accessibility tree. This client chooses where the swap
           * happens, in site.css.
           */}
-        ${plan.usesMenuMotion ? "<Menu>" : "<>"}
-        <platform.Disclosure
+        ${plan.usesMenuMotion ? "<Menu>\n        " : ""}<platform.Disclosure
           className="${ns}-menu"
           panelClassName="${ns}-menu-panel"
           staticClassName="${ns}-nav-static"
@@ -121,8 +120,7 @@ function Header({
           summaryClassName="${ns}-menu-toggle"
         >
           {navigation}
-        </platform.Disclosure>
-        ${plan.usesMenuMotion ? "</Menu>" : "</>"}
+        </platform.Disclosure>${plan.usesMenuMotion ? "\n        </Menu>" : ""}
 
         <div className="${ns}-header-actions">
           <platform.Search />

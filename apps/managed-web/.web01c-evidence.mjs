@@ -43,6 +43,7 @@ async function sample(page, selector, ms = 500, step = 25) {
           t: Math.round(performance.now() - started),
           h: Math.round(box.height * 100) / 100,
           y: Math.round(box.y * 100) / 100,
+          x: Math.round(box.x * 100) / 100,
           opacity: Number(style.opacity),
         });
         await new Promise((r) => setTimeout(r, interval));
@@ -171,7 +172,8 @@ async function run() {
     await page.locator(".sl-viewer-button", { hasText: "Next" }).click();
     const stepFrames = await stepPromise;
     writeFileSync(join(dir, "media-next.json"), JSON.stringify(stepFrames, null, 2));
-    const moved = new Set(stepFrames.map((f) => f.y)).size;
+    // The step travels on x, so x is what proves it moved rather than swapped.
+    const moved = new Set(stepFrames.map((f) => f.x)).size;
     const fadedStep = stepFrames.some((f) => f.opacity < 0.95);
     if (reduced) {
       check("reduced: media step does not animate", moved <= 2 && !fadedStep,
@@ -187,6 +189,20 @@ async function run() {
     await page.locator(".sl-viewer-button", { hasText: "Previous" }).click();
     const prevFrames = await prevPromise;
     writeFileSync(join(dir, "media-previous.json"), JSON.stringify(prevFrames, null, 2));
+    if (!reduced) {
+      // Forward and back must not enter from the same side, or the movement is
+      // decoration rather than a sense of where the reader is in the sequence.
+      const firstOffset = (frames) => {
+        const settled = frames[frames.length - 1]?.x ?? 0;
+        const start = frames.find((f) => f.opacity < 0.6)?.x ?? settled;
+        return start - settled;
+      };
+      const fwd = firstOffset(stepFrames);
+      const back = firstOffset(prevFrames);
+      check("media steps enter from the side the reader came from",
+        Math.sign(fwd) !== Math.sign(back) && fwd !== 0 && back !== 0,
+        `Next offset ${fwd.toFixed(1)}px, Previous offset ${back.toFixed(1)}px`);
+    }
     check(`${label}: media Previous returns`,
       (await page.locator(".sl-viewer-count").textContent())?.trim().startsWith("1"));
 

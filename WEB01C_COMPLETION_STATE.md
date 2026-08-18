@@ -194,6 +194,38 @@ zero timers, zero storage. One shared `IntersectionObserver` that disconnects
 when its last element settles; one `window` listener, scoped to a disclosure
 carrying an id and removed on unmount.
 
-**The A3 baseline artifact ID is byte-identical to the one produced before this
-pass** — `0f980095b09ef119ce5ed42e42a7e6dfd99632c9937c55efc2daa00bb3c6ca69`. A
-legacy brief regenerates the site that was approved.
+### Legacy fidelity — checked properly, and it was wrong the first time
+
+An earlier note in this file claimed the A3 artifact ID was byte-identical. That
+was wrong: the artifact ID embeds the factory revision, so it changes on every
+commit and proves nothing about the generated experience. Comparing the actual
+generated source against a worktree at the original candidate found four real
+regressions for legacy briefs:
+
+- beat photographs acquired a MEDIA entrance the approved site never had, because
+  legacy `ENTRANCE` mapped to `EVERY_SECTION` and that accepts `MEDIA`;
+- a `[data-menu="closing"]` rule was emitted for clients with no menu helper —
+  dead CSS for an attribute nobody could set;
+- an empty JSX fragment appeared in the Shell;
+- a POLICIES branch was written into every client's contact route, including the
+  ones whose content has no POLICIES section — dead source in somebody's
+  repository.
+
+All four are fixed. The legacy pin now covers the entrance vocabulary, the menu
+CSS is gated on the helper that sets its attribute, and the POLICIES branch is
+only written when the plan saw a POLICIES run.
+
+Compared rule-by-rule against the original candidate's output for the same
+legacy brief:
+
+| | |
+|---|---|
+| CSS rules only in the original | 0 |
+| CSS rules only in the completion | 0 |
+| CSS rules with changed declarations | 0 |
+| `Arrive` wrappers per route | 2 / 1 / 1 / 2, unchanged |
+| client components emitted | `Pieces`, `Reveal`, `Shell`, `motion` — unchanged |
+
+The remaining textual differences are comments, an inert optional `as` prop on
+`Arrive`, and one COPY key that carries a default. **A legacy brief regenerates
+the site that was approved.**
