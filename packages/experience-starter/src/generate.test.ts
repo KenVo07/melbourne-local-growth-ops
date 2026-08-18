@@ -415,7 +415,6 @@ describe("interaction capability emission", () => {
     const generated = generate(briefWith({}), withFaq);
     for (const decision of [
       generated.interactions.contactFaq,
-      generated.interactions.serviceQuestions,
       generated.interactions.projectMedia,
     ]) {
       expect(decision.reason.length).toBeGreaterThan(20);

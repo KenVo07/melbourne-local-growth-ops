@@ -117,9 +117,6 @@ export function generateExperienceStarter(
     interaction: design.interaction,
     routeIds: facts.routeIds,
     faqCount: facts.faqCount,
-    serviceQuestionCount: Math.min(
-      ...brief.serviceNarratives.map(({ questions }) => questions.length),
-    ),
   });
 
   const files: GeneratedExperienceFile[] = [

@@ -35,7 +35,6 @@ export {
 export {
   decideContactFaqTreatment,
   decideProjectMediaTreatment,
-  decideServiceQuestionTreatment,
   type DisclosureTreatment,
   type InteractionDecision,
   type MediaTreatment,

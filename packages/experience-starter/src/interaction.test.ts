@@ -6,7 +6,7 @@ import { quietBrief, loudBrief } from "./fixtures.js";
 import {
   decideContactFaqTreatment,
   decideProjectMediaTreatment,
-  decideServiceQuestionTreatment,
+  planInteractions,
 } from "./interaction-decisions.js";
 
 const language: StarterInteraction = {
@@ -153,16 +153,15 @@ describe("interaction opportunity decisions", () => {
     ).toBe("PROGRESSIVE_DISCLOSURE");
   });
 
-  it("holds a service question rail to a longer run than the contact FAQ", () => {
-    const resolved = resolve({ disclosure: "WHEN_LONG" });
-    expect(
-      decideServiceQuestionTreatment({ itemCount: 3, interaction: resolved })
-        .treatment,
-    ).toBe("STATIC");
-    expect(
-      decideServiceQuestionTreatment({ itemCount: 4, interaction: resolved })
-        .treatment,
-    ).toBe("PROGRESSIVE_DISCLOSURE");
+  /*
+   * There is deliberately no rule for the per-service question rail: it lists
+   * the questions a customer arrives with and carries no answers, so folding it
+   * would open onto nothing. Semantics gate the capability before any client
+   * preference is read.
+   */
+  it("offers no disclosure where the content has nothing behind it", () => {
+    const source = planInteractions.toString();
+    expect(source).not.toMatch(/serviceQuestion/i);
   });
 
   it("lets appetite change the answer for identical content", () => {

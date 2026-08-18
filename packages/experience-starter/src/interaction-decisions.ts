@@ -12,6 +12,13 @@ import type { ResolvedInteraction } from "./decisions.js";
  * Every decision carries the sentence that justifies it, which goes into the
  * generation report so an operator can see why a site folded its questions away
  * and another did not.
+ *
+ * There is deliberately no rule for the per-service question rail. That rail is
+ * a list of the questions a customer arrives with — `questions: string[]`, with
+ * no answers behind them — so there is nothing to disclose, and folding it would
+ * produce controls that open onto nothing. Semantics decide what is valid before
+ * any client preference is consulted; if service narratives ever carry answers,
+ * that is when the rule becomes possible.
  */
 
 export type DisclosureTreatment = "STATIC" | "PROGRESSIVE_DISCLOSURE";
@@ -28,12 +35,11 @@ export interface InteractionDecision<T extends string> {
  * short list is simply worse closed.
  */
 const disclosureThreshold = {
-  WHEN_LONG: { faq: 3, questions: 4 },
-  PREFERRED: { faq: 2, questions: 3 },
+  WHEN_LONG: 3,
+  PREFERRED: 2,
 } as const;
 
 function decideDisclosure(
-  kind: "faq" | "questions",
   label: string,
   itemCount: number,
   interaction: ResolvedInteraction,
@@ -45,7 +51,7 @@ function decideDisclosure(
       reason: `${label} stays visible: this client's interaction language keeps content in the open.`,
     };
   }
-  const threshold = disclosureThreshold[appetite][kind];
+  const threshold = disclosureThreshold[appetite];
   if (itemCount < threshold) {
     return {
       treatment: "STATIC",
@@ -63,26 +69,7 @@ export function decideContactFaqTreatment(input: {
   readonly itemCount: number;
   readonly interaction: ResolvedInteraction;
 }): InteractionDecision<DisclosureTreatment> {
-  return decideDisclosure(
-    "faq",
-    "Contact questions",
-    input.itemCount,
-    input.interaction,
-  );
-}
-
-/** The per-service question rail. Held to a longer run than the FAQ, because
- * it sits inside a reading column rather than being the section's whole point. */
-export function decideServiceQuestionTreatment(input: {
-  readonly itemCount: number;
-  readonly interaction: ResolvedInteraction;
-}): InteractionDecision<DisclosureTreatment> {
-  return decideDisclosure(
-    "questions",
-    "Service questions",
-    input.itemCount,
-    input.interaction,
-  );
+  return decideDisclosure("Contact questions", input.itemCount, input.interaction);
 }
 
 /**
@@ -154,7 +141,6 @@ export function decideProjectMediaTreatment(input: {
  */
 export interface InteractionPlan {
   readonly contactFaq: InteractionDecision<DisclosureTreatment>;
-  readonly serviceQuestions: InteractionDecision<DisclosureTreatment>;
   readonly projectMedia: InteractionDecision<MediaTreatment>;
   /** Photographs a project beat needs before the overlay is offered. */
   readonly projectMediaThreshold: number;
@@ -173,12 +159,6 @@ export function planInteractions(input: {
   readonly routeIds: readonly string[];
   /** Questions the client's own FAQ section carries, 0 when it has none. */
   readonly faqCount: number;
-  /**
-   * The *fewest* questions any service carries. One service detail route serves
-   * every service, so a site that folded some rails and not others would read
-   * as inconsistent rather than as considered.
-   */
-  readonly serviceQuestionCount: number;
 }): InteractionPlan {
   const { interaction } = input;
   const has = (routeId: string) => input.routeIds.includes(routeId);
@@ -189,16 +169,6 @@ export function planInteractions(input: {
         treatment: "STATIC",
         reason: "This client has no contact route.",
       } as const);
-  const serviceQuestions = has("service-detail")
-    ? decideServiceQuestionTreatment({
-        itemCount: input.serviceQuestionCount,
-        interaction,
-      })
-    : ({
-        treatment: "STATIC",
-        reason: "This client has no service detail route.",
-      } as const);
-
   /*
    * A capability decision rather than a count decision: how many photographs a
    * given project carries is only known at render time, so the emitted source
@@ -216,12 +186,9 @@ export function planInteractions(input: {
 
   return Object.freeze({
     contactFaq,
-    serviceQuestions,
     projectMedia,
     projectMediaThreshold: threshold ?? 0,
-    usesDisclosure:
-      contactFaq.treatment === "PROGRESSIVE_DISCLOSURE" ||
-      serviceQuestions.treatment === "PROGRESSIVE_DISCLOSURE",
+    usesDisclosure: contactFaq.treatment === "PROGRESSIVE_DISCLOSURE",
     usesMediaExplorer: projectMedia.treatment === "DIALOG_EXPLORER",
     usesReveal: interaction.reveals,
   });

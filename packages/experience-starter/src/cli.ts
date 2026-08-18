@@ -52,7 +52,6 @@ process.stdout.write(
       interaction: {
         language: generated.design.interaction.source,
         contactFaq: generated.interactions.contactFaq,
-        serviceQuestions: generated.interactions.serviceQuestions,
         projectMedia: generated.interactions.projectMedia,
       },
       files: generated.files.map(({ path, lines, sha256 }) => ({
