@@ -11,6 +11,7 @@
   "scripts": {
     "build": "pnpm --recursive --if-present run build",
     "check": "pnpm build && pnpm test && pnpm typecheck",
+    "creative:envelope": "tsx scripts/creative/envelope-probe.ts",
     "governance:audit": "node scripts/governance/check-audit.mjs",
     "governance:audit:self-test": "node scripts/governance/check-audit.mjs --self-test",
     "governance:licenses": "node scripts/governance/generate-notice.mjs --check",

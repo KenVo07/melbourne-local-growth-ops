@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/creative/envelope-probe.ts",
+  "policySource": "apps/managed-web/src/generation/client-experience-source-policy.ts",
+  "candidateCount": 32,
+  "permittedCount": 15,
+  "refusedCount": 17,
+  "disagreementCount": 0,
+  "techniques": [
+    {
+      "id": "css-transition-keyframes",
+      "summary": "CSS transitions and @keyframes in a client-local stylesheet",
+      "creativeUse": "State change, hover character, entrance choreography",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "css-scroll-driven-animation",
+      "summary": "Native CSS scroll-driven animation (animation-timeline / scroll())",
+      "creativeUse": "Scroll-linked drawing, progress spines, parallax without JS",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "waapi-element-animate",
+      "summary": "Web Animations API via element.animate()",
+      "creativeUse": "Interruptible, sequenced motion driven by real state",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "request-animation-frame",
+      "summary": "requestAnimationFrame loop",
+      "creativeUse": "Continuous custom motion, physics, cursor-following behaviour",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "intersection-observer",
+      "summary": "IntersectionObserver",
+      "creativeUse": "Entrance reveals, stepwise scroll narrative, lazy behaviour",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "resize-observer",
+      "summary": "ResizeObserver",
+      "creativeUse": "Composition that responds to its own measured box",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "match-media-reduced-motion",
+      "summary": "matchMedia for prefers-reduced-motion",
+      "creativeUse": "Designed reduced-motion state, required by every Signature",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "view-transitions",
+      "summary": "document.startViewTransition()",
+      "creativeUse": "Route and state continuity",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "canvas-2d",
+      "summary": "<canvas> with a 2D context",
+      "creativeUse": "Generative ornament, drawn diagrams, particle fields",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "webgl-inline-shaders",
+      "summary": "WebGL context with shader sources as inline string literals",
+      "creativeUse": "Shader-driven media treatment, 3D, displacement",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "inline-svg-geometry",
+      "summary": "Inline SVG geometry authored in JSX",
+      "creativeUse": "Drawn line work, stroke-dash narrative, masks",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "video-element-local-source",
+      "summary": "<video> element with a client-owned relative source path",
+      "creativeUse": "Motion media, ambient background footage",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "css-local-font-face",
+      "summary": "@font-face referencing a self-hosted /fonts/ file",
+      "creativeUse": "Licensed typography without a third-party request",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "css-inline-svg-data-uri",
+      "summary": "Inline SVG data URI as a CSS mask, with every quote percent-encoded",
+      "creativeUse": "Ornament, texture, masked reveals — no third-party request",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "css-svg-data-uri-literal-quotes",
+      "summary": "Inline SVG data URI containing literal quote characters",
+      "creativeUse": "Pasting an SVG mask straight out of a design tool",
+      "status": "REFUSED",
+      "errorCode": "CSS_RESOURCE_REFERENCE_FORBIDDEN"
+    },
+    {
+      "id": "scoped-approved-dependency",
+      "summary": "A scoped npm dependency declared in the manifest and governance-approved",
+      "creativeUse": "A library that materially improves one client's Signature",
+      "status": "PERMITTED",
+      "errorCode": null
+    },
+    {
+      "id": "undeclared-dependency",
+      "summary": "An npm dependency that governance has not approved",
+      "creativeUse": "Reaching for a library mid-build",
+      "status": "REFUSED",
+      "errorCode": "IMPORT_FORBIDDEN"
+    },
+    {
+      "id": "fetch-runtime-data",
+      "summary": "fetch() at runtime",
+      "creativeUse": "Loading shader files, model geometry, JSON, live data",
+      "status": "REFUSED",
+      "errorCode": "NETWORK_ACCESS_FORBIDDEN"
+    },
+    {
+      "id": "image-constructor-texture",
+      "summary": "new Image() to preload a texture or bitmap",
+      "creativeUse": "Loading imagery into canvas or WebGL",
+      "status": "REFUSED",
+      "errorCode": "NETWORK_ACCESS_FORBIDDEN"
+    },
+    {
+      "id": "web-worker",
+      "summary": "new Worker() for off-main-thread work",
+      "creativeUse": "Heavy generative or physics computation",
+      "status": "REFUSED",
+      "errorCode": "NETWORK_ACCESS_FORBIDDEN"
+    },
+    {
+      "id": "local-storage-persistence",
+      "summary": "localStorage / sessionStorage",
+      "creativeUse": "Remembering a visitor's state between visits",
+      "status": "REFUSED",
+      "errorCode": "BROWSER_STATE_FORBIDDEN"
+    },
+    {
+      "id": "audio-constructor",
+      "summary": "new Audio() playback",
+      "creativeUse": "Sound design on interaction",
+      "status": "REFUSED",
+      "errorCode": "NETWORK_ACCESS_FORBIDDEN"
+    },
+    {
+      "id": "raw-anchor-tag",
+      "summary": "A raw <a> element",
+      "creativeUse": "Any bespoke link treatment",
+      "status": "REFUSED",
+      "errorCode": "UNSAFE_MARKUP_FORBIDDEN"
+    },
+    {
+      "id": "raw-img-tag",
+      "summary": "A raw <img> element",
+      "creativeUse": "Any bespoke image treatment",
+      "status": "REFUSED",
+      "errorCode": "UNSAFE_MARKUP_FORBIDDEN"
+    },
+    {
+      "id": "iframe-embed",
+      "summary": "<iframe> embed",
+      "creativeUse": "Third-party map, video or tool embed",
+      "status": "REFUSED",
+      "errorCode": "UNSAFE_MARKUP_FORBIDDEN"
+    },
+    {
+      "id": "dangerously-set-inner-html",
+      "summary": "dangerouslySetInnerHTML",
+      "creativeUse": "Injecting authored markup or SVG strings",
+      "status": "REFUSED",
+      "errorCode": "UNSAFE_MARKUP_FORBIDDEN"
+    },
+    {
+      "id": "css-remote-webfont",
+      "summary": "@font-face pointing at a third-party font CDN",
+      "creativeUse": "Using a hosted webfont service",
+      "status": "REFUSED",
+      "errorCode": "CSS_RESOURCE_REFERENCE_FORBIDDEN"
+    },
+    {
+      "id": "css-raster-background",
+      "summary": "CSS background-image referencing a local raster file",
+      "creativeUse": "Photographic backgrounds set from the stylesheet",
+      "status": "REFUSED",
+      "errorCode": "CSS_RESOURCE_REFERENCE_FORBIDDEN"
+    },
+    {
+      "id": "css-import",
+      "summary": "CSS @import",
+      "creativeUse": "Splitting stylesheets",
+      "status": "REFUSED",
+      "errorCode": "CSS_RESOURCE_REFERENCE_FORBIDDEN"
+    },
+    {
+      "id": "next-framework-import",
+      "summary": "Importing next/image or next/link",
+      "creativeUse": "Reaching for framework primitives directly",
+      "status": "REFUSED",
+      "errorCode": "IMPORT_FORBIDDEN"
+    },
+    {
+      "id": "javascript-url",
+      "summary": "A javascript: URL",
+      "creativeUse": "n/a — probed because it must stay refused",
+      "status": "REFUSED",
+      "errorCode": "UNSAFE_URL_FORBIDDEN"
+    },
+    {
+      "id": "dynamic-code-execution",
+      "summary": "eval / new Function()",
+      "creativeUse": "n/a — probed because it must stay refused",
+      "status": "REFUSED",
+      "errorCode": "SOURCE_PARSE_ERROR"
+    }
+  ]
+}
