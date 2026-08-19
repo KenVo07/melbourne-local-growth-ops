@@ -1061,7 +1061,6 @@ function productionAgentPrompt(input: {
 }): string {
   const { current, selection, repository } = input;
   const target = productionTargetRoot(current, repository);
-  const inputLabel = portableInputLabel(current, repository);
   const fixes =
     selection.namedFixes.length === 0
       ? ["_The gate named no fixes._"]
@@ -1108,7 +1107,7 @@ Verify the pack you are reading is the pack that was published:
 sha256sum -c integrity.sha256
 \`\`\`
 
-If a hash does not match, stop. ${STOP_PROTOCOL}
+If a hash does not match: ${STOP_PROTOCOL.charAt(0).toLowerCase()}${STOP_PROTOCOL.slice(1)}
 
 ## The decision you are implementing
 
@@ -1148,9 +1147,11 @@ Each one is an acceptance condition, not a suggestion. The ship gate checks them
 - \`${target}/**\` — this client's authored experience source.
 - Client-local tests colocated with that experience where the repository
   convention already places them.
-- The \`## Translation delta\` section of \`${inputLabel}\`'s production handoff,
-  written after you implement: what you changed while translating the approved
-  slice into the existing substrate, and why the intent still holds.
+- The \`## Translation delta\` section of the workspace's own
+  \`delivery/production-handoff.md\`, written after you implement: what you
+  changed while translating the approved slice into the existing substrate, and
+  why the intent still holds. Change nothing else in that file — \`creative:verify\`
+  compares every other section to the copy this pack froze.
 - A promotion-ledger row for any new client-local mechanic.
 
 ## What you may not change

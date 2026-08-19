@@ -26,3 +26,8 @@ __pycache__/
 apps/managed-web/.web01c-*.mjs
 apps/managed-web/.axecheck.mjs
 apps/managed-web/.dbg.mjs
+
+# WEB-01E premium orchestrator review package (generated output)
+/WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE/
+/WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE.zip
+/WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE.zip.sha256
