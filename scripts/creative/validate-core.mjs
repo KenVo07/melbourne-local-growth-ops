@@ -141,6 +141,7 @@ function validateProductionDelta(handoff, byKind, fail) {
     fail(
       handoff.name,
       `has no rows in its "## ${heading}" table. Name what production keeps, evolves, rewrites or adds.`,
+      "PRODUCTION_DELTA_INCOMPLETE",
     );
     return;
   }
@@ -155,16 +156,25 @@ function validateProductionDelta(handoff, byKind, fail) {
       fail(
         handoff.name,
         `row "${label}" has disposition "${disposition || "(blank)"}"; it must be one of ${PRODUCTION_DISPOSITIONS.join(", ")}.`,
+        "PRODUCTION_DELTA_INCOMPLETE",
       );
       continue;
     }
     if (disposition === "NEW_SIGNATURE") newSignatures += 1;
 
     if (isUnfilled(scope)) {
-      fail(handoff.name, `has a ${disposition} row with no scope. Name the source it applies to.`);
+      fail(
+        handoff.name,
+        `has a ${disposition} row with no scope. Name the source it applies to.`,
+        "PRODUCTION_DELTA_INCOMPLETE",
+      );
     }
     if (isUnfilled(row["Intent"])) {
-      fail(handoff.name, `row "${label}" does not say what changes.`);
+      fail(
+        handoff.name,
+        `row "${label}" does not say what changes.`,
+        "PRODUCTION_DELTA_INCOMPLETE",
+      );
     }
 
     const why = (row["Why"] ?? "").trim();
@@ -172,6 +182,7 @@ function validateProductionDelta(handoff, byKind, fail) {
       fail(
         handoff.name,
         `row "${label}" has no reason. A production agent that is not told why will trace the picture instead.`,
+        "HANDOFF_WHY_MISSING",
       );
     } else {
       const lowered = why.toLowerCase();
@@ -180,22 +191,29 @@ function validateProductionDelta(handoff, byKind, fail) {
         fail(
           handoff.name,
           `row "${label}" gives "${why}" as its reason. "${tracing}" is an instruction to reproduce a picture, not a reason the intent requires this.`,
+          "HANDOFF_WHY_MISSING",
         );
       } else if (why.replaceAll(/[^A-Za-z]/g, "").length < 12) {
         fail(
           handoff.name,
           `row "${label}" gives "${why}" as its reason, which is too short to be one.`,
+          "HANDOFF_WHY_MISSING",
         );
       }
     }
 
     const home = (row["Production home"] ?? "").trim();
     if (isUnfilled(home)) {
-      fail(handoff.name, `row "${label}" does not say where production owns this.`);
+      fail(
+        handoff.name,
+        `row "${label}" does not say where production owns this.`,
+        "PRODUCTION_DELTA_INCOMPLETE",
+      );
     } else if (home !== P1_REUSE_HOME && !CLIENT_EXPERIENCE_HOME.test(home)) {
       fail(
         handoff.name,
         `row "${label}" sends work to "${home}". Production home is ${P1_REUSE_HOME} or a path under this client's "experience/"; P1, Core, root configuration, another client and a provider runtime are all out of scope.`,
+        "PRODUCTION_HOME_FORBIDDEN",
       );
     }
   }
@@ -216,6 +234,7 @@ function validateProductionDelta(handoff, byKind, fail) {
       fail(
         handoff.name,
         `declares ${newSignatures} NEW_SIGNATURE row(s) but the promotion ledger records ${clientLocal.length} client-local mechanic(s). Every new Signature starts client-local and is recorded as such.`,
+        "PRODUCTION_DELTA_INCOMPLETE",
       );
     }
   }
@@ -299,7 +318,13 @@ export function loadEnvelope(envelopeText) {
  */
 export function validateArtifacts(documents, envelope) {
   const problems = [];
-  const fail = (file, message) => problems.push({ file, message });
+  /*
+   * `code` is optional and only set where the premium bridge has a named
+   * refusal for the rule. `creative:validate` prints file and message and
+   * ignores it; `creative:launch` uses it so it can refuse with the exact code
+   * its negative tests assert on, without a second copy of these rules.
+   */
+  const fail = (file, message, code) => problems.push({ file, message, code });
 
   const byKind = new Map();
   for (const document of documents) {
@@ -360,10 +385,11 @@ export function validateArtifacts(documents, envelope) {
 
     for (const heading of definition.sections ?? []) {
       const content = sectionBody(body, heading);
+      const code = definition.sectionCodes?.[heading];
       if (content === null) {
-        fail(name, `is missing the "## ${heading}" section.`);
+        fail(name, `is missing the "## ${heading}" section.`, code);
       } else if (isUnfilled(stripScaffolding(content))) {
-        fail(name, `left "## ${heading}" unfilled.`);
+        fail(name, `left "## ${heading}" unfilled.`, code);
       }
     }
   }
@@ -453,7 +479,8 @@ export function validateArtifacts(documents, envelope) {
     ) {
       fail(
         gate.name,
-        `records "${gate.frontMatter.decided_by}" as the decider. The Creative Gate is reserved for a named human; an agent cannot pass its own work.`,
+        `records "${gate.frontMatter.decided_by}" as the decider. A creative gate is reserved for a named human; an agent cannot pass its own work.`,
+        "HUMAN_GATE_REQUIRED",
       );
     }
     /* An unanswered field parses as an empty list, so coerce before testing. */
@@ -502,6 +529,7 @@ export function validateArtifacts(documents, envelope) {
         fail(
           handoff.name,
           `descends from a gate that FAILED. A failed direction does not go to production.`,
+          "GATE_FAILED",
         );
       }
       /*
@@ -519,6 +547,7 @@ export function validateArtifacts(documents, envelope) {
           fail(
             handoff.name,
             `carries ${carried.length} of the ${required} named fix(es) from ${gate.name}. Every acceptance condition must reach production; copy each one into "named_fixes".`,
+            "NAMED_FIXES_MISSING",
           );
         }
       }
@@ -569,6 +598,7 @@ export function validateArtifacts(documents, envelope) {
         fail(
           plan.name,
           `asset "${asset}" substantiates "${substantiates}" but is classed ${provenance}. Only ${EVIDENCE_CLASS} may stand behind work, team, premises, results or certifications.`,
+          "MEDIA_CLAIM_UNSUPPORTED",
         );
       }
       if (isUnfilled(row["Approved by"])) {

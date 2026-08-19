@@ -194,6 +194,16 @@ export const ARTIFACTS = Object.freeze({
       "Client-local Signature work",
       "Prototype shortcuts that must not reach production",
     ],
+    /*
+     * Two sections the premium bridge refuses by name rather than as a generic
+     * unfilled section. Mobile recomposition and the designed reduced-motion
+     * state are the two the Creative Gate is most often signed without, and an
+     * operator reading "MOBILE_EVIDENCE_MISSING" knows immediately what to do.
+     */
+    sectionCodes: {
+      Mobile: "MOBILE_EVIDENCE_MISSING",
+      "Reduced motion": "REDUCED_MOTION_MISSING",
+    },
   },
   "creative-gate": {
     title: "Creative Gate",
