@@ -65,6 +65,8 @@ export const REFUSALS = Object.freeze({
   PORTABILITY_VIOLATION: "A portable manifest carries an absolute path, drive letter, home directory or temporary directory.",
 
   /* --- human authority --------------------------------------------------- */
+  DELIVERY_INCOMPLETE:
+    "The creative delivery does not pass creative:validate, so there is no approved direction to launch.",
   HUMAN_GATE_REQUIRED: "A gate is missing, unsigned, or signed by a non-human identity.",
   GATE_FAILED: "The Creative Gate decision is FAIL. A failed direction does not go to production.",
   NAMED_FIXES_MISSING: "A PASS_WITH_NAMED_FIXES gate names fixes the handoff does not carry.",

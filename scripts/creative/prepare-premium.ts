@@ -226,7 +226,8 @@ await runCommandMain(SPEC, async (flags) => {
       "  1. explore three materially different territories and prototype one Signature Slice;",
       "  2. fill delivery/*.md, then run: pnpm creative:validate <workspace>/delivery",
       "  3. record a named-human Creative Gate decision;",
-      "  4. run: pnpm creative:launch --workspace <workspace> --input <same input> --output <new dir>",
+      "  4. run: pnpm creative:launch --workspace <workspace> --input <same input> \\",
+      "             --artifact <same artifact> --output <new dir>",
       "",
       "Before uploading anything to a creative provider, complete",
       `  ${join(displayPath(target), "provider/PROVIDER_PREFLIGHT.md")}`,
@@ -959,9 +960,11 @@ edited in place is a second website that nothing ships.
   fill delivery/*.md
   pnpm creative:validate <this workspace>/delivery
   record a named-human Creative Gate                 ← human
-  pnpm creative:launch  --workspace <this> --input <same input> --output <new dir>
+  pnpm creative:launch  --workspace <this> --input <same input> --artifact <same artifact> \\
+                        --output <new dir>
   a fresh production agent implements against the live experience/ tree
-  pnpm creative:verify  --workspace <this> --launch <launch dir> --input <same input> --output <new dir>
+  pnpm creative:verify  --launch <launch dir> --input <same input> --candidate <revision> \\
+                        --output <new dir>
   sign the final creative gate                       ← human
 \`\`\`
 

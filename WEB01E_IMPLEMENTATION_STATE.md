@@ -40,7 +40,7 @@ matrix and the current source.
 | 2 identity, contracts, atomicity | DONE | `source-binding-core.mjs`, `atomic-output.mjs`, `premium-contracts.mjs`, `source-binding.ts`, `premium-core.test.mjs` (37 passing). |
 | 3 `creative:prepare` | DONE | `prepare-premium.ts`, `premium-cli.ts`, `premium-workflow.test.ts` (18 passing, incl. stale/foreign/tamper/secret/baseline/no-overwrite/no-network). |
 | 4 handoff and provider preflight | DONE | `artifact-model.mjs` production-handoff extension + `final-creative-gate` kind, both templates, `validate-core.mjs` rules, `self-test.mjs` fail-capable cases. The recovered working diff completed it by attaching refusal codes to the shared validator. |
-| 5 `creative:launch` | NOT STARTED | `scripts/creative/launch-production.ts` absent; no `creative:launch` root alias. |
+| 5 `creative:launch` | DONE | `launch-production.ts` + `creative:launch` alias. 23 new workflow tests: success, portability, fresh-agent prompt, stale source, tampered baseline, dirty worktree, failed/agent gate, missing named fix, missing WHY, forbidden home, reduced motion, source mismatch, foreign client, missing translation-delta heading, media claim, non-empty output, provider binding/attestation/approval, no network. |
 | 6 `creative:verify` | NOT STARTED | `scripts/creative/verify-production.ts` absent; no `creative:verify` root alias. |
 | 7 docs / operator polish | NOT STARTED | `docs/creative/premium-workflow.md` absent although `prepare-premium.ts` and `premium-contracts.mjs` already cite it. Operator pack, red team, translation runbook, evidence protocol, delivery system and README all still at their WEB-01D revisions. |
 | 8 adversarial + clean-room proof | NOT STARTED | No review package directory, ZIP or checksum sidecar exists. |
@@ -59,8 +59,9 @@ completed and committed rather than reset.
 
 Re-run at recovery and green (Node 24.18.0 via nvm), with the working diff applied:
 
-- `pnpm creative:test` — 55 passing (37 `premium-core` + 18 `premium-workflow`), 0 failing.
+- `pnpm creative:test` — 78 passing (37 `premium-core` + 41 `premium-workflow`), 0 failing.
 - `pnpm creative:validate:self-test` — PASS.
+- `git diff --exit-code -- pnpm-lock.yaml` — unchanged.
 
 Not yet run in this run: `pnpm check`, managed-web e2e, ordinary client
 assembly, the launch/verify negative matrix (their commands do not exist yet),
@@ -78,16 +79,15 @@ change.
 
 ## First incomplete acceptance requirement
 
-> "Launch requires clean Git baseline and records branch/revision." — and every
-> acceptance row below it that names `creative:launch` or `creative:verify`.
+> "Verification distinguishes controlled candidate delta from stale pre-launch
+> source." — and every acceptance row below it that names `creative:verify`.
 
 Everything above that row in the acceptance matrix (prepare, source identity,
-workspace, handoff, gate authority, provider preflight) has an implementation
-and a passing negative fixture.
+workspace, handoff, gate authority, provider preflight, launch) has an
+implementation and a passing negative fixture.
 
 ## Next action
 
-Commit the recovered Phase 4 tail (refusal codes threaded through
-`validate-core.mjs`), then implement Phase 5: `scripts/creative/launch-production.ts`
-plus the `creative:launch` root alias, per
-`WEB01E_PRO_REASONING_OUTPUT/11_PRODUCTION_AGENT_LAUNCH_CONTRACT.md`.
+Implement Phase 6: `scripts/creative/verify-production.ts` plus the
+`creative:verify` root alias, per
+`WEB01E_PRO_REASONING_OUTPUT/12_POST_IMPLEMENTATION_VALIDATION.md`.

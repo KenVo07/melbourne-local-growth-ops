@@ -803,3 +803,770 @@ test("preparing the same inputs twice produces the same identities", async () =>
   assert.equal(left.workspaceId, right.workspaceId);
   assert.equal(canonicalJson(left), canonicalJson(right));
 });
+
+/* ----------------------------------------------------------------- launch */
+
+/**
+ * A client input inside its own Git repository.
+ *
+ * `creative:launch` records the baseline of the repository that holds the
+ * production target, so a launch fixture needs a real repository with a real
+ * commit. Building one per test also means the dirty-worktree case can be
+ * proved without touching the repository this tooling lives in.
+ */
+async function repositoryWithInput(input: string): Promise<{
+  readonly root: string;
+  readonly input: string;
+  readonly revision: string;
+}> {
+  const root = await temporary("premium-repo-");
+  const inputDirectory = join(root, "clients/harbour-electrical");
+  await mkdir(dirname(inputDirectory), { recursive: true });
+  await cp(input, inputDirectory, { recursive: true });
+  const git = async (...argv: string[]) => {
+    const outcome = await runGit(root, argv);
+    assert.equal(outcome.exitCode, 0, `git ${argv.join(" ")}: ${outcome.output}`);
+    return outcome.output.trim();
+  };
+  await git("init", "-b", "main");
+  await git("config", "user.email", "fixture@example.invalid");
+  await git("config", "user.name", "Fixture");
+  await git("add", "-A");
+  await git("commit", "-m", "client input");
+  return { root, input: inputDirectory, revision: await git("rev-parse", "HEAD") };
+}
+
+async function runGit(cwd: string, argv: readonly string[]): Promise<CommandOutcome> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn("git", [...argv], { cwd, stdio: ["ignore", "pipe", "pipe"] });
+    let output = "";
+    child.stdout.on("data", (chunk) => {
+      output += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      output += String(chunk);
+    });
+    child.on("error", rejectPromise);
+    child.on("close", (code) => resolvePromise({ exitCode: code ?? -1, output }));
+  });
+}
+
+/* ------------------------------------------------- delivery fixture writer */
+
+type FrontMatter = Record<string, string | string[]>;
+
+function renderArtifact(frontMatter: FrontMatter, sections: Record<string, string>): string {
+  const lines: string[] = ["---"];
+  for (const [key, value] of Object.entries(frontMatter)) {
+    if (Array.isArray(value)) {
+      lines.push(`${key}:`);
+      for (const item of value) lines.push(`  - ${item}`);
+    } else {
+      lines.push(`${key}: ${value}`);
+    }
+  }
+  lines.push("---", "");
+  for (const [heading, body] of Object.entries(sections)) {
+    lines.push(`## ${heading}`, "", body, "");
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function filled(headings: readonly string[], overrides: Record<string, string> = {}) {
+  const sections: Record<string, string> = {};
+  for (const heading of headings) {
+    sections[heading] = overrides[heading] ?? `Filled content for ${heading}.`;
+  }
+  return sections;
+}
+
+const DELTA_ROWS = [
+  "| Disposition | Scope | Intent | Why | Production home |",
+  "|---|---|---|---|---|",
+  "| EVOLVE | experience/routes/HomeRoute.tsx opening | Replace the static opening with the surveyed-ground sequence | The thesis is that the ground is surveyed before it is built on, and a static opening states nothing about that | experience/routes/HomeRoute.tsx |",
+  "| KEEP | experience/routes/ContactRoute.tsx | Leave the conversion path as it stands | It already carries the proof the intent depends on and changing it would cost trust for no gain | P1_REUSE |",
+].join("\n");
+
+interface DeliveryOverrides {
+  readonly gate?: FrontMatter;
+  readonly gateSections?: Record<string, string>;
+  readonly handoff?: FrontMatter;
+  readonly handoffSections?: Record<string, string>;
+  readonly sliceSections?: Record<string, string>;
+  readonly client?: string;
+  readonly dropHandoffSection?: string;
+}
+
+/**
+ * Fills a prepared workspace's nine artifacts with a delivery that passes
+ * `creative:validate`, binding the handoff to that workspace's own identities.
+ */
+async function fillDelivery(
+  workspace: string,
+  overrides: DeliveryOverrides = {},
+): Promise<Record<string, unknown>> {
+  const manifest = JSON.parse(
+    await readFile(join(workspace, "premium-workspace.json"), "utf8"),
+  ) as Record<string, never>;
+  const binding = manifest.sourceBinding as unknown as {
+    artifactId: string;
+    sourceSetId: string;
+  };
+  const client = overrides.client ?? "harbour-electrical";
+  const delivery = join(workspace, "delivery");
+
+  const write = async (name: string, text: string) => {
+    await chmod(join(delivery, name), 0o644).catch(() => {});
+    await writeFile(join(delivery, name), text);
+  };
+
+  await write(
+    "creative-intent.md",
+    renderArtifact(
+      {
+        kind: "creative-intent",
+        client,
+        status: "READY_FOR_TERRITORIES",
+        anti_targets: ["generic trade template"],
+        perception_targets: ["precise", "unhurried"],
+      },
+      filled([
+        "Customer truth",
+        "Business truth",
+        "Desired perception",
+        "Primary conversion",
+        "Creative thesis seed",
+        "Productive tension",
+        "What should remain quiet",
+        "What may become Signature material",
+        "Anti-targets",
+        "References",
+      ]),
+    ),
+  );
+
+  const territoryIds = ["alpha", "beta", "gamma"];
+  for (const [index, id] of territoryIds.entries()) {
+    await write(
+      `territory-${index + 1}.md`,
+      renderArtifact(
+        {
+          kind: "creative-territory",
+          client,
+          territory: id,
+          thesis: `Thesis ${id}`,
+          intent: "creative-intent.md",
+          bespoke: "true",
+          materially_different_from: territoryIds.filter((other) => other !== id),
+        },
+        filled([
+          "Thesis",
+          "Why this belongs to the client",
+          "Typography",
+          "Spatial and composition logic",
+          "Media and art direction",
+          "Movement and interaction character",
+          "Signature idea",
+          "P1 inheritance",
+          "Intentional rewrite",
+          "Mobile translation",
+          "Conversion continuity",
+          "Performance and accessibility risks",
+          "Reference delta",
+          "Why this is materially different",
+        ]),
+      ),
+    );
+  }
+
+  await write(
+    "signature-slice.md",
+    renderArtifact(
+      {
+        kind: "signature-slice",
+        client,
+        selected_territory: "alpha",
+        territory: "territory-1.md",
+        covers: ["navigation", "opening", "proof", "conversion"],
+        techniques: ["css-scroll-driven-animation"],
+        prototype_fakes: ["placeholder project photography"],
+      },
+      filled(
+        [
+          "Creative thesis expressed",
+          "Real content and media inputs",
+          "Spatial narrative",
+          "Interaction and movement sequence",
+          "Desktop",
+          "Mobile",
+          "Reduced motion",
+          "Production feasibility",
+          "P1 capabilities reused",
+          "Client-local Signature work",
+          "Prototype shortcuts that must not reach production",
+        ],
+        overrides.sliceSections ?? {},
+      ),
+    ),
+  );
+
+  await write(
+    "creative-gate.md",
+    renderArtifact(
+      {
+        kind: "creative-gate",
+        client,
+        decision: "PASS_WITH_NAMED_FIXES",
+        decided_by: "Khoa Vo",
+        decided_on: "2026-08-19",
+        candidate_commit: "abc1234",
+        candidate: "signature-slice.md",
+        ...(overrides.gate ?? {}),
+      },
+      filled(["Decision", "Named fixes", "Evidence reviewed"], {
+        "Named fixes": "- Raise the 390px conversion above the fold",
+        ...(overrides.gateSections ?? {}),
+      }),
+    ),
+  );
+
+  const handoffHeadings = [
+    "Creative intent carried forward",
+    "Signature thesis",
+    "Production delta",
+    "Behaviour and movement intent",
+    "Responsive intent",
+    "Media provenance",
+    "Production constraints",
+    "P1 capabilities to reuse",
+    "Client-local bespoke work",
+    "Performance, accessibility and reduced motion",
+    "What the prototype fakes",
+    "Acceptance evidence",
+    "Translation delta",
+  ].filter((heading) => heading !== overrides.dropHandoffSection);
+
+  await write(
+    "production-handoff.md",
+    renderArtifact(
+      {
+        kind: "production-handoff",
+        client,
+        selected_territory: "alpha",
+        prototype_tool: "local prototype",
+        prototype_artifacts: ["exports/slice-desktop.png"],
+        techniques: ["css-scroll-driven-animation"],
+        p1_capabilities_reused: ["Platform Image focal behaviour"],
+        prototype_fakes: ["placeholder project photography"],
+        gate: "creative-gate.md",
+        slice: "signature-slice.md",
+        named_fixes: ["Raise the 390px conversion above the fold"],
+        workspace_manifest: "../premium-workspace.json",
+        source_artifact_id: binding.artifactId,
+        source_set_id: binding.sourceSetId,
+        ...(overrides.handoff ?? {}),
+      },
+      filled(handoffHeadings, {
+        "Production delta": DELTA_ROWS,
+        "Translation delta": "",
+        ...(overrides.handoffSections ?? {}),
+      }),
+    ),
+  );
+
+  await write(
+    "media-plan.md",
+    renderArtifact({ kind: "media-plan", client }, {
+      Assets: [
+        "| Asset | Provenance class | Substantiates | Approved by |",
+        "|---|---|---|---|",
+        "| hero/primary.png | REAL_CLIENT_EVIDENCE | completed switchboard work | Khoa Vo |",
+      ].join("\n"),
+      Approval: "Approved by Khoa Vo on 2026-08-19.",
+    }),
+  );
+
+  await write(
+    "promotion-ledger.md",
+    renderArtifact({ kind: "promotion-ledger", client }, {
+      Ledger: [
+        "| Mechanic | Clients observed | Invariant substrate | Current home | Decision | Reason |",
+        "|---|---|---|---|---|---|",
+        "| surveyed-ground opening | harbour-electrical | - | client-local | CLIENT_LOCAL_SIGNATURE | one delivery |",
+      ].join("\n"),
+      "Promotion rule": "Promotion needs the same mechanic, needed twice, on an invariant substrate.",
+    }),
+  );
+
+  return manifest;
+}
+
+/** A prepared workspace inside a fresh repository, with a valid delivery. */
+async function preparedForLaunch(
+  overrides: DeliveryOverrides = {},
+  designMode?: string,
+): Promise<{
+  readonly repository: { root: string; input: string; revision: string };
+  readonly artifact: string;
+  readonly workspace: string;
+  readonly manifest: Record<string, unknown>;
+}> {
+  const repository = await repositoryWithInput(sharedInput);
+  const artifact = await assembleFor(repository.input);
+  const workspace = await outputPath("launch-workspace");
+  const prepared = await runPremiumCommand("prepare-premium.ts", [
+    "--input",
+    repository.input,
+    "--artifact",
+    artifact,
+    "--output",
+    workspace,
+    ...(designMode === undefined ? [] : ["--design-mode", designMode]),
+  ]);
+  assert.equal(prepared.exitCode, 0, prepared.output);
+  const manifest = await fillDelivery(workspace, overrides);
+  return { repository, artifact, workspace, manifest };
+}
+
+async function launch(
+  fixture: { repository: { input: string }; artifact: string; workspace: string },
+  output: string,
+  extra: readonly string[] = [],
+): Promise<CommandOutcome> {
+  return runPremiumCommand("launch-production.ts", [
+    "--workspace",
+    fixture.workspace,
+    "--input",
+    fixture.repository.input,
+    "--artifact",
+    fixture.artifact,
+    "--output",
+    output,
+    ...extra,
+  ]);
+}
+
+test("launch freezes an approved delivery into a pack a fresh agent can execute", async () => {
+  const fixture = await preparedForLaunch();
+  const output = await outputPath("launch");
+  const outcome = await launch(fixture, output);
+  assert.equal(outcome.exitCode, 0, outcome.output);
+
+  const manifest = JSON.parse(await readFile(join(output, "production-launch.json"), "utf8"));
+  assert.deepEqual(validateRecord("production-launch", manifest), []);
+  assert.equal(manifest.workspaceId, (fixture.manifest as { workspaceId: string }).workspaceId);
+  assert.equal(manifest.repositoryBaseline.branch, "main");
+  assert.equal(manifest.repositoryBaseline.sourceRevision, fixture.repository.revision);
+  assert.equal(manifest.repositoryBaseline.worktreeClean, true);
+  assert.equal(manifest.handoff.sliceGateDecision, "PASS_WITH_NAMED_FIXES");
+  assert.equal(manifest.handoff.gateDecidedBy, "Khoa Vo");
+  assert.deepEqual(manifest.handoff.namedFixes, ["Raise the 390px conversion above the fold"]);
+  assert.equal(manifest.approvedDependencyChanges.length, 0);
+  assert.equal(manifest.humanCreativeDecision, "REQUIRED_SEPARATELY");
+
+  /* The production target is the same client's live experience tree, named
+   * relative to the repository that holds it. */
+  assert.equal(manifest.productionTarget.experienceRoot, "clients/harbour-electrical/experience");
+  assert.equal(manifest.productionTarget.inputInsideRepository, true);
+  assert.equal(manifest.client.clientId, "harbour-electrical");
+
+  /* The pack carries the delivery byte for byte. */
+  for (const name of ["creative-intent.md", "production-handoff.md", "creative-gate.md"]) {
+    assert.equal(
+      await hashFile(join(output, "inputs", name)),
+      await hashFile(join(fixture.workspace, "delivery", name)),
+      name,
+    );
+  }
+
+  /* Everything is inventoried and nothing is editable. */
+  const files = await listFiles(output);
+  assert.deepEqual(
+    [...manifest.integrity.allowlist].sort(),
+    files.filter((path) => path !== "production-launch.json" && path !== "integrity.sha256").sort(),
+  );
+  for (const path of files) {
+    const mode = (await stat(join(output, path))).mode & 0o222;
+    assert.equal(mode, 0, `${path} is writable; a launch pack is frozen`);
+  }
+  await assertNoStagingResidue(dirname(output));
+});
+
+test("the launch manifest records a location, never the machine it was built on", async () => {
+  const fixture = await preparedForLaunch();
+  const output = await outputPath("portable");
+  const portable = await launch(fixture, output);
+  assert.equal(portable.exitCode, 0, portable.output);
+
+  const text = await readFile(join(output, "production-launch.json"), "utf8");
+  for (const marker of [tmpdir(), "/home/", "/Users/", fixture.repository.root]) {
+    assert.ok(!text.includes(marker), `production-launch.json leaks ${marker}`);
+  }
+  const manifest = JSON.parse(text);
+  assert.deepEqual(validateRecord("production-launch", manifest), []);
+});
+
+test("a fresh agent's prompt answers where, what, and when to stop", async () => {
+  const fixture = await preparedForLaunch();
+  const output = await outputPath("prompt");
+  const promptOutcome = await launch(fixture, output);
+  assert.equal(promptOutcome.exitCode, 0, promptOutcome.output);
+
+  const prompt = await readFile(join(output, "PRODUCTION_AGENT_PROMPT.md"), "utf8");
+  const manifest = JSON.parse(await readFile(join(output, "production-launch.json"), "utf8"));
+
+  /* Where. */
+  assert.match(prompt, /clients\/harbour-electrical\/experience/);
+  assert.ok(prompt.includes(fixture.repository.revision), "names the baseline revision");
+  assert.match(prompt, /\bmain\b/);
+
+  /* What, and on whose authority. */
+  assert.match(prompt, /Raise the 390px conversion above the fold/);
+  assert.match(prompt, /Khoa Vo/);
+  assert.match(prompt, /never authoritative/i);
+  assert.match(prompt, /reduced.motion/i);
+  assert.match(prompt, /1440, 834, 390 and 320/);
+
+  /* When to stop, and that it cannot decide. */
+  for (const condition of manifest.stopConditions) {
+    assert.ok(prompt.includes(condition), `prompt omits stop condition: ${condition}`);
+  }
+  for (const prohibition of manifest.prohibitedChanges) {
+    assert.ok(prompt.includes(prohibition), `prompt omits prohibition: ${prohibition}`);
+  }
+  assert.match(prompt, /You do not make that decision/);
+});
+
+test("a live experience changed after preparation is refused, not launched", async () => {
+  const fixture = await preparedForLaunch();
+  const target = join(fixture.repository.input, "experience/routes/HomeRoute.tsx");
+  await writeFile(target, `${await readFile(target, "utf8")}\n// drift\n`);
+  await runGit(fixture.repository.root, ["commit", "-am", "drift"]);
+
+  const output = await outputPath("stale-launch");
+  assertRefused(await launch(fixture, output), "STALE_SOURCE");
+  await assertAbsent(output);
+});
+
+test("an edited workspace baseline cannot be laundered into a launch", async () => {
+  const fixture = await preparedForLaunch();
+  const baseline = join(fixture.workspace, "source/experience/routes/HomeRoute.tsx");
+  await chmod(baseline, 0o644);
+  await writeFile(baseline, `${await readFile(baseline, "utf8")}\n/* edited */\n`);
+
+  const output = await outputPath("tampered-workspace");
+  assertRefused(await launch(fixture, output), "WORKSPACE_TAMPERED");
+  await assertAbsent(output);
+});
+
+test("an uncommitted worktree has no baseline to diff a candidate against", async () => {
+  const fixture = await preparedForLaunch();
+  await writeFile(join(fixture.repository.root, "uncommitted.txt"), "work in progress\n");
+
+  const output = await outputPath("dirty");
+  assertRefused(await launch(fixture, output), "WORKTREE_DIRTY");
+  await assertAbsent(output);
+});
+
+test("a failed gate does not reach production", async () => {
+  const fixture = await preparedForLaunch({
+    gate: { decision: "FAIL" },
+    gateSections: { "Named fixes": "- The opening does not carry the thesis" },
+  });
+  const output = await outputPath("failed-gate");
+  assertRefused(await launch(fixture, output), "GATE_FAILED");
+  await assertAbsent(output);
+});
+
+test("an agent cannot sign the gate that authorises its own work", async () => {
+  const fixture = await preparedForLaunch({ gate: { decided_by: "Claude Opus" } });
+  const output = await outputPath("agent-gate");
+  assertRefused(await launch(fixture, output), "HUMAN_GATE_REQUIRED");
+  await assertAbsent(output);
+});
+
+test("a named fix that never reached the handoff blocks the launch", async () => {
+  const fixture = await preparedForLaunch({
+    gateSections: {
+      "Named fixes": "- Raise the 390px conversion above the fold\n- Give the proof sequence a reduced-motion state",
+    },
+  });
+  const output = await outputPath("named-fixes");
+  assertRefused(await launch(fixture, output), "NAMED_FIXES_MISSING");
+  await assertAbsent(output);
+});
+
+test("a production delta row that says what but not why is refused", async () => {
+  const fixture = await preparedForLaunch({
+    handoffSections: {
+      "Production delta": [
+        "| Disposition | Scope | Intent | Why | Production home |",
+        "|---|---|---|---|---|",
+        "| EVOLVE | experience/routes/HomeRoute.tsx | Rebuild the opening | match the design | experience/routes/HomeRoute.tsx |",
+      ].join("\n"),
+    },
+  });
+  const output = await outputPath("why-missing");
+  assertRefused(await launch(fixture, output), "HANDOFF_WHY_MISSING");
+  await assertAbsent(output);
+});
+
+test("production work cannot be sent outside this client's experience tree", async () => {
+  const fixture = await preparedForLaunch({
+    handoffSections: {
+      "Production delta": [
+        "| Disposition | Scope | Intent | Why | Production home |",
+        "|---|---|---|---|---|",
+        "| EVOLVE | the shared heading rhythm | Tighten the display scale across the platform | The thesis needs a tighter vertical rhythm than the current default gives it | packages/site-core/src/platform/Heading.tsx |",
+      ].join("\n"),
+    },
+  });
+  const output = await outputPath("forbidden-home");
+  assertRefused(await launch(fixture, output), "PRODUCTION_HOME_FORBIDDEN");
+  await assertAbsent(output);
+});
+
+test("a slice with no designed reduced-motion state is refused by name", async () => {
+  const fixture = await preparedForLaunch({ sliceSections: { "Reduced motion": "<!-- -->" } });
+  const output = await outputPath("reduced-motion");
+  assertRefused(await launch(fixture, output), "REDUCED_MOTION_MISSING");
+  await assertAbsent(output);
+});
+
+test("a handoff written against different source cannot launch this workspace", async () => {
+  const fixture = await preparedForLaunch({
+    handoff: { source_set_id: "c".repeat(64) },
+  });
+  const output = await outputPath("wrong-source-set");
+  assertRefused(await launch(fixture, output), "ARTIFACT_MISMATCH");
+  await assertAbsent(output);
+});
+
+test("a delivery that names another client is not this client's delivery", async () => {
+  const fixture = await preparedForLaunch({ client: "northline-joinery" });
+  const output = await outputPath("foreign-client");
+  assertRefused(await launch(fixture, output), "CROSS_CLIENT_LEAKAGE");
+  await assertAbsent(output);
+});
+
+test("production has nowhere to record the translation delta if the heading is gone", async () => {
+  const fixture = await preparedForLaunch({ dropHandoffSection: "Translation delta" });
+  const output = await outputPath("no-translation-delta");
+  assertRefused(await launch(fixture, output), "TRANSLATION_DELTA_MISSING");
+  await assertAbsent(output);
+});
+
+test("an asset cannot substantiate a claim its provenance cannot carry", async () => {
+  const fixture = await preparedForLaunch();
+  await writeFile(
+    join(fixture.workspace, "delivery/media-plan.md"),
+    renderArtifact({ kind: "media-plan", client: "harbour-electrical" }, {
+      Assets: [
+        "| Asset | Provenance class | Substantiates | Approved by |",
+        "|---|---|---|---|",
+        "| hero/primary.png | AI_GENERATED_CREATIVE | completed switchboard work | Khoa Vo |",
+      ].join("\n"),
+      Approval: "Approved by Khoa Vo on 2026-08-19.",
+    }),
+  );
+  const output = await outputPath("media-claim");
+  assertRefused(await launch(fixture, output), "MEDIA_CLAIM_UNSUPPORTED");
+  await assertAbsent(output);
+});
+
+test("an existing launch output is never overwritten", async () => {
+  const fixture = await preparedForLaunch();
+  const output = await outputPath("launch-existing");
+  await mkdir(output, { recursive: true });
+  await writeFile(join(output, "notes.md"), "someone else's evidence\n");
+  assertRefused(await launch(fixture, output), "OUTPUT_NOT_EMPTY");
+  assert.equal(await readFile(join(output, "notes.md"), "utf8"), "someone else's evidence\n");
+});
+
+/* ------------------------------------------------------- provider boundary */
+
+/**
+ * A completed provider evidence manifest — the record a human fills in before
+ * anything leaves the local boundary, and the same record launch reads back.
+ */
+async function providerEvidence(
+  fixture: { workspace: string; manifest: Record<string, unknown> },
+  overrides: Record<string, unknown> = {},
+): Promise<string> {
+  const manifest = fixture.manifest as unknown as {
+    workspaceId: string;
+    sourceBinding: { artifactId: string; sourceSetId: string };
+  };
+  const record = {
+    schemaVersion: 1,
+    kind: "CREATIVE_PROVIDER_EVIDENCE",
+    provider: "CLAUDE_DESIGN",
+    projectLabel: "harbour-electrical signature exploration",
+    designMode: "B",
+    binding: {
+      workspaceId: manifest.workspaceId,
+      artifactId: manifest.sourceBinding.artifactId,
+      sourceSetId: manifest.sourceBinding.sourceSetId,
+      slice: "signature-slice.md",
+      gate: "creative-gate.md",
+    },
+    designSystemAttestation: {
+      status: "NONE",
+      attestedBy: "Khoa Vo",
+      attestedOn: "2026-08-19",
+    },
+    dataHandlingApproval: {
+      approvedBy: "Khoa Vo",
+      approvedOn: "2026-08-19",
+      retentionUnderstood: true,
+    },
+    items: [
+      {
+        label: "opening sequence exploration",
+        purpose: "shows the surveyed-ground motion the slice describes",
+        content: "MOTION",
+        carriesNoNewBusinessFact: true,
+      },
+    ],
+    ...overrides,
+  };
+  const file = join(await temporary("premium-vendor-"), "provider-evidence.json");
+  await writeFile(file, `${JSON.stringify(record, null, 2)}\n`);
+  return file;
+}
+
+test("bound provider evidence travels as evidence, never as authority", async () => {
+  const fixture = await preparedForLaunch();
+  const evidence = await providerEvidence(fixture);
+  const output = await outputPath("vendor-bound");
+  const outcome = await launch(fixture, output, ["--vendor-evidence", evidence]);
+  assert.equal(outcome.exitCode, 0, outcome.output);
+
+  const manifest = JSON.parse(await readFile(join(output, "production-launch.json"), "utf8"));
+  assert.deepEqual(validateRecord("production-launch", manifest), []);
+  assert.equal(manifest.provider.evidenceSupplied, true);
+  assert.equal(manifest.provider.authority, "NON_AUTHORITATIVE");
+  assert.equal(manifest.provider.path, "inputs/provider-evidence-manifest.json");
+
+  const frozen = JSON.parse(
+    await readFile(join(output, "inputs/provider-evidence-manifest.json"), "utf8"),
+  );
+  assert.equal(frozen.binding.workspaceId, (fixture.manifest as { workspaceId: string }).workspaceId);
+
+  const index = JSON.parse(await readFile(join(output, "evidence-index.json"), "utf8"));
+  assert.equal(index.providerEvidence.authority, "NON_AUTHORITATIVE");
+  assert.deepEqual(index.requiredFromProduction.viewportWidths, [1440, 834, 390, 320]);
+});
+
+test("an export produced against a different substrate cannot support this decision", async () => {
+  const fixture = await preparedForLaunch();
+  const evidence = await providerEvidence(fixture, {
+    binding: {
+      workspaceId: "d".repeat(64),
+      artifactId: "e".repeat(64),
+      sourceSetId: "f".repeat(64),
+      slice: "signature-slice.md",
+      gate: "creative-gate.md",
+    },
+  });
+  const output = await outputPath("vendor-unbound");
+  assertRefused(
+    await launch(fixture, output, ["--vendor-evidence", evidence]),
+    "VENDOR_EVIDENCE_UNBOUND",
+  );
+  await assertAbsent(output);
+});
+
+test("an inherited design system that is not this client's does not enter production", async () => {
+  const fixture = await preparedForLaunch();
+  const evidence = await providerEvidence(fixture, {
+    designSystemAttestation: {
+      status: "FOREIGN_OR_UNKNOWN_BLOCKED",
+      attestedBy: "Khoa Vo",
+      attestedOn: "2026-08-19",
+    },
+  });
+  const output = await outputPath("foreign-design-system");
+  assertRefused(
+    await launch(fixture, output, ["--vendor-evidence", evidence]),
+    "FOREIGN_DESIGN_SYSTEM",
+  );
+  await assertAbsent(output);
+});
+
+test("Mode A claims a client-scoped design system and must prove one", async () => {
+  const fixture = await preparedForLaunch({}, "A");
+  const output = await outputPath("mode-a-unattested");
+  assertRefused(await launch(fixture, output), "FOREIGN_DESIGN_SYSTEM");
+  await assertAbsent(output);
+
+  const attested = await providerEvidence(fixture, {
+    designMode: "A",
+    designSystemAttestation: {
+      status: "CLIENT_SCOPED",
+      designSystemId: "harbour-electrical-brand",
+      brandScope: "harbour-electrical",
+      attestedBy: "Khoa Vo",
+      attestedOn: "2026-08-19",
+    },
+  });
+  const second = await outputPath("mode-a-attested");
+  const attestedOutcome = await launch(fixture, second, ["--vendor-evidence", attested]);
+  assert.equal(attestedOutcome.exitCode, 0, attestedOutcome.output);
+});
+
+test("an agent cannot approve its own upload", async () => {
+  const fixture = await preparedForLaunch();
+  const evidence = await providerEvidence(fixture, {
+    dataHandlingApproval: {
+      approvedBy: "Claude Code",
+      approvedOn: "2026-08-19",
+      retentionUnderstood: true,
+    },
+  });
+  const output = await outputPath("data-handling");
+  assertRefused(
+    await launch(fixture, output, ["--vendor-evidence", evidence]),
+    "DATA_HANDLING_UNAPPROVED",
+  );
+  await assertAbsent(output);
+});
+
+test("launch performs no network activity", async () => {
+  const fixture = await preparedForLaunch();
+  const evidence = await providerEvidence(fixture);
+  const output = await outputPath("launch-network");
+  const spy = join(await temporary("premium-spy-"), "spy.mjs");
+  await writeFile(
+    spy,
+    [
+      "/* Fails the process the moment anything opens a socket or fetches. */",
+      "import { Socket } from 'node:net';",
+      "const originalConnect = Socket.prototype.connect;",
+      "Socket.prototype.connect = function connect(...argv) {",
+      "  process.stderr.write(`NETWORK_ATTEMPT ${JSON.stringify(argv[0])}\\n`);",
+      "  process.exit(97);",
+      "};",
+      "globalThis.fetch = () => { process.stderr.write('NETWORK_ATTEMPT fetch\\n'); process.exit(97); };",
+      "void originalConnect;",
+    ].join("\n"),
+  );
+  const outcome = await runPremiumCommand(
+    "launch-production.ts",
+    [
+      "--workspace",
+      fixture.workspace,
+      "--input",
+      fixture.repository.input,
+      "--artifact",
+      fixture.artifact,
+      "--output",
+      output,
+      "--vendor-evidence",
+      evidence,
+    ],
+    ["--import", spy],
+  );
+  assert.equal(outcome.exitCode, 0, outcome.output);
+  assert.ok(!outcome.output.includes("NETWORK_ATTEMPT"), outcome.output);
+});

@@ -12,6 +12,7 @@
     "build": "pnpm --recursive --if-present run build",
     "check": "pnpm build && pnpm test && pnpm typecheck",
     "creative:envelope": "tsx scripts/creative/envelope-probe.ts",
+    "creative:launch": "tsx scripts/creative/launch-production.ts",
     "creative:new": "node scripts/creative/scaffold.mjs",
     "creative:package": "node scripts/creative/package-context.mjs",
     "creative:prepare": "tsx scripts/creative/prepare-premium.ts",
