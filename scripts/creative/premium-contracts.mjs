@@ -567,7 +567,13 @@ VALIDATORS.set("baseline-evidence", (record) => {
   check.hash("artifactId");
   check.hash("sourceSetId");
   check.text("capturedAt");
-  const captures = check.list("captures");
+  checkCaptures(check.list("captures"), problems);
+  assertPortableManifest(record, problems);
+  return problems;
+});
+
+/** One capture: where it is, what it shows, at what width, in which motion. */
+function checkCaptures(captures, problems) {
   for (const [index, capture] of captures.entries()) {
     const at = `captures[${index}]`;
     if (capture === null || typeof capture !== "object") {
@@ -591,6 +597,54 @@ VALIDATORS.set("baseline-evidence", (record) => {
     }
     if (!["FULL", "REDUCED"].includes(capture.motion)) {
       problems.push(`${at}.motion must be FULL or REDUCED.`);
+    }
+  }
+}
+
+/**
+ * What production observed, bound to the artifact production produced.
+ *
+ * The same shape as baseline evidence for the captures, because the point of
+ * both is to be comparable, plus the two result sets a browser suite produces
+ * and a screenshot cannot: accessibility outcomes per engine and state, and the
+ * runtime observations (console, network, overflow, isolation) that decide
+ * whether the page merely looks finished.
+ */
+VALIDATORS.set("candidate-evidence", (record) => {
+  const problems = [];
+  if (record === null || typeof record !== "object") {
+    return ["candidate evidence must be an object."];
+  }
+  const check = checker(record, problems);
+  check.constant("schemaVersion", 1);
+  check.constant("kind", "PREMIUM_CANDIDATE_EVIDENCE");
+  check.hash("artifactId");
+  check.hash("sourceSetId");
+  check.text("candidateRevision");
+  check.text("capturedAt");
+  checkCaptures(check.list("captures"), problems);
+
+  for (const [field, columns] of [
+    ["accessibility", ["engine", "state"]],
+    ["runtime", ["check", "scope"]],
+  ]) {
+    for (const [index, entry] of check.list(field, 0).entries()) {
+      const at = `${field}[${index}]`;
+      if (entry === null || typeof entry !== "object") {
+        problems.push(`${at} must be an object.`);
+        continue;
+      }
+      for (const column of columns) {
+        if (typeof entry[column] !== "string" || entry[column].trim() === "") {
+          problems.push(`${at}.${column} must be a non-empty string.`);
+        }
+      }
+      if (!["PASS", "FAIL"].includes(entry.result)) {
+        problems.push(`${at}.result must be PASS or FAIL.`);
+      }
+      if (typeof entry.proof !== "string" || entry.proof.trim() === "") {
+        problems.push(`${at}.proof must say what was observed.`);
+      }
     }
   }
   assertPortableManifest(record, problems);

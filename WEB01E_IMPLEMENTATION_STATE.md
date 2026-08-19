@@ -41,7 +41,7 @@ matrix and the current source.
 | 3 `creative:prepare` | DONE | `prepare-premium.ts`, `premium-cli.ts`, `premium-workflow.test.ts` (18 passing, incl. stale/foreign/tamper/secret/baseline/no-overwrite/no-network). |
 | 4 handoff and provider preflight | DONE | `artifact-model.mjs` production-handoff extension + `final-creative-gate` kind, both templates, `validate-core.mjs` rules, `self-test.mjs` fail-capable cases. The recovered working diff completed it by attaching refusal codes to the shared validator. |
 | 5 `creative:launch` | DONE | `launch-production.ts` + `creative:launch` alias. 23 new workflow tests: success, portability, fresh-agent prompt, stale source, tampered baseline, dirty worktree, failed/agent gate, missing named fix, missing WHY, forbidden home, reduced motion, source mismatch, foreign client, missing translation-delta heading, media claim, non-empty output, provider binding/attestation/approval, no network. |
-| 6 `creative:verify` | NOT STARTED | `scripts/creative/verify-production.ts` absent; no `creative:verify` root alias. |
+| 6 `creative:verify` | DONE | `verify-production.ts` + `creative:verify` alias + the `candidate-evidence` contract. 20 new tests: controlled delta PASS, no-verdict report, blank ship gate, missing mobile/reduced-motion/absent evidence, failing runtime, unfilled and rewritten handoff, P1 escape, business-truth drift, dependency drift, unrelated/unknown revision, tampered launch, workspace mismatch, standing-gate pass/fail, output integrity, non-empty output. |
 | 7 docs / operator polish | NOT STARTED | `docs/creative/premium-workflow.md` absent although `prepare-premium.ts` and `premium-contracts.mjs` already cite it. Operator pack, red team, translation runbook, evidence protocol, delivery system and README all still at their WEB-01D revisions. |
 | 8 adversarial + clean-room proof | NOT STARTED | No review package directory, ZIP or checksum sidecar exists. |
 
@@ -59,7 +59,7 @@ completed and committed rather than reset.
 
 Re-run at recovery and green (Node 24.18.0 via nvm), with the working diff applied:
 
-- `pnpm creative:test` — 78 passing (37 `premium-core` + 41 `premium-workflow`), 0 failing.
+- `pnpm creative:test` — 99 passing (38 core + 61 workflow), 0 failing.
 - `pnpm creative:validate:self-test` — PASS.
 - `git diff --exit-code -- pnpm-lock.yaml` — unchanged.
 
@@ -77,17 +77,34 @@ provider network call, no live Claude Design session, no Stone & Line production
 implementation, no real Proportion creative work, no dependency or lockfile
 change.
 
+## P1 observation recorded during Phase 6
+
+The P1 assembly is **not byte-reproducible**. Two assemblies of identical client
+source at the same Factory revision produce different artifact ids, because the
+generated Pagefind index carries run-varying filenames and content
+(`source/public/pagefind/*.pf_filter`, `*.pf_meta`, `pagefind-entry.json`),
+which flows into the artifact's file inventory and therefore into `artifactId`.
+
+This is pre-existing P1 behaviour, not something WEB-01E introduced, and P1 was
+not modified. It is recorded because it is the reason `creative:verify` binds
+candidate evidence to **source set plus candidate revision** rather than to
+`artifactId`: an artifact-id binding would fail honest evidence and train an
+operator to recapture until it passed, which is precisely how a real
+"captures of a previous build" failure would stop being noticed.
+
+`creative:prepare` and `creative:launch` are unaffected — both compare a *given*
+artifact against live source and never re-assemble.
+
 ## First incomplete acceptance requirement
 
-> "Verification distinguishes controlled candidate delta from stale pre-launch
-> source." — and every acceptance row below it that names `creative:verify`.
+> "Final review package is validated, zipped, clean-extracted, revalidated and
+> hashed." — plus the documentation rows.
 
-Everything above that row in the acceptance matrix (prepare, source identity,
-workspace, handoff, gate authority, provider preflight, launch) has an
-implementation and a passing negative fixture.
+Every acceptance row for prepare, launch and verify has an implementation and a
+passing negative fixture.
 
 ## Next action
 
-Implement Phase 6: `scripts/creative/verify-production.ts` plus the
-`creative:verify` root alias, per
-`WEB01E_PRO_REASONING_OUTPUT/12_POST_IMPLEMENTATION_VALIDATION.md`.
+Phase 7: `docs/creative/premium-workflow.md`, plus the README, delivery-system,
+operator-pack, translation-runbook, evidence-protocol and red-team updates.
+Then Phase 8: full suites, clean-room proof and the review package.

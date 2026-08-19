@@ -37,6 +37,7 @@ import * as sourcePolicy from "../../apps/managed-web/src/generation/client-expe
 
 import { hashFile, listFiles } from "./atomic-output.mjs";
 import { canonicalJson, sha256, validateRecord } from "./premium-contracts.mjs";
+import { sourceSetId } from "./source-binding-core.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const fixtureRoot = join(repositoryRoot, "tests/fixtures/web01b/northline");
@@ -185,7 +186,10 @@ async function buildClientInput(
 }
 
 /** Assembles the artifact the ordinary way, with no premium code involved. */
-async function assembleFor(input: string): Promise<string> {
+async function assembleFor(
+  input: string,
+  factoryRevision = "premium-workflow-test",
+): Promise<string> {
   const output = join(await temporary("premium-artifact-"), "artifact");
   await assembleClientSourceArtifact({
     definition: JSON.parse(
@@ -194,7 +198,7 @@ async function assembleFor(input: string): Promise<string> {
     publicDirectory: join(input, "public"),
     inputDirectory: input,
     outputDirectory: output,
-    factoryRevision: "premium-workflow-test",
+    factoryRevision,
   });
   return output;
 }
@@ -814,7 +818,10 @@ test("preparing the same inputs twice produces the same identities", async () =>
  * commit. Building one per test also means the dirty-worktree case can be
  * proved without touching the repository this tooling lives in.
  */
-async function repositoryWithInput(input: string): Promise<{
+async function repositoryWithInput(
+  input: string,
+  scripts?: Record<string, string>,
+): Promise<{
   readonly root: string;
   readonly input: string;
   readonly revision: string;
@@ -823,6 +830,12 @@ async function repositoryWithInput(input: string): Promise<{
   const inputDirectory = join(root, "clients/harbour-electrical");
   await mkdir(dirname(inputDirectory), { recursive: true });
   await cp(input, inputDirectory, { recursive: true });
+  if (scripts !== undefined) {
+    await writeFile(
+      join(root, "package.json"),
+      `${JSON.stringify({ name: "client-repository", private: true, scripts }, null, 2)}\n`,
+    );
+  }
   const git = async (...argv: string[]) => {
     const outcome = await runGit(root, argv);
     assert.equal(outcome.exitCode, 0, `git ${argv.join(" ")}: ${outcome.output}`);
@@ -1105,13 +1118,14 @@ async function fillDelivery(
 async function preparedForLaunch(
   overrides: DeliveryOverrides = {},
   designMode?: string,
+  scripts?: Record<string, string>,
 ): Promise<{
   readonly repository: { root: string; input: string; revision: string };
   readonly artifact: string;
   readonly workspace: string;
   readonly manifest: Record<string, unknown>;
 }> {
-  const repository = await repositoryWithInput(sharedInput);
+  const repository = await repositoryWithInput(sharedInput, scripts);
   const artifact = await assembleFor(repository.input);
   const workspace = await outputPath("launch-workspace");
   const prepared = await runPremiumCommand("prepare-premium.ts", [
@@ -1569,4 +1583,533 @@ test("launch performs no network activity", async () => {
   );
   assert.equal(outcome.exitCode, 0, outcome.output);
   assert.ok(!outcome.output.includes("NETWORK_ATTEMPT"), outcome.output);
+});
+
+/* ----------------------------------------------------------------- verify */
+
+/**
+ * A production candidate: a controlled change inside the client's own
+ * experience tree, the Translation delta production owes, and a commit.
+ */
+async function implementCandidate(
+  fixture: { repository: { root: string; input: string }; workspace: string },
+  options: {
+    readonly alsoChange?: readonly { path: string; contents: string }[];
+    readonly translationDelta?: string;
+  } = {},
+): Promise<string> {
+  const signature = join(fixture.repository.input, "experience/styles/conductor.css");
+  await writeFile(
+    signature,
+    `${await readFile(signature, "utf8")}\n.conductor__mark { letter-spacing: 0.02em; }\n`,
+  );
+  for (const change of options.alsoChange ?? []) {
+    const absolute = join(fixture.repository.root, ...change.path.split("/"));
+    await mkdir(dirname(absolute), { recursive: true });
+    await writeFile(absolute, change.contents);
+  }
+  if (options.translationDelta !== "") {
+    await fillDelivery(fixture.workspace, {
+      handoffSections: {
+        "Translation delta":
+          options.translationDelta ??
+          "The opening reuses the existing Conductor mark rather than the prototype's redrawn one; the surveyed-ground reading survives because the mark already carries it, and rebuilding it bespoke would have duplicated a P1 primitive.",
+      },
+    });
+  }
+  const git = async (...argv: string[]) => {
+    const outcome = await runGit(fixture.repository.root, argv);
+    assert.equal(outcome.exitCode, 0, `git ${argv.join(" ")}: ${outcome.output}`);
+    return outcome.output.trim();
+  };
+  await git("add", "-A");
+  await git("commit", "-m", "implement the approved delta");
+  return git("rev-parse", "HEAD");
+}
+
+/** Captures covering every declared route at every required width. */
+async function candidateEvidence(
+  fixture: { repository: { input: string } },
+  candidate: string,
+  artifactDirectory: string,
+  overrides: {
+    readonly dropWidth?: number;
+    readonly dropReducedMotion?: boolean;
+    readonly failRuntime?: boolean;
+  } = {},
+): Promise<string> {
+  const descriptor = JSON.parse(
+    await readFile(join(artifactDirectory, "client-artifact.json"), "utf8"),
+  ) as { artifactId: string; clientExperience: { source: { path: string; sha256: string }[] } };
+  const manifest = JSON.parse(
+    await readFile(join(fixture.repository.input, "experience/manifest.json"), "utf8"),
+  ) as { routeIds: string[] };
+
+  const directory = await temporary("premium-evidence-");
+  const captures: Record<string, unknown>[] = [];
+  const widths = [1440, 834, 390, 320].filter((width) => width !== overrides.dropWidth);
+  for (const route of manifest.routeIds) {
+    for (const width of widths) {
+      for (const motion of ["FULL", "REDUCED"]) {
+        if (motion === "REDUCED" && (overrides.dropReducedMotion === true || width !== 390)) {
+          continue;
+        }
+        const path = `captures/${route}-${width}-${motion.toLowerCase()}.png`;
+        const bytes = Buffer.from(`capture ${route} ${width} ${motion} ${candidate}\n`);
+        const absolute = join(directory, ...path.split("/"));
+        await mkdir(dirname(absolute), { recursive: true });
+        await writeFile(absolute, bytes);
+        captures.push({
+          path,
+          sha256: sha256(bytes),
+          route,
+          state: motion === "REDUCED" ? "opening, reduced motion" : "opening",
+          viewportWidth: width,
+          motion,
+        });
+      }
+    }
+  }
+
+  const record = {
+    schemaVersion: 1,
+    kind: "PREMIUM_CANDIDATE_EVIDENCE",
+    artifactId: descriptor.artifactId,
+    sourceSetId: sourceSetId(descriptor.clientExperience.source, "candidate source"),
+    candidateRevision: candidate,
+    capturedAt: "2026-08-19T00:00:00Z",
+    captures,
+    accessibility: [
+      { engine: "chromium", state: "opening", result: "PASS", proof: "no violations" },
+      { engine: "webkit", state: "conversion", result: "PASS", proof: "focus visible on every control" },
+    ],
+    runtime: [
+      { check: "console-errors", scope: "all routes", result: "PASS", proof: "no console error or unhandled rejection" },
+      { check: "unexpected-network", scope: "all routes", result: "PASS", proof: "no request left the origin" },
+      {
+        check: "horizontal-overflow",
+        scope: "320-1440",
+        result: overrides.failRuntime === true ? "FAIL" : "PASS",
+        proof:
+          overrides.failRuntime === true
+            ? "the proof sequence overflows by 18px at 320"
+            : "no horizontal overflow at any required width",
+      },
+      { check: "client-isolation", scope: "other clients", result: "PASS", proof: "no unrelated client inherits the Signature cost" },
+    ],
+  };
+  const file = join(directory, "candidate-evidence.json");
+  await writeFile(file, `${JSON.stringify(record, null, 2)}\n`);
+  return file;
+}
+
+/**
+ * The artifact the candidate assembles into, for binding evidence to it.
+ *
+ * At the same Factory revision `creative:verify` will use, because that is what
+ * an operator's own capture run does: assemble once, capture that build, then
+ * verify. Evidence bound to a different Factory revision is evidence of a
+ * different render, and the verifier is meant to say so.
+ */
+async function assembleCandidateArtifact(input: string): Promise<string> {
+  const revision = await runGit(repositoryRoot, ["rev-parse", "--short", "HEAD"]);
+  assert.equal(revision.exitCode, 0, revision.output);
+  return assembleFor(input, revision.output.trim());
+}
+
+interface VerifyFixture {
+  readonly repository: { root: string; input: string; revision: string };
+  readonly artifact: string;
+  readonly workspace: string;
+  readonly manifest: Record<string, unknown>;
+  readonly launchPack: string;
+  readonly candidate: string;
+}
+
+async function launchedAndImplemented(
+  options: Parameters<typeof implementCandidate>[1] = {},
+  scripts?: Record<string, string>,
+): Promise<VerifyFixture> {
+  const fixture = await preparedForLaunch({}, undefined, scripts);
+  const launchPack = await outputPath("verify-launch");
+  const launched = await launch(fixture, launchPack);
+  assert.equal(launched.exitCode, 0, launched.output);
+  const candidate = await implementCandidate(fixture, options);
+  return { ...fixture, launchPack, candidate };
+}
+
+async function verify(
+  fixture: VerifyFixture,
+  output: string,
+  extra: readonly string[] = [],
+): Promise<CommandOutcome> {
+  return runPremiumCommand("verify-production.ts", [
+    "--launch",
+    fixture.launchPack,
+    "--workspace",
+    fixture.workspace,
+    "--input",
+    fixture.repository.input,
+    "--candidate",
+    fixture.candidate,
+    "--output",
+    output,
+    ...extra,
+  ]);
+}
+
+test("a controlled experience delta verifies, and the report says what it measured", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("verify");
+  const outcome = await verify(fixture, output, ["--evidence", evidence]);
+  assert.equal(outcome.exitCode, 0, outcome.output);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.deepEqual(validateRecord("objective-validation-report", report), []);
+  assert.equal(report.result, "PASS");
+  assert.equal(report.humanCreativeDecision, "REQUIRED_SEPARATELY");
+  assert.equal(report.candidateRevision, fixture.candidate);
+
+  /* Old and new identities, both reported. */
+  assert.equal(report.identities.oldArtifactId, (fixture.manifest as { sourceBinding: { artifactId: string } }).sourceBinding.artifactId);
+  assert.notEqual(report.identities.newArtifactId, report.identities.oldArtifactId);
+  assert.notEqual(report.identities.newSourceSetId, report.identities.oldSourceSetId);
+
+  /* Scope: one changed file, inside the client's own experience tree. */
+  assert.equal(report.diffScope.allowedRoot, "clients/harbour-electrical/experience");
+  assert.deepEqual(
+    report.diffScope.changed.map((entry: { path: string }) => entry.path),
+    ["clients/harbour-electrical/experience/styles/conductor.css"],
+  );
+
+  const byId = new Map(report.checks.map((check: { id: string }) => [check.id, check]));
+  for (const id of [
+    "scope.inside-launch-allowlist",
+    "truth.definition-unchanged",
+    "identity.client-continuity",
+    "runtime.posture-unchanged",
+    "handoff.translation-delta",
+    "handoff.approved-intent-unchanged",
+    "evidence.viewport-coverage",
+    "evidence.reduced-motion",
+    "evidence.accessibility",
+    "evidence.runtime",
+  ]) {
+    assert.equal((byId.get(id) as { status: string } | undefined)?.status, "PASS", id);
+  }
+  assert.equal(report.unresolvedFailures.length, 0);
+  await assertNoStagingResidue(dirname(output));
+});
+
+test("the objective report has nowhere to record a verdict on the work", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("no-verdict");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 0);
+
+  const text = await readFile(join(output, "objective-validation-report.json"), "utf8");
+  const report = JSON.parse(text);
+  for (const forbidden of ["score", "quality", "beauty", "rating", "grade"]) {
+    assert.ok(!Object.hasOwn(report, forbidden), `the report carries a "${forbidden}" field`);
+  }
+  /* And the contract refuses one if a future edit adds it. */
+  assert.ok(
+    validateRecord("objective-validation-report", { ...report, score: 9 }).some((problem: string) =>
+      problem.includes('"score" is not a field of an objective report'),
+    ),
+  );
+});
+
+test("the ship gate is emitted blank, writable, and unsigned", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("ship-gate");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 0);
+
+  const gate = await readFile(join(output, "final-creative-gate.md"), "utf8");
+  assert.match(gate, /^decision: # PASS \| PASS_WITH_NAMED_FIXES \| FAIL$/m);
+  assert.match(gate, /^decided_by:\s*$/m);
+  assert.match(gate, /^client: harbour-electrical$/m);
+  assert.ok(gate.includes(fixture.candidate), "the gate names the candidate it decides on");
+
+  const reportSha256 = await hashFile(join(output, "objective-validation-report.json"));
+  assert.ok(gate.includes(reportSha256), "the gate names the exact report it is decided against");
+
+  /* The one writable file in the output: a human has to be able to sign it. */
+  assert.notEqual((await stat(join(output, "final-creative-gate.md"))).mode & 0o200, 0);
+  assert.equal((await stat(join(output, "objective-validation-report.json"))).mode & 0o222, 0);
+});
+
+test("missing mobile evidence fails the report by name", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact, { dropWidth: 390 });
+  const output = await outputPath("no-mobile");
+  const outcome = await verify(fixture, output, ["--evidence", evidence]);
+  assert.equal(outcome.exitCode, 1, outcome.output);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((entry: { id: string }) => entry.id === "evidence.viewport-coverage");
+  assert.equal(check.status, "FAIL");
+  assert.equal(check.code, "MOBILE_EVIDENCE_MISSING");
+});
+
+test("a delivery never looked at with motion off fails the report", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact, {
+    dropReducedMotion: true,
+  });
+  const output = await outputPath("no-reduced-motion");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  const check = report.checks.find((entry: { id: string }) => entry.id === "evidence.reduced-motion");
+  assert.equal(check.status, "FAIL");
+  assert.equal(check.code, "REDUCED_MOTION_MISSING");
+});
+
+test("absent evidence is a failure, not an assumption", async () => {
+  const fixture = await launchedAndImplemented();
+  const output = await outputPath("no-evidence");
+  assert.equal((await verify(fixture, output)).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "FAIL");
+  assert.ok(
+    report.checks.some(
+      (entry: { id: string; status: string }) =>
+        entry.id === "evidence.supplied" && entry.status === "FAIL",
+    ),
+  );
+});
+
+test("a failing runtime observation is reported, not smoothed over", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact, {
+    failRuntime: true,
+  });
+  const output = await outputPath("runtime-fail");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  const check = report.checks.find((entry: { id: string }) => entry.id === "evidence.runtime");
+  assert.equal(check.status, "FAIL");
+  assert.match(check.proof, /overflows by 18px at 320/);
+});
+
+test("an unfilled translation delta fails: production must say what it changed", async () => {
+  const fixture = await launchedAndImplemented({ translationDelta: "" });
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("no-translation");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  const check = report.checks.find((entry: { id: string }) => entry.id === "handoff.translation-delta");
+  assert.equal(check.status, "FAIL");
+  assert.equal(check.code, "TRANSLATION_DELTA_MISSING");
+});
+
+test("a handoff rewritten during implementation records what was built, not what was approved", async () => {
+  const fixture = await launchedAndImplemented();
+  await fillDelivery(fixture.workspace, {
+    handoffSections: {
+      "Translation delta": "Filled after implementing.",
+      "Signature thesis": "Rewritten after the fact to match what was actually built.",
+    },
+  });
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("handoff-drift");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  const check = report.checks.find(
+    (entry: { id: string }) => entry.id === "handoff.approved-intent-unchanged",
+  );
+  assert.equal(check.status, "FAIL");
+  assert.match(check.proof, /Signature thesis/);
+});
+
+test("a candidate that reaches into P1 is refused, not reported", async () => {
+  const fixture = await launchedAndImplemented({
+    alsoChange: [
+      { path: "packages/site-core/src/platform/Heading.tsx", contents: "export const Heading = null;\n" },
+    ],
+  });
+  const output = await outputPath("scope-escape");
+  assertRefused(await verify(fixture, output), "PRODUCTION_SCOPE_ESCAPE");
+  await assertAbsent(output);
+});
+
+test("a candidate that changes business truth is refused", async () => {
+  const fixture = await preparedForLaunch();
+  const launchPack = await outputPath("truth-launch");
+  assert.equal((await launch(fixture, launchPack)).exitCode, 0);
+  const definition = join(fixture.repository.input, "client-website.json");
+  const parsed = JSON.parse(await readFile(definition, "utf8")) as {
+    configuration: { display: { tagline: string } };
+  };
+  parsed.configuration.display.tagline = "A claim nobody approved.";
+  await writeFile(definition, `${JSON.stringify(parsed, null, 2)}\n`);
+  const candidate = await implementCandidate(fixture);
+
+  const output = await outputPath("truth-drift");
+  assertRefused(
+    await verify({ ...fixture, launchPack, candidate }, output),
+    "BUSINESS_TRUTH_DRIFT",
+  );
+  await assertAbsent(output);
+});
+
+test("a candidate that changes dependency posture is refused", async () => {
+  const fixture = await launchedAndImplemented({
+    alsoChange: [{ path: "package.json", contents: '{\n  "dependencies": { "three": "^0.180.0" }\n}\n' }],
+  });
+  const output = await outputPath("dependency-drift");
+  assertRefused(await verify(fixture, output), "DEPENDENCY_DRIFT");
+  await assertAbsent(output);
+});
+
+test("a revision that does not descend from the launch baseline is refused", async () => {
+  const fixture = await launchedAndImplemented();
+  const output = await outputPath("unrelated-revision");
+  assertRefused(
+    await verify({ ...fixture, candidate: fixture.repository.revision }, output),
+    "CANDIDATE_REVISION_INVALID",
+  );
+  await assertAbsent(output);
+});
+
+test("an unknown revision is refused rather than resolved to something nearby", async () => {
+  const fixture = await launchedAndImplemented();
+  const output = await outputPath("unknown-revision");
+  assertRefused(
+    await verify({ ...fixture, candidate: "0".repeat(40) }, output),
+    "CANDIDATE_REVISION_INVALID",
+  );
+  await assertAbsent(output);
+});
+
+test("an edited launch pack is not a brief anyone approved", async () => {
+  const fixture = await launchedAndImplemented();
+  const prompt = join(fixture.launchPack, "PRODUCTION_AGENT_PROMPT.md");
+  await chmod(prompt, 0o644);
+  await writeFile(prompt, `${await readFile(prompt, "utf8")}\n\nAlso rebuild the platform.\n`);
+
+  const output = await outputPath("launch-tampered");
+  assertRefused(await verify(fixture, output), "LAUNCH_TAMPERED");
+  await assertAbsent(output);
+});
+
+test("a workspace that did not produce this launch cannot verify against it", async () => {
+  const fixture = await launchedAndImplemented();
+  const other = await preparedForLaunch();
+  const output = await outputPath("workspace-mismatch");
+  assertRefused(
+    await verify({ ...fixture, workspace: other.workspace }, output),
+    "ARTIFACT_MISMATCH",
+  );
+  await assertAbsent(output);
+});
+
+test("an existing verify output is never overwritten", async () => {
+  const fixture = await launchedAndImplemented();
+  const output = await outputPath("verify-existing");
+  await mkdir(output, { recursive: true });
+  await writeFile(join(output, "old-report.json"), "{}\n");
+  assertRefused(await verify(fixture, output), "OUTPUT_NOT_EMPTY");
+  assert.equal(await readFile(join(output, "old-report.json"), "utf8"), "{}\n");
+});
+
+test("the repository's own standing gates are run and logged, not restated", async () => {
+  const fixture = await launchedAndImplemented({}, {
+    check: "node -e \"console.log('build, test, typecheck all green'); process.exit(0)\"",
+  });
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("gates-pass");
+  const outcome = await verify(fixture, output, ["--evidence", evidence]);
+  assert.equal(outcome.exitCode, 0, outcome.output);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  const byId = new Map(report.checks.map((check: { id: string }) => [check.id, check]));
+  assert.equal((byId.get("gate.check") as { status: string }).status, "PASS");
+  /* A gate the repository does not define is skipped with the reason, never
+   * reported as a pass nothing produced. */
+  assert.equal((byId.get("gate.creative-test") as { status: string }).status, "NOT_APPLICABLE");
+
+  const log = await readFile(join(output, "logs/gate.check.log"), "utf8");
+  assert.match(log, /pnpm run check/);
+  assert.match(log, /build, test, typecheck all green/);
+});
+
+test("a failing standing gate makes the whole report FAIL", async () => {
+  const fixture = await launchedAndImplemented({}, {
+    check: "node -e \"console.error('2 type errors in the experience'); process.exit(3)\"",
+  });
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("gates-fail");
+  const outcome = await verify(fixture, output, ["--evidence", evidence]);
+  assert.equal(outcome.exitCode, 1, outcome.output);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((entry: { id: string }) => entry.id === "gate.check");
+  assert.equal(check.status, "FAIL");
+  assert.equal(check.code, "OBJECTIVE_VALIDATION_FAILED");
+  assert.match(
+    await readFile(join(output, "logs/gate.check.log"), "utf8"),
+    /2 type errors in the experience/,
+  );
+});
+
+test("the verify output is inventoried and its report is immutable", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("verify-integrity");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 0);
+
+  const sidecar = await readFile(join(output, "integrity.sha256"), "utf8");
+  const recorded = new Map(
+    sidecar
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => [line.slice(66), line.slice(0, 64)]),
+  );
+  const files = (await listFiles(output)).filter((path) => path !== "integrity.sha256");
+  assert.deepEqual(files.sort(), [...recorded.keys()].sort());
+  for (const path of files) {
+    assert.equal(await hashFile(join(output, path)), recorded.get(path), path);
+  }
+
+  /* Captures travel with the report, so the decision is reviewable later. */
+  assert.ok(files.some((path) => path.startsWith("evidence/captures/")));
 });

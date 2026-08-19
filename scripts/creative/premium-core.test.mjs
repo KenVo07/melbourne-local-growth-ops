@@ -694,7 +694,17 @@ test("the three published records validate, and every kind has a validator", () 
   assert.deepEqual(validateRecord("premium-workspace", validWorkspace()), []);
   assert.deepEqual(validateRecord("production-launch", validLaunch()), []);
   assert.deepEqual(validateRecord("objective-validation-report", validReport()), []);
-  assert.equal(CONTRACT_KINDS.length, 6);
+  /* Named rather than counted: a new published record has to be added here
+   * deliberately, and the diff says which one it is. */
+  assert.deepEqual(CONTRACT_KINDS, [
+    "baseline-evidence",
+    "candidate-evidence",
+    "objective-validation-report",
+    "premium-workspace",
+    "production-launch",
+    "provider-evidence",
+    "provider-upload-inventory",
+  ]);
   assert.throws(() => validateRecord("not-a-kind", {}), /No premium contract validator/);
 });
 
@@ -1021,4 +1031,57 @@ test("a symlink anywhere in a tree is refused rather than followed", async () =>
   await refusesWithAsync("UNSUPPORTED_FILE", () =>
     resolveExistingDirectory(join(workspace, "source/index.tsx"), "client input"),
   );
+});
+
+test("candidate evidence must be bound, complete and honest about its results", () => {
+  const capture = (overrides = {}) => ({
+    path: "captures/home-390-full.png",
+    sha256: "c".repeat(64),
+    route: "home",
+    state: "opening",
+    viewportWidth: 390,
+    motion: "FULL",
+    ...overrides,
+  });
+  const valid = {
+    schemaVersion: 1,
+    kind: "PREMIUM_CANDIDATE_EVIDENCE",
+    artifactId: "a".repeat(64),
+    sourceSetId: "b".repeat(64),
+    candidateRevision: "4634bfb0243923d2d92cd15d39a9b298c4017816",
+    capturedAt: "2026-08-19T00:00:00Z",
+    captures: [capture()],
+    accessibility: [
+      { engine: "chromium", state: "opening", result: "PASS", proof: "no violations" },
+    ],
+    runtime: [
+      { check: "console-errors", scope: "all routes", result: "PASS", proof: "clean" },
+    ],
+  };
+  assert.deepEqual(validateRecord("candidate-evidence", valid), []);
+
+  const cases = [
+    [{ captures: [capture({ viewportWidth: 1024 })] }, /viewportWidth/],
+    [{ captures: [capture({ motion: "OFF" })] }, /motion/],
+    [{ captures: [capture({ path: "/absolute/home.png" })] }, /portable relative path/],
+    [{ captures: [capture({ route: "" })] }, /route/],
+    [{ captures: [] }, /at least 1 item/],
+    [
+      { accessibility: [{ engine: "chromium", state: "opening", result: "MAYBE", proof: "x" }] },
+      /result must be PASS or FAIL/,
+    ],
+    [
+      { runtime: [{ check: "console-errors", scope: "all", result: "FAIL", proof: "" }] },
+      /proof/,
+    ],
+    [{ candidateRevision: "" }, /candidateRevision/],
+    [{ sourceSetId: "short" }, /sourceSetId/],
+  ];
+  for (const [overrides, expected] of cases) {
+    const problems = validateRecord("candidate-evidence", { ...valid, ...overrides });
+    assert.ok(
+      problems.some((problem) => expected.test(problem)),
+      `${JSON.stringify(overrides)} should have reported ${expected}; got ${problems.join(" | ") || "(nothing)"}`,
+    );
+  }
 });
