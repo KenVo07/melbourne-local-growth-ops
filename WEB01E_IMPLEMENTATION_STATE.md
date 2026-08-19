@@ -42,7 +42,7 @@ matrix and the current source.
 | 4 handoff and provider preflight | DONE | `artifact-model.mjs` production-handoff extension + `final-creative-gate` kind, both templates, `validate-core.mjs` rules, `self-test.mjs` fail-capable cases. The recovered working diff completed it by attaching refusal codes to the shared validator. |
 | 5 `creative:launch` | DONE | `launch-production.ts` + `creative:launch` alias. 23 new workflow tests: success, portability, fresh-agent prompt, stale source, tampered baseline, dirty worktree, failed/agent gate, missing named fix, missing WHY, forbidden home, reduced motion, source mismatch, foreign client, missing translation-delta heading, media claim, non-empty output, provider binding/attestation/approval, no network. |
 | 6 `creative:verify` | DONE | `verify-production.ts` + `creative:verify` alias + the `candidate-evidence` contract. 20 new tests: controlled delta PASS, no-verdict report, blank ship gate, missing mobile/reduced-motion/absent evidence, failing runtime, unfilled and rewritten handoff, P1 escape, business-truth drift, dependency drift, unrelated/unknown revision, tampered launch, workspace mismatch, standing-gate pass/fail, output integrity, non-empty output. |
-| 7 docs / operator polish | NOT STARTED | `docs/creative/premium-workflow.md` absent although `prepare-premium.ts` and `premium-contracts.mjs` already cite it. Operator pack, red team, translation runbook, evidence protocol, delivery system and README all still at their WEB-01D revisions. |
+| 7 docs / operator polish | DONE | New `premium-workflow.md`; README premium path and command table; delivery-system artifact chain + source-bound path; operator pack preflight, Mode A attestation and Mode B generation; translation runbook launch-pack section, boundary table and stop conditions; evidence protocol binding and coverage; red team inherited-aesthetic and export-runtime attacks. Two new tests assert the command surface and that every documented command exists. |
 | 8 adversarial + clean-room proof | NOT STARTED | No review package directory, ZIP or checksum sidecar exists. |
 
 ## Recovered working diff (preserved, not discarded)
@@ -59,7 +59,7 @@ completed and committed rather than reset.
 
 Re-run at recovery and green (Node 24.18.0 via nvm), with the working diff applied:
 
-- `pnpm creative:test` — 99 passing (38 core + 61 workflow), 0 failing.
+- `pnpm creative:test` — 101 passing (40 core + 61 workflow), 0 failing.
 - `pnpm creative:validate:self-test` — PASS.
 - `git diff --exit-code -- pnpm-lock.yaml` — unchanged.
 
@@ -98,13 +98,13 @@ artifact against live source and never re-assemble.
 ## First incomplete acceptance requirement
 
 > "Final review package is validated, zipped, clean-extracted, revalidated and
-> hashed." — plus the documentation rows.
+> hashed."
 
-Every acceptance row for prepare, launch and verify has an implementation and a
-passing negative fixture.
+Every acceptance row for prepare, launch, verify and documentation has an
+implementation and a passing check.
 
 ## Next action
 
-Phase 7: `docs/creative/premium-workflow.md`, plus the README, delivery-system,
-operator-pack, translation-runbook, evidence-protocol and red-team updates.
-Then Phase 8: full suites, clean-room proof and the review package.
+Phase 8: the adversarial and clean-room proof — `pnpm check`, managed-web e2e,
+a synthetic end-to-end prepare → launch → verify run, and the review package with
+its manifest, checksums, ZIP, SHA-256 sidecar and clean-room re-extraction.

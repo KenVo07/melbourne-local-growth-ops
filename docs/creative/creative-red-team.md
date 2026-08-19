@@ -52,11 +52,30 @@ pages are built for speed.
 - Crops that stop meaning anything at a narrow aspect.
 - A Signature that silently disappears rather than having a designed small form.
 
+### Inherited aesthetic from outside this client
+- **A design system that is not this client's.** A creative environment that
+  already holds a design system will apply it, and the result will look
+  intentional. Ask whose brand the type scale, spacing and colour actually
+  belong to. If the honest answer is "the provider's" or "unknown", that is a
+  finding, and `creative:launch` refuses it as `FOREIGN_DESIGN_SYSTEM`.
+- **Another client's source, media or examples** reaching the working context.
+  This is rarely deliberate: it happens because a previous delivery's files were
+  nearby. A premium workspace carries one client's material and nothing else, and
+  the delivery's artifacts must all name the same client.
+- **A provider export treated as authority.** An export is evidence of a
+  conversation. Code pasted from one carries its shortcuts, its runtime
+  assumptions and sometimes its network calls, none of which were reviewed by
+  anybody. Ask what the export *meant*, then build that.
+
 ### Provenance and debt
 - **Copied reference DNA** — a layout, identity or choreography traceable to a
   known site.
 - **Accessibility or performance debt hidden by spectacle** — the impressive thing
   is the thing that breaks keyboard operation or the loading budget.
+- **Runtime smuggled in through an export** — a remote font, a remote stylesheet,
+  a fetch, storage, or an embed. The source policy refuses these, but the red team
+  should catch the intent before the policy catches the code, because by then the
+  direction has already been approved.
 
 ## The two questions that decide it
 

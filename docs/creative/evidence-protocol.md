@@ -88,8 +88,54 @@ After the build:
 - any technique swapped because the envelope refused the original;
 - the promotion ledger entry for every bespoke mechanic.
 
+## What evidence is bound to
+
+A screenshot with no identity is the most convincing way to review a change that
+never happened. So every capture set names the build it came from, and the
+premium commands refuse or fail when it does not match.
+
+**Baseline captures** — of the site as it stands, before any creative work —
+bind to `artifactId` and `sourceSetId`. `creative:prepare --baseline-manifest`
+records them as usable evidence only when both match the workspace it is
+building; captures from a previous build are kept, but marked
+`UNBOUND_REFUSED`, and cannot support a gate.
+
+**Candidate captures** — of the implemented result — bind to `sourceSetId` and
+the **candidate revision**, and are hash-verified file by file before
+`creative:verify` copies them into its report.
+
+They deliberately do *not* bind to `artifactId`. P1 assembly is not
+byte-reproducible: the generated Pagefind index carries run-varying filenames, so
+two assemblies of identical source at the same Factory revision produce
+different artifact ids. Requiring a match would fail honest evidence and teach an
+operator to recapture until it passed — which is exactly how a real
+"captures of a previous build" failure would stop being noticed. The source set
+and the revision are what production actually wrote, and they are stable.
+
+A capture set records, per capture: the route, the state, the viewport width —
+one of 1440, 834, 390, 320 — and whether motion was `FULL` or `REDUCED`.
+Alongside them, per engine and significant state, the accessibility results, and
+the runtime observations: console errors, unexpected network requests,
+horizontal overflow, and whether unrelated clients inherit the Signature's cost.
+
+## Coverage is measured, not asserted
+
+`creative:verify` checks coverage against the routes the **experience manifest
+declares**, not against the routes someone happened to capture. Four widths on
+one route and nothing else is the exact gap this protocol exists to close, and
+it is the shape most incomplete evidence takes.
+
+Missing evidence is a **failure**, not an assumption. A report with no mobile
+captures says `MOBILE_EVIDENCE_MISSING`; one with no reduced-motion capture says
+`REDUCED_MOTION_MISSING`. Neither is a silent gap that a reviewer might read as
+approval.
+
 ## Where it lives
 
 Alongside the delivery's creative artifacts, in a directory the Creative Gate can
 name. Evidence that cannot be pointed at from the gate decision is evidence
 nobody will find.
+
+For a premium delivery, `creative:verify` copies every verified capture into its
+own output beside the report, so the decision stays reviewable a year later even
+if the working directory it came from is gone.

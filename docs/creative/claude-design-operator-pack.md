@@ -34,6 +34,14 @@ optional rather than load-bearing.
    premises, results or certifications unless real client evidence exists and is
    classified `REAL_CLIENT_EVIDENCE`.
 
+**If this is a premium delivery, start with `pnpm creative:prepare`.** It builds
+the curated Mode B package described in §1 from the client's own validated
+definition, so the context you carry into a design session is generated rather
+than assembled by hand — and provably matches the source production will modify.
+See [premium-workflow.md](premium-workflow.md). Everything in this pack still
+applies; the bridge changes where the context comes from and what has to be true
+before anything leaves your machine, not how the exploration is run.
+
 ## 1. Environment, and which integration mode you are in
 
 ### One-time setup
@@ -88,10 +96,28 @@ Run `/design-sync` and follow it. Sync the design system; exclude the generation
 pipeline, contracts, tests, and **any other client's experience**. A canvas holding
 another client's art direction is how one delivery's aesthetic leaks into the next.
 
+In a premium delivery, Mode A is the one mode where absence is itself a refusal.
+It claims the work was done inside a design system that belongs to *this client*,
+so `creative:launch` requires provider evidence attesting
+`designSystemAttestation.status: CLIENT_SCOPED`, naming the system and the brand
+it belongs to, and signed by a named human. Without it the launch refuses with
+`FOREIGN_DESIGN_SYSTEM` — an unattested design system is an unknown one, and a
+provider organisation happening to publish an inherited system is exactly the
+thing that must not be read as agreement.
+
 ### Mode B — curated creative context
 
-This is the mode for a generated, client-local architecture. Assemble a curated
-package by hand and carry it into a Claude Design **web** project. Four things are
+This is the mode for a generated, client-local architecture, and the mode this
+repository is in today. **Mode B needs no provider at all**: the exact source
+baseline plus the public context is the bridge, and a delivery can be explored,
+gated, built and verified without any design tool ever being opened.
+
+For a premium delivery, `pnpm creative:prepare` generates this package —
+`context/CREATIVE_CONTEXT.md`, the capability envelope, the platform contract,
+the approved media, and the exact read-only source baseline — using
+`creative:package`'s own builders, so a workspace and a standalone package say
+exactly the same thing about the same client. Assemble it by hand only when you
+are not running the premium path. Four things are
 forbidden while doing it, and each of them has been proposed and rejected:
 
 - do **not** create a workspace package merely to satisfy Claude Design — the
@@ -118,7 +144,10 @@ The curated context must preserve all of:
 | Production constraints | the envelope's refusals |
 
 **No other client's visual source enters this package.** Not as reference, not as
-an example, not as a starting point.
+an example, not as a starting point. `creative:prepare` enforces this
+structurally: what may be uploaded is a positive allowlist generated from what
+the workspace actually contains, and material belonging to another client is
+refused as `CROSS_CLIENT_LEAKAGE` rather than merely discouraged.
 
 ### Mode C — code canvas / early preview
 
@@ -132,6 +161,32 @@ absent — "the 'request tweaks' agent loop [is] not available in this canvas ed
 — so the divergence and critique prompts in §2–§3 have no interlocutor to answer
 them. Work done there must never be recorded as a conversational Claude Design
 proof.
+
+### Before anything leaves your machine
+
+No command in this system uploads anything. `creative:prepare` writes
+`provider/PROVIDER_PREFLIGHT.md` and an upload inventory describing what *may*
+leave the local boundary; whether it does is a human decision, taken once, in
+writing.
+
+Complete the preflight before the first upload. It records, and `creative:launch`
+re-reads:
+
+| Field | What it records |
+|---|---|
+| `binding` | The workspace, artifact, source set, slice and gate this export belongs to. Evidence from a different substrate cannot support this decision. |
+| `designSystemAttestation` | `NONE`, `CLIENT_SCOPED` or `FOREIGN_OR_UNKNOWN_BLOCKED`, attested by a named human on a date. |
+| `dataHandlingApproval` | Who approved what may leave, when, and that retention is understood. An agent name here is refused as `DATA_HANDLING_UNAPPROVED`. |
+| `items[].carriesNoNewBusinessFact` | Must be `true`. Provider output cannot introduce a claim the client definition does not carry. |
+
+The generated public snapshot and the client artifact descriptor are never
+uploadable: both record connector selections, required environment variable names
+and recipient configuration.
+
+Pass the completed file to `pnpm creative:launch --vendor-evidence <file>`. The
+launch pack then carries it as `inputs/provider-evidence-manifest.json`, marked
+`authority: NON_AUTHORITATIVE`, because an export is evidence of a conversation
+and never a decision.
 
 ### Prompt — orient the design session
 
@@ -387,8 +442,16 @@ give fresh eyes on it.
 
 The canvas has produced a direction. The repository produces the website.
 
-1. Fill the creative artifacts (`pnpm creative:new <client> <dir>` scaffolds them).
+1. Fill the creative artifacts. In a premium delivery they are already in
+   `<workspace>/delivery/`; otherwise `pnpm creative:new <client> <dir>` scaffolds
+   them.
 2. Run `pnpm creative:validate <dir>` until it passes.
 3. Take the Signature Slice to the founder for the [Creative Gate](creative-gate.md).
    **An agent cannot pass this gate, and the validator refuses one that tries.**
-4. On a pass, follow the [production translation runbook](production-translation-runbook.md).
+4. On a pass, run `pnpm creative:launch` to freeze the decision and the current
+   source identity into a pack a production agent can execute, then follow the
+   [production translation runbook](production-translation-runbook.md).
+5. When production reports back, run `pnpm creative:verify` and take its objective
+   report — plus the site itself — to the founder for the ship gate.
+
+The full path is in [premium-workflow.md](premium-workflow.md).

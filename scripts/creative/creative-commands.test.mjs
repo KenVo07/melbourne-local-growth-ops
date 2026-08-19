@@ -168,3 +168,56 @@ test("the creative system ships no importable runtime module", async () => {
     );
   }
 });
+
+/**
+ * The public command surface, named rather than counted.
+ *
+ * The premium bridge adds exactly three orchestration commands. Listing them
+ * here means a fourth cannot appear without a deliberate edit to this test, and
+ * means the "thin bridge, not a subsystem" claim is checked rather than asserted.
+ */
+test("the creative command surface is exactly the documented one", async () => {
+  const { scripts } = JSON.parse(
+    await readFile(join(repositoryRoot, "package.json"), "utf8"),
+  );
+  assert.deepEqual(
+    Object.keys(scripts)
+      .filter((name) => name.startsWith("creative:"))
+      .sort(),
+    [
+      "creative:envelope",
+      "creative:launch",
+      "creative:new",
+      "creative:package",
+      "creative:prepare",
+      "creative:templates",
+      "creative:test",
+      "creative:validate",
+      "creative:validate:self-test",
+      "creative:verify",
+    ],
+  );
+});
+
+/**
+ * Documentation that names a command nobody can run is worse than no
+ * documentation: the operator concludes the tooling is broken rather than that
+ * the sentence is stale.
+ */
+test("every root command the creative docs name actually exists", async () => {
+  const { scripts } = JSON.parse(
+    await readFile(join(repositoryRoot, "package.json"), "utf8"),
+  );
+  const documentation = join(repositoryRoot, "docs/creative");
+  const missing = [];
+  for (const path of await walk(documentation)) {
+    if (!path.endsWith(".md")) continue;
+    const text = await readFile(path, "utf8");
+    for (const [, name] of text.matchAll(/\bpnpm ((?:creative|governance):[a-z:-]+)/g)) {
+      if (scripts[name] === undefined) {
+        missing.push(`${path.slice(repositoryRoot.length + 1)} names "pnpm ${name}"`);
+      }
+    }
+  }
+  assert.deepEqual([...new Set(missing)], []);
+});

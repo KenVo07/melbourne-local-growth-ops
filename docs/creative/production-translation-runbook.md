@@ -6,6 +6,57 @@ into production source.
 **You are not copying a prototype. You are building the intent the prototype
 argued for, inside constraints the prototype did not have to respect.**
 
+## If you were given a launch pack
+
+A premium delivery hands you a frozen pack from `pnpm creative:launch` rather
+than a loose directory. Everything in this runbook still applies; the pack makes
+three things exact that were otherwise a matter of care.
+
+**Verify it before you read the creative detail.** The pack is hashed:
+
+```sh
+cd <launch-pack> && sha256sum -c integrity.sha256
+```
+
+If a hash does not match, stop. A launch pack edited after publication is a brief
+nobody approved.
+
+**`production-launch.json` names the target, and it is the only one.** The
+`productionTarget.experienceRoot` it records is the same client's live
+`experience/` tree — not a copy, not the workspace's `source/`, which is a
+read-only baseline for you to read and diff against. There is no second website
+in this system.
+
+**`repositoryBaseline` names the branch and the revision you start from.** It was
+recorded from a clean worktree so `creative:verify` can compute exactly what you
+changed. Start there, commit coherently as you go, and hand back the candidate
+revision.
+
+`PRODUCTION_AGENT_PROMPT.md` in the pack states the same boundary in the form a
+fresh agent needs. `inputs/` holds the delivery byte-for-byte as it was gated.
+
+### The change boundary, exactly
+
+| May change | May not change |
+|---|---|
+| `<input>/experience/**` — this client's authored source | P1 Factory packages and the managed-web runtime |
+| Client-local tests colocated with that experience | Root dependency, lockfile, tooling or CI configuration |
+| The handoff's `## Translation delta` | Any other client's input, source or media |
+| A promotion-ledger row, recorded client-local | `client-website.json` — business truth is an input, never an output |
+| Evidence written into the output directory `creative:verify` is given | Routes, connectors, recipient addresses, secrets, entitlements, deployment configuration |
+| | Shared or global design system resources |
+| | Provider runtime, SDK or embed code |
+| | New remote fonts, remote CSS, network requests, storage, eval, server or API code |
+| | Promotion of a client-local mechanic into Core |
+
+No launch approves a dependency or runtime-posture change. If the direction needs
+one, that is a stop condition, not a decision you make.
+
+`creative:verify` refuses outright — no report, nothing to review — when a
+candidate changes business truth, dependencies, P1, root configuration or another
+client. Those are not findings to be argued; they mean the delta is not the one
+that was approved.
+
 ## Stop conditions — check these first
 
 Stop and ask a human if any of these is true. Do not proceed on assumption.
@@ -19,6 +70,14 @@ Stop and ask a human if any of these is true. Do not proceed on assumption.
 | Production would need a claim the client cannot evidence | Truth failure. Return to the media plan and the founder. |
 | The work requires changing Factory/Core source | Almost certainly wrong. See §7 before touching Core. |
 | Real client data would go to a new external provider | Provider/privacy/data-use decision. Founder's call. |
+| The live source no longer matches the launch baseline before your first edit | Someone changed the substrate under you. Re-prepare; do not build on top of it. |
+| A provider export carries hidden network, storage or server behaviour | It was never reviewed by anyone. Build the intent instead, or stop. |
+| Another client's design or source appears in your working context | A delivery changes one client's experience and nothing else. |
+| The branch or baseline revision is not the one the launch pack names | You are building against different history than the one that will be diffed. |
+
+A stopped run records **the exact contradiction and the smallest next decision**,
+and hands it back. It does not invent a workaround that weakens the boundary. A
+stop is cheap; a boundary quietly widened to fit one direction is not.
 
 ## 1. What to read, in this order
 
@@ -153,9 +212,32 @@ work.
 
 ## 8. Close the loop
 
-When production is complete, write `translation_delta` into the production handoff:
-what actually changed between the approved prototype and the shipped
-implementation, and why.
+When production is complete, write the **`## Translation delta`** section into the
+production handoff: what actually changed between the approved prototype and the
+shipped implementation, and why the intent still holds.
 
 This is the field that makes the next delivery's estimate honest. A build where
 nothing changed usually means nobody checked.
+
+Write it in the workspace's own `delivery/production-handoff.md`, and change
+nothing else in that file. `creative:verify` compares every other section to the
+copy the launch pack froze: a Production delta edited during implementation
+records what was built rather than what was approved, and the gap between those
+two is what a ship gate exists to catch.
+
+Then hand back the candidate revision and let verification run:
+
+```sh
+pnpm creative:verify \
+  --launch    <launch-pack> \
+  --workspace <workspace> \
+  --input     <client input> \
+  --candidate <your revision> \
+  --output    <new empty directory> \
+  --evidence  <candidate-evidence.json>
+```
+
+It publishes an objective report and a **blank** ship gate. You do not sign that
+gate, and there is no field in the report in which you could record an opinion
+about the work. A named human decides, against the report and against the site
+itself.

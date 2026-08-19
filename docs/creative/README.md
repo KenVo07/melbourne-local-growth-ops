@@ -12,6 +12,7 @@ the same runtime as one built without it.
 
 | If you are… | Read |
 |---|---|
+| Running a premium delivery end to end | [premium-workflow.md](premium-workflow.md) |
 | Understanding what this is and why it is shaped this way | [creative-delivery-system.md](creative-delivery-system.md) |
 | Running a creative exploration | [claude-design-operator-pack.md](claude-design-operator-pack.md) |
 | Building an approved direction in the repository | [production-translation-runbook.md](production-translation-runbook.md) |
@@ -23,6 +24,26 @@ the same runtime as one built without it.
 | Working out what evidence to capture | [evidence-protocol.md](evidence-protocol.md) |
 
 ## The workflow
+
+For a premium delivery — one that will modify a real client's live experience
+source — use the three source-bound commands. They carry the identity of the
+exact source through every step, so the thing a human approves and the thing an
+agent builds are provably the same site:
+
+```
+  pnpm creative:prepare  →  a source-bound workspace
+  explore, prototype, decide                          ← human
+  pnpm creative:validate <workspace>/delivery
+  founder Creative Gate      →  creative-gate.md      ← human, always
+  pnpm creative:launch   →  a frozen launch pack
+  a production agent builds in the live experience/ tree
+  pnpm creative:verify   →  objective report + blank ship gate
+  founder ship gate                                   ← human, always
+```
+
+See [premium-workflow.md](premium-workflow.md). The expert commands below remain
+exactly as they were, for exploration that is not bound to a client's live
+source:
 
 ```
   package the client        →  pnpm creative:package <client> <dir>
@@ -41,8 +62,11 @@ the same runtime as one built without it.
 
 | Command | Does |
 |---|---|
+| `pnpm creative:prepare` | Binds a client input to its assembled artifact and publishes a source-bound workspace. Refuses on any drift. No network. |
+| `pnpm creative:launch` | Freezes an approved delivery and the current source identity into a launch pack a fresh production agent can execute. |
+| `pnpm creative:verify` | Checks a candidate against its launch pack and publishes the objective report a named human decides against. |
 | `pnpm creative:package <client> <dir>` | Turns a P1 client definition into creative-exploration context. Extracts only; invents nothing. |
-| `pnpm creative:new <client-id> <dir>` | Scaffolds the seven artifacts, generated from the model that validates them. |
+| `pnpm creative:new <client-id> <dir>` | Scaffolds the nine artifacts, generated from the model that validates them. |
 | `pnpm creative:validate <dir>` | Checks presence, traceability, provenance and consistency. Never taste. |
 | `pnpm creative:validate:self-test` | Proves the validator's own rules still fire. |
 | `pnpm creative:test` | Proves nothing in this system is reachable from a client website's runtime. |
@@ -57,14 +81,15 @@ the same runtime as one built without it.
 | Creative Territory ×3 | Three materially different theses, each naming where its design values live. |
 | Signature Slice | The prototyped proof: navigation, opening, proof sequence, conversion. |
 | Creative Gate | The founder's recorded decision, named fixes, freeze rule. |
-| Production Handoff | Intent and constraint for the build agent — never pixels. |
+| Production Handoff | Intent and constraint for the build agent — never pixels. Carries the source binding and the post-build Translation delta. |
 | Media Plan | Every asset, its provenance class, and what it may substantiate. |
 | Promotion Ledger | Every bespoke mechanic and where it lives. Client-local by default. |
+| Final Creative Ship Gate | The named human's decision after objective validation. Emitted blank by `creative:verify`, never scaffolded with the rest. |
 
 Each is one Markdown file with YAML front-matter. Front-matter carries what a
 machine can honestly check; prose carries the creative content.
 
-## Three things this system will not do
+## Four things this system will not do
 
 1. **Judge taste.** No validator here claims to. The Creative Gate is human and
    an agent that signs one is refused.
@@ -73,6 +98,9 @@ machine can honestly check; prose carries the creative content.
    validator, contract or line of client source.
 3. **Promote anything into Core.** Only repeated evidence across two or more
    deliveries does that, and the validator enforces the count.
+4. **Upload anything.** No command here contacts a provider. `creative:prepare`
+   generates an inventory of what *may* leave the local boundary; a named human
+   decides whether it does, and `creative:launch` refuses without that decision.
 
 ## Worked example
 

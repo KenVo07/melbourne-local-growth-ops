@@ -60,9 +60,12 @@ validator checks the link exists, not the number.
 
 ## 3. The artifact chain
 
-Seven authored artifacts. Six of them are the templates the WEB-01D handoff
-package already specified; exactly one is new (Production Handoff, Requirement G).
-Adding no others is a deliberate anti-bloat decision.
+Nine authored artifacts, plus one emitted after the build. Six are the templates
+the WEB-01D handoff package already specified; the Production Handoff was
+Requirement G; the Final Creative Ship Gate exists because objective validation
+happens after production and the decision it records could not honestly be
+scaffolded before the work existed. Adding no others is a deliberate anti-bloat
+decision.
 
 ```
   REFERENCE ANALYSIS ──┐
@@ -81,7 +84,18 @@ Adding no others is a deliberate anti-bloat decision.
                                                                                 ▼
                                                                        PROMOTION LEDGER
                                                                    client-local by default
+                                                                                │
+                                                                                ▼
+                                                                  FINAL CREATIVE SHIP GATE
+                                                                 emitted blank after objective
+                                                                 validation; a named human's
+                                                                 decision, never scaffolded
 ```
+
+The ship gate is deliberately absent from the initial scaffold. A blank decision
+document sitting in a delivery from day one is a decision waiting to be filled in
+by whoever is nearest at the end; one emitted only after there is an objective
+report to decide against is a decision with something in front of it.
 
 Each artifact is **one Markdown file with a YAML front-matter block**. The
 front-matter carries only what a machine can honestly check — identity, links,
@@ -90,8 +104,24 @@ creative content. This split is the whole reason the system can be validated
 without anyone pretending taste is machine-checkable.
 
 It also keeps the system operable by a trained Digital Experience/Conversion
-specialist who does not write source: every artifact is a document, and the only
-command they run is `pnpm creative:validate`.
+specialist who does not write source: every artifact is a document, and the
+commands they run take explicit paths and refuse with a named code and the next
+action rather than a stack trace.
+
+### The source-bound path
+
+For a delivery that will modify a real client's live experience source, three
+commands carry the identity of that source through every step —
+`creative:prepare`, `creative:launch`, `creative:verify`. They are a bridge, not
+a subsystem: same nine artifacts, same validator, same gate, same source policy,
+same P1 assembly. What they add is that every step names the exact bytes it was
+performed against, so the site a human approved and the site an agent built are
+provably the same one.
+
+No database, no service, no dashboard, no workflow engine, no mutable stage file.
+Status is whatever the artifacts say. Every output is immutable, hashed and
+published atomically, and a command that cannot proceed refuses rather than
+repairs. See [premium-workflow.md](premium-workflow.md).
 
 ## 4. Where creative ambition meets production reality
 
@@ -310,8 +340,13 @@ away.
 
 ## 8. What this system does not do
 
-- It does not judge taste, and no validator in it claims to.
+- It does not judge taste, and no validator in it claims to. The objective report
+  `creative:verify` publishes has no field for a verdict on the work, and its
+  contract refuses one if a future edit tries to add it.
 - It does not make an unreviewed direction shippable.
 - It does not authorise any change to P1 Factory source or output.
-- It does not make Claude Design, or any vendor, a production dependency.
+- It does not make Claude Design, or any vendor, a production dependency. A
+  premium delivery runs end to end in Mode B with no design tool at all.
+- It does not upload anything, contact any provider, or start any agent. Those
+  are human acts, taken against manifests these commands generate.
 - It does not promote anything into Core. Only repeated evidence does that.
