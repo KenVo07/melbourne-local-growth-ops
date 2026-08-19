@@ -97,14 +97,35 @@ artifact against live source and never re-assemble.
 
 ## First incomplete acceptance requirement
 
-> "Final review package is validated, zipped, clean-extracted, revalidated and
-> hashed."
+None. Every row of the Pro acceptance matrix has an implementation and a passing
+check, and each is mapped to its proof in the review package's
+`05_NEGATIVE_ATTACK_MATRIX.md` and `03_ARCHITECTURE_CONFORMANCE.md`.
 
-Every acceptance row for prepare, launch, verify and documentation has an
-implementation and a passing check.
+## Review package
+
+Generated output, git-ignored, at the repository root:
+
+- `WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE/` — 157 files, ~1.5 MB
+- `WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE.zip`
+- `WEB01E_PREMIUM_ORCHESTRATOR_REVIEW_PACKAGE.zip.sha256`
+
+Clean-room proved: the sidecar verifies against the exact ZIP, the ZIP extracts
+into an empty directory, `sha256sum -c checksums.sha256` passes for every file,
+and an independent pass over `manifest.json` finds nothing missing and nothing
+undeclared. The nested `integrity.sha256` of the synthetic launch pack and
+objective report verify with zero mismatches; the synthetic workspace's reports
+exactly nine, all of them `delivery/*.md`, which is the editable tree and the
+expected result.
+
+To regenerate it from a clean worktree, re-run the phase-8 sequence recorded in
+the package's `04_TESTS_AND_CHECKS.md`.
 
 ## Next action
 
-Phase 8: the adversarial and clean-room proof — `pnpm check`, managed-web e2e,
-a synthetic end-to-end prepare → launch → verify run, and the review package with
-its manifest, checksums, ZIP, SHA-256 sidecar and clean-room re-extraction.
+None. Final outcome:
+
+**`WEB01E_PREMIUM_ORCHESTRATOR_READY_FOR_FOUNDER_REVIEW`**
+
+Not done, deliberately, and still open for a human decision: no push, no merge,
+no change to `main`, no PR #14 update, no Notion update, and no real Proportion
+creative work has been started.
