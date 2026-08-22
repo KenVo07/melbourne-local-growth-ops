@@ -75,7 +75,35 @@ package's 15-report suite is its evidence. Client worktree re-verified clean at
 
 ## Phase 5 — validation (PENDING)
 
-## Phase 6 — package (PENDING)
+## Phase 6 — package (COMPLETE)
+
+`POST_STONE_CONSOLIDATION_REVIEW_PACKAGE/` — 28 files, `verify.sh` passing all
+three checks, including that its own manifest does not name itself. Zip and
+sha256 sidecar published.
+
+Post-commit re-verification: `pnpm check` exit 0 at `14f82b4`, 891 package tests
+plus 67 creative tests.
+
+## Commits (local only — not pushed, not merged)
+
+Branch `feature/web-01b-premium-experience`, from `94e8ac0`. `main` unchanged at
+`5eca7ac`.
+
+| | |
+|---|---|
+| `dc38333` | `fix(creative): a checksum manifest cannot list itself` |
+| `43aab0a` | `test(starter): defend the guard that refuses generation over authored source` |
+| `efdb209` | `feat(creative): say what an approved design artifact is authoritative for` |
+| `14f82b4` | `docs(delivery): the reusable delivery system, without the client's identity` |
+
+The client repository has no commit: its scripts are gitignored, which is exactly
+why the durable guard is a Platform test.
+
+## Closed
+
+Consolidation complete. Stone & Line frozen at `6afa603`, PASS, creatively closed.
+One process contract promoted; zero components promoted; three tooling hazards
+fixed; three design problems written as briefs rather than invented.
 
 
 ---
@@ -179,7 +207,7 @@ before finalising). See Phase 3, PASS B3.
 | Core smaller or larger? | **Core unchanged.** No `packages/site-core`, contracts, templates, app or runtime package modified. `scripts/creative/` grew, which is tooling. |
 | Easier for client #2? | **Yes on four counts, not yet on one.** Approved visuals arrive automatically; the destructive script is gone; packaging is enforced; the catalogue and disposition say what to reuse and what not to. The archive, service-scale and navigation questions are still open studies — honestly still open. |
 
-## Phase 5 — validation
+## Phase 5 — validation (COMPLETE, all green)
 
 | Check | Result |
 |---|---|
@@ -194,4 +222,32 @@ before finalising). See Phase 3, PASS B3.
 | Visual-authority handoff carries provider-neutral fixture | proven — Figma, paper, PNG; workflow test uses `provider: "Figma"` |
 | Parity-slice gate representable without Claude Design | yes — same three commands on a smaller scope, no provider required |
 
-## Phase 6 — package (PENDING)
+## Phase 6 — package (COMPLETE)
+
+`POST_STONE_CONSOLIDATION_REVIEW_PACKAGE/` — 28 files, `verify.sh` passing all
+three checks, including that its own manifest does not name itself. Zip and
+sha256 sidecar published.
+
+Post-commit re-verification: `pnpm check` exit 0 at `14f82b4`, 891 package tests
+plus 67 creative tests.
+
+## Commits (local only — not pushed, not merged)
+
+Branch `feature/web-01b-premium-experience`, from `94e8ac0`. `main` unchanged at
+`5eca7ac`.
+
+| | |
+|---|---|
+| `dc38333` | `fix(creative): a checksum manifest cannot list itself` |
+| `43aab0a` | `test(starter): defend the guard that refuses generation over authored source` |
+| `efdb209` | `feat(creative): say what an approved design artifact is authoritative for` |
+| `14f82b4` | `docs(delivery): the reusable delivery system, without the client's identity` |
+
+The client repository has no commit: its scripts are gitignored, which is exactly
+why the durable guard is a Platform test.
+
+## Closed
+
+Consolidation complete. Stone & Line frozen at `6afa603`, PASS, creatively closed.
+One process contract promoted; zero components promoted; three tooling hazards
+fixed; three design problems written as briefs rather than invented.
