@@ -1237,9 +1237,24 @@ test("a fresh agent's prompt answers where, what, and when to stop", async () =>
   /* What, and on whose authority. */
   assert.match(prompt, /Raise the 390px conversion above the fold/);
   assert.match(prompt, /Khoa Vo/);
-  assert.match(prompt, /never authoritative/i);
   assert.match(prompt, /reduced.motion/i);
   assert.match(prompt, /1440, 834, 390 and 320/);
+
+  /*
+   * Authority, stated by class rather than as one blanket sentence.
+   *
+   * This assertion used to be `/never authoritative/i`, which passed against a
+   * prompt that told the agent to disregard approved visuals along with
+   * prototype code — the sentence that cost a redesign. The distinction, not the
+   * dismissal, is what has to be in the brief.
+   */
+  assert.match(prompt, /BUSINESS_TRUTH_AUTHORITY/);
+  assert.match(prompt, /PRODUCTION_SOURCE_AUTHORITY/);
+  assert.match(prompt, /NON_AUTHORITATIVE_PROTOTYPE_CODE/);
+  assert.match(prompt, /Prototype code is\s+evidence of a conversation/);
+  assert.match(prompt, /never pasted, never binding/i);
+  /* No provider here, so the brief must still refuse P1 layout as a default. */
+  assert.match(prompt, /an unchanged P1\s+composition is a translation failure/);
 
   /* When to stop, and that it cannot decide. */
   for (const condition of manifest.stopConditions) {
@@ -1406,6 +1421,14 @@ test("an existing launch output is never overwritten", async () => {
 async function providerEvidence(
   fixture: { workspace: string; manifest: Record<string, unknown> },
   overrides: Record<string, unknown> = {},
+  approved: {
+    /** Write a real artifact beside the manifest and claim authority over it. */
+    readonly visual?: boolean;
+    /** Claim authority over a file that is not there. */
+    readonly missingFile?: boolean;
+    /** Claim authority over a file whose bytes differ from the recorded hash. */
+    readonly wrongHash?: boolean;
+  } = {},
 ): Promise<string> {
   const manifest = fixture.manifest as unknown as {
     workspaceId: string;
@@ -1438,18 +1461,43 @@ async function providerEvidence(
       {
         label: "opening sequence exploration",
         purpose: "shows the surveyed-ground motion the slice describes",
-        content: "MOTION",
-        carriesNoNewBusinessFact: true,
+        content: ["MOTION", "COMMENTARY"],
+        authority: "NON_AUTHORITATIVE_PROTOTYPE_CODE",
+        businessTruth: "NOT_AUTHORITATIVE",
       },
     ],
     ...overrides,
   };
-  const file = join(await temporary("premium-vendor-"), "provider-evidence.json");
+
+  const directory = await temporary("premium-vendor-");
+
+  /* An approved visual is a real file or it is not an authority, so the fixture
+   * writes real bytes and records their real digest. */
+  if (approved.visual === true || approved.missingFile === true || approved.wrongHash === true) {
+    const bytes = Buffer.from("<!doctype html><title>approved composition</title>\n");
+    const relative = "approved-visual/visual-reset.html";
+    if (approved.missingFile !== true) {
+      const absolute = join(directory, ...relative.split("/"));
+      await mkdir(dirname(absolute), { recursive: true });
+      await writeFile(absolute, bytes);
+    }
+    (record.items as Record<string, unknown>[]).push({
+      label: "approved visual reset",
+      purpose: "the composition, palette, type and scale a named human approved",
+      content: ["VISUAL", "COMMENTARY"],
+      authority: "VISUAL_AUTHORITY",
+      path: relative,
+      sha256: approved.wrongHash === true ? "a".repeat(64) : sha256(bytes),
+      businessTruth: "NOT_AUTHORITATIVE",
+    });
+  }
+
+  const file = join(directory, "provider-evidence.json");
   await writeFile(file, `${JSON.stringify(record, null, 2)}\n`);
   return file;
 }
 
-test("bound provider evidence travels as evidence, never as authority", async () => {
+test("bound provider evidence travels, and prototype code carries no authority", async () => {
   const fixture = await preparedForLaunch();
   const evidence = await providerEvidence(fixture);
   const output = await outputPath("vendor-bound");
@@ -1459,8 +1507,10 @@ test("bound provider evidence travels as evidence, never as authority", async ()
   const manifest = JSON.parse(await readFile(join(output, "production-launch.json"), "utf8"));
   assert.deepEqual(validateRecord("production-launch", manifest), []);
   assert.equal(manifest.provider.evidenceSupplied, true);
-  assert.equal(manifest.provider.authority, "NON_AUTHORITATIVE");
+  assert.equal(manifest.provider.prototypeCodeAuthority, "NON_AUTHORITATIVE");
   assert.equal(manifest.provider.path, "inputs/provider-evidence-manifest.json");
+  /* No item claimed visual authority here, so nothing was carried as one. */
+  assert.deepEqual(manifest.provider.approvedAuthorities, []);
 
   const frozen = JSON.parse(
     await readFile(join(output, "inputs/provider-evidence-manifest.json"), "utf8"),
@@ -1468,8 +1518,114 @@ test("bound provider evidence travels as evidence, never as authority", async ()
   assert.equal(frozen.binding.workspaceId, (fixture.manifest as { workspaceId: string }).workspaceId);
 
   const index = JSON.parse(await readFile(join(output, "evidence-index.json"), "utf8"));
-  assert.equal(index.providerEvidence.authority, "NON_AUTHORITATIVE");
+  assert.equal(index.providerEvidence.supplied, true);
+  assert.match(index.providerEvidence.prototypeCode, /NON_AUTHORITATIVE/);
+  assert.match(index.providerEvidence.businessTruth, /NOT_AUTHORITATIVE/);
+  assert.deepEqual(index.providerEvidence.approvedAuthorities, []);
   assert.deepEqual(index.requiredFromProduction.viewportWidths, [1440, 834, 390, 320]);
+});
+
+test("an approved visual travels into the pack, is named as authority, and must be rendered", async () => {
+  /*
+   * The largest process defect Stone & Line found, closed end to end.
+   *
+   * A named human approved a composition. The launch pack then told the
+   * production agent that every provider export was "evidence of a conversation"
+   * and "never authoritative", carried no copy of the artifact, and left it out
+   * of the read order. The agent behaved correctly on the instructions it had and
+   * kept most of the P1 layout.
+   *
+   * What this proves: the approved artifact is copied into the pack, hashed with
+   * everything else, listed in the read order, recorded in the manifest as the
+   * source binding for visual authority, and accompanied by an instruction to
+   * open it that a reader cannot mistake for optional.
+   */
+  const fixture = await preparedForLaunch();
+  /* Deliberately not Claude Design. The authority model is stated in modalities
+   * and digests, so any tool — or none — fits the same contract; a vendor name
+   * here would be the lock-in the architecture refuses. */
+  const evidence = await providerEvidence(
+    fixture,
+    { provider: "Figma", projectLabel: "client exploration, exported frames" },
+    { visual: true },
+  );
+  const output = await outputPath("approved-visual");
+  const outcome = await launch(fixture, output, ["--vendor-evidence", evidence]);
+  assert.equal(outcome.exitCode, 0, outcome.output);
+
+  /* It is in the pack, byte-identical to what was approved. */
+  const packPath = join(output, "inputs/approved-visual/visual-reset.html");
+  const carried = await readFile(packPath);
+  assert.match(carried.toString(), /approved composition/);
+
+  /* The manifest binds it: which approved bytes production received. */
+  const manifest = JSON.parse(await readFile(join(output, "production-launch.json"), "utf8"));
+  assert.deepEqual(validateRecord("production-launch", manifest), []);
+  assert.equal(manifest.provider.approvedAuthorities.length, 1);
+  const bound = manifest.provider.approvedAuthorities[0];
+  assert.equal(bound.path, "inputs/approved-visual/visual-reset.html");
+  assert.equal(bound.authority, "VISUAL_AUTHORITY");
+  assert.equal(bound.sha256, await hashFile(packPath));
+
+  /* It is covered by the pack's own integrity manifest. */
+  const sidecar = await readFile(join(output, "integrity.sha256"), "utf8");
+  assert.match(sidecar, /inputs\/approved-visual\/visual-reset\.html/);
+
+  /* The agent is told to open it, and where it sits in the read order. */
+  const prompt = await readFile(join(output, "PRODUCTION_AGENT_PROMPT.md"), "utf8");
+  assert.match(prompt, /inputs\/approved-visual\/visual-reset\.html/);
+  assert.match(prompt, /Render and inspect each one before you write code/);
+  assert.match(prompt, /VISUAL_AUTHORITY/);
+  assert.match(prompt, /BUSINESS_TRUTH_AUTHORITY/);
+  /* And the old blanket dismissal is gone. */
+  assert.doesNotMatch(prompt, /It is never authoritative/);
+  assert.match(prompt, /Prototype code is\s+evidence of a conversation/);
+
+  /* The evidence index classifies rather than flattening. */
+  const index = JSON.parse(await readFile(join(output, "evidence-index.json"), "utf8"));
+  assert.equal(index.providerEvidence.approvedAuthorities.length, 1);
+  assert.match(index.providerEvidence.approvedAuthorities[0].obligation, /RENDER_AND_INSPECT/);
+
+  /* And the pack names the tool that was used without depending on which. */
+  assert.equal(manifest.provider.provider, "Figma");
+  const frozen = JSON.parse(
+    await readFile(join(output, "inputs/provider-evidence-manifest.json"), "utf8"),
+  );
+  assert.equal(frozen.provider, "Figma");
+});
+
+test("an approved visual the pack cannot open is refused rather than described", async () => {
+  const fixture = await preparedForLaunch();
+  const missing = await providerEvidence(fixture, {}, { missingFile: true });
+  const output = await outputPath("visual-missing");
+  assertRefused(
+    await launch(fixture, output, ["--vendor-evidence", missing]),
+    "VISUAL_AUTHORITY_UNREADABLE",
+  );
+  await assertAbsent(output);
+
+  /* And one whose bytes are not the approved bytes. */
+  const fixtureTwo = await preparedForLaunch();
+  const wrong = await providerEvidence(fixtureTwo, {}, { wrongHash: true });
+  const second = await outputPath("visual-wrong-hash");
+  assertRefused(
+    await launch(fixtureTwo, second, ["--vendor-evidence", wrong]),
+    "VISUAL_AUTHORITY_UNREADABLE",
+  );
+  await assertAbsent(second);
+});
+
+test("with no approved visual the brief still refuses to treat the old layout as a default", async () => {
+  /* Mode B works with no provider at all, and the agent must still be told that
+   * an unchanged P1 composition is a translation failure rather than caution. */
+  const fixture = await preparedForLaunch();
+  const output = await outputPath("no-provider-authority");
+  assert.equal((await launch(fixture, output)).exitCode, 0);
+
+  const prompt = await readFile(join(output, "PRODUCTION_AGENT_PROMPT.md"), "utf8");
+  assert.match(prompt, /No approved visual artifact was supplied/);
+  assert.match(prompt, /an unchanged P1\s+composition is a translation failure/);
+  assert.match(prompt, /BUSINESS_TRUTH_AUTHORITY/);
 });
 
 test("an export produced against a different substrate cannot support this decision", async () => {
@@ -1636,6 +1792,8 @@ async function candidateEvidence(
     readonly dropWidth?: number;
     readonly dropReducedMotion?: boolean;
     readonly failRuntime?: boolean;
+    readonly dropInteractions?: boolean;
+    readonly syntheticPointer?: boolean;
   } = {},
 ): Promise<string> {
   const descriptor = JSON.parse(
@@ -1697,6 +1855,34 @@ async function candidateEvidence(
       },
       { check: "client-isolation", scope: "other clients", result: "PASS", proof: "no unrelated client inherits the Signature cost" },
     ],
+    /* A finished delivery has driven its own controls. The pointer-sensitive one
+     * is driven by a real pointer sequence, because a synthetic click cannot
+     * show that a control holding pointer capture is still reachable. */
+    ...(overrides.dropInteractions === true
+      ? {}
+      : {
+          interactions: [
+            {
+              control: "collection scroller plate",
+              behaviour: "a click opens the record; a drag scrolls the run",
+              pointerSensitive: true,
+              input: overrides.syntheticPointer === true ? "SYNTHETIC_CLICK" : "REAL_POINTER",
+              result: "PASS",
+              proof:
+                overrides.syntheticPointer === true
+                  ? "element.click() opened the record"
+                  : "pointer down, up at plate centre with no travel — opened the record; 40px travel scrolled instead",
+            },
+            {
+              control: "primary navigation disclosure",
+              behaviour: "opens the menu and traps focus",
+              pointerSensitive: false,
+              input: "REAL_KEYBOARD",
+              result: "PASS",
+              proof: "Enter opened it, Escape closed it, focus returned to the trigger",
+            },
+          ],
+        }),
   };
   const file = join(directory, "candidate-evidence.json");
   await writeFile(file, `${JSON.stringify(record, null, 2)}\n`);
@@ -2088,6 +2274,75 @@ test("a failing standing gate makes the whole report FAIL", async () => {
     await readFile(join(output, "logs/gate.check.log"), "utf8"),
     /2 type errors in the experience/,
   );
+});
+
+test("a pointer-sensitive control evidenced by a synthetic click fails the report", async () => {
+  /*
+   * The defect that shipped through a full evidence pass. A collection plate
+   * held pointer capture from `pointerdown`, so the click a press produced was
+   * dispatched at the capturing element and the plate could not be clicked at
+   * all. The harness proved the plates worked with `element.click()`, which
+   * never involves a pointer, capture or hit-testing.
+   *
+   * Reported rather than refused: the delivery is inside its boundary, and a
+   * reviewer needs to see which control is unproven.
+   */
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact, {
+    syntheticPointer: true,
+  });
+  const output = await outputPath("synthetic-pointer");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find(
+    (entry: { id: string }) => entry.id === "evidence.pointer-input",
+  );
+  assert.equal(check.status, "FAIL");
+  assert.equal(check.code, "SYNTHETIC_POINTER_EVIDENCE");
+  assert.match(check.proof, /collection scroller plate/);
+  assert.match(check.proof, /SYNTHETIC_CLICK/);
+});
+
+test("a delivery whose controls were never driven is reported, not assumed to work", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact, {
+    dropInteractions: true,
+  });
+  const output = await outputPath("no-interactions");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 1);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "FAIL");
+  for (const id of ["evidence.interaction", "evidence.pointer-input"]) {
+    const check = report.checks.find((entry: { id: string }) => entry.id === id);
+    assert.equal(check.status, "FAIL", `${id} must fail when no control was driven`);
+  }
+});
+
+test("real pointer evidence passes, and the report counts what was driven", async () => {
+  const fixture = await launchedAndImplemented();
+  const artifact = await assembleCandidateArtifact(fixture.repository.input);
+  const evidence = await candidateEvidence(fixture, fixture.candidate, artifact);
+  const output = await outputPath("real-pointer");
+  assert.equal((await verify(fixture, output, ["--evidence", evidence])).exitCode, 0);
+
+  const report = JSON.parse(
+    await readFile(join(output, "objective-validation-report.json"), "utf8"),
+  );
+  assert.equal(report.result, "PASS");
+  const pointer = report.checks.find(
+    (entry: { id: string }) => entry.id === "evidence.pointer-input",
+  );
+  assert.equal(pointer.status, "PASS");
+  assert.match(pointer.proof, /real pointer or touch/);
 });
 
 test("the verify output is inventoried and its report is immutable", async () => {

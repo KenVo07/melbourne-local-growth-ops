@@ -47,6 +47,7 @@ import {
 import {
   assertContract,
   compareText,
+  REAL_POINTER_INPUTS,
   refuse,
   REQUIRED_VIEWPORT_WIDTHS,
   sha256,
@@ -875,6 +876,12 @@ async function loadCandidateEvidence(
         ),
         fail("evidence.viewport-coverage", "No evidence to cover 1440, 834, 390 or 320.", "MOBILE_EVIDENCE_MISSING"),
         fail("evidence.reduced-motion", "No designed reduced-motion state was recorded.", "REDUCED_MOTION_MISSING"),
+        fail("evidence.interaction", "No interaction evidence was recorded."),
+        fail(
+          "evidence.pointer-input",
+          "No pointer-sensitive control was driven by a real pointer sequence.",
+          "SYNTHETIC_POINTER_EVIDENCE",
+        ),
         fail("evidence.accessibility", "No accessibility results were recorded."),
         fail("evidence.runtime", "No console, network, overflow or isolation results were recorded."),
       ],
@@ -1016,6 +1023,73 @@ async function loadCandidateEvidence(
         ),
   );
 
+  /*
+   * Interaction evidence, and specifically whether pointer-sensitive controls
+   * were driven by a pointer.
+   *
+   * Reported rather than refused: a delivery whose interaction evidence is thin
+   * is a reviewable outcome, and hiding it behind a refusal would lose the
+   * report that says which control is unproven. The contract has already
+   * rejected any entry that claims a synthetic click proves a pointer-sensitive
+   * control, so what is left to check here is coverage.
+   */
+  const interactions = (record.interactions ?? []) as {
+    control: string;
+    pointerSensitive: boolean;
+    input: string;
+    result: string;
+    proof: string;
+  }[];
+  const pointerSensitive = interactions.filter((entry) => entry.pointerSensitive);
+  const realPointer = pointerSensitive.filter((entry) =>
+    (REAL_POINTER_INPUTS as readonly string[]).includes(entry.input),
+  );
+  const interactionFailures = interactions.filter((entry) => entry.result === "FAIL");
+  checks.push(
+    interactions.length === 0
+      ? fail(
+          "evidence.interaction",
+          "No interaction evidence was recorded. A premium delivery's controls are the part a reader touches, and a delivery whose controls have not been driven has not been evidenced.",
+        )
+      : interactionFailures.length > 0
+        ? fail(
+            "evidence.interaction",
+            interactionFailures
+              .map((entry) => `${entry.control}: ${entry.proof}`)
+              .join("; "),
+          )
+        : pass(
+            "evidence.interaction",
+            `${interactions.length} interaction(s) recorded, all passing; ${pointerSensitive.length} declared pointer-sensitive.`,
+          ),
+  );
+  checks.push(
+    pointerSensitive.length === 0
+      ? interactions.length === 0
+        ? fail(
+            "evidence.pointer-input",
+            "No interaction evidence at all, so no pointer-sensitive control has been driven by a pointer.",
+            "SYNTHETIC_POINTER_EVIDENCE",
+          )
+        : pass(
+            "evidence.pointer-input",
+            "No control is declared pointer-sensitive, so no real-pointer evidence is required.",
+          )
+      : realPointer.length === pointerSensitive.length
+        ? pass(
+            "evidence.pointer-input",
+            `${realPointer.length} pointer-sensitive control(s) driven by a real pointer or touch sequence.`,
+          )
+        : fail(
+            "evidence.pointer-input",
+            `${pointerSensitive.length - realPointer.length} pointer-sensitive control(s) were not driven by a real pointer: ${pointerSensitive
+              .filter((entry) => !(REAL_POINTER_INPUTS as readonly string[]).includes(entry.input))
+              .map((entry) => `${entry.control} (${entry.input})`)
+              .join(", ")}.`,
+            "SYNTHETIC_POINTER_EVIDENCE",
+          ),
+  );
+
   for (const [id, entries, label] of [
     ["evidence.accessibility", record.accessibility ?? [], "accessibility"],
     ["evidence.runtime", record.runtime ?? [], "runtime"],
@@ -1042,6 +1116,9 @@ async function loadCandidateEvidence(
       routes: [...byRoute.keys()].sort(compareText),
       widths: [...new Set(verified.map((capture) => capture.viewportWidth))].sort((a, b) => b - a),
       reducedMotionCaptures: reduced.length,
+      interactions: interactions.length,
+      pointerSensitiveInteractions: pointerSensitive.length,
+      realPointerInteractions: realPointer.length,
       accessibility: record.accessibility ?? [],
       runtime: record.runtime ?? [],
     },

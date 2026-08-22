@@ -20,8 +20,8 @@
  * pack is read-only and disposable; the repository is the only thing that
  * changes afterwards, and only by a human or an agent a human started.
  */
-import { readdir, readFile } from "node:fs/promises";
-import { basename, extname, isAbsolute, join, relative } from "node:path";
+import { copyFile, mkdir, readdir, readFile } from "node:fs/promises";
+import { basename, dirname, extname, isAbsolute, join, relative } from "node:path";
 
 import { ARTIFACTS, NON_HUMAN_DECIDERS } from "./artifact-model.mjs";
 import {
@@ -41,6 +41,7 @@ import {
   assertContract,
   compareText,
   refuse,
+  RENDERABLE_AUTHORITIES,
   sha256,
   validateRecord,
 } from "./premium-contracts.mjs";
@@ -199,6 +200,15 @@ await runCommandMain(SPEC, async (flags) => {
     }
     if (provider.record !== undefined) {
       await writeJsonInto(staging, "inputs/provider-evidence-manifest.json", provider.record);
+    }
+    /* The approved visuals travel with the pack. Copied rather than referenced,
+     * because a path to the operator's machine is not something a fresh agent —
+     * or a reviewer six months later — can open. They are hashed into
+     * integrity.sha256 with everything else by the inventory below. */
+    for (const authority of provider.authorities) {
+      const destination = join(staging, ...authority.packPath.split("/"));
+      await mkdir(dirname(destination), { recursive: true });
+      await copyFile(authority.sourcePath, destination);
     }
     await writeJsonInto(
       staging,
@@ -635,6 +645,28 @@ interface ProviderState {
   readonly record?: Record<string, unknown>;
   readonly path?: string;
   readonly summary: string;
+  /** Gate-approved artifacts that carry visual or motion authority. */
+  readonly authorities: readonly ApprovedAuthority[];
+}
+
+/**
+ * An approved artifact the production agent must open, and where it sits in the
+ * pack once copied.
+ *
+ * This is the record whose absence caused the first premium implementation to
+ * preserve too much P1 layout: the authority existed, a human had approved it,
+ * and nothing carried it across the boundary.
+ */
+interface ApprovedAuthority {
+  readonly label: string;
+  readonly purpose: string;
+  readonly authority: string;
+  readonly modalities: readonly string[];
+  /** Where the operator's manifest pointed. */
+  readonly sourcePath: string;
+  /** Where it lives inside the published pack. */
+  readonly packPath: string;
+  readonly sha256: string;
 }
 
 /**
@@ -666,7 +698,10 @@ async function loadProviderEvidence(
         { designMode: mode },
       );
     }
-    return { summary: `no provider evidence supplied; design Mode ${mode} does not require one` };
+    return {
+      summary: `no provider evidence supplied; design Mode ${mode} does not require one`,
+      authorities: [],
+    };
   }
 
   const file = await resolveExistingFile(path, "provider evidence manifest");
@@ -739,11 +774,81 @@ async function loadProviderEvidence(
   }
 
   const items = (record.items ?? []) as { label: string }[];
+  const authorities = await resolveApprovedAuthorities(record, file);
   return {
     record,
     path: file,
-    summary: `provider evidence from ${String(record.provider)} bound to this workspace: ${items.length} item(s), design system ${attestation.status}, data handling approved by ${approvedBy}`,
+    summary: `provider evidence from ${String(record.provider)} bound to this workspace: ${items.length} item(s), ${authorities.length} carrying approved visual or motion authority, design system ${attestation.status}, data handling approved by ${approvedBy}`,
+    authorities,
   };
+}
+
+/**
+ * Resolves every item that claims visual or motion authority to real bytes.
+ *
+ * An approved visual is only an authority if production can open it, so this
+ * refuses rather than warns: a manifest that names an artifact it cannot produce
+ * is the failure mode that made the original defect invisible. Paths resolve
+ * relative to the manifest, which is what an operator means when they write one.
+ */
+async function resolveApprovedAuthorities(
+  record: Record<string, unknown>,
+  manifestPath: string,
+): Promise<ApprovedAuthority[]> {
+  const root = dirname(manifestPath);
+  const items = (record.items ?? []) as Record<string, unknown>[];
+  const resolved: ApprovedAuthority[] = [];
+  const used = new Set<string>();
+
+  for (const item of items) {
+    const authority = String(item.authority ?? "");
+    if (!(RENDERABLE_AUTHORITIES as readonly string[]).includes(authority)) continue;
+
+    const declared = String(item.path ?? "");
+    const absolute = join(root, ...declared.split("/"));
+    let actual: string;
+    try {
+      actual = await hashFile(absolute);
+    } catch {
+      throw refuse(
+        "VISUAL_AUTHORITY_UNREADABLE",
+        `"${String(item.label)}" claims ${authority} at "${declared}", which does not exist beside the evidence manifest. An approved visual the production agent cannot open is not an authority; supply the file or reclassify the item as NON_AUTHORITATIVE_PROTOTYPE_CODE.`,
+        { label: item.label, path: declared },
+      );
+    }
+    if (actual !== item.sha256) {
+      throw refuse(
+        "VISUAL_AUTHORITY_UNREADABLE",
+        `"${String(item.label)}" records SHA-256 ${String(item.sha256)} but "${declared}" hashes to ${actual}. The approved bytes and the supplied bytes differ, so this pack cannot prove which visual was approved.`,
+        { label: item.label, recorded: item.sha256, actual },
+      );
+    }
+
+    /* Flattened into one pack directory under the artifact's own basename, so
+     * the agent's read order is a list of files rather than a tree walk. A
+     * collision is refused rather than silently overwritten. */
+    const name = basename(declared);
+    const packPath = `inputs/approved-visual/${name}`;
+    if (used.has(packPath)) {
+      throw refuse(
+        "VISUAL_AUTHORITY_UNREADABLE",
+        `Two approved artifacts would both publish as "${packPath}". Give them distinct filenames so the pack can carry both.`,
+        { packPath },
+      );
+    }
+    used.add(packPath);
+
+    resolved.push({
+      label: String(item.label),
+      purpose: String(item.purpose),
+      authority,
+      modalities: (Array.isArray(item.content) ? item.content : [item.content]).map(String),
+      sourcePath: absolute,
+      packPath,
+      sha256: actual,
+    });
+  }
+  return resolved;
 }
 
 /* The same list that decides who may sign a Creative Gate. An identity that
@@ -954,14 +1059,34 @@ function buildLaunchManifest(input: {
     stopConditions: [...STOP_CONDITIONS],
     provider:
       input.provider.record === undefined
-        ? { evidenceSupplied: false as const, authority: "NON_AUTHORITATIVE" as const }
+        ? {
+            evidenceSupplied: false as const,
+            prototypeCodeAuthority: "NON_AUTHORITATIVE" as const,
+            approvedAuthorities: [] as readonly {
+              readonly path: string;
+              readonly sha256: string;
+              readonly authority: string;
+            }[],
+          }
         : {
             evidenceSupplied: true as const,
-            authority: "NON_AUTHORITATIVE" as const,
+            /* Unchanged, and now scoped to the thing it was always true of. */
+            prototypeCodeAuthority: "NON_AUTHORITATIVE" as const,
             provider: String(input.provider.record.provider),
             path: "inputs/provider-evidence-manifest.json",
             designSystemAttestation: (input.provider.record.designSystemAttestation as Record<string, string>)
               .status,
+            /*
+             * The approved artifacts this launch actually carried, by pack path
+             * and digest. This is the source binding for visual authority: a
+             * reviewer can prove which approved bytes production received, and
+             * `creative:verify` re-checks them with the rest of the pack.
+             */
+            approvedAuthorities: input.provider.authorities.map((authority) => ({
+              path: authority.packPath,
+              sha256: authority.sha256,
+              authority: authority.authority,
+            })),
           },
     designMode: {
       recommended: workspace.manifest.designMode.recommended,
@@ -990,7 +1115,12 @@ function readOrder(delivery: LoadedDelivery, provider: ProviderState): string[] 
       if (document.kind === kind) order.push(`inputs/${document.name}`);
     }
   }
+  /* Approved visual and motion authority sits with the gate that approved it,
+   * ahead of the mechanism. An agent that reads the handoff and never opens the
+   * picture builds the words and keeps the old layout, which is the exact defect
+   * this ordering exists to prevent. */
   if (provider.record !== undefined) order.push("inputs/provider-evidence-manifest.json");
+  for (const authority of provider.authorities) order.push(authority.packPath);
   order.push("evidence-index.json");
   return [...new Set(order)];
 }
@@ -1013,13 +1143,32 @@ function buildEvidenceIndex(
     kind: "PREMIUM_LAUNCH_EVIDENCE_INDEX",
     launchId,
     baseline: workspace.manifest.evidence,
+    /*
+     * Provider evidence, classified rather than dismissed.
+     *
+     * The field this replaced recorded a single `authority: "NON_AUTHORITATIVE"`
+     * for the whole export, which was true of its prototype code and false of
+     * the visuals a human had just approved. Production read the honest half and
+     * ignored the authoritative one.
+     */
     providerEvidence:
       provider.record === undefined
-        ? { supplied: false, authority: "NON_AUTHORITATIVE" }
+        ? { supplied: false, items: [], approvedAuthorities: [] }
         : {
             supplied: true,
-            authority: "NON_AUTHORITATIVE",
             items: (provider.record.items ?? []) as unknown[],
+            approvedAuthorities: provider.authorities.map((authority) => ({
+              label: authority.label,
+              purpose: authority.purpose,
+              authority: authority.authority,
+              modalities: authority.modalities,
+              path: authority.packPath,
+              sha256: authority.sha256,
+              obligation:
+                "RENDER_AND_INSPECT — open this artifact and match the built result against it.",
+            })),
+            businessTruth: "NOT_AUTHORITATIVE — every fact comes from client-website.json.",
+            prototypeCode: "NON_AUTHORITATIVE — readable as reference, never pasted.",
           },
     requiredFromProduction: {
       viewportWidths: [1440, 834, 390, 320],
@@ -1048,6 +1197,86 @@ function buildEvidenceIndex(
 }
 
 /* -------------------------------------------------------------- generated docs */
+
+/**
+ * The authority table the production agent reads before it builds anything.
+ *
+ * Five classes, always printed, whether or not a provider was involved: the
+ * table's job is to make the *distinctions* explicit, and the two that matter
+ * most — business truth and production source — are true with no provider at
+ * all. When approved visuals exist, each is named with the obligation to open
+ * it, because "was told the file existed" is what previously passed for having
+ * inspected a design.
+ */
+function authoritySection(provider: ProviderState): string {
+  const rows = [
+    "| Authority | What holds it here |",
+    "|---|---|",
+    "| `BUSINESS_TRUTH_AUTHORITY` | `client-website.json`. Every fact, name, number and claim. Nothing else, ever. |",
+    "| `PRODUCTION_SOURCE_AUTHORITY` | The client's live `experience/` tree. The only thing you modify. |",
+  ];
+
+  const visual = provider.authorities.filter(
+    (authority) => authority.authority === "VISUAL_AUTHORITY",
+  );
+  const motion = provider.authorities.filter(
+    (authority) => authority.authority === "MOTION_AUTHORITY",
+  );
+  rows.push(
+    visual.length === 0
+      ? "| `VISUAL_AUTHORITY` | No approved visual artifact was supplied. The approved territory and slice documents carry the visual intent in prose. |"
+      : `| \`VISUAL_AUTHORITY\` | ${visual.length} approved artifact(s), listed below. These specify how the site looks. |`,
+    motion.length === 0
+      ? "| `MOTION_AUTHORITY` | No approved motion artifact was supplied. The slice document carries the motion intent in prose. |"
+      : `| \`MOTION_AUTHORITY\` | ${motion.length} approved artifact(s), listed below. These specify how the site moves. |`,
+    "| `NON_AUTHORITATIVE_PROTOTYPE_CODE` | Any prototype implementation, from any tool. Readable. Never pasted, never binding. |",
+  );
+
+  if (provider.authorities.length === 0) {
+    return [
+      ...rows,
+      "",
+      "No approved visual or motion artifact travelled with this launch, so the",
+      "written direction is the whole visual specification. Build from it rather",
+      "than from what the current layout happens to be: an unchanged P1",
+      "composition is a translation failure, not a conservative choice.",
+    ].join("\n");
+  }
+
+  const lines = [
+    ...rows,
+    "",
+    "### Approved artifacts you must open before you build",
+    "",
+    "| Artifact | Authority | Carries | In this pack |",
+    "|---|---|---|---|",
+    ...provider.authorities.map(
+      (authority) =>
+        `| ${authority.label} | \`${authority.authority}\` | ${authority.modalities.join(", ")} | \`${authority.packPath}\` |`,
+    ),
+    "",
+    "These are not references. A named human approved them, and they are the",
+    "specification for composition and motion.",
+    "",
+    "**Render and inspect each one before you write code.** Open it in a real",
+    "browser — serve the directory if it needs a runtime, and let its fonts and",
+    "scripts load — and look at every artboard it contains. Reading the filename,",
+    "the manifest entry or this table is not inspection.",
+    "",
+    "Then state, in the handoff's `## Translation delta`, what you observed in",
+    "them and how the built result matches. Where the approved visual and the",
+    "existing P1 composition disagree, the approved visual wins on composition,",
+    "and `client-website.json` still wins on every fact. If they disagree in a way",
+    "you cannot reconcile, that is a stop condition, not a choice you make.",
+    "",
+    "Verify you received what was approved:",
+    "",
+    "```sh",
+    "sha256sum -c integrity.sha256",
+    "```",
+  ];
+  return lines.join("\n");
+}
 
 function productionAgentPrompt(input: {
   launchId: string;
@@ -1121,6 +1350,10 @@ ${fixes.join("\n")}
 
 Each one is an acceptance condition, not a suggestion. The ship gate checks them.
 
+## What is authoritative, and for what
+
+${authoritySection(input.provider)}
+
 ## How to build it
 
 1. Build the **intent**, not the picture. Every Production delta row carries a
@@ -1131,9 +1364,12 @@ Each one is an acceptance condition, not a suggestion. The ship gate checks them
    a Signature.
 3. Keep Signature work client-local. It earns promotion by being needed twice,
    never by being impressive once.
-4. Treat any provider export — code, screenshot, canvas, video — as evidence of
-   a conversation. It is never authoritative. Do not paste its code, and do not
-   inherit its shortcuts.
+4. Distinguish what a creative tool's output is authoritative *for*. The
+   authority table above says which is which for this launch. Prototype code is
+   evidence of a conversation: read it, never paste it, never inherit its
+   shortcuts. An approved visual or motion artifact is a different thing — a
+   named human approved that composition, and it is the specification for how
+   this site looks and moves.
 5. Keep mobile recomposition and the designed reduced-motion state first-class
    while you build. They are not a pass at the end; a layout that only stacks
    at 390px is a failure of the idea, not of the breakpoint.

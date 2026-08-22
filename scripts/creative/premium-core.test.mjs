@@ -14,6 +14,7 @@
  *   node --test scripts/creative/premium-core.test.mjs
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -32,12 +33,18 @@ import {
 import {
   assertPortableManifest,
   assertPortableRelativePath,
+  AUTHORITY_CLASSES,
   canonicalJson,
   CONTRACT_KINDS,
+  EVIDENCE_MODALITIES,
+  INTERACTION_INPUTS,
   isPortableRelativePath,
+  MODALITY_AUTHORITY,
   PremiumRefusal,
+  REAL_POINTER_INPUTS,
   REFUSALS,
   refuse,
+  RENDERABLE_AUTHORITIES,
   REQUIRED_DELIVERY_ARTIFACTS,
   sha256,
   validateRecord,
@@ -857,8 +864,11 @@ test("provider evidence must be bound, attested and free of new business facts",
       {
         label: "territory-2 canvas export",
         purpose: "Motion reference for the opening sequence",
-        content: "MOTION",
-        carriesNoNewBusinessFact: true,
+        content: ["MOTION"],
+        authority: "MOTION_AUTHORITY",
+        path: "approved-visual/territory-2.html",
+        sha256: hashA,
+        businessTruth: "NOT_AUTHORITATIVE",
       },
     ],
   };
@@ -881,10 +891,10 @@ test("provider evidence must be bound, attested and free of new business facts",
   );
 
   const claiming = structuredClone(evidence);
-  claiming.items[0].carriesNoNewBusinessFact = false;
+  claiming.items[0].businessTruth = "AUTHORITATIVE";
   assert.ok(
     validateRecord("provider-evidence", claiming).some((problem) =>
-      /carriesNoNewBusinessFact/.test(problem),
+      /businessTruth/.test(problem),
     ),
   );
 
@@ -895,6 +905,240 @@ test("provider evidence must be bound, attested and free of new business facts",
       /brandScope|designSystemId/.test(problem),
     ),
     "a claimed design system must name its owner and brand scope",
+  );
+});
+
+/* ------------------------------------------------------- authority classes */
+
+test("the authority vocabulary separates what a creative tool can and cannot decide", () => {
+  /* The distinction Stone & Line lost. Business truth and production source are
+   * repository facts; visual and motion authority can be delegated to an
+   * approved artifact; prototype code is authority over nothing. */
+  assert.deepEqual(AUTHORITY_CLASSES, [
+    "BUSINESS_TRUTH_AUTHORITY",
+    "VISUAL_AUTHORITY",
+    "MOTION_AUTHORITY",
+    "PRODUCTION_SOURCE_AUTHORITY",
+    "NON_AUTHORITATIVE_PROTOTYPE_CODE",
+  ]);
+  assert.deepEqual(RENDERABLE_AUTHORITIES, ["VISUAL_AUTHORITY", "MOTION_AUTHORITY"]);
+
+  /* No modality may claim the two repository authorities, whatever it contains. */
+  for (const modality of EVIDENCE_MODALITIES) {
+    const permitted = MODALITY_AUTHORITY[modality];
+    assert.ok(permitted !== undefined, `${modality} must declare what it may claim`);
+    assert.ok(!permitted.includes("BUSINESS_TRUTH_AUTHORITY"));
+    assert.ok(!permitted.includes("PRODUCTION_SOURCE_AUTHORITY"));
+  }
+  /* Code is the one modality that can claim nothing. */
+  assert.deepEqual(MODALITY_AUTHORITY.CODE, ["NON_AUTHORITATIVE_PROTOTYPE_CODE"]);
+  assert.ok(MODALITY_AUTHORITY.VISUAL.includes("VISUAL_AUTHORITY"));
+  assert.ok(MODALITY_AUTHORITY.MOTION.includes("MOTION_AUTHORITY"));
+  assert.ok(!MODALITY_AUTHORITY.VISUAL.includes("MOTION_AUTHORITY"));
+});
+
+test("an approved visual can travel, and the record Stone & Line actually wrote cannot", () => {
+  const item = (overrides = {}) => ({
+    label: "Visual Reset canvas",
+    purpose: "Approved composition, palette, type and scale",
+    content: ["VISUAL", "COMMENTARY"],
+    authority: "VISUAL_AUTHORITY",
+    path: "approved-visual/visual-reset.html",
+    sha256: hashA,
+    businessTruth: "NOT_AUTHORITATIVE",
+    ...overrides,
+  });
+  const evidence = (items) => ({
+    schemaVersion: 1,
+    kind: "CREATIVE_PROVIDER_EVIDENCE",
+    provider: "any design tool",
+    projectLabel: "probe-client premium exploration",
+    designMode: "B",
+    binding: {
+      workspaceId: hashD,
+      artifactId: hashE,
+      sourceSetId: hashC,
+      slice: "signature-slice.md",
+      gate: "creative-gate.md",
+    },
+    designSystemAttestation: {
+      status: "NONE",
+      attestedBy: "Khoa Vo Minh — Founder",
+      attestedOn: "2026-08-22",
+    },
+    dataHandlingApproval: {
+      approvedBy: "Khoa Vo Minh — Founder",
+      approvedOn: "2026-08-22",
+      retentionUnderstood: true,
+    },
+    items,
+  });
+
+  assert.deepEqual(validateRecord("provider-evidence", evidence([item()])), []);
+
+  /* The composite token a real operator wrote when one artifact carried three
+   * modalities and the field held one value. A refusal here is the whole reason
+   * the approved visuals never reached production. */
+  const composite = validateRecord(
+    "provider-evidence",
+    evidence([item({ content: "VISUAL_MOTION_COMMENTARY" })]),
+  );
+  assert.ok(
+    composite.some((problem) => /List several rather than combining them/.test(problem)),
+    "a composite modality token must say to list them instead",
+  );
+
+  /* Several modalities on one artifact is the normal case, not the exception. */
+  assert.deepEqual(
+    validateRecord(
+      "provider-evidence",
+      evidence([item({ content: ["VISUAL", "MOTION", "COMMENTARY"] })]),
+    ),
+    [],
+  );
+
+  /* An authority nobody can open is not an authority. */
+  assert.ok(
+    validateRecord("provider-evidence", evidence([item({ path: undefined })])).some(
+      (problem) => /must be a portable relative path to the artifact itself/.test(problem),
+    ),
+  );
+  assert.ok(
+    validateRecord("provider-evidence", evidence([item({ sha256: undefined })])).some(
+      (problem) => /which approved bytes production received/.test(problem),
+    ),
+  );
+
+  /* Prototype code cannot be promoted into visual authority by relabelling it. */
+  assert.ok(
+    validateRecord(
+      "provider-evidence",
+      evidence([item({ content: ["CODE"], authority: "VISUAL_AUTHORITY" })]),
+    ).some((problem) => /none of those modalities can support/.test(problem)),
+  );
+
+  /* The two repository authorities are unreachable from an export. */
+  for (const authority of ["BUSINESS_TRUTH_AUTHORITY", "PRODUCTION_SOURCE_AUTHORITY"]) {
+    assert.ok(
+      validateRecord("provider-evidence", evidence([item({ authority })])).some((problem) =>
+        problem.includes(authority),
+      ),
+      `${authority} must be refused on a provider item`,
+    );
+  }
+
+  /* Code with no path is fine: it claims nothing and travels as commentary. */
+  assert.deepEqual(
+    validateRecord(
+      "provider-evidence",
+      evidence([
+        {
+          label: "prototype JSX",
+          purpose: "Readable reference only",
+          content: ["CODE"],
+          authority: "NON_AUTHORITATIVE_PROTOTYPE_CODE",
+          businessTruth: "NOT_AUTHORITATIVE",
+        },
+      ]),
+    ),
+    [],
+  );
+});
+
+/* ---------------------------------------------------- interaction evidence */
+
+test("interaction evidence records how a control was driven, including honestly badly", () => {
+  const evidence = (interactions) => ({
+    schemaVersion: 1,
+    kind: "PREMIUM_CANDIDATE_EVIDENCE",
+    artifactId: hashE,
+    sourceSetId: hashC,
+    candidateRevision: "6afa603",
+    capturedAt: "2026-08-22T00:00:00Z",
+    captures: [
+      {
+        path: "captures/home-1440-opening.png",
+        sha256: hashA,
+        route: "home",
+        state: "opening",
+        viewportWidth: 1440,
+        motion: "FULL",
+      },
+    ],
+    accessibility: [
+      { engine: "chromium", state: "opening", result: "PASS", proof: "0 violations" },
+    ],
+    runtime: [{ check: "console", scope: "all routes", result: "PASS", proof: "0 errors" }],
+    interactions,
+  });
+  const plate = (overrides = {}) => ({
+    control: "project collection plate",
+    behaviour: "a click opens the project route",
+    pointerSensitive: true,
+    input: "REAL_POINTER",
+    result: "PASS",
+    proof: "pointer down, 0px travel, up at plate centre — navigated",
+    ...overrides,
+  });
+
+  assert.deepEqual(validateRecord("candidate-evidence", evidence([plate()])), []);
+
+  /*
+   * The exact substitution that let an unclickable card ship as verified — and
+   * it *validates*, on purpose.
+   *
+   * This record is well-formed and insufficient. Refusing it here would write no
+   * report, making the operator's cheapest path to a report the relabelling of
+   * the control as not pointer-sensitive; the contract would teach them to hide
+   * the fact it exists to surface. Sufficiency is judged by `creative:verify`,
+   * which reports evidence.pointer-input FAIL and names the control. Proved end
+   * to end in premium-workflow.test.ts.
+   */
+  assert.deepEqual(
+    validateRecord(
+      "candidate-evidence",
+      evidence([plate({ input: "SYNTHETIC_CLICK", proof: "element.click() navigated" })]),
+    ),
+    [],
+    "an honest record of insufficient evidence must be well-formed",
+  );
+
+  /* Touch is a real pointer sequence; keyboard is real but not a pointer. */
+  assert.deepEqual(
+    validateRecord("candidate-evidence", evidence([plate({ input: "REAL_TOUCH" })])),
+    [],
+  );
+  assert.deepEqual(REAL_POINTER_INPUTS, ["REAL_POINTER", "REAL_TOUCH"]);
+  assert.ok(INTERACTION_INPUTS.includes("REAL_KEYBOARD"));
+
+  /* A control with no pointer behaviour may legitimately be clicked
+   * programmatically; the rule is about pointer-sensitive controls only. */
+  assert.deepEqual(
+    validateRecord(
+      "candidate-evidence",
+      evidence([
+        plate({
+          control: "footer link",
+          behaviour: "navigates",
+          pointerSensitive: false,
+          input: "SYNTHETIC_CLICK",
+          proof: "navigated",
+        }),
+      ]),
+    ),
+    [],
+  );
+
+  /* Absence stays well-formed: completeness is the report's judgement. */
+  const withoutField = evidence([]);
+  delete withoutField.interactions;
+  assert.deepEqual(validateRecord("candidate-evidence", withoutField), []);
+
+  /* But a malformed entry is still malformed. */
+  assert.ok(
+    validateRecord("candidate-evidence", evidence([plate({ pointerSensitive: "yes" })])).some(
+      (problem) => /pointerSensitive must be a boolean/.test(problem),
+    ),
   );
 });
 
@@ -1010,6 +1254,65 @@ test("an inventory covers every file, and re-verifying names what moved", async 
   await rm(join(root, "delivery/creative-intent.md"));
   const afterDelete = await verifyInventory(root, entries);
   assert.deepEqual(afterDelete.missing, ["delivery/creative-intent.md"]);
+});
+
+test("a checksum manifest cannot list itself, and the rule survives sha256sum -c", async () => {
+  /*
+   * The self-reference defect, proved rather than described.
+   *
+   * A manifest that names itself can never verify: its digest is not knowable
+   * until it is written, and writing it changes the bytes it just measured. The
+   * failure is quiet and total — exactly one line fails, forever, and a reviewer
+   * reads a corrupted package rather than an impossible instruction. Every
+   * Platform-generated pack avoided this because each caller remembered to
+   * exclude the sidecar; a hand-assembled review package did not, which is how a
+   * documented convention became a shipped defect.
+   */
+  const root = await temporary("premium-selfref-");
+  await writeInto(root, "README.md", "# review package\n");
+  await writeInto(root, "report.json", '{"result":"PASS"}\n');
+
+  const correct = await inventoryDirectory(root, ["checksums.sha256"]);
+  await writeChecksumSidecar(root, "checksums.sha256", correct);
+  const written = await readFile(join(root, "checksums.sha256"), "utf8");
+  assert.equal(written.trim().split("\n").length, 2, "one line per covered file");
+  assert.ok(
+    !written.includes("checksums.sha256"),
+    "the manifest must not name itself",
+  );
+
+  /* The real thing the rule protects: strict verification passes. */
+  const check = spawnSync("sha256sum", ["-c", "checksums.sha256"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  if (check.error === undefined && check.status !== null) {
+    assert.equal(check.status, 0, `sha256sum -c must pass: ${check.stdout}${check.stderr}`);
+    assert.equal((check.stdout.match(/: OK$/gm) ?? []).length, 2);
+  }
+
+  /* And the mistake is refused at the one place every package goes through. */
+  const selfReferencing = [
+    ...correct,
+    { path: "checksums.sha256", sha256: hashF, size: 1 },
+  ];
+  const refusal = await refusesWithAsync("CONTRACT_INVALID", () =>
+    writeChecksumSidecar(root, "checksums.sha256", selfReferencing),
+  );
+  assert.match(refusal.message, /cannot list itself/);
+  assert.match(refusal.message, /inventoryDirectory\(root, \["checksums.sha256"\]\)/);
+
+  /* The refusal names the manifest it was given, not a hardcoded filename, so
+   * packages that call their manifest something else are covered too. */
+  const other = await refusesWithAsync("CONTRACT_INVALID", () =>
+    writeChecksumSidecar(root, "integrity.sha256", [
+      { path: "integrity.sha256", sha256: hashF, size: 1 },
+    ]),
+  );
+  assert.match(other.message, /"integrity.sha256" cannot list itself/);
+
+  /* The correct call is unchanged by the guard: it still writes the file. */
+  await writeChecksumSidecar(root, "checksums.sha256", correct);
 });
 
 test("the checksum sidecar is readable by sha256sum -c", async () => {

@@ -83,6 +83,16 @@ export const REFUSALS = Object.freeze({
   MEDIA_CLAIM_UNSUPPORTED: "An asset substantiates a client fact its provenance class cannot carry.",
   BASELINE_UNBOUND: "Baseline captures are not bound to this artifact and source set.",
 
+  /* --- authority classification ----------------------------------------------- */
+  /* A malformed authority claim reports through CONTRACT_INVALID, which already
+   * names the item, the field and the legal values. These two are the failures
+   * that need a code of their own, because they are not shape problems: a file
+   * that is absent or has moved, and a method that cannot observe what it claims. */
+  VISUAL_AUTHORITY_UNREADABLE:
+    "An item claims visual or motion authority but names no file the production agent can open.",
+  SYNTHETIC_POINTER_EVIDENCE:
+    "A pointer-sensitive control is evidenced by a synthetic click rather than a real pointer sequence.",
+
   /* --- provider boundary ----------------------------------------------------- */
   FOREIGN_DESIGN_SYSTEM: "The provider context inherits a design system that is not this client's.",
   VENDOR_EVIDENCE_UNBOUND: "Provider evidence is not bound to this workspace, artifact, source set and slice.",
@@ -114,6 +124,94 @@ export const UPLOAD_CLASSIFICATIONS = Object.freeze([
   "APPROVED_MEDIA",
   "P1_EVIDENCE",
   "INSTRUCTIONS",
+]);
+
+/**
+ * What a piece of evidence is allowed to be the authority *for*.
+ *
+ * The distinction this vocabulary exists to make: a creative tool's output is
+ * not one undifferentiated thing. An approved canvas can be the authority on
+ * what the site should look like while being no authority at all on what the
+ * business does, and its prototype code can be worth nothing while the pixels
+ * beside it are worth everything. Stone & Line lost a redesign to exactly that
+ * conflation — the whole export was labelled "evidence of a conversation", so
+ * an agent correctly ignored the visuals it was supposed to build.
+ *
+ * Deliberately tool-neutral. A Figma export, a PNG set, a video or a design-tool
+ * canvas all classify the same way; nothing here names a vendor.
+ */
+export const AUTHORITY_CLASSES = Object.freeze([
+  /* client-website.json, and nothing else, ever. */
+  "BUSINESS_TRUTH_AUTHORITY",
+  /* What the site should look like: composition, palette, type, scale, density. */
+  "VISUAL_AUTHORITY",
+  /* What should move, and how it should feel doing it. */
+  "MOTION_AUTHORITY",
+  /* The live client experience/ tree. The only thing production may modify. */
+  "PRODUCTION_SOURCE_AUTHORITY",
+  /* A prototype's implementation. Readable, never copyable, never binding. */
+  "NON_AUTHORITATIVE_PROTOTYPE_CODE",
+]);
+
+/** What a provider item can carry. An item may carry several at once. */
+export const EVIDENCE_MODALITIES = Object.freeze([
+  "CODE",
+  "VISUAL",
+  "MOTION",
+  "COMMENTARY",
+]);
+
+/**
+ * Which authority each modality is permitted to claim.
+ *
+ * VISUAL may claim visual authority; MOTION may claim motion authority; CODE
+ * may claim nothing. No modality may ever claim business truth or production
+ * source: those two live in the repository, not in a provider's export.
+ */
+export const MODALITY_AUTHORITY = Object.freeze({
+  VISUAL: Object.freeze(["VISUAL_AUTHORITY", "NON_AUTHORITATIVE_PROTOTYPE_CODE"]),
+  MOTION: Object.freeze(["MOTION_AUTHORITY", "NON_AUTHORITATIVE_PROTOTYPE_CODE"]),
+  COMMENTARY: Object.freeze(["NON_AUTHORITATIVE_PROTOTYPE_CODE"]),
+  CODE: Object.freeze(["NON_AUTHORITATIVE_PROTOTYPE_CODE"]),
+});
+
+/**
+ * How an interaction was actually driven when it was evidenced.
+ *
+ * This vocabulary exists because of a defect that passed a full evidence pass.
+ * A collection scroller took pointer capture on `pointerdown`; while an element
+ * holds capture the click a press produces is dispatched at the capturing
+ * element, so every card could be dragged and keyboard-opened but could not be
+ * *clicked*. The harness proved the cards worked by calling `element.click()`,
+ * which dispatches a click event directly and never involves a pointer, capture
+ * or hit-testing. The evidence was real, the method was wrong, and nothing in the
+ * contract could tell the difference.
+ *
+ * A synthetic click is still legitimate evidence for a control that has no
+ * pointer behaviour. It is never evidence that a pointer-sensitive control
+ * works.
+ */
+export const INTERACTION_INPUTS = Object.freeze([
+  /* A real pointer sequence: pointerdown, pointermove, pointerup at coordinates. */
+  "REAL_POINTER",
+  /* Real key events, including focus traversal. */
+  "REAL_KEYBOARD",
+  /* Real touch sequence on a touch-capable context. */
+  "REAL_TOUCH",
+  /* element.click(), dispatchEvent, or any programmatic activation. */
+  "SYNTHETIC_CLICK",
+]);
+
+/** Inputs that exercise the platform's own hit-testing and capture behaviour. */
+export const REAL_POINTER_INPUTS = Object.freeze([
+  "REAL_POINTER",
+  "REAL_TOUCH",
+]);
+
+/** The authorities that oblige production to render and inspect the artifact. */
+export const RENDERABLE_AUTHORITIES = Object.freeze([
+  "VISUAL_AUTHORITY",
+  "MOTION_AUTHORITY",
 ]);
 
 /** Design-system inheritance states a human may attest to before an upload. */
@@ -573,6 +671,51 @@ VALIDATORS.set("baseline-evidence", (record) => {
 });
 
 /** One capture: where it is, what it shows, at what width, in which motion. */
+/**
+ * Interaction evidence: what a well-formed entry looks like.
+ *
+ * This checks shape, and deliberately not sufficiency. An entry that honestly
+ * records "I drove this pointer-sensitive control with a synthetic click" is
+ * well-formed and *insufficient*, and those are different failures with
+ * different homes: `creative:verify` reports insufficiency as a FAIL against the
+ * named control, where a reviewer can see it.
+ *
+ * Refusing it here instead would be worse than useless. A refusal writes no
+ * report, so the operator's cheapest route to a report would be to relabel the
+ * control `pointerSensitive: false` — the contract would have taught them to
+ * hide exactly the fact it exists to surface. The honest record has to be the
+ * one that validates.
+ */
+function checkInteractions(interactions, problems) {
+  for (const [index, entry] of interactions.entries()) {
+    const at = `interactions[${index}]`;
+    if (entry === null || typeof entry !== "object") {
+      problems.push(`${at} must be an object.`);
+      continue;
+    }
+    if (typeof entry.control !== "string" || entry.control.trim() === "") {
+      problems.push(`${at}.control must name the control exercised.`);
+    }
+    if (typeof entry.behaviour !== "string" || entry.behaviour.trim() === "") {
+      problems.push(`${at}.behaviour must state what the control is meant to do.`);
+    }
+    if (typeof entry.pointerSensitive !== "boolean") {
+      problems.push(
+        `${at}.pointerSensitive must be a boolean. A control that captures the pointer, drags, swipes, hovers or scrubs is pointer-sensitive.`,
+      );
+    }
+    if (!INTERACTION_INPUTS.includes(entry.input)) {
+      problems.push(`${at}.input must be one of ${INTERACTION_INPUTS.join(", ")}.`);
+    }
+    if (!["PASS", "FAIL"].includes(entry.result)) {
+      problems.push(`${at}.result must be PASS or FAIL.`);
+    }
+    if (typeof entry.proof !== "string" || entry.proof.trim() === "") {
+      problems.push(`${at}.proof must say what was observed.`);
+    }
+  }
+}
+
 function checkCaptures(captures, problems) {
   for (const [index, capture] of captures.entries()) {
     const at = `captures[${index}]`;
@@ -623,6 +766,19 @@ VALIDATORS.set("candidate-evidence", (record) => {
   check.text("candidateRevision");
   check.text("capturedAt");
   checkCaptures(check.list("captures"), problems);
+  /*
+   * Optional here, and a reported failure in `creative:verify`.
+   *
+   * The split is deliberate and matches how this system already treats missing
+   * evidence: the contract says what a well-formed record means, and the report
+   * says whether a delivery is complete. A record with no interaction evidence
+   * is well-formed and incomplete, which is a reviewable outcome rather than a
+   * malformed file. What the contract will not accept is an interaction entry
+   * that claims a synthetic click proves a pointer-sensitive control.
+   */
+  if (record.interactions !== undefined) {
+    checkInteractions(check.list("interactions", 0), problems);
+  }
 
   for (const [field, columns] of [
     ["accessibility", ["engine", "state"]],
@@ -737,15 +893,83 @@ VALIDATORS.set("provider-evidence", (record) => {
     if (typeof item.purpose !== "string" || item.purpose.trim() === "") {
       problems.push(`${at}.purpose must state what this evidence is for.`);
     }
-    if (!["CODE", "VISUAL", "MOTION", "COMMENTARY"].includes(item.content)) {
-      problems.push(`${at}.content must be CODE, VISUAL, MOTION or COMMENTARY.`);
+
+    /* A real design export is multi-modal: one canvas shows composition, states
+     * a motion intent and carries commentary. The single-valued field this
+     * replaced could not describe that, so an honest operator wrote
+     * "VISUAL_MOTION_COMMENTARY" and the record was refused. */
+    const modalities = Array.isArray(item.content)
+      ? item.content
+      : item.content === undefined
+        ? []
+        : [item.content];
+    if (modalities.length === 0) {
+      problems.push(
+        `${at}.content must list at least one of ${EVIDENCE_MODALITIES.join(", ")}.`,
+      );
+    }
+    for (const modality of modalities) {
+      if (!EVIDENCE_MODALITIES.includes(modality)) {
+        problems.push(
+          `${at}.content contains "${String(modality)}"; legal modalities are ${EVIDENCE_MODALITIES.join(", ")}. List several rather than combining them into one token.`,
+        );
+      }
+    }
+
+    if (!AUTHORITY_CLASSES.includes(item.authority)) {
+      problems.push(
+        `${at}.authority must be one of ${AUTHORITY_CLASSES.join(", ")}.`,
+      );
+    } else if (item.authority === "BUSINESS_TRUTH_AUTHORITY") {
+      problems.push(
+        `${at}.authority claims BUSINESS_TRUTH_AUTHORITY. client-website.json is the only business-truth authority; a provider export can never become one.`,
+      );
+    } else if (item.authority === "PRODUCTION_SOURCE_AUTHORITY") {
+      problems.push(
+        `${at}.authority claims PRODUCTION_SOURCE_AUTHORITY. That belongs to the client's live experience/ tree, not to an export.`,
+      );
+    } else {
+      /* Every modality present must permit the claimed authority. A screenshot
+       * cannot be motion authority, and prototype code cannot be either. */
+      const permitted = modalities.filter((modality) =>
+        (MODALITY_AUTHORITY[modality] ?? []).includes(item.authority),
+      );
+      if (modalities.length > 0 && permitted.length === 0) {
+        problems.push(
+          `${at} carries ${modalities.join("+")} and claims ${item.authority}, which none of those modalities can support. ${describePermittedAuthorities(modalities)}`,
+        );
+      }
+    }
+
+    /* An authority the agent cannot open is not an authority. This is the field
+     * whose absence meant approved visuals could not travel into a launch pack
+     * at all: the manifest could say a canvas existed and never carry it. */
+    if (RENDERABLE_AUTHORITIES.includes(item.authority)) {
+      if (!isPortableRelativePath(item.path)) {
+        problems.push(
+          `${at}.path must be a portable relative path to the artifact itself. ${item.authority} obliges production to render and inspect it, which requires a file.`,
+        );
+      }
+      if (!isSha256(item.sha256)) {
+        problems.push(
+          `${at}.sha256 must be the artifact's SHA-256, so the pack can prove which approved bytes production received.`,
+        );
+      }
+    } else if (item.path !== undefined && !isPortableRelativePath(item.path)) {
+      problems.push(`${at}.path is present but is not a portable relative path.`);
     }
     if (item.sha256 !== undefined && !isSha256(item.sha256)) {
       problems.push(`${at}.sha256 is present but is not a SHA-256.`);
     }
-    if (item.carriesNoNewBusinessFact !== true) {
+
+    /* The invariant that actually matters, stated so it can be met honestly.
+     * The boolean this replaced asked whether the artifact *displays* no new
+     * fact, which every real canvas fails: it shows draft copy. What must be
+     * true is narrower and absolute — the artifact is not where production gets
+     * its facts, whatever text is drawn on it. */
+    if (item.businessTruth !== "NOT_AUTHORITATIVE") {
       problems.push(
-        `${at}.carriesNoNewBusinessFact must be true. Provider output cannot introduce a claim the client definition does not carry.`,
+        `${at}.businessTruth must be "NOT_AUTHORITATIVE". Whatever copy the artifact displays, production takes every business fact from client-website.json.`,
       );
     }
   }
@@ -830,6 +1054,16 @@ VALIDATORS.set("objective-validation-report", (record) => {
   assertPortableManifest(record, problems);
   return problems;
 });
+
+/** Names what each modality present could legitimately have claimed. */
+function describePermittedAuthorities(modalities) {
+  const allowed = [
+    ...new Set(modalities.flatMap((modality) => MODALITY_AUTHORITY[modality] ?? [])),
+  ].sort(compareText);
+  return allowed.length === 0
+    ? "Those modalities can claim no authority."
+    : `Those modalities may claim ${allowed.join(" or ")}.`;
+}
 
 /** Kinds this module can validate, for tests and documentation. */
 export const CONTRACT_KINDS = Object.freeze([...VALIDATORS.keys()].sort(compareText));
