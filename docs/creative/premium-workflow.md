@@ -27,6 +27,12 @@ immutable outputs and refuse rather than repair.
   sign the ship gate                                    ← human, always
 ```
 
+For a **materially redesigned** client, run that sequence once on a representative
+parity slice — home, one service detail, one project detail, mobile — and gate it
+before scaling to the remaining routes. Not a fourth command: the same three, on a
+smaller scope, so a translation mistake costs one page instead of a site. See the
+[parity-slice gate](../delivery/parity-slice-gate.md).
+
 Two of those eight steps are human decisions, and no command can make either.
 The other six are checks and packaging.
 
@@ -132,8 +138,25 @@ The pack it publishes is frozen, hashed and read-only:
   production-launch.json         identities, target, boundary, integrity
   integrity.sha256               sha256sum -c proves the pack is intact
   inputs/                        the delivery, byte-for-byte as it was gated
+  inputs/approved-visual/        approved visual and motion artifacts, when supplied
   evidence-index.json            evidence that exists, evidence production owes
 ```
+
+### Approved visual and motion authority
+
+When provider evidence declares an item with `VISUAL_AUTHORITY` or
+`MOTION_AUTHORITY`, the launch **carries the artifact itself** — copied into
+`inputs/approved-visual/`, hashed into `integrity.sha256`, listed in the agent's
+read order beside the gate that approved it, and bound in `production-launch.json`
+under `provider.approvedAuthorities` by pack path and digest.
+
+An item claiming that authority must name a real file whose digest matches, or the
+launch refuses `VISUAL_AUTHORITY_UNREADABLE`. An approved visual the agent cannot
+open is not an authority, and describing one in a manifest is what allowed a
+redesign to be approved and then not built.
+
+The brief distinguishes prototype code from approved composition. Read the
+[authority model](authority-model.md) before writing provider evidence.
 
 It records a location, never the machine it was produced on: an absolute path in
 a launch manifest is refused by the contract rather than trimmed.
@@ -218,6 +241,23 @@ Coverage is measured against the routes the experience manifest declares, not
 against the routes someone happened to capture — four widths on one route and
 nothing else is the exact gap the check exists to find. See the
 [evidence protocol](evidence-protocol.md) for what to capture and how it binds.
+
+### Interaction evidence
+
+A pointer-sensitive control — one that captures the pointer, drags, swipes, hovers
+or scrubs — must be evidenced through a **real pointer sequence**. A synthetic
+`element.click()` dispatches an event directly and never exercises hit-testing or
+pointer capture, so it cannot show the control is reachable by a pointer; a
+collection plate that held capture from `pointerdown` was unclickable and shipped
+through a full evidence pass for exactly that reason.
+
+`creative:verify` reports `evidence.interaction` and `evidence.pointer-input`. An
+honest record of insufficient evidence is well-formed and fails the report, naming
+the control — the failure is visible rather than refused, because the delivery is
+inside its boundary and a reviewer needs to see which control is unproven.
+
+This adds no browser-testing framework. The requirement is on the evidence a
+delivery submits.
 
 ## 6. The ship gate
 

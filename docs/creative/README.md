@@ -22,6 +22,8 @@ the same runtime as one built without it.
 | Deciding what a Signature can technically do | [signature-capability-envelope.md](signature-capability-envelope.md) |
 | Using references without absorbing them | [reference-analysis.md](reference-analysis.md) |
 | Working out what evidence to capture | [evidence-protocol.md](evidence-protocol.md) |
+| Working out what an approved design artifact is authoritative *for* | [authority-model.md](authority-model.md) |
+| Consolidated delivery process, taxonomy and patterns | [../delivery/README.md](../delivery/README.md) |
 
 ## The workflow
 
@@ -95,7 +97,11 @@ machine can honestly check; prose carries the creative content.
    an agent that signs one is refused.
 2. **Make a vendor load-bearing.** Claude Design is a current preferred
    environment, in beta, and replaceable without changing any artifact,
-   validator, contract or line of client source.
+   validator, contract or line of client source. The
+   [authority model](authority-model.md) is stated in modalities and authority
+   classes rather than in tools: an approved artifact is a file with a digest and
+   a human's classification, whatever produced it. Design Mode B works with no
+   provider at all.
 3. **Promote anything into Core.** Only repeated evidence across two or more
    deliveries does that, and the validator enforces the count.
 4. **Upload anything.** No command here contacts a provider. `creative:prepare`
