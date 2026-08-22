@@ -210,8 +210,26 @@ export async function inventoryDirectory(root, exclude = []) {
  * It is an accident detector, not a signature: anyone who can rewrite a file
  * can rewrite this. The tamper check that actually holds is re-deriving the
  * identity from the live client input at launch.
+ *
+ * **The self-reference rule, now enforced rather than described.** A manifest
+ * cannot list itself: its own digest is not knowable until it is written, and
+ * writing it changes the file it just measured. A package whose manifest names
+ * itself fails `sha256sum -c` forever, on exactly one line, and reads to a
+ * reviewer as a corrupted package rather than an impossible instruction. Every
+ * Platform-generated pack already excluded the sidecar because each caller
+ * remembered to; a hand-assembled closure package did not, which is what turned
+ * a documented convention into a defect. The rule now lives in the one function
+ * every package goes through.
  */
 export async function writeChecksumSidecar(root, name, entries) {
+  const selfReferencing = entries.filter((entry) => entry.path === name);
+  if (selfReferencing.length > 0) {
+    throw refuse(
+      "CONTRACT_INVALID",
+      `The checksum manifest "${name}" cannot list itself. Its digest is not knowable before it is written, and writing it invalidates the line — strict verification would fail on that one entry forever. Exclude "${name}" when taking the inventory: inventoryDirectory(root, ["${name}"]).`,
+      { manifest: name },
+    );
+  }
   const body = entries
     .map(({ sha256: digest, path }) => `${digest}  ${path}`)
     .join("\n");
