@@ -79,9 +79,9 @@ Both are fixed in this milestone.
 | D starter cardinality + media reality | COMPLETE |
 | E operator command surface | COMPLETE |
 | F second-context fixture + generalisation proof | COMPLETE (built and rendered) |
-| G docs + first-client start here | PENDING |
-| H regression, clean-room, adversarial, red team | PENDING |
-| I review package | PENDING |
+| G docs + first-client start here | COMPLETE |
+| H regression, clean-room, adversarial, red team | COMPLETE |
+| I review package | COMPLETE |
 
 ## Phase A + B — what was implemented
 
@@ -205,3 +205,52 @@ reasoning about it.**
 Commit Phase A+B, then Phase C: the delivery intake contracts
 (sales handoff, client intake, media audit/provenance/lanes, shot gap,
 truth normalisation, creative configuration) in `packages/contracts/src/`.
+
+
+---
+
+## Phases G–I — closed
+
+**Documents.** `docs/delivery/tradies-profile-v1.md`,
+`tradies-delivery-runbook.md`, `tradies-adversarial-review.md`,
+`tradies-sellability-red-team.md`, plus `FIRST_REAL_TRADIE_CLIENT_START_HERE.md`
+at the repository root. The three design briefs carry their resolutions at the
+top; the inherited contracts point at their implementations.
+
+**Clean-room simulation.** A small plumber (4 services, 3 jobs, 6 photographs)
+walked from an empty directory to 15 static pages using only the commands the
+first-client document prints. One friction point found and fixed: the scaffold
+emitted optional fields as empty strings, handing the operator an error for a
+question they had no answer to.
+
+**Adversarial pass.** The Codex Claude Code plugin is not installed; the binary
+is, but invoking it would send the repository to an external service nobody asked
+to involve. Internal pass instead — 7 findings, all fixed:
+unbounded home page · contradicting page caps (128 vs a 250-project collection) ·
+focus lost when the show-all control hid itself · a raw `<form>` in generated
+source · manual asset copying · two fixture suburb collisions · the scaffold
+friction above.
+
+**Red team.** Fourteen scenarios executed against synthetic businesses, including
+8 bad phone photos, 100 projects, 40 services, and `creative:prepare` on a
+Tradies-composed client (design mode B, no provider).
+
+**Package.** `../TRADIES_PROFILE_V1_REVIEW_PACKAGE/` — 68 files, `verify.sh`
+passing all four checks. Zip sha256
+`c466b6584559e79ae4d0703e652cb426180c5f977da5a49ea398a87d9b47c683`.
+
+## Final state
+
+| | |
+|---|---|
+| Branch | `feature/web-01b-premium-experience` |
+| `main` | `5eca7ac…` unchanged |
+| Milestone base | `aeedbb5…` |
+| Tests | `pnpm check` exit 0 (945) · `tradie:test` 43 · `creative:test` 67 · `tradie:typecheck` exit 0 |
+| Dependencies added | none |
+
+**Verdict: TRADIES_PROFILE_V1_READY_WITH_NAMED_NONBLOCKING_LIMITATIONS.**
+The limitations are named in `03-DEFERRED-AND-NON-GOALS.md` and in the red team's
+"where the claim is weakest": no real client has been through this, the visual
+refinement is deliberately not designed, and licensed typefaces remain a manual
+stylesheet edit. None of them blocks accepting a paying Tradie.
