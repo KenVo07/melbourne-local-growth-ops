@@ -236,8 +236,10 @@ friction above.
 Tradies-composed client (design mode B, no provider).
 
 **Package.** `../TRADIES_PROFILE_V1_REVIEW_PACKAGE/` — 68 files, `verify.sh`
-passing all four checks. Zip sha256
-`c466b6584559e79ae4d0703e652cb426180c5f977da5a49ea398a87d9b47c683`.
+passing all four checks. The zip's SHA-256 is published in
+`TRADIES_PROFILE_V1_REVIEW_PACKAGE.zip.sha256` beside it; it is deliberately not
+repeated here, because this file travels *inside* the archive and a document
+cannot carry the hash of the thing containing it.
 
 ## Final state
 
