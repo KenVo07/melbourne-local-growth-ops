@@ -90,9 +90,11 @@
         "items": [
           {
             "title": "Electrical service",
-            "description": "Fictional demonstration copy for common residential electrical enquiries."
+            "description": "Fictional demonstration copy for common residential electrical enquiries.",
+            "featured": false
           }
-        ]
+        ],
+        "groups": []
       },
       {
         "type": "TRUST_SIGNALS",

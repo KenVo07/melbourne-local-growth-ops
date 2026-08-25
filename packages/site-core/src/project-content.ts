@@ -60,6 +60,25 @@ export const WebsiteProjectSchema = z
     demonstrationDisclosure: longText.optional(),
     serviceIds: z.array(boundedId).min(1).max(24),
     locationLabel: shortText.optional(),
+    /**
+     * Selected by the agency for curated storytelling — the home page, a
+     * service's proof, a navigation panel.
+     *
+     * Authored rather than derived, and deliberately not "the most recent N": a
+     * trade business's most persuasive job is frequently not its newest one, and
+     * deriving prominence from recency quietly hands editorial control to
+     * whatever was finished last.
+     */
+    featured: z.boolean().default(false),
+    /**
+     * The calendar year the work completed, where the business knows it.
+     *
+     * A year rather than a date because that is the resolution a trade business
+     * actually retains, and inventing a month to satisfy a date type is how a
+     * definition acquires a fact nobody stated. Bounded below at 1900 so a typo
+     * cannot produce a project completed in the year 20.
+     */
+    completedYear: z.number().int().min(1_900).max(2_200).optional(),
     hero: WebsiteMediaReferenceSchema,
     gallery: z.array(WebsiteMediaReferenceSchema).max(60).default([]),
     facts: z.array(WebsiteProjectFactSchema).max(24).default([]),
@@ -143,6 +162,31 @@ export function projectBySlug(
   projectSlug: string,
 ): WebsiteProject | undefined {
   return collection.projects.find((project) => project.slug === projectSlug);
+}
+
+/** The projects the agency selected for curated storytelling, in authored order. */
+export function featuredProjects(
+  collection: WebsiteProjectCollection,
+): readonly WebsiteProject[] {
+  return Object.freeze(collection.projects.filter(({ featured }) => featured));
+}
+
+/**
+ * Every project that names this service, in collection order.
+ *
+ * This is the relation a service detail route reads to show its own evidence,
+ * and the relation an archive filter reads to narrow itself. Both directions
+ * resolve stable IDs only.
+ */
+export function projectsForService(
+  collection: WebsiteProjectCollection,
+  serviceId: string,
+): readonly WebsiteProject[] {
+  return Object.freeze(
+    collection.projects.filter((project) =>
+      project.serviceIds.includes(serviceId),
+    ),
+  );
 }
 
 function validateCollectionReferences(

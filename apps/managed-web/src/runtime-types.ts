@@ -111,11 +111,48 @@ export interface RuntimeTitledItem {
   readonly description: string;
 }
 
+interface RuntimeFaqItem {
+  readonly question: string;
+  readonly answer: string;
+}
+
+export interface RuntimeServiceCommercialFact {
+  readonly label: string;
+  readonly value: string;
+  readonly qualifier?: string | undefined;
+}
+
+/**
+ * The truth a service detail route needs in order to be a decision page.
+ * Every list may legitimately be empty, and an empty list renders as nothing.
+ */
+export interface RuntimeServiceDecision {
+  readonly suitedTo: readonly string[];
+  readonly covers: readonly string[];
+  readonly excludes: readonly string[];
+  readonly whenToCall: readonly string[];
+  readonly stages: readonly RuntimeTitledItem[];
+  readonly customerProvides: readonly string[];
+  readonly commercial: readonly RuntimeServiceCommercialFact[];
+  readonly questions: readonly RuntimeFaqItem[];
+  readonly nextActionId?: string | undefined;
+}
+
+export interface RuntimeServiceGroup {
+  readonly groupId: string;
+  readonly title: string;
+  readonly description?: string | undefined;
+}
+
 /** SERVICES items carry the additive stable identifier used by detail routes. */
 export interface RuntimeServiceItem {
   readonly serviceId?: string | undefined;
   readonly title: string;
   readonly description: string;
+  readonly narrative?: string | undefined;
+  readonly decision?: RuntimeServiceDecision | undefined;
+  readonly groupId?: string | undefined;
+  readonly featured: boolean;
 }
 
 interface RuntimeGalleryItem {
@@ -128,11 +165,6 @@ interface RuntimeTestimonial {
   readonly quote: string;
   readonly attribution: string;
   readonly disclosure?: string | undefined;
-}
-
-interface RuntimeFaqItem {
-  readonly question: string;
-  readonly answer: string;
 }
 
 interface RuntimeMenuItem {
@@ -174,6 +206,7 @@ type RuntimeTitledListSection =
   | (RuntimeProfileSectionBase & {
       readonly type: "SERVICES";
       readonly items: readonly RuntimeServiceItem[];
+      readonly groups: readonly RuntimeServiceGroup[];
     })
   | (RuntimeProfileSectionBase & {
       readonly type: "PROCESS" | "EVENTS" | "COLLECTIONS";
@@ -514,6 +547,8 @@ export interface RuntimeProject {
   readonly demonstrationDisclosure?: string | undefined;
   readonly serviceIds: readonly string[];
   readonly locationLabel?: string | undefined;
+  readonly featured: boolean;
+  readonly completedYear?: number | undefined;
   readonly hero: RuntimeMediaReference;
   readonly gallery: readonly RuntimeMediaReference[];
   readonly facts: readonly RuntimeProjectFact[];

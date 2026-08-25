@@ -146,17 +146,122 @@ const titledItemSchema = z.strictObject({
   description: requiredText,
 });
 
+const faqItemSchema = z.strictObject({
+  question: shortText,
+  answer: requiredText,
+});
+
+/**
+ * One commercial fact a business is willing to state in public, with what it is
+ * conditioned on.
+ *
+ * `qualifier` exists because an unqualified figure is the fastest way for a
+ * website to make a promise the business did not make. "From $180" is a
+ * different sentence from "From $180, first hour on site, business hours".
+ */
+export const WebsiteServiceCommercialFactSchema = z.strictObject({
+  label: shortText,
+  value: shortText,
+  qualifier: shortText.optional(),
+});
+
+/**
+ * What a visitor with a specific problem needs in order to decide whether to
+ * call, expressed only as truth the business actually has.
+ *
+ * Every field is a list that defaults to empty, and an empty list renders as
+ * nothing. That is the whole honesty mechanism: a service page with truth for
+ * four of these questions shows four answers, not nine headings over
+ * "information not available". The alternative — a required field per question —
+ * produces SEO filler, which is what this contract exists to prevent.
+ *
+ * Two questions are deliberately **not** fields here:
+ *
+ * - *What projects prove this?* is already the backward relation from
+ *   `WebsiteProject.serviceIds`. Restating it would create two places for the
+ *   same relation to disagree.
+ * - *Is this relevant to me?* is answered by `title`, `description` and
+ *   `suitedTo` together, not by a field that would only ever restate them.
+ *
+ * `excludes` is the field most often dropped and the one that qualifies
+ * hardest. A reader who learns what a business does not do either stops wasting
+ * both parties' time or trusts the rest of the page more.
+ *
+ * Whether an empty list means "not asked yet" or "genuinely none" is a delivery
+ * question, not a published one — the visitor sees the same page either way. It
+ * is answered by the intake truth ledger, which records completeness per field
+ * for the operator, and never reaches the website.
+ */
+export const WebsiteServiceDecisionSchema = z.strictObject({
+  /** Job types and situations this service is the right answer to. */
+  suitedTo: z.array(shortText).max(16).default([]),
+  /** What the service actually includes. */
+  covers: z.array(shortText).max(24).default([]),
+  /** The boundary: what it does not cover, and where the business stops. */
+  excludes: z.array(shortText).max(24).default([]),
+  /** The triggers that mean a customer should make contact now. */
+  whenToCall: z.array(shortText).max(12).default([]),
+  /** The process, as stages a customer will actually experience. */
+  stages: z.array(titledItemSchema).max(12).default([]),
+  /** Information, material or access the customer has to supply. */
+  customerProvides: z.array(shortText).max(12).default([]),
+  /** Commercial information that is genuinely known and approved for publication. */
+  commercial: z.array(WebsiteServiceCommercialFactSchema).max(12).default([]),
+  /** The questions and objections this service actually attracts. */
+  questions: z.array(faqItemSchema).max(12).default([]),
+  /**
+   * The appropriate next action, by the `actionId` of a declared ACTIONS entry.
+   * Cross-checked against the profile so a service can never point a visitor at
+   * a contact route the business has not configured.
+   */
+  nextActionId: sectionId.optional(),
+});
+
+/**
+ * A group of services, one level deep and non-recursive by construction.
+ *
+ * A business with twelve services almost never has twelve peers — it has a few
+ * things it is known for, each with variants underneath — and presenting that
+ * as a flat list is a failure of information architecture no layout repairs.
+ *
+ * There is deliberately no `parentGroupId`. Depth is bounded by the shape of
+ * the schema rather than by a validation rule, because a recursive taxonomy is
+ * a maintenance surface no trade business has ever needed and every recursive
+ * taxonomy eventually acquires a level nobody can render.
+ */
+export const WebsiteServiceGroupSchema = z.strictObject({
+  groupId: sectionId,
+  title: shortText,
+  description: requiredText.optional(),
+});
+
 /**
  * Services carry an additive stable identifier so multi-page definitions can
  * route to a service detail page without ever matching an editable display
  * title. The field stays optional: legacy one-page profiles remain valid and
  * gain no route merely because an ID is present. Runtime title or slug matching
  * is prohibited; the v2 cross-validator requires exact IDs.
+ *
+ * `narrative` and `decision` are where a service detail route gets the truth
+ * that makes it a decision page rather than a showroom. Both are optional, and
+ * both live here — in the validated client definition — rather than in any
+ * creative artifact, because they are things the business said about itself.
  */
 export const WebsiteServiceItemSchema = z.strictObject({
   serviceId: sectionId.optional(),
   title: shortText,
+  /** The one-line summary an index shows. */
   description: requiredText,
+  /** The longer read a detail route opens with, where one exists. */
+  narrative: requiredText.optional(),
+  decision: WebsiteServiceDecisionSchema.optional(),
+  /** Membership of a declared group. Ungrouped services stay valid. */
+  groupId: sectionId.optional(),
+  /**
+   * Selected by the agency for prominence — a home page, a navigation panel.
+   * Not a quality claim and not visible as one; it decides placement only.
+   */
+  featured: z.boolean().default(false),
 });
 
 const galleryItemSchema = z.strictObject({
@@ -169,11 +274,6 @@ export const WebsiteTestimonialSchema = z.strictObject({
   quote: requiredText,
   attribution: shortText,
   disclosure: shortText.optional(),
-});
-
-const faqItemSchema = z.strictObject({
-  question: shortText,
-  answer: requiredText,
 });
 
 export const WebsiteMenuItemSchema = z.strictObject({
@@ -215,6 +315,13 @@ const serviceSectionSchema = z.strictObject({
   type: z.literal("SERVICES"),
   ...sectionHeading,
   items: z.array(WebsiteServiceItemSchema).min(1).max(100),
+  /**
+   * Declared groups, if this business genuinely has them. Empty is the normal
+   * case and stays the normal case: a business with four peer services declares
+   * no groups and every reader of this section sees a flat list, exactly as
+   * before.
+   */
+  groups: z.array(WebsiteServiceGroupSchema).max(16).default([]),
 });
 const trustSectionSchema = z.strictObject({
   type: z.literal("TRUST_SIGNALS"),
@@ -391,6 +498,11 @@ function profileShape<
       const seenIds = new Set<string>();
       const seenTypes = new Set<string>();
       const seenServiceIds = new Set<string>();
+      const declaredActionIds = new Set<string>();
+      const serviceNextActions: {
+        readonly actionId: string;
+        readonly path: (string | number)[];
+      }[] = [];
       for (const [index, section] of content.sections.entries()) {
         if (seenIds.has(section.sectionId)) {
           context.addIssue({
@@ -402,8 +514,47 @@ function profileShape<
         seenIds.add(section.sectionId);
         seenTypes.add(section.type);
 
+        if (section.type === "ACTIONS") {
+          for (const action of section.actions) declaredActionIds.add(action.actionId);
+        }
+
         if (section.type !== "SERVICES") continue;
+        const groupIds = new Set<string>();
+        for (const [groupIndex, group] of section.groups.entries()) {
+          if (groupIds.has(group.groupId)) {
+            context.addIssue({
+              code: "custom",
+              path: ["sections", index, "groups", groupIndex, "groupId"],
+              message: `Service group ID "${group.groupId}" is duplicated.`,
+            });
+          }
+          groupIds.add(group.groupId);
+        }
+        const usedGroupIds = new Set<string>();
         for (const [itemIndex, item] of section.items.entries()) {
+          if (item.groupId !== undefined) {
+            usedGroupIds.add(item.groupId);
+            if (!groupIds.has(item.groupId)) {
+              context.addIssue({
+                code: "custom",
+                path: ["sections", index, "items", itemIndex, "groupId"],
+                message: `Service group "${item.groupId}" is not declared by this section.`,
+              });
+            }
+          }
+          if (item.decision?.nextActionId !== undefined) {
+            serviceNextActions.push({
+              actionId: item.decision.nextActionId,
+              path: [
+                "sections",
+                index,
+                "items",
+                itemIndex,
+                "decision",
+                "nextActionId",
+              ],
+            });
+          }
           if (item.serviceId === undefined) continue;
           if (seenServiceIds.has(item.serviceId)) {
             context.addIssue({
@@ -414,6 +565,33 @@ function profileShape<
           }
           seenServiceIds.add(item.serviceId);
         }
+        /*
+         * A declared group no service belongs to is a heading over nothing —
+         * the same failure the optional GALLERY and TESTIMONIALS sections exist
+         * to avoid, arriving one level down.
+         */
+        for (const [groupIndex, group] of section.groups.entries()) {
+          if (usedGroupIds.has(group.groupId)) continue;
+          context.addIssue({
+            code: "custom",
+            path: ["sections", index, "groups", groupIndex, "groupId"],
+            message: `Service group "${group.groupId}" contains no services.`,
+          });
+        }
+      }
+
+      /*
+       * A service's next action must be an action the business has actually
+       * declared. Resolved after the loop because ACTIONS may be authored after
+       * SERVICES, and section order is the client's to choose.
+       */
+      for (const { actionId, path } of serviceNextActions) {
+        if (declaredActionIds.has(actionId)) continue;
+        context.addIssue({
+          code: "custom",
+          path,
+          message: `Service next action "${actionId}" is not declared by any ACTIONS section.`,
+        });
       }
 
       for (const required of requiredSections) {
@@ -460,10 +638,83 @@ export type WebsiteProfileSection = z.infer<
   typeof WebsiteProfileSectionSchema
 >;
 export type WebsiteServiceItem = z.infer<typeof WebsiteServiceItemSchema>;
+export type WebsiteServiceCommercialFact = z.infer<
+  typeof WebsiteServiceCommercialFactSchema
+>;
+export type WebsiteServiceDecision = z.infer<
+  typeof WebsiteServiceDecisionSchema
+>;
+export type WebsiteServiceGroup = z.infer<typeof WebsiteServiceGroupSchema>;
 export type WebsiteServiceSection = Extract<
   WebsiteProfileSection,
   { readonly type: "SERVICES" }
 >;
+
+/** Every SERVICES section the validated profile declares, in authored order. */
+export function serviceSections(
+  content: WebsiteProfileContent,
+): readonly WebsiteServiceSection[] {
+  return Object.freeze(
+    content.sections.filter(
+      (section): section is WebsiteServiceSection => section.type === "SERVICES",
+    ),
+  );
+}
+
+/**
+ * One group and the services that belong to it, plus the services that belong
+ * to none, in authored order.
+ *
+ * A caller renders `groups` as headed lists and `ungrouped` as a flat run after
+ * them. A profile that declares no groups produces an empty `groups` and every
+ * service in `ungrouped`, which is exactly the flat list a small business
+ * already had — the grouped case is the addition, not the new default.
+ */
+export interface WebsiteGroupedServices {
+  readonly groups: readonly Readonly<{
+    group: WebsiteServiceGroup;
+    services: readonly WebsiteServiceItem[];
+  }>[];
+  readonly ungrouped: readonly WebsiteServiceItem[];
+}
+
+export function groupedServices(
+  content: WebsiteProfileContent,
+): WebsiteGroupedServices {
+  const sections = serviceSections(content);
+  const items = sections.flatMap((section) => section.items);
+  const groups = sections.flatMap((section) => section.groups);
+  return Object.freeze({
+    groups: Object.freeze(
+      groups.map((group) =>
+        Object.freeze({
+          group,
+          services: Object.freeze(
+            items.filter((item) => item.groupId === group.groupId),
+          ),
+        }),
+      ),
+    ),
+    ungrouped: Object.freeze(items.filter((item) => item.groupId === undefined)),
+  });
+}
+
+/**
+ * The services the agency selected for prominence, in authored order.
+ *
+ * Deliberately not "the first N". A business's best argument is rarely the
+ * service it happened to list first, and silently promoting position into
+ * emphasis is how a home page ends up leading with the cheapest job.
+ */
+export function featuredServices(
+  content: WebsiteProfileContent,
+): readonly WebsiteServiceItem[] {
+  return Object.freeze(
+    serviceSections(content)
+      .flatMap((section) => section.items)
+      .filter((item) => item.featured),
+  );
+}
 
 /**
  * Resolves a service by its stable identifier only. Title and slug matching are

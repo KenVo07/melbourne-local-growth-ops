@@ -135,9 +135,15 @@ export {
   WebsiteProfileContentSchema,
   WebsiteProfileSchema,
   WebsiteProfileSectionSchema,
+  WebsiteServiceCommercialFactSchema,
+  WebsiteServiceDecisionSchema,
+  WebsiteServiceGroupSchema,
   WebsiteServiceItemSchema,
   WebsiteTestimonialSchema,
+  featuredServices,
+  groupedServices,
   serviceItemById,
+  serviceSections,
   stableServiceIds,
   validateWebsiteProfileContent,
 } from "./profile-content.js";
@@ -145,12 +151,36 @@ export type {
   WebsiteArchetype,
   WebsiteBrand,
   WebsiteExternalAction,
+  WebsiteGroupedServices,
   WebsiteProfile,
   WebsiteProfileContent,
   WebsiteProfileSection,
+  WebsiteServiceCommercialFact,
+  WebsiteServiceDecision,
+  WebsiteServiceGroup,
   WebsiteServiceItem,
   WebsiteServiceSection,
 } from "./profile-content.js";
+export {
+  SERVICE_DETAIL_ROUTE_THRESHOLD,
+  deriveProjectFacets,
+  deservesServiceDetailRoute,
+  resolveNavigationPlan,
+  resolveProjectPresentation,
+  resolveServicePresentation,
+  serviceDecisionDepth,
+} from "./collection-scale.js";
+export type {
+  CollectionFacet,
+  CollectionFacetValue,
+  NavigationPlan,
+  NavigationSectionMode,
+  ProjectPresentationMode,
+  ProjectPresentationPlan,
+  ProjectRetrieval,
+  ServicePresentationMode,
+  ServicePresentationPlan,
+} from "./collection-scale.js";
 export {
   WebsiteDesignDnaSchema,
   WebsiteExperiencePaletteSchema,
@@ -230,8 +260,10 @@ export {
   WebsiteProjectStoryBlockSchema,
   WebsiteProjectStoryBlockTypeSchema,
   WebsiteProjectTruthModeSchema,
+  featuredProjects,
   projectById,
   projectBySlug,
+  projectsForService,
   validateWebsiteProjectCollection,
 } from "./project-content.js";
 export type {

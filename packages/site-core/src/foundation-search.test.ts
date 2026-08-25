@@ -128,7 +128,10 @@ function contractorProfile(): WebsiteProfileContent {
         type: "SERVICES",
         sectionId: "services",
         heading: "Services",
-        items: [{ title: "Repairs", description: "Illustrative repairs." }],
+        items: [
+          { title: "Repairs", description: "Illustrative repairs.", featured: false },
+        ],
+        groups: [],
       },
       {
         type: "TRUST_SIGNALS",

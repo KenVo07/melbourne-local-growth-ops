@@ -113,17 +113,21 @@
         "items": [
           {
             "title": "Residential Electrical Installation",
-            "description": "Illustrative proposed copy for general wiring, lighting, power point, and safety switch services. Confirm the real client's approved scope before publishing."
+            "description": "Illustrative proposed copy for general wiring, lighting, power point, and safety switch services. Confirm the real client's approved scope before publishing.",
+            "featured": false
           },
           {
             "title": "Switchboard Upgrades & Circuit Safety",
-            "description": "Illustrative proposed copy for switchboard and circuit-safety services. Verify the real client's qualifications and approved service wording before publishing."
+            "description": "Illustrative proposed copy for switchboard and circuit-safety services. Verify the real client's qualifications and approved service wording before publishing.",
+            "featured": false
           },
           {
             "title": "Split-System Air Conditioning",
-            "description": "Illustrative proposed copy for split-system electrical work. Confirm the real client's licensing, service scope, and commissioning wording before publishing."
+            "description": "Illustrative proposed copy for split-system electrical work. Confirm the real client's licensing, service scope, and commissioning wording before publishing.",
+            "featured": false
           }
-        ]
+        ],
+        "groups": []
       },
       {
         "type": "TRUST_SIGNALS",
