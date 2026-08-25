@@ -368,10 +368,19 @@ ${
   budget === 0
     ? ""
     : `
+        {/*
+          A checkbox rather than a one-way control, and it is never hidden after
+          use. Removing the element a reader has just activated takes focus with
+          it and drops them at the top of the document; the label's text changes
+          instead, which also changes the control's accessible name.
+        */}
         <div className="${ns}-archive-more">
           <input id="archive-show-all" type="checkbox" />
           <label htmlFor="archive-show-all">
-            Show all {archive.length} records
+            <span className="${ns}-more-closed">
+              Show all {archive.length} records
+            </span>
+            <span className="${ns}-more-open">Show fewer</span>
           </label>
         </div>
 `

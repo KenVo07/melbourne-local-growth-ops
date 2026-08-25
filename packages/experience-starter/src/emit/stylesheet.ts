@@ -1333,8 +1333,17 @@ function archiveGrammar(design: ResolvedDesign, scale: ClientScale): string {
   display: none;
 }
 
-.${ns}-archive-scope:has(#archive-show-all:checked) .${ns}-archive-more {
+/* The control stays; its label changes. Never hide a focused element. */
+.${ns}-archive-more .${ns}-more-open {
   display: none;
+}
+
+.${ns}-archive-scope:has(#archive-show-all:checked) .${ns}-archive-more .${ns}-more-closed {
+  display: none;
+}
+
+.${ns}-archive-scope:has(#archive-show-all:checked) .${ns}-archive-more .${ns}-more-open {
+  display: inline;
 }
 `;
 

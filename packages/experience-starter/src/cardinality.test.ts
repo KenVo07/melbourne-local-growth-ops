@@ -202,6 +202,17 @@ describe("a service without a photograph", () => {
   });
 });
 
+describe("the home page is an argument, not an index", () => {
+  it("shows the agency's selection, not everything", () => {
+    const route = fileNamed(generate(withProjects(60, 4)), "routes/HomeRoute.tsx");
+    expect(route).toContain("const featuredServices = allServices.filter");
+    expect(route).toContain(".slice(0, 6)");
+    expect(route).toContain("const homeProjects = (");
+    expect(route).toContain(".slice(0, 4)");
+    expect(route).not.toContain("{projects.projects.map(");
+  });
+});
+
 describe("navigation at scale", () => {
   const manyServices = (count: number, groups: readonly { groupId: string; title: string }[] = []) => ({
     ...testDefinition,

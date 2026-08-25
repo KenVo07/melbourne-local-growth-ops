@@ -1,5 +1,11 @@
 # Media and business intake contract
 
+> **Implemented in Tradies Profile V1.** Every class, lane and invariant below is
+> now enforced in `scripts/tradies/intake-contracts.mjs` and exercised by
+> `pnpm tradie:test`. The operating procedure is in
+> [tradies-delivery-runbook.md](tradies-delivery-runbook.md). This document
+> remains the statement of *why* each distinction exists.
+
 The delivery contract the Tradies workflow implements. **Not a media-management
 product, not an uploader, not a UI.** Schema and decision boundaries only.
 

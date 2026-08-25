@@ -1,5 +1,23 @@
 # Design brief B — high-cardinality service architecture
 
+> **RESOLVED — Tradies Profile V1.** See
+> [tradies-profile-v1.md §3](../tradies-profile-v1.md). Implemented and rendered
+> at 10 services in 3 groups.
+>
+> 1. **Services group. A group is not a page** — it is a heading with a list. A
+>    group route's content is its children's, which means duplicated copy or a
+>    thin page holding links.
+> 2. Therefore no group route.
+> 3. The index composition is unchanged; grouping wraps it in heading levels
+>    rather than replacing the instrument.
+> 4. A group inherits nothing. Evidence stays on the service that earned it.
+> 5. **Minimum truth for a route: two decision answers**, evidence counting as
+>    one. Advisory, never enforced — the page graph is authored.
+> 6. Yes — see [brief C](visual-navigation.md), resolved with it.
+>
+> Depth is bounded by schema shape: there is no `parentGroupId`, so a second
+> level cannot be expressed.
+
 For the Tradies workflow's targeted design phase. **A brief, not a design.**
 
 ## Problem

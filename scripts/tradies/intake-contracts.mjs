@@ -209,7 +209,7 @@ export const CLAIM_KINDS = Object.freeze([
  * decorative: **an asset may not substantiate a claim its provenance cannot
  * carry.**
  *
- * A generated image beside the words "our recent work in Hawthorn" is the
+ * A generated image beside the words "our recent work in Sunbury" is the
  * failure this table prevents, and it is a buyer-trust problem before it is a
  * legal one — a reader who suspects one photograph stops believing the rest.
  *

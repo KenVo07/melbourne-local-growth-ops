@@ -47,9 +47,24 @@ import { COPY, SITE_MEDIA } from "../content/site-content";
  */
 export function HomeRoute(props: ClientExperienceRouteProps) {
   const { platform, profile, projects } = props;
-  const services = profile.sections.flatMap((section) =>
+  const allServices = profile.sections.flatMap((section) =>
     section.type === "SERVICES" ? section.items : [],
   );
+  /*
+   * A home page is an argument, not an index. Past a handful of entries the
+   * register stops reading as "here is what we do" and starts reading as a list
+   * somebody forgot to edit — and the services index one click away is the page
+   * that does lists properly.
+   *
+   * Featured first, because that is the agency's selection; position is the
+   * fallback, not the rule.
+   */
+  const featuredServices = allServices.filter((service) => service.featured);
+  const services = (featuredServices.length > 0 ? featuredServices : allServices).slice(0, 6);
+  const featuredProjects = projects.projects.filter((project) => project.featured);
+  const homeProjects = (
+    featuredProjects.length > 0 ? featuredProjects : projects.projects
+  ).slice(0, 4);
 ${imageLedOpening ? "  const method = profile.sections.find((section) => section.type === \"PROCESS\");\n" : ""}
   return (
     <RouteShell props={props}>
@@ -111,7 +126,7 @@ ${imageLedOpening ? imageLed(design) : splitStatement(design)}
         </div>
         <div className="${ns}-preview-aside">
           <ul>
-            {projects.projects.map((project, index) => (
+            {homeProjects.map((project, index) => (
               <li key={project.projectId}>
                 <platform.Link href={\`/projects/\${project.slug}\`}>
                   <span className="${ns}-row-compact">

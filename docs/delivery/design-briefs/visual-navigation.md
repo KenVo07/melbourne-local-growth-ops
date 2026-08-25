@@ -1,5 +1,24 @@
 # Design brief C — visual and mega navigation
 
+> **RESOLVED — Tradies Profile V1.** See
+> [tradies-profile-v1.md §6](../tradies-profile-v1.md). Implemented and rendered.
+>
+> 1. **The page graph**, through the `parentPageId` that already exists. No new
+>    schema, and the menu cannot disagree with the site.
+> 2. **Yes** — one authored source, rendered twice by the existing Platform
+>    disclosure, exactly as the single level already was.
+> 3. **Nothing animates on open.** A panel whose meaning depends on the
+>    transition is not designed yet.
+> 4. **A disclosure**, native `<details>`. Not a menu: a menu implies
+>    application semantics, arrow traversal and an Escape contract. Escape
+>    therefore does not close it, and that is stated rather than hidden.
+> 5. **No media in the panel at P1.** A contextual media stage is a premium
+>    addition, not a default.
+> 6. **Two controls.** The summary expands; the first panel link goes to the
+>    section. A parent that does both has to guess what a tap meant.
+>
+> Off by default: expanded at seven or more services, or any declared group.
+
 For the Tradies workflow's targeted design phase. **A brief, not a design.**
 
 ## Problem

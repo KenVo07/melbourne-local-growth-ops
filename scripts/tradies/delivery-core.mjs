@@ -719,6 +719,18 @@ export function composeDefinition(records) {
     );
   }
 
+  /*
+   * The page ceiling, reported before it becomes an assembly failure. Every
+   * published project needs its own detail route, so a very large archive is
+   * also a very large page graph.
+   */
+  const PAGE_CEILING = 256;
+  if (pageGraph.pages.length > PAGE_CEILING * 0.85) {
+    warnings.push(
+      `${pageGraph.pages.length} pages, against a ceiling of ${PAGE_CEILING}. Every published job needs its own route; if the archive keeps growing, publish the records worth reading and let the rest stay off the site.`,
+    );
+  }
+
   const unused = mediaInventory.assets.filter(
     (asset) => !assetById.has(asset.assetId),
   );

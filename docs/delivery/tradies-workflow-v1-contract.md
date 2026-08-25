@@ -36,25 +36,31 @@ and the workflow starts from it rather than re-deciding it.
 9. **Generation never overwrites authored source.** Enforced, with a regression test.
 10. **Pointer-sensitive controls need real pointer evidence.** Reported by verify.
 
+> **V1 is done.** Every decision below is answered, implemented and rendered
+> against a second client context. The answers live in
+> [tradies-profile-v1.md](tradies-profile-v1.md) and
+> [tradies-delivery-runbook.md](tradies-delivery-runbook.md); this table is kept
+> as the record of what was open and where each one landed.
+
 ## What V1 must decide, in order
 
 These are open by design, and each is cheap to build and expensive to decide —
 which is why they are decisions rather than code.
 
-| # | Decision | Brief |
+| # | Decision | Answer |
 |---|---|---|
-| 1 | The archive threshold, and whether it is client or Platform | [A](design-briefs/high-cardinality-projects.md) |
-| 2 | Categories: declared vocabulary or derived from `serviceIds` + `locationLabel` | A |
-| 3 | Filtered view: URL or client state — a routing decision | A |
-| 4 | Do services group, and is a group a page | [B](design-briefs/large-service-architecture.md) |
-| 5 | Minimum truth for a service to deserve a detail route | B |
-| 6 | Second nav level: page graph or client experience | [C](design-briefs/visual-navigation.md) |
-| 7 | Mega-nav behaviour under keyboard, touch and reduced motion | C |
-| 8 | Media intake implementation: uploader, storage, audit surface | [media contract](media-intake-contract.md) |
-| 9 | Who or what chooses a focal point | same |
-| 10 | Whether reverse shared-element continuity is turned on at Platform level | [catalogue](pattern-catalogue.md#shared-element-morph) |
-| 11 | Whether the authored surface's element reset moves to zero specificity | below |
-| 12 | Whether "notation on media" becomes a declared property | [catalogue](pattern-catalogue.md#notation-on-media--open-question-not-yet-a-pattern) |
+| 1 | The archive threshold, and whether it is client or Platform | 12 / 25, **Platform**, stated once in `collection-scale.ts` |
+| 2 | Categories: declared vocabulary or derived | **Derived** from `serviceIds`, `locationLabel`, `completedYear`. No vocabulary |
+| 3 | Filtered view: URL or client state | **Client state.** Every record ships in the HTML, so the problem is attention, not bytes |
+| 4 | Do services group, and is a group a page | **They group. A group is not a page** |
+| 5 | Minimum truth for a service to deserve a detail route | **Two decision answers**, evidence counting as one. Advisory |
+| 6 | Second nav level: page graph or client experience | **Page graph**, through the existing `parentPageId`. No new schema |
+| 7 | Mega-nav behaviour under keyboard, touch and reduced motion | **A disclosure, not a menu.** Native `<details>`; no hover; two controls on touch; nothing animates |
+| 8 | Media intake implementation | **Schema and CLI, no uploader and no storage product.** `scripts/tradies/` |
+| 9 | Who or what chooses a focal point | **A person, at audit**, recorded per asset. Refused if absent |
+| 10 | Reverse shared-element continuity at Platform level | **Still deferred** — no client has needed it twice |
+| 11 | Authored surface's element reset at zero specificity | **Still open.** No new client stylesheet has been hand-authored yet; the generated one has no such collision |
+| 12 | "Notation on media" as a declared property | **Still deferred** — one client, one instance |
 
 ## Two carried-forward technical debts, with their arithmetic
 

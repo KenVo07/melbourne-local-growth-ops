@@ -15,7 +15,7 @@
  *
  * `check` is the one to run when unsure. It is read-only and safe at any point.
  */
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 
 import {
@@ -268,6 +268,38 @@ async function compose(): Promise<void> {
     throw refuse("CONTRACT_INVALID", issueList("definition", modelValidation.issues));
   }
 
+  /*
+   * Copy the approved files into the build package, where the definition already
+   * says they will be.
+   *
+   * This was the last step an operator did by hand, and hand-copying by filename
+   * is exactly the operation that puts the wrong photograph beside a named job.
+   * A declared file that is not there is refused here rather than at assembly,
+   * because the mistake was made here.
+   */
+  const mediaRoot = flags.media;
+  if (mediaRoot !== undefined) {
+    /* Every file is checked before any file is copied, so a refusal leaves no half-copied package. */
+    const missing: string[] = [];
+    for (const asset of composed.definition.assets) {
+      if (!(await exists(resolve(mediaRoot, ...asset.sourcePath.split("/"))))) {
+        missing.push(asset.sourcePath);
+      }
+    }
+    if (missing.length > 0) {
+      throw refuse(
+        "CONTRACT_INVALID",
+        `${missing.length} approved asset file(s) are not under "${mediaRoot}":\n  ${missing.join("\n  ")}`,
+        { missing },
+      );
+    }
+    for (const asset of composed.definition.assets) {
+      const to = join(build, "public", ...asset.sourcePath.split("/"));
+      await mkdir(dirname(to), { recursive: true });
+      await copyFile(resolve(mediaRoot, ...asset.sourcePath.split("/")), to);
+    }
+  }
+
   await writeInto(
     join(build, "client-website.json"),
     `${JSON.stringify(composed.definition, null, 2)}\n`,
@@ -312,7 +344,11 @@ async function compose(): Promise<void> {
     for (const warning of composed.warnings) step(warning);
   }
   heading("Next");
-  step("copy the client's approved image files into build/public/assets/");
+  step(
+    mediaRoot === undefined
+      ? "copy the approved image files into build/public/ — or re-run with --media <dir> and let this do it"
+      : `${composed.definition.assets.length} approved file(s) copied into build/public/`,
+  );
   step("answer the TODO copy fields in starter-brief.json");
   step(`then: pnpm tradie p1 --workspace ${workspace}`);
 }
@@ -548,7 +584,7 @@ function usage(): string {
   pnpm tradie check     --workspace <dir>
   pnpm tradie recommend --workspace <dir>
   pnpm tradie shotlist  --workspace <dir>
-  pnpm tradie compose   --workspace <dir>
+  pnpm tradie compose   --workspace <dir> [--media <dir-holding-the-client-files>]
   pnpm tradie p1        --workspace <dir>
   pnpm tradie demo      --into <dir>
 

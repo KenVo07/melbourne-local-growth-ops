@@ -1,14 +1,19 @@
 /**
  * The blank delivery workspace.
  *
- * Five JSON records with every field present and every value empty, plus a
- * README that says who owns each file. An operator starting a new client should
- * never have to remember a schema; they should open a file that already asks
- * the questions.
+ * Four JSON records with every *required* field present and empty, plus a README
+ * that says who owns each file and which fields are optional. An operator
+ * starting a new client should never have to remember a schema; they should open
+ * a file that already asks the questions.
  *
  * The templates are deliberately *invalid* until answered — empty strings and
  * empty required lists — so `tradie check` reports exactly what is unanswered
  * rather than accepting a placeholder as an answer.
+ *
+ * **Optional fields are omitted rather than emitted empty.** An empty optional
+ * string is not "no value", it is a malformed value, and a scaffold that emits
+ * one hands the operator an error for a question they legitimately have no
+ * answer to. The README names them instead.
  */
 
 export function scaffoldWorkspace(clientId, businessName) {
@@ -51,6 +56,23 @@ keeps the client from being asked to act as their own designer.
 They are asked factual questions about their business, for everything they
 already have, and to approve how they are represented.
 
+## Optional fields, omitted from the templates
+
+Add them if the answer exists. Leaving them out is a valid answer; leaving them
+in as an empty string is not.
+
+| File | Field | What it is |
+|---|---|---|
+| \`client-intake.json\` | \`tagline\` | One line under the business name |
+| | \`services[].narrative\` | The longer read a service detail route opens with |
+| | \`services[].groupId\` | Membership of a declared \`serviceGroups\` entry |
+| | \`services[].stages\`, \`commercial\`, \`questions\` | Process, known costs, real questions |
+| | \`contact.phone\` | International format only — \`+61390000000\`. A number that would not dial is refused |
+| | \`projects[].brief\`, \`approach\`, \`outcome\` | Case-study prose for a job worth writing up |
+| | \`projects[].completedYear\`, \`locationLabel\`, \`featured\` | |
+| \`media-inventory.json\` | \`assets[].sourceAssetId\` | Required for \`AI_ENHANCED\` and \`AI_RECOMPOSED\` |
+| \`sale-handoff.json\` | \`notes\`, \`domain.registrar\` | |
+
 ## Commands
 
     pnpm tradie check     --workspace <this directory>
@@ -75,7 +97,7 @@ function saleHandoff(clientId, businessName) {
     soldOn: "",
     soldBy: "",
     approvalAuthority: { name: "", role: "", email: "" },
-    contacts: [{ name: "", role: "", email: "", phone: "" }],
+    contacts: [{ name: "", role: "", email: "" }],
     includedPages: ["HOME", "SERVICES_INDEX", "SERVICE_DETAIL", "ABOUT", "CONTACT"],
     includedCapabilities: ["CONTACT_FORM"],
     exclusions: [],
@@ -130,7 +152,6 @@ function clientIntake(clientId, businessName) {
     clientId,
     collectedOn: "",
     businessName,
-    tagline: "",
     story: "",
     serviceGroups: [],
     services: [
@@ -138,7 +159,6 @@ function clientIntake(clientId, businessName) {
         serviceId: "",
         title: "",
         summary: "",
-        narrative: "",
         featured: false,
         suitedTo: [],
         covers: [],
@@ -160,7 +180,6 @@ function clientIntake(clientId, businessName) {
     commercial: [],
     contact: {
       enquiryEmail: "",
-      phone: "",
       quoteModel: "SITE_VISIT_THEN_QUOTE",
       emergencyAvailable: false,
     },

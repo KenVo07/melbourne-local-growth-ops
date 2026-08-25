@@ -16,8 +16,10 @@ business-specific inputs  →  reusable delivery process  →  bespoke client ex
 
 | If you are… | Read |
 |---|---|
+| **Delivering a Tradie client** | [tradies-delivery-runbook.md](tradies-delivery-runbook.md) |
+| **Asking what a Tradies site can say** | [tradies-profile-v1.md](tradies-profile-v1.md) |
 | Running a premium delivery | [premium-happy-path.md](premium-happy-path.md) |
-| Starting the next client's workflow | [tradies-workflow-v1-contract.md](tradies-workflow-v1-contract.md) |
+| Reading what the V1 workflow inherited | [tradies-workflow-v1-contract.md](tradies-workflow-v1-contract.md) |
 | Deciding where a mechanic belongs | [interaction-taxonomy.md](interaction-taxonomy.md) |
 | Deciding whether to promote something | [promotion-ladder.md](promotion-ladder.md) |
 | Looking for a proven mechanic to copy | [pattern-catalogue.md](pattern-catalogue.md) |
@@ -28,18 +30,26 @@ business-specific inputs  →  reusable delivery process  →  bespoke client ex
 | Checking what was and was not promoted | [disposition.md](disposition.md) |
 | Understanding design → code authority | [../creative/authority-model.md](../creative/authority-model.md) |
 
-## Open design studies
+## The three design studies — closed
 
-Three problems this consolidation deliberately did **not** solve, each with a brief
-stating the problem, inputs, scalability ranges, accessibility and mobile
-requirements, truth constraints, and the questions a design study must answer:
+The post-Stone consolidation deliberately left three problems unsolved rather than
+invent a layout from one client's evidence. Tradies Profile V1 answered all three,
+and each brief now carries its resolution at the top:
 
-- [A — high-cardinality project archive](design-briefs/high-cardinality-projects.md)
-- [B — high-cardinality service architecture](design-briefs/large-service-architecture.md)
-- [C — visual and mega navigation](design-briefs/visual-navigation.md)
+- [A — high-cardinality project archive](design-briefs/high-cardinality-projects.md) — **resolved**
+- [B — high-cardinality service architecture](design-briefs/large-service-architecture.md) — **resolved**
+- [C — visual and mega navigation](design-briefs/visual-navigation.md) — **resolved**
 
-No layouts were invented for these. Inventing one from a single client's evidence is
-how a Factory acquires a default nobody chose.
+Every one turned out to be an *architectural* question rather than an aesthetic
+one — where the second level lives, whether a filter is a URL, whether a group is
+a page — and each answer is implemented, rendered and tested against a second
+client context. See [tradies-profile-v1.md](tradies-profile-v1.md).
+
+What is still deliberately not invented is the **visual** refinement: the panel's
+composition and the archive cell's typography. That belongs to a real client's
+creative direction, where it will have that client's material to work with.
+Inventing it now from a synthetic fixture is how a Factory acquires a default
+nobody chose.
 
 ## What is runtime, and what is not
 

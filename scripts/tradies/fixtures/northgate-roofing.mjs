@@ -24,7 +24,7 @@
 
 const SUBURBS = [
   "Northcote", "Preston", "Thornbury", "Reservoir", "Coburg",
-  "Brunswick West", "Pascoe Vale", "Fairfield", "Alphington", "Ivanhoe East",
+  "Brunswick West", "Pascoe Vale", "Fairfield", "Alphington", "Strathmore",
   "Heidelberg", "Rosanna", "Macleod", "Bundoora", "Fawkner",
 ];
 
@@ -296,7 +296,7 @@ const AUTHORED_PROJECTS = [
     outcome: "One flashing replaced. The stain has not returned in two winters." },
   { projectId: "fairfield-tile-rebed", title: "Fairfield ridge re-bed", serviceIds: ["tile-roofing"], suburb: "Fairfield", year: 2024,
     summary: "Ridge and hip re-bedding on a 1960s concrete tile roof shedding mortar into the gutters." },
-  { projectId: "ivanhoe-copper-planters", title: "Ivanhoe copper planter linings", serviceIds: ["architectural-metal"], suburb: "Ivanhoe East", year: 2023,
+  { projectId: "strathmore-copper-planters", title: "Strathmore copper planter linings", serviceIds: ["architectural-metal"], suburb: "Strathmore", year: 2023,
     summary: "Six copper planter linings, folded and soldered, to a landscape architect's section." },
   { projectId: "reservoir-storm-response", title: "Reservoir storm make-safe", serviceIds: ["storm-response", "roof-replacement"], suburb: "Reservoir", year: 2023,
     summary: "Overnight make-safe after wind lifted eleven sheets, followed by a full replacement once the insurer settled." },
@@ -374,7 +374,7 @@ const MEDIA_ASSETS = [
   ]),
   /* Two of the remaining authored jobs have exactly one usable frame each. */
   jobAsset("fairfield-tile-rebed", "01", { audit: "RECOVERY_GRADE", width: 3024, height: 4032 }),
-  jobAsset("ivanhoe-copper-planters", "01"),
+  jobAsset("strathmore-copper-planters", "01"),
 
   /* A real asset improved, and the asset it came from — the pair the contract requires. */
   asset({
@@ -507,7 +507,7 @@ export const clientIntake = Object.freeze({
     "Northgate started in 2009 as two roof plumbers working out of a van in Preston. The metalwork came later, when an architect asked for a folded screen nobody else would quote, and it is now about a third of what the business does. There are eleven people, one workshop, and a rule that nothing leaves the shop that has not been fitted to a real measurement.",
   services: SERVICES,
   serviceGroups: SERVICE_GROUPS,
-  serviceAreas: ["Melbourne's inner north", "Northcote", "Preston", "Thornbury", "Coburg", "Brunswick", "Ivanhoe", "Heidelberg"],
+  serviceAreas: ["Melbourne's inner north", "Northcote", "Preston", "Thornbury", "Coburg", "Brunswick", "Strathmore", "Heidelberg"],
   process: [
     { title: "We get on the roof", description: "Nothing is quoted from the ground or from a photograph. We inspect, and we photograph what we find." },
     { title: "Written quote against a fixed scope", description: "You get the scope, the exclusions and the price in writing. Variations are agreed before they happen." },

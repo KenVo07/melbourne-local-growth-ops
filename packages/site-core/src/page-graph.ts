@@ -142,7 +142,20 @@ export const WebsiteNavigationItemSchema = z.strictObject({
 export const WebsitePageGraphSchema = z.strictObject({
   schemaVersion: z.literal(1),
   homePageId: boundedId,
-  pages: z.array(WebsitePageDefinitionSchema).min(1).max(128),
+  /*
+   * 256, because 128 contradicted a cap that already existed.
+   *
+   * A project collection may hold 250 records, and the v2 cross-validator
+   * requires every published project to have exactly one PROJECT_DETAIL page.
+   * Those three facts together put the real project ceiling at roughly 120 —
+   * not 250 — and the failure surfaced as "pages: too big" at assembly rather
+   * than as anything a reader of the project contract could have predicted.
+   *
+   * A trade business with a hundred recorded jobs and forty services is at the
+   * edge of plausible rather than past it, and a static page costs a build a
+   * few milliseconds. Two caps that disagree cost more than that.
+   */
+  pages: z.array(WebsitePageDefinitionSchema).min(1).max(256),
   navigation: z.strictObject({
     primary: z.array(WebsiteNavigationItemSchema).min(1).max(12),
     utility: z.array(WebsiteNavigationItemSchema).max(12).default([]),

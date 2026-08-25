@@ -1,5 +1,27 @@
 # Design brief A — high-cardinality project archive
 
+> **RESOLVED — Tradies Profile V1.** See
+> [tradies-profile-v1.md §4–5](../tradies-profile-v1.md). Implemented and
+> rendered at 25 published records; the questions are answered below.
+>
+> 1. **Threshold** — 12 / 25, a Platform decision stated once in
+>    `collection-scale.ts`, not a client one.
+> 2. **Categories** — derived from `serviceIds`, `locationLabel` and
+>    `completedYear`. No declared vocabulary; a business asked to invent a
+>    taxonomy invents one that duplicates its service list and drifts.
+> 3. **Filtered view** — client state, not a URL. Every record ships in the HTML
+>    regardless, so the retrieval problem is attention rather than bytes and a
+>    route per facet would only add thin pages.
+> 4. **One route**, not pages.
+> 5. **Empty results are impossible by construction** — a facet with no records
+>    is never offered, and each label carries its own count.
+> 6. **Curated survives**, authored via `featured` — not recency.
+> 7. **Retrieval** — progressive reveal in CSS, applying only while nothing is
+>    narrowing the set. No pagination, no virtualisation, no script.
+>
+> Known limit: with no script nothing announces a changed result count, so each
+> facet label carries its count and the reader knows the size before choosing.
+
 For the Tradies workflow's targeted design phase. **A brief, not a design.** Do not
 implement a layout from this document; answer its questions in a design study
 first.

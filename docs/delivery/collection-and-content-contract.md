@@ -1,5 +1,10 @@
 # Collection and content contract
 
+> **Implemented in Tradies Profile V1.** The distinctions below are now carried
+> by the schema and by `collection-scale.ts`; the architecture that honours them
+> is in [tradies-profile-v1.md](tradies-profile-v1.md). This document remains the
+> statement of *why* the distinctions exist.
+
 What Stone & Line proved about projects and services, frozen as requirements. This
 is **not** the design of the future archive — that is a
 [design brief](design-briefs/high-cardinality-projects.md). It is the set of
