@@ -293,7 +293,14 @@ ${
   scale.projects.filtering
     ? `
         {facets.length < 2 ? null : (
-          <form className="${ns}-archive-filter">
+          <div className="${ns}-archive-filter">
+            {/*
+              A fieldset rather than a form: nothing is submitted, and the
+              client experience source policy refuses a raw <form> so route and
+              markup validation cannot be bypassed. The grouping and the legend
+              are what a screen reader needs; the form element was never doing
+              anything.
+            */}
             <fieldset>
               <legend className="${ns}-visually-hidden">Narrow by service</legend>
               <div className="${ns}-facets">
@@ -320,7 +327,7 @@ ${
                 ))}
               </div>
             </fieldset>
-          </form>
+          </div>
         )}
 `
     : ""

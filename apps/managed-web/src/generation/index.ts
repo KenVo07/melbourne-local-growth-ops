@@ -35,4 +35,8 @@ export type {
   InspectedClientExperienceSource,
 } from "./client-experience-source-policy";
 export { approvedClientExperienceDependencies } from "./approved-client-dependencies";
-export { validateClientExperienceManifest } from "@melbourne-local-growth-ops/site-core";
+export {
+  validateClientExperienceManifest,
+  validateWebsiteProfileContent,
+  validateWebsiteV2Model,
+} from "@melbourne-local-growth-ops/site-core";

@@ -27,6 +27,8 @@
     "governance:notices": "node scripts/governance/generate-notice.mjs --write",
     "governance:secrets": "node scripts/governance/check-secrets.mjs",
     "test": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run test",
+    "tradie": "tsx scripts/tradies/cli.ts",
+    "tradie:test": "node --test scripts/tradies/tradies-core.test.mjs && tsx --test scripts/tradies/tradies-workflow.test.ts",
     "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run typecheck"
   },
   "devDependencies": {

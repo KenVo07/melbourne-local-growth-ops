@@ -75,10 +75,10 @@ Both are fixed in this milestone.
 | 0 reconstruction | COMPLETE |
 | A semantics (service decision, groups, projects) | COMPLETE |
 | B collection scale + navigation | COMPLETE (policy); nav *schema* deferred to Phase E decision |
-| C delivery intake contracts | PENDING |
-| D starter cardinality + media reality | PENDING |
-| E operator command surface | PENDING |
-| F second-context fixture + generalisation proof | PENDING |
+| C delivery intake contracts | COMPLETE |
+| D starter cardinality + media reality | COMPLETE |
+| E operator command surface | COMPLETE |
+| F second-context fixture + generalisation proof | COMPLETE (built and rendered) |
 | G docs + first-client start here | PENDING |
 | H regression, clean-room, adversarial, red team | PENDING |
 | I review package | PENDING |
@@ -138,7 +138,67 @@ alignment test still holds. Two site-core tests updated for the widened output t
 
 | | |
 |---|---|
-| (pending) | Phase A + B |
+| `e5c75e1` | `feat(tradies): say what a service covers, and where it stops` |
+| `f114aa0` | `fix(starter): a service without a photograph is still a service` |
+| (pending) | delivery workflow + operator commands |
+
+## Phase C–F — what was implemented
+
+`scripts/tradies/` — delivery-time tooling, dependency-free, `node --test`-able.
+Deliberately **not** in `packages/contracts`: that package's `dist` is vendored
+wholesale into every client artifact, so a module added there ships to every
+website whether or not anything imports it.
+
+- `intake-contracts.mjs` — five records (`sale-handoff`, `business-read`,
+  `client-intake`, `media-inventory`, `creative-configuration`), a closed refusal
+  vocabulary, and the three cross-field media invariants:
+  `PROVENANCE_CLAIM_CAPABILITY` (an asset may not substantiate a claim its
+  provenance cannot carry), `LANE_PROVENANCE`, and a derived asset must name its
+  real source. Non-human approvers refused at both approval points.
+- `delivery-core.mjs` — `readinessReport` (gaps carry an **owner**),
+  `deriveShotList` (derived from the site being built, not a universal
+  checklist), `recommendCreativeConfiguration` (media reality decides image
+  treatment), `composeDefinition` (→ one validated definition + a truth ledger).
+- `brief-template.mjs` — derives every design decision and all navigational
+  chrome from the approved creative configuration; leaves 8 genuinely editorial
+  fields as `TODO —`, which `tradie p1` refuses.
+- `scaffold.mjs` — the blank workspace, with a README that says who answers what.
+- `cli.ts` — `pnpm tradie start|check|recommend|shotlist|compose|p1|demo`.
+- `fixtures/northgate-roofing.mjs` — the second-context fixture.
+
+Definition validation at compose time runs the Factory's own
+`validateWebsiteProfileContent` + `validateWebsiteV2Model`, reached through the
+documented re-export in `apps/managed-web/src/generation/index.ts`.
+
+### Generalisation proof — executed, not asserted
+
+Northgate Roofing & Metal: 10 services in 3 groups, 34 job records, 41 assets of
+mixed grade and five provenances.
+
+| Step | Result |
+|---|---|
+| all five records validate | PASS |
+| `tradie check` | INPUTS READY, 1 agency gap (an unsighted credential) |
+| `tradie shotlist` | 34 requirements, 39 frames, each naming what it would prove |
+| `tradie compose` | 40 pages, 25 published projects, 34 assets, 46 ledger entries, 10 honest warnings |
+| Factory v2 cross-validation | PASS |
+| `tradie p1` | 16 files, 4,728 lines |
+| `assemble:client` | PASS |
+| artifact `pnpm typecheck` | PASS |
+| artifact `pnpm build` | **43 static pages** |
+| rendered archive | 25 rows, 11 facet controls, show-all, one `<legend>`, no client `<form>` |
+| rendered services index | 3 group headings, 10 service links |
+| rendered service detail | 7 decision panels, 4 answered pairs, stages, 5 evidence links |
+| thin services | **5 panels, not 7** — 0 "not stated", 0 TODO |
+
+### Defect this proof caught
+
+The archive filter was emitted inside a raw `<form>`. The client experience
+source policy refuses `<form>` (`UNSAFE_MARKUP_FORBIDDEN`) so route and markup
+validation cannot be bypassed. Nothing was being submitted — the form was
+decorative. Replaced with `fieldset`/`legend`, which is what a screen reader
+needed anyway. **This is the value of building the second context rather than
+reasoning about it.**
 
 ## Exact next action
 
