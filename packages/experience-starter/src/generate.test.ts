@@ -302,12 +302,12 @@ describe("refusals", () => {
     expect(() => generate(brief)).toThrow(/does not declare: invented-service/);
   });
 
-  it("refuses to leave a service detail route without narrative", () => {
+  it("refuses a service detail route for a service with nothing to say", () => {
     const brief = {
       ...quietBrief,
       serviceNarratives: [quietBrief.serviceNarratives[0]],
     };
-    expect(() => generate(brief)).toThrow(/Missing: second-service/);
+    expect(() => generate(brief)).toThrow(/Silent services: second-service/);
   });
 
   it("refuses a ground the configured brand surface cannot live on", () => {

@@ -311,11 +311,25 @@ export const StarterCopySchema = z.strictObject({
   notFoundBody: longText,
 });
 
+/**
+ * Optional per-service editorial the client definition does not carry.
+ *
+ * `media` is optional, and that is the whole point of this shape. A trade
+ * business with eleven services will not have eleven publishable photographs,
+ * and requiring one per service made a client's *media reality* a hard blocker
+ * on generation — a site that could not be built because a photographer had not
+ * been booked. A service with no photograph now renders without one.
+ *
+ * `questions` is optional for the same reason it is optional in the definition:
+ * where the client definition carries `decision.questions`, restating them here
+ * is a second copy of the same truth, and the second copy is the one that goes
+ * stale.
+ */
 export const StarterServiceNarrativeSchema = z.strictObject({
   serviceId: identifier,
   body: longText,
-  questions: z.array(shortText).min(1).max(6),
-  media: StarterMediaPlacementSchema,
+  questions: z.array(shortText).max(6).default([]),
+  media: StarterMediaPlacementSchema.optional(),
 });
 
 export const StarterBriefSchema = z.strictObject({
@@ -348,7 +362,14 @@ export const StarterBriefSchema = z.strictObject({
     homeSecondary: StarterMediaPlacementSchema.optional(),
     about: StarterMediaPlacementSchema,
   }),
-  serviceNarratives: z.array(StarterServiceNarrativeSchema).min(1).max(24),
+  /**
+   * Optional, and capped at the profile's own service ceiling rather than at
+   * 24. A client whose definition carries `narrative` and `decision` for every
+   * service needs no entry here at all; the generator reads the definition
+   * first and treats this as the place for editorial the definition has nowhere
+   * to hold.
+   */
+  serviceNarratives: z.array(StarterServiceNarrativeSchema).max(100).default([]),
   /**
    * Optional override of the ground's derived neutral scale. Present so an
    * operator can pin a considered value; absent, the generator derives one and

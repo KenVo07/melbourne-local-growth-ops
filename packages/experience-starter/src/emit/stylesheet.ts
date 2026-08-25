@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../decisions.js";
+import type { ClientScale } from "../scale.js";
 import type { InteractionPlan } from "../interaction-decisions.js";
 import {
   disclosureStyles,
@@ -33,6 +34,7 @@ import {
 export function emitStylesheet(
   design: ResolvedDesign,
   plan: InteractionPlan,
+  scale: ClientScale,
 ): string {
   const sections = [
     header(design),
@@ -48,6 +50,7 @@ export function emitStylesheet(
     servicesGrammar(design),
     serviceDetailGrammar(design),
     projectsGrammar(design),
+    scale.projects.archive ? archiveGrammar(design, scale) : "",
     projectDetailGrammar(design),
     aboutGrammar(design),
     contactGrammar(design),
@@ -999,12 +1002,106 @@ function servicesGrammar(design: ResolvedDesign): string {
   color: var(--ink-muted);
   max-width: var(--measure);
 }
+
+.${ns}-service-group {
+  padding-top: calc(var(--unit) * 6);
+  margin-bottom: calc(var(--unit) * 2);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: var(--stack);
+}
+
+.${ns}-service-group:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.${ns}-group-title {
+  font-size: ${type.sectionTitle};
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: var(--display-leading);
+}
+
+.${ns}-service-group p {
+  font-size: ${type.body};
+  line-height: 1.6;
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
 `;
 }
 
 function serviceDetailGrammar(design: ResolvedDesign): string {
   const { ns, type, media, brief } = design;
   const shared = `
+.${ns}-decision {
+  display: grid;
+  gap: calc(var(--unit) * 5);
+}
+
+.${ns}-decision-heading {
+  font-size: ${type.itemTitle};
+  font-weight: var(--display-weight);
+  line-height: 1.2;
+  margin-bottom: var(--stack);
+}
+
+.${ns}-decision ul,
+.${ns}-decision ol {
+  display: grid;
+  gap: calc(var(--unit) * 1.5);
+  max-width: var(--measure);
+}
+
+.${ns}-decision li {
+  font-size: ${type.body};
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+.${ns}-stages li {
+  display: grid;
+  gap: calc(var(--unit) * 0.5);
+  padding-block: calc(var(--unit) * 2);
+  border-top: 1px solid var(--rule-soft);
+}
+
+.${ns}-stages li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.${ns}-stages strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.${ns}-answered > div {
+  padding-block: calc(var(--unit) * 2.5);
+  border-top: 1px solid var(--rule-soft);
+  max-width: var(--measure);
+}
+
+.${ns}-answered > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.${ns}-answered dt {
+  font-size: ${type.body};
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.${ns}-answered dd {
+  margin: 0;
+  margin-top: calc(var(--unit) * 0.75);
+  font-size: ${type.body};
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
 .${ns}-questions li {
   padding-block: calc(var(--unit) * 2.5);
   border-top: 1px solid var(--rule-soft);
@@ -1094,6 +1191,171 @@ ${shared}`;
   gap: var(--stack-loose);
 }
 ${shared}`;
+}
+
+/**
+ * The browsable archive, and the filter that narrows it.
+ *
+ * Every rule here only ever *hides*. The two hiding mechanisms are kept apart on
+ * purpose: the facet rules apply whatever is selected, and the reading budget
+ * applies only while "all work" is selected — so a narrowed set is always shown
+ * in full and the two can never fight over one row.
+ *
+ * One rule per declared service, emitted from the client's own stable service
+ * IDs. CSS cannot compare a control's value to an element's attribute, so the
+ * correspondence has to be written out; the alternative is a script, and a
+ * script here would buy nothing a reader can see.
+ */
+function archiveGrammar(design: ResolvedDesign, scale: ClientScale): string {
+  const { ns, type } = design;
+  const facetRules = scale.serviceIds
+    .map(
+      (serviceId) => `.${ns}-archive-scope:has([data-facet="${serviceId}"]:checked) .${ns}-archive > li:not([data-services~="${serviceId}"]) {
+  display: none;
+}`,
+    )
+    .join("\n\n");
+  const budgetRule =
+    scale.archiveBudget === 0
+      ? ""
+      : `
+/* The reading budget, and only while nothing is narrowing the set. */
+.${ns}-archive-scope:has([data-facet="all"]:checked):not(:has(#archive-show-all:checked))
+  .${ns}-archive > li:nth-child(n + ${scale.archiveBudget + 1}) {
+  display: none;
+}
+
+.${ns}-archive-scope:has(#archive-show-all:checked) .${ns}-archive-more {
+  display: none;
+}
+`;
+
+  return `
+/* --------------------------------------------------------------- archive */
+
+.${ns}-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.${ns}-archive-scope {
+  margin-top: calc(var(--unit) * 12);
+  padding-top: calc(var(--unit) * 8);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: calc(var(--unit) * 4);
+}
+
+.${ns}-archive-head {
+  display: grid;
+  gap: var(--stack-tight);
+}
+
+.${ns}-archive-filter fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.${ns}-facets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 1.5);
+}
+
+/* The control stays in the accessibility tree and stays focusable; the label
+   beside it is what a pointer sees. Never \`display: none\` on the input. */
+.${ns}-facets input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.${ns}-facets label {
+  display: inline-block;
+  padding: calc(var(--unit) * 1.25) calc(var(--unit) * 2.5);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: ${type.small};
+  line-height: 1.2;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.${ns}-facets input:checked + label {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.${ns}-facets input:focus-visible + label {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.${ns}-archive {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.${ns}-archive > li {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.${ns}-archive > li:first-child {
+  border-top: 1px solid var(--rule);
+}
+
+.${ns}-archive a {
+  display: block;
+  padding-block: calc(var(--unit) * 2.5);
+}
+
+.${ns}-archive-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: calc(var(--unit) * 2);
+  align-items: baseline;
+}
+
+.${ns}-archive-title {
+  font-size: ${type.body};
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.${ns}-archive-more input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.${ns}-archive-more label {
+  display: inline-block;
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 3);
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: ${type.small};
+  cursor: pointer;
+}
+
+.${ns}-archive-more input:focus-visible + label {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+${facetRules}
+${budgetRule}`;
 }
 
 function projectsGrammar(design: ResolvedDesign): string {

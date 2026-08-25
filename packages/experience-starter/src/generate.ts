@@ -23,6 +23,7 @@ import {
   planInteractions,
   type InteractionPlan,
 } from "./interaction-decisions.js";
+import { readClientScale } from "./scale.js";
 
 /**
  * The P1 Experience Starter.
@@ -80,7 +81,14 @@ interface DefinitionFacts {
   readonly surfaceColour: string;
   readonly routeIds: readonly string[];
   readonly serviceIds: readonly string[];
+  /**
+   * Services whose definition already answers at least one of the customer's
+   * decision questions. A service in this set needs nothing from the brief.
+   */
+  readonly servicesWithDecisionTruth: ReadonlySet<string>;
   readonly assetIds: ReadonlySet<string>;
+  readonly projectCount: number;
+  readonly featuredProjectCount: number;
   /** The client's validated profile sections, in authored order. */
   readonly sections: readonly { readonly type?: unknown }[];
 }
@@ -120,6 +128,17 @@ export function generateExperienceStarter(
     sections: facts.sections,
   });
 
+  /*
+   * What this client's counts mean for composition, decided once by site-core's
+   * collection policy so the routes and the stylesheet cannot disagree about
+   * where an archive begins.
+   */
+  const scale = readClientScale({
+    serviceIds: facts.serviceIds,
+    projectCount: facts.projectCount,
+    featuredProjectCount: facts.featuredProjectCount,
+  });
+
   const files: GeneratedExperienceFile[] = [
     file("manifest.json", emitManifest(design, facts.routeIds, plan)),
     file("design-dna.json", emitDesignDna(design)),
@@ -127,7 +146,7 @@ export function generateExperienceStarter(
     file("content/site-content.ts", emitSiteContent(brief)),
     file("components/Shell.tsx", emitShell(design, plan)),
     file("components/Pieces.tsx", emitPieces(design, plan)),
-    file("styles/site.css", emitStylesheet(design, plan)),
+    file("styles/site.css", emitStylesheet(design, plan, scale)),
   ];
 
   if (facts.routeIds.includes("home")) {
@@ -143,7 +162,9 @@ export function generateExperienceStarter(
     facts.routeIds.includes("projects-index") ||
     facts.routeIds.includes("project-detail")
   ) {
-    files.push(file("routes/ProjectsRoutes.tsx", emitProjectsRoutes(design, plan)));
+    files.push(
+      file("routes/ProjectsRoutes.tsx", emitProjectsRoutes(design, plan, scale)),
+    );
   }
   // Always emitted: it carries the not-found route, which every experience uses.
   files.push(
@@ -205,6 +226,7 @@ function readDefinition(definition: unknown): DefinitionFacts {
       sections?: readonly { type?: unknown; items?: readonly unknown[] }[];
     };
     pageGraph?: { pages?: readonly { experienceRouteId?: unknown }[] };
+    projects?: { projects?: readonly { featured?: unknown }[] };
     assets?: readonly { assetId?: unknown }[];
   };
   if (root?.schemaVersion !== 2) {
@@ -239,11 +261,22 @@ function readDefinition(definition: unknown): DefinitionFacts {
       { unknownRouteIds: unknown },
     );
   }
-  const serviceIds = (root.profile?.sections ?? [])
+  const serviceItems = (root.profile?.sections ?? [])
     .filter((section) => section.type === "SERVICES")
-    .flatMap((section) => section.items ?? [])
-    .map((item) => (item as { serviceId?: unknown }).serviceId)
+    .flatMap((section) => section.items ?? []) as readonly {
+    serviceId?: unknown;
+    narrative?: unknown;
+    decision?: Readonly<Record<string, unknown>>;
+  }[];
+  const serviceIds = serviceItems
+    .map((item) => item.serviceId)
     .filter((value): value is string => typeof value === "string");
+  const servicesWithDecisionTruth = new Set(
+    serviceItems
+      .filter((item) => carriesDecisionTruth(item))
+      .map((item) => item.serviceId)
+      .filter((value): value is string => typeof value === "string"),
+  );
   const assetIds = new Set(
     (root.assets ?? [])
       .map(({ assetId }) => assetId)
@@ -254,9 +287,32 @@ function readDefinition(definition: unknown): DefinitionFacts {
     surfaceColour,
     routeIds: Object.freeze(routeIds),
     serviceIds: Object.freeze(serviceIds),
+    servicesWithDecisionTruth,
     assetIds,
+    projectCount: (root.projects?.projects ?? []).length,
+    featuredProjectCount: (root.projects?.projects ?? []).filter(
+      ({ featured }) => featured === true,
+    ).length,
     sections: Object.freeze(root.profile?.sections ?? []),
   });
+}
+
+/**
+ * Whether a service's own definition answers any of the customer's decision
+ * questions. One answer is enough to make a route worth rendering; the page
+ * shows what exists and omits the rest.
+ */
+function carriesDecisionTruth(item: {
+  narrative?: unknown;
+  decision?: Readonly<Record<string, unknown>>;
+}): boolean {
+  if (typeof item.narrative === "string" && item.narrative.trim() !== "") return true;
+  const decision = item.decision;
+  if (decision === undefined || decision === null) return false;
+  for (const value of Object.values(decision)) {
+    if (Array.isArray(value) && value.length > 0) return true;
+  }
+  return false;
 }
 
 /**
@@ -276,7 +332,9 @@ function assertBriefMatchesClient(
     ...(brief.mediaPlan.homeSecondary === undefined
       ? []
       : [brief.mediaPlan.homeSecondary.assetId]),
-    ...brief.serviceNarratives.map(({ media }) => media.assetId),
+    ...brief.serviceNarratives
+      .map(({ media }) => media?.assetId)
+      .filter((assetId): assetId is string => assetId !== undefined),
   ];
   const missingAssets = [
     ...new Set(referenced.filter((assetId) => !facts.assetIds.has(assetId))),
@@ -300,17 +358,34 @@ function assertBriefMatchesClient(
     );
   }
 
+  /*
+   * A service that has a route needs something to say on it — but not a
+   * photograph, and not necessarily a brief entry.
+   *
+   * The rule this replaces required narrative *and* a photograph for every
+   * routed service, which made a client's media reality a hard blocker on
+   * generating anything at all: a business with eleven services and eight
+   * usable photographs could not produce a P1 site. It also put the answers a
+   * customer needs inside the creative brief, so business truth was entered
+   * twice and the two copies drifted.
+   *
+   * A service now earns its route from the definition — `narrative`, or any of
+   * the decision lists — and the brief is where editorial goes that the
+   * definition has nowhere to hold. Only a service that can say *nothing* is
+   * refused, and the message names it.
+   */
   if (facts.routeIds.includes("service-detail")) {
-    const covered = new Set(
+    const briefed = new Set(
       brief.serviceNarratives.map(({ serviceId }) => serviceId),
     );
-    const uncovered = facts.serviceIds.filter(
-      (serviceId) => !covered.has(serviceId),
+    const silent = facts.serviceIds.filter(
+      (serviceId) =>
+        !briefed.has(serviceId) && !facts.servicesWithDecisionTruth.has(serviceId),
     );
-    if (uncovered.length > 0) {
+    if (silent.length > 0) {
       throw new StarterGenerationError(
-        `Every service with a detail route needs narrative and a photograph. Missing: ${uncovered.join(", ")}.`,
-        { uncovered },
+        `A service with a detail route must have something to say on it: narrative or decision content in the client definition, or an entry in the brief. Silent services: ${silent.join(", ")}.`,
+        { silent },
       );
     }
   }

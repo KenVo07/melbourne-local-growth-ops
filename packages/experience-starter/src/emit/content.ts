@@ -46,7 +46,11 @@ export const SITE_MEDIA = {
 export interface ServiceNarrative {
   readonly body: string;
   readonly questions: readonly string[];
-  readonly photograph: SitePhotograph;
+  /**
+   * Optional. A business with more services than publishable photographs is
+   * the ordinary case, and a service without one renders without one.
+   */
+  readonly photograph?: SitePhotograph | undefined;
 }
 
 export const SERVICE_NARRATIVE: Record<string, ServiceNarrative | undefined> = {
@@ -56,8 +60,12 @@ ${serviceNarratives
     body: ${quote(narrative.body)},
     questions: [
 ${narrative.questions.map((question) => `      ${quote(question)},`).join("\n")}
-    ],
-    photograph: ${photograph(narrative.media, 4)},
+    ],${
+      narrative.media === undefined
+        ? ""
+        : `
+    photograph: ${photograph(narrative.media, 4)},`
+    }
   },`,
   )
   .join("\n")}

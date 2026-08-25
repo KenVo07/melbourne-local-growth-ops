@@ -83,8 +83,24 @@ const INITIAL_ARCHIVE_COUNT = 12;
 export function resolveProjectPresentation(
   collection: WebsiteProjectCollection,
 ): ProjectPresentationPlan {
-  const total = collection.projects.length;
-  const curatedCount = featuredProjects(collection).length;
+  return resolveProjectPresentationFromCounts(
+    collection.projects.length,
+    featuredProjects(collection).length,
+  );
+}
+
+/**
+ * The same decision from raw counts.
+ *
+ * Exists because the P1 source generator reads an unvalidated definition and
+ * holds counts rather than a validated collection, and the one thing that must
+ * not happen is the generator inventing its own threshold. One rule, two
+ * callers.
+ */
+export function resolveProjectPresentationFromCounts(
+  total: number,
+  curatedCount: number,
+): ProjectPresentationPlan {
   const mode: ProjectPresentationMode =
     total >= ARCHIVE_FLOOR
       ? "ARCHIVE"

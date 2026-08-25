@@ -167,6 +167,7 @@ export {
   deservesServiceDetailRoute,
   resolveNavigationPlan,
   resolveProjectPresentation,
+  resolveProjectPresentationFromCounts,
   resolveServicePresentation,
   serviceDecisionDepth,
 } from "./collection-scale.js";

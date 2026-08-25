@@ -37,6 +37,7 @@ export function emitServicesRoutes(
   serviceById,
   type ClientExperienceRouteProps,
   type RuntimeProject,
+  type RuntimeServiceItem,
 } from "@proportion/client-experience";
 
 import { RouteShell } from "../components/Shell";
@@ -55,9 +56,38 @@ import { COPY, SERVICE_NARRATIVE } from "../content/site-content";
  */
 export function ServicesIndexRoute(props: ClientExperienceRouteProps) {
   const { media, platform, profile } = props;
-  const services = profile.sections.flatMap((section) =>
-    section.type === "SERVICES" ? section.items : [],
+  const sections = profile.sections.filter(
+    (section) => section.type === "SERVICES",
   );
+  const services = sections.flatMap((section) => section.items);
+  const groups = sections.flatMap((section) => section.groups);
+  /*
+   * A business with a handful of peer services declares no groups and gets one
+   * unheaded run — the flat list it already had. A business that groups its
+   * work gets a real heading level per group, because eleven peers presented
+   * flat is an information-architecture failure no layout repairs.
+   */
+  const runs =
+    groups.length === 0
+      ? [{ key: "all", title: undefined, description: undefined, services }]
+      : [
+          ...groups.map((group) => ({
+            key: group.groupId,
+            title: group.title,
+            description: group.description,
+            services: services.filter((item) => item.groupId === group.groupId),
+          })),
+          ...(services.some((item) => item.groupId === undefined)
+            ? [
+                {
+                  key: "ungrouped",
+                  title: "Also available",
+                  description: undefined,
+                  services: services.filter((item) => item.groupId === undefined),
+                },
+              ]
+            : []),
+        ];
 
   return (
     <RouteShell props={props}>
@@ -97,6 +127,11 @@ export function ServiceDetailRoute(props: ClientExperienceRouteProps) {
     throw new Error(\`Service "\${serviceId}" is not declared by the profile.\`);
   }
   const narrative = SERVICE_NARRATIVE[serviceId];
+  /*
+   * The definition is the business-truth authority, so its narrative wins. The
+   * brief entry is editorial for a service whose definition has none.
+   */
+  const body = service.narrative ?? narrative?.body;
   const evidence = projects.projects.filter((project) =>
     project.serviceIds.includes(serviceId),
   );
@@ -114,21 +149,44 @@ ${brief.composition.serviceDetail === "MEDIA_INTERRUPT" ? mediaInterrupt(design)
   );
 }
 
-/** The questions a customer actually arrives with, and the honest limit. */
+/**
+ * The questions a customer actually arrives with.
+ *
+ * Answered pairs from the client definition come first, because a question with
+ * the business's own answer beside it is worth more than the question alone.
+ * Unanswered prompts from the brief follow, and either list may be empty.
+ */
 function QuestionRail({
+  answered,
   narrative,
   platform,
 }: {
+  readonly answered: readonly { readonly question: string; readonly answer: string }[];
   readonly narrative: { readonly questions: readonly string[] } | undefined;
   readonly platform: ClientExperienceRouteProps["platform"];
 }) {
+  const prompts = narrative?.questions ?? [];
   return (
     <>
-      {narrative === undefined ? null : (
+      {answered.length === 0 ? null : (
         <div>
           <Label>{COPY.questionsEyebrow}</Label>
+          <dl className="${ns}-answered" style={{ marginTop: "var(--stack)" }}>
+            {answered.map((entry) => (
+              <div key={entry.question}>
+                <dt>{entry.question}</dt>
+                <dd>{entry.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
+      {prompts.length === 0 ? null : (
+        <div>
+          {answered.length > 0 ? null : <Label>{COPY.questionsEyebrow}</Label>}
           <ul className="${ns}-questions" style={{ marginTop: "var(--stack)" }}>
-            {narrative.questions.map((question) => (
+            {prompts.map((question) => (
               <li key={question}>{question}</li>
             ))}
           </ul>
@@ -145,6 +203,86 @@ function QuestionRail({
         </p>
       </div>
     </>
+  );
+}
+
+/**
+ * What the service covers, where it stops, and what the customer has to do.
+ *
+ * Every panel renders only if the client definition carries truth for it, so a
+ * business that has answered four of these questions shows four panels rather
+ * than nine headings over "not stated". Nothing here invents a boundary, a
+ * price or a stage.
+ */
+function Decision({
+  service,
+}: {
+  readonly service: RuntimeServiceItem;
+}) {
+  const decision = service.decision;
+  if (decision === undefined) return null;
+  const lists: readonly (readonly [string, readonly string[]])[] = [
+    ["Best suited to", decision.suitedTo],
+    ["What this covers", decision.covers],
+    ["What this does not cover", decision.excludes],
+    ["When to call us", decision.whenToCall],
+    ["What we need from you", decision.customerProvides],
+  ];
+  const shown = lists.filter(([, items]) => items.length > 0);
+  if (
+    shown.length === 0 &&
+    decision.stages.length === 0 &&
+    decision.commercial.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="${ns}-decision">
+      {shown.map(([heading, items]) => (
+        <section key={heading}>
+          <h2 className="${ns}-decision-heading">{heading}</h2>
+          <ul>
+            {items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      {decision.stages.length === 0 ? null : (
+        <section>
+          <h2 className="${ns}-decision-heading">How the job runs</h2>
+          <ol className="${ns}-stages">
+            {decision.stages.map((stage) => (
+              <li key={stage.title}>
+                <strong>{stage.title}</strong>
+                <span>{stage.description}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {decision.commercial.length === 0 ? null : (
+        <section>
+          <h2 className="${ns}-decision-heading">What is known about cost</h2>
+          <dl className="${ns}-answered">
+            {decision.commercial.map((fact) => (
+              <div key={fact.label}>
+                <dt>{fact.label}</dt>
+                <dd>
+                  {fact.value}
+                  {fact.qualifier === undefined ? null : (
+                    <span className="${ns}-meta"> — {fact.qualifier}</span>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -180,8 +318,15 @@ function Evidence({
 
 function alternatingRows(design: ResolvedDesign): string {
   const { ns, breakpoints } = design;
-  return `      <div className="${ns}-shell">
-        {services.map((service, index) => {
+  return `      {runs.map((run) => (
+      <div className="${ns}-shell" key={run.key}>
+        {run.title === undefined ? null : (
+          <div className="${ns}-service-group">
+            <h2 className="${ns}-group-title">{run.title}</h2>
+            {run.description === undefined ? null : <p>{run.description}</p>}
+          </div>
+        )}
+        {run.services.map((service, index) => {
           const narrative =
             service.serviceId === undefined
               ? undefined
@@ -205,7 +350,7 @@ function alternatingRows(design: ResolvedDesign): string {
                 )}
               </div>
               <div className="${ns}-service-media">
-                {narrative === undefined ? null : (
+                {narrative?.photograph === undefined ? null : (
                   <Plate
                     platform={platform}
                     ratio={ratioFor(media, narrative.photograph.assetId, {
@@ -220,13 +365,22 @@ function alternatingRows(design: ResolvedDesign): string {
             </article>
           );
         })}
-      </div>`;
+      </div>
+      ))}`;
 }
 
 function staggeredColumns(design: ResolvedDesign): string {
   const { ns, breakpoints } = design;
-  return `      <div className="${ns}-shell ${ns}-service-grid">
-        {services.map((service, index) => {
+  return `      {runs.map((run) => (
+      <div key={run.key}>
+        {run.title === undefined ? null : (
+          <div className="${ns}-shell ${ns}-service-group">
+            <h2 className="${ns}-group-title">{run.title}</h2>
+            {run.description === undefined ? null : <p>{run.description}</p>}
+          </div>
+        )}
+      <div className="${ns}-shell ${ns}-service-grid">
+        {run.services.map((service, index) => {
           const narrative =
             service.serviceId === undefined
               ? undefined
@@ -236,7 +390,7 @@ function staggeredColumns(design: ResolvedDesign): string {
               className="${ns}-service-card"
               key={service.serviceId ?? service.title}
             >
-              {narrative === undefined ? null : (
+              {narrative?.photograph === undefined ? null : (
                 <Plate
                   platform={platform}
                   ratio={ratioFor(media, narrative.photograph.assetId, {
@@ -260,14 +414,16 @@ function staggeredColumns(design: ResolvedDesign): string {
             </article>
           );
         })}
-      </div>`;
+      </div>
+      </div>
+      ))}`;
 }
 
 function readingColumnRail(design: ResolvedDesign): string {
   const { ns, breakpoints } = design;
   return `      <div className="${ns}-shell ${ns}-detail" data-service-id={serviceId}>
         <div className="${ns}-detail-main">
-          {narrative === undefined ? null : (
+          {narrative?.photograph === undefined ? null : (
             <Plate
               platform={platform}
               ratio={ratioFor(media, narrative.photograph.assetId, {
@@ -278,23 +434,28 @@ function readingColumnRail(design: ResolvedDesign): string {
               sizes="(max-width: ${breakpoints.wide}) 100vw, 58vw"
             />
           )}
-          {narrative === undefined ? null : (
+          {body === undefined ? null : (
             <div className="${ns}-prose">
-              <p>{narrative.body}</p>
+              <p>{body}</p>
             </div>
           )}
+          <Decision service={service} />
           <Evidence evidence={evidence} platform={platform} />
         </div>
 
         <aside className="${ns}-detail-aside">
-          <QuestionRail narrative={narrative} platform={platform} />
+          <QuestionRail
+            answered={service.decision?.questions ?? []}
+            narrative={narrative}
+            platform={platform}
+          />
         </aside>
       </div>`;
 }
 
 function mediaInterrupt(design: ResolvedDesign): string {
   const { ns } = design;
-  return `      {narrative === undefined ? null : (
+  return `      {narrative?.photograph === undefined ? null : (
         <div className="${ns}-shell ${ns}-interrupt">
           <Plate
             platform={platform}
@@ -308,16 +469,21 @@ function mediaInterrupt(design: ResolvedDesign): string {
 
       <div className="${ns}-shell ${ns}-detail-split" data-service-id={serviceId}>
         <div>
-          {narrative === undefined ? null : (
+          {body === undefined ? null : (
             <div className="${ns}-prose">
-              <p>{narrative.body}</p>
+              <p>{body}</p>
             </div>
           )}
+          <Decision service={service} />
           <Evidence evidence={evidence} platform={platform} />
         </div>
 
         <aside className="${ns}-detail-aside">
-          <QuestionRail narrative={narrative} platform={platform} />
+          <QuestionRail
+            answered={service.decision?.questions ?? []}
+            narrative={narrative}
+            platform={platform}
+          />
         </aside>
       </div>`;
 }
