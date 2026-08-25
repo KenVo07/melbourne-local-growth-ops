@@ -62,9 +62,9 @@ try {
   await main();
 } catch (error) {
   if (error instanceof TradiesRefusal) {
-    const meaning = REFUSALS[error.code as keyof typeof REFUSALS] ?? "";
+    const meaning: string | undefined = REFUSALS[error.code as keyof typeof REFUSALS];
     process.stderr.write(
-      `\nREFUSED: ${error.code}\n${meaning === "" ? "" : `${meaning}\n`}\n${error.message}\n\nNothing was written.\n`,
+      `\nREFUSED: ${error.code}\n${meaning === undefined ? "" : `${meaning}\n`}\n${error.message}\n\nNothing was written.\n`,
     );
     process.exitCode = 1;
   } else {
@@ -426,6 +426,7 @@ function parseFlags(argv: readonly string[]): Record<string, string> {
   const values: Record<string, string> = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === undefined) continue;
     if (!token.startsWith("--")) {
       throw refuse("CONTRACT_INVALID", `Unexpected argument "${token}". Named flags only.`);
     }

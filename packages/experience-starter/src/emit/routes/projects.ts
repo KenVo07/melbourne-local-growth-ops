@@ -296,7 +296,7 @@ ${
           <div className="${ns}-archive-filter">
             {/*
               A fieldset rather than a form: nothing is submitted, and the
-              client experience source policy refuses a raw <form> so route and
+              client experience source policy refuses a raw form element so route and
               markup validation cannot be bypassed. The grouping and the legend
               are what a screen reader needs; the form element was never doing
               anything.

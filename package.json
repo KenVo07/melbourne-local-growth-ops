@@ -29,6 +29,7 @@
     "test": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run test",
     "tradie": "tsx scripts/tradies/cli.ts",
     "tradie:test": "node --test scripts/tradies/tradies-core.test.mjs && tsx --test scripts/tradies/tradies-workflow.test.ts",
+    "tradie:typecheck": "tsc --project scripts/tradies/tsconfig.json",
     "typecheck": "pnpm --filter @melbourne-local-growth-ops/contracts build && pnpm --recursive --if-present run typecheck"
   },
   "devDependencies": {
