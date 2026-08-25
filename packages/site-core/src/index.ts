@@ -218,6 +218,7 @@ export {
   WebsitePageMetadataSchema,
   WebsitePageSearchSchema,
   WebsiteRoutePathSchema,
+  childPages,
   navigationHref,
   resolveWebsitePageById,
   resolveWebsitePageByPath,

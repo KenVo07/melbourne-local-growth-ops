@@ -1,4 +1,5 @@
 import type { ResolvedDesign } from "../../decisions.js";
+import type { ClientScale } from "../../scale.js";
 import { reveal, usesArrive } from "./reveal.js";
 import { disclosureFor, foldsAway, type InteractionPlan } from "../../interaction-decisions.js";
 import { quote } from "../content.js";
@@ -16,6 +17,7 @@ import { quote } from "../content.js";
 export function emitAboutContactRoutes(
   design: ResolvedDesign,
   plan: InteractionPlan,
+  scale: ClientScale,
 ): string {
   const { ns, brief } = design;
   /*
@@ -220,7 +222,19 @@ function detailId(title: string): string {
  * Not found. Same chrome, same palette, and a route list rather than a dead end.
  * It is told nothing about the requested path, so a 404 cannot leak the route
  * table.
+ */${
+  scale.expandedNavigation
+    ? `
+
+/*
+ * A 404 carries no record collection, so its navigation offers no work panel.
+ * The page's job is to get a reader back to something real, not to preview
+ * anything.
  */
+const NO_RECORDS = { schemaVersion: 1 as const, projects: [] };
+`
+    : ""
+}
 export function NotFoundRoute({
   site,
   pageGraph,
@@ -230,7 +244,12 @@ export function NotFoundRoute({
     <Shell
       pageGraph={pageGraph}
       platform={platform}
-      profile={{
+${
+  scale.expandedNavigation
+    ? `      projects={NO_RECORDS}
+`
+    : ""
+}      profile={{
         schemaVersion: 1,
         profile: ${quote(design.profile)},
         archetype: "SERVICE_LED",

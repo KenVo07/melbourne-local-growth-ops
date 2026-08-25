@@ -86,6 +86,7 @@ interface DefinitionFacts {
    * decision questions. A service in this set needs nothing from the brief.
    */
   readonly servicesWithDecisionTruth: ReadonlySet<string>;
+  readonly serviceGroupCount: number;
   readonly assetIds: ReadonlySet<string>;
   readonly projectCount: number;
   readonly featuredProjectCount: number;
@@ -135,6 +136,7 @@ export function generateExperienceStarter(
    */
   const scale = readClientScale({
     serviceIds: facts.serviceIds,
+    serviceGroupCount: facts.serviceGroupCount,
     projectCount: facts.projectCount,
     featuredProjectCount: facts.featuredProjectCount,
   });
@@ -144,7 +146,7 @@ export function generateExperienceStarter(
     file("design-dna.json", emitDesignDna(design)),
     file("index.tsx", emitEntrypoint(design, facts.routeIds)),
     file("content/site-content.ts", emitSiteContent(brief)),
-    file("components/Shell.tsx", emitShell(design, plan)),
+    file("components/Shell.tsx", emitShell(design, plan, scale)),
     file("components/Pieces.tsx", emitPieces(design, plan)),
     file("styles/site.css", emitStylesheet(design, plan, scale)),
   ];
@@ -168,7 +170,7 @@ export function generateExperienceStarter(
   }
   // Always emitted: it carries the not-found route, which every experience uses.
   files.push(
-    file("routes/AboutContactRoutes.tsx", emitAboutContactRoutes(design, plan)),
+    file("routes/AboutContactRoutes.tsx", emitAboutContactRoutes(design, plan, scale)),
   );
   /*
    * Interaction helpers. Each is client-local source over native browser APIs,
@@ -223,7 +225,11 @@ function readDefinition(definition: unknown): DefinitionFacts {
     profile?: {
       profile?: unknown;
       brand?: { surfaceColor?: unknown };
-      sections?: readonly { type?: unknown; items?: readonly unknown[] }[];
+      sections?: readonly {
+      type?: unknown;
+      items?: readonly unknown[];
+      groups?: readonly unknown[];
+    }[];
     };
     pageGraph?: { pages?: readonly { experienceRouteId?: unknown }[] };
     projects?: { projects?: readonly { featured?: unknown }[] };
@@ -288,6 +294,9 @@ function readDefinition(definition: unknown): DefinitionFacts {
     routeIds: Object.freeze(routeIds),
     serviceIds: Object.freeze(serviceIds),
     servicesWithDecisionTruth,
+    serviceGroupCount: (root.profile?.sections ?? [])
+      .filter((section) => section.type === "SERVICES")
+      .reduce((sum, section) => sum + (section.groups ?? []).length, 0),
     assetIds,
     projectCount: (root.projects?.projects ?? []).length,
     featuredProjectCount: (root.projects?.projects ?? []).filter(

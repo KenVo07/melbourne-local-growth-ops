@@ -23,6 +23,20 @@ export function pageById(
   return graph.pages.find((page) => page.pageId === pageId);
 }
 
+/**
+ * The pages that declare this page as their parent, in graph order.
+ *
+ * The second navigation level is derived from the page graph rather than
+ * authored beside it, so a service added to the site cannot be missing from the
+ * menu and a menu entry cannot point at a page somebody removed.
+ */
+export function childPages(
+  graph: RuntimePageGraph,
+  pageId: string,
+): readonly RuntimePageDefinition[] {
+  return Object.freeze(graph.pages.filter((page) => page.parentPageId === pageId));
+}
+
 export function pageByPath(
   graph: RuntimePageGraph,
   path: string,

@@ -836,7 +836,7 @@ function buildProjectStory(source) {
   return blocks;
 }
 
-function page(pageId, path, kind, experienceRouteId, title, description, content) {
+function page(pageId, path, kind, experienceRouteId, title, description, content, parentPageId) {
   return {
     pageId,
     path,
@@ -846,6 +846,7 @@ function page(pageId, path, kind, experienceRouteId, title, description, content
     metadata: { title: truncate(title, 200), description: truncate(description, 2_000) },
     content,
     anchors: [],
+    ...(parentPageId === undefined ? {} : { parentPageId }),
     relatedPageIds: [],
     search: { include: true },
   };
@@ -878,6 +879,12 @@ function buildPageGraph({ clientIntake, services, projects, saleHandoff }) {
         service.title,
         service.description,
         { kind: "SERVICE", serviceId: service.serviceId },
+        /*
+         * The parent relation is what the header's second level reads. Setting
+         * it here means the navigation and the site are the same list, so a
+         * service cannot exist on the site and be missing from the menu.
+         */
+        "services",
       ),
     );
   }
@@ -896,6 +903,7 @@ function buildPageGraph({ clientIntake, services, projects, saleHandoff }) {
           project.title,
           project.summary,
           { kind: "PROJECT", projectId: project.projectId },
+          "projects",
         ),
       );
     }

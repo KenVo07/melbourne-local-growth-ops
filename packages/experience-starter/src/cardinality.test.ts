@@ -98,6 +98,7 @@ describe("a small client is untouched", () => {
   it("keeps twelve records as one composition", () => {
     const scale = readClientScale({
       serviceIds: [],
+      serviceGroupCount: 0,
       projectCount: 12,
       featuredProjectCount: 3,
     });
@@ -198,6 +199,103 @@ describe("a service without a photograph", () => {
     const route = fileNamed(generated, "routes/ServicesRoutes.tsx");
     expect(route).toContain("function Decision(");
     expect(route).toContain("What this does not cover");
+  });
+});
+
+describe("navigation at scale", () => {
+  const manyServices = (count: number, groups: readonly { groupId: string; title: string }[] = []) => ({
+    ...testDefinition,
+    profile: {
+      ...testDefinition.profile,
+      sections: [
+        {
+          ...testDefinition.profile.sections[0],
+          groups,
+          items: Array.from({ length: count }, (_unused, index) => ({
+            serviceId: `service-${index}`,
+            title: `Service ${index}`,
+            description: "One.",
+            narrative: "A longer read.",
+            ...(groups.length > 0 ? { groupId: groups[0]?.groupId } : {}),
+          })),
+        },
+      ],
+    },
+    pageGraph: {
+      ...testDefinition.pageGraph,
+      pages: [
+        ...testDefinition.pageGraph.pages.filter((page) => page.kind !== "SERVICE_DETAIL"),
+        ...Array.from({ length: count }, (_unused, index) => ({
+          pageId: `service-${index}`,
+          path: `/services/service-${index}`,
+          kind: "SERVICE_DETAIL",
+          experienceRouteId: "service-detail",
+          parentPageId: "services",
+        })),
+      ],
+    },
+  });
+
+  it("leaves a small business on a flat header", () => {
+    const shell = fileNamed(
+      generateExperienceStarter({ definition: manyServices(4), brief: { ...quietBrief, serviceNarratives: [] } }),
+      "components/Shell.tsx",
+    );
+    expect(shell).not.toContain("NavigationSection");
+    expect(shell).not.toContain("childPages");
+  });
+
+  it("exposes a second level once there are enough services to be worth it", () => {
+    const shell = fileNamed(
+      generateExperienceStarter({ definition: manyServices(9), brief: { ...quietBrief, serviceNarratives: [] } }),
+      "components/Shell.tsx",
+    );
+    expect(shell).toContain("NavigationSection");
+    /* Derived from the page graph's parent relation, never authored twice. */
+    expect(shell).toContain("childPages(graph, pageId)");
+  });
+
+  it("expands a grouped business at any size", () => {
+    const shell = fileNamed(
+      generateExperienceStarter({
+        definition: manyServices(2, [{ groupId: "power", title: "Power" }]),
+        brief: { ...quietBrief, serviceNarratives: [] },
+      }),
+      "components/Shell.tsx",
+    );
+    expect(shell).toContain("NavigationSection");
+  });
+
+  it("is a disclosure, not a menu, and never opens on hover", () => {
+    const generated = generateExperienceStarter({
+      definition: manyServices(9),
+      brief: { ...quietBrief, serviceNarratives: [] },
+    });
+    const shell = fileNamed(generated, "components/Shell.tsx");
+    const styles = fileNamed(generated, "styles/site.css");
+    expect(shell).toContain("<details className=");
+    expect(shell).toContain("<summary className=");
+    expect(shell).not.toContain('role="menu"');
+    expect(shell).not.toContain("onMouseEnter");
+    expect(styles).not.toMatch(/-nav-section:hover/);
+  });
+
+  it("caps the panel and always offers the whole set", () => {
+    const shell = fileNamed(
+      generateExperienceStarter({ definition: manyServices(20), brief: { ...quietBrief, serviceNarratives: [] } }),
+      "components/Shell.tsx",
+    );
+    expect(shell).toContain("NAVIGATION_PANEL_LIMIT = 8");
+    expect(shell).toContain("selected.slice(0, NAVIGATION_PANEL_LIMIT)");
+    expect(shell).toContain("All {item.label.toLowerCase()}");
+  });
+
+  it("offers only selected records, never the whole archive", () => {
+    const shell = fileNamed(
+      generateExperienceStarter({ definition: manyServices(9), brief: { ...quietBrief, serviceNarratives: [] } }),
+      "components/Shell.tsx",
+    );
+    expect(shell).toContain('page.content.kind !== "PROJECT" || featured.has');
   });
 });
 

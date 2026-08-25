@@ -23,13 +23,27 @@ export interface ClientScale {
    * construction and showing all of it is the correct answer.
    */
   readonly archiveBudget: number;
+  /**
+   * Whether the header exposes a second level.
+   *
+   * Count-driven, and off by default: below seven services a panel shows a
+   * reader what one click would have shown them anyway, and a business with four
+   * sections keeps the flat header that is proven for it. A grouped business
+   * expands at any size, because the group structure is the thing worth
+   * exposing.
+   */
+  readonly expandedNavigation: boolean;
 }
 
 /** Rows past this point are folded away until the reader asks for them. */
 const ARCHIVE_BUDGET = 14;
 
+/** Below this, the flat header is still the better answer. */
+const EXPANDED_NAVIGATION_FLOOR = 7;
+
 export function readClientScale(facts: {
   readonly serviceIds: readonly string[];
+  readonly serviceGroupCount: number;
   readonly projectCount: number;
   readonly featuredProjectCount: number;
 }): ClientScale {
@@ -42,5 +56,8 @@ export function readClientScale(facts: {
     projects,
     archiveBudget:
       projects.archive && facts.projectCount > ARCHIVE_BUDGET ? ARCHIVE_BUDGET : 0,
+    expandedNavigation:
+      facts.serviceGroupCount > 0 ||
+      facts.serviceIds.length >= EXPANDED_NAVIGATION_FLOOR,
   });
 }

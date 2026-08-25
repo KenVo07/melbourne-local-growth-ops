@@ -56,6 +56,7 @@ export type {
   RuntimeProfileSection,
 } from "../runtime-types";
 export {
+  childPages,
   navigationHref,
   pageById,
   pageByPath,

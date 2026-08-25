@@ -44,6 +44,7 @@ export function emitStylesheet(
     actions(design),
     plates(design),
     chrome(design),
+    scale.expandedNavigation ? expandedNavigationGrammar(design) : "",
     footer(design),
     pageHead(design),
     homeGrammar(design),
@@ -1191,6 +1192,113 @@ ${shared}`;
   gap: var(--stack-loose);
 }
 ${shared}`;
+}
+
+/**
+ * A primary destination that owns pages.
+ *
+ * Two placements from one authored source, because the navigation is already
+ * rendered twice by the Platform disclosure — once statically for the wide
+ * header, once inside the compact menu. The wide one floats a panel beneath the
+ * bar; the compact one lets the same panel sit inline in the menu, which is what
+ * a phone actually wants. Neither needs JavaScript and neither responds to
+ * hover, so there is no destination reachable only by a pointer.
+ *
+ * A note on what this deliberately is not: there is no animation on open. A
+ * panel whose meaning depends on the transition is not designed yet, and a
+ * reduced-motion reader would be looking at the undesigned half.
+ */
+function expandedNavigationGrammar(design: ResolvedDesign): string {
+  const { ns, type } = design;
+  return `
+/* ------------------------------------------------- expanded navigation */
+
+.${ns}-nav-section > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.${ns}-nav-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.${ns}-nav-summary::after {
+  content: "";
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin-left: 0.5em;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+}
+
+.${ns}-nav-section[open] > .${ns}-nav-summary::after {
+  transform: translateY(0.1em) rotate(-135deg);
+}
+
+.${ns}-nav-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.${ns}-nav-panel {
+  display: grid;
+  gap: calc(var(--unit) * 3);
+  padding-block: calc(var(--unit) * 3);
+}
+
+.${ns}-nav-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: calc(var(--unit) * 1.25);
+}
+
+.${ns}-nav-panel a {
+  font-size: ${type.body};
+  line-height: 1.35;
+}
+
+.${ns}-nav-group {
+  font-size: ${type.label.size};
+  letter-spacing: ${type.label.tracking};
+  text-transform: ${type.label.transform};
+  font-weight: ${type.label.weight};
+  color: var(--ink-faint);
+  margin-bottom: calc(var(--unit) * 1.5);
+}
+
+.${ns}-nav-all {
+  padding-bottom: calc(var(--unit) * 2);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+/* The wide header floats the panel; the compact menu keeps it inline. */
+[data-platform-disclosure="static"] .${ns}-nav-section {
+  position: relative;
+}
+
+[data-platform-disclosure="static"] .${ns}-nav-panel {
+  position: absolute;
+  top: calc(100% + var(--unit) * 2);
+  left: 0;
+  z-index: 30;
+  min-width: 18rem;
+  max-width: min(46rem, 90vw);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  padding: calc(var(--unit) * 4);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--media-radius);
+  box-shadow: 0 1.5rem 3rem -1.5rem rgb(0 0 0 / 0.25);
+}
+
+[data-platform-disclosure="static"] .${ns}-nav-all {
+  grid-column: 1 / -1;
+}
+`;
 }
 
 /**

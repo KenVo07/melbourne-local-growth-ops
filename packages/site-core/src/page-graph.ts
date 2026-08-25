@@ -194,6 +194,26 @@ export function resolveWebsitePageById(
   return graph.pages.find((page) => page.pageId === pageId);
 }
 
+/**
+ * The pages that declare this page as their parent, in graph order.
+ *
+ * This is the second navigation level, and it is **derived rather than
+ * authored**. A nav panel written separately from the page graph is a second
+ * list of the same destinations, and the second list is the one that goes stale
+ * — a service added to the site but not to the menu, or a menu entry pointing at
+ * a page somebody removed. `parentPageId` already exists, is already validated
+ * for cycles and missing references, and already says which page a detail route
+ * belongs under. Reading it backwards costs nothing and cannot disagree.
+ */
+export function childPages(
+  graph: WebsitePageGraph,
+  pageId: string,
+): readonly WebsitePageDefinition[] {
+  return Object.freeze(
+    graph.pages.filter((page) => page.parentPageId === pageId),
+  );
+}
+
 export function routeSegments(path: WebsiteRoutePath): readonly string[] {
   return path === "/"
     ? Object.freeze([])
