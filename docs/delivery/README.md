@@ -12,6 +12,22 @@ turns them into one.
 business-specific inputs  →  reusable delivery process  →  bespoke client experience
 ```
 
+## Canonical release — TRADIES_PROFILE_V1
+
+The Tradies profile is founder-accepted for first-client use.
+
+| | |
+|---|---|
+| Release tag | `tradies-profile-v1` |
+| Reviewed candidate | `151a1abffb25d8cc16f4dd0d5c29a8b53ed86d7a` |
+| Accepted review artifact | `TRADIES_PROFILE_V1_REVIEW_PACKAGE.zip` |
+| Artifact SHA-256 | `dc5a02d21ea3c8d6ba911c26b78888363d39de95cfdb6a2f12a8834f269afed8` |
+| After a Tradie says yes | [`FIRST_REAL_TRADIE_CLIENT_START_HERE.md`](../../FIRST_REAL_TRADIE_CLIENT_START_HERE.md) |
+
+The release commit adds this block and the release record in
+`TRADIES_V1_IMPLEMENTATION_STATE.md` and nothing else: no application or runtime
+source differs from the reviewed candidate.
+
 ## Start here
 
 | If you are… | Read |

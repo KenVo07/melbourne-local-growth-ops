@@ -291,3 +291,40 @@ The limitations are named in `03-DEFERRED-AND-NON-GOALS.md` and in the red team'
 "where the claim is weakest": no real client has been through this, the visual
 refinement is deliberately not designed, and licensed typefaces remain a manual
 stylesheet edit. None of them blocks accepting a paying Tradie.
+
+
+---
+
+## Release freeze — TRADIES_PROFILE_V1
+
+Founder-accepted for first-client use. No feature work, no redesign, no
+behaviour change.
+
+| | |
+|---|---|
+| Reviewed candidate | `151a1abffb25d8cc16f4dd0d5c29a8b53ed86d7a` |
+| Pre-integration `main` | `5eca7ac44809c566e105fcabc82e873ac2ff99a6` |
+| Integration | fast-forward — `main` was an ancestor of the candidate, 0 commits would be lost |
+| Release tag | `tradies-profile-v1`, annotated, matching the repository's existing practice |
+| Accepted artifact | `TRADIES_PROFILE_V1_REVIEW_PACKAGE.zip` |
+| Artifact SHA-256 | `dc5a02d21ea3c8d6ba911c26b78888363d39de95cfdb6a2f12a8834f269afed8` |
+| First-client document | `FIRST_REAL_TRADIE_CLIENT_START_HERE.md` |
+
+### Verified at freeze
+
+| Check | Result |
+|---|---|
+| `pnpm check` | exit 0 — 945 package tests |
+| `pnpm creative:test` | exit 0 — 111 tests |
+| `pnpm tradie:test` | exit 0 — 43 tests |
+| `pnpm tradie:typecheck` | exit 0 |
+| `governance:secrets` | PASS — 518 text files scanned |
+| `governance:audit` | PASS — no undeferred high or critical advisories |
+| `governance:licenses` | PASS — NOTICE.md matches the dependency graph |
+| Review package `verify.sh` | PASS — checksums, self-reference, completeness, secret scan |
+| Artifact SHA-256 | recomputed, matches the accepted hash |
+| Candidate identity | HEAD, the 12-commit list and all 35 packaged source files match the repository byte for byte |
+| Client-truth leakage | none in shipping or reusable code |
+
+The release commit is documentation only. Application and runtime source is
+byte-identical to the reviewed candidate.
