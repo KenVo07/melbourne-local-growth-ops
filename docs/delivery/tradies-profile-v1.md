@@ -180,10 +180,20 @@ records cost a hundred lines rather than a hundred image requests.
 
 **No JavaScript.** The filter is a radio group matched in CSS through `:has()`,
 one rule per declared service. Every record's link ships in the initial HTML
-whether or not it is currently shown, so a crawler sees the whole archive and no
-request is made when a facet changes. The reading budget is a second CSS rule
-that applies only while "all work" is selected, so a narrowed set is always shown
-in full and the two mechanisms can never fight over one row.
+whether or not it is currently shown, so a crawler sees the whole archive. The
+reading budget is a second CSS rule that applies only while "all work" is
+selected, so a narrowed set is always shown in full and the two mechanisms can
+never fight over one row.
+
+**Archive rows do not prefetch, and that is deliberate.** The filter itself
+fetches nothing — every record is already in the document — but the framework
+prefetches a route payload for any link entering the viewport, and re-laying the
+list out sends links across that boundary repeatedly. Measured in a browser, a
+single facet change pulled twenty payloads for five routes. A reader scanning a
+hundred rows to find one job is passing over ninety-nine they will not open, so
+archive rows pass `prefetch={false}`; the curated records above them keep it,
+because those are few and are likely destinations. After the change, filtering
+costs less than scrolling does.
 
 **Is a filtered view a URL or client state?** Client state. A route per facet
 would add a thin page per service to the page graph; a query string is not

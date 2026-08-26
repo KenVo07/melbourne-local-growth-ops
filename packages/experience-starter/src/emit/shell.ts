@@ -73,7 +73,7 @@ ${
   scale.expandedNavigation
     ? `          const children =
             item.target.kind === "ROUTE"
-              ? panelPages(pageGraph, projects, item.target.pageId)
+              ? panelPages(pageGraph, profile, projects, item.target.pageId)
               : [];
           if (children.length > 0) {
             return (
@@ -112,13 +112,20 @@ ${
     ? `
 
 /**
- * How many entries a panel will hold before it stops being a selection.
+ * How many entries a panel holds before it stops being a selection.
  *
- * Past this the panel is a list of everything, which the section's own page
- * already is and does better. The overflow is not truncated silently: the panel
- * always carries a link to the whole set.
+ * Two limits, because a flat list and a grouped one stop working at different
+ * sizes. Eight ungrouped entries is where a panel becomes a list somebody forgot
+ * to edit — the section's own page already is that list, and does it better.
+ * A *grouped* panel is an outline rather than a list, and stays readable much
+ * longer, so it gets a limit that will not cut a group in half and make a
+ * business with three maintenance services look like it has one.
+ *
+ * The overflow is never silent either way: the panel always carries a link to
+ * the whole set.
  */
 const NAVIGATION_PANEL_LIMIT = 8;
+const GROUPED_NAVIGATION_PANEL_LIMIT = 24;
 
 /**
  * The pages a panel should offer, which is not the same as the pages that exist.
@@ -131,9 +138,13 @@ const NAVIGATION_PANEL_LIMIT = 8;
  */
 function panelPages(
   graph: RuntimePageGraph,
+  profile: RuntimeWebsiteProfileContent,
   projects: RuntimeProjectCollection,
   pageId: string,
 ): readonly RuntimePageDefinition[] {
+  const groups = profile.sections.flatMap((section) =>
+    section.type === "SERVICES" ? section.groups : [],
+  );
   const children = childPages(graph, pageId);
   const featured = new Set(
     projects.projects.filter((project) => project.featured).map(({ projectId }) => projectId),
@@ -141,7 +152,11 @@ function panelPages(
   const selected = children.filter(
     (page) => page.content.kind !== "PROJECT" || featured.has(page.content.projectId),
   );
-  return selected.slice(0, NAVIGATION_PANEL_LIMIT);
+  const grouped = groups.length > 0 && selected.some((page) => page.content.kind === "SERVICE");
+  return selected.slice(
+    0,
+    grouped ? GROUPED_NAVIGATION_PANEL_LIMIT : NAVIGATION_PANEL_LIMIT,
+  );
 }
 
 /**

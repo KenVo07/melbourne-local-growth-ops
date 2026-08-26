@@ -18,6 +18,8 @@ operator still has to remember undocumented workflow.*
 
 ## Findings, and what happened to each
 
+Eight, the last of which only a browser could have found.
+
 ### 1. The home page rendered everything — **fixed**
 
 At forty services and a hundred jobs the home route printed all of them. Nothing
@@ -75,6 +77,27 @@ The blank workspace emitted optional fields as empty strings, which then failed
 validation as "must be a non-empty string when present". An empty optional string
 is not "no value", it is a malformed value. Optional fields are now omitted and
 the README names them. Found by the clean-room simulation.
+
+### 8. Filtering pulled route payloads nobody asked for — **fixed**
+
+Found by driving the built site in a real browser. The filter runs no
+JavaScript, but the framework prefetches a route payload for every link that
+enters the viewport, and changing a facet re-lays the list out — so one facet
+change pulled **twenty payloads for five routes**, and narrowing then restoring
+pulled thirty-two.
+
+Measured against a control: plain scrolling of the same archive caused eight.
+So the filter was genuinely more expensive than reading, which is the opposite
+of the point.
+
+Archive rows now pass `prefetch={false}` — a field the Platform's link contract
+already carried, so no Core change was needed. The curated records above the
+archive keep prefetching, because a handful of featured jobs are likely
+destinations and a hundred archive rows are not. Re-measured: four prefetches
+where scrolling causes seven.
+
+The documentation had claimed "no request is made when a facet changes". That
+was wrong as written, and is corrected.
 
 ---
 

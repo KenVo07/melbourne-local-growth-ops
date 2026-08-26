@@ -291,13 +291,19 @@ describe("navigation at scale", () => {
     expect(styles).not.toMatch(/-nav-section:hover/);
   });
 
-  it("caps the panel and always offers the whole set", () => {
+  it("caps a flat panel tightly and a grouped one loosely, and always offers the whole set", () => {
     const shell = fileNamed(
       generateExperienceStarter({ definition: manyServices(20), brief: { ...quietBrief, serviceNarratives: [] } }),
       "components/Shell.tsx",
     );
     expect(shell).toContain("NAVIGATION_PANEL_LIMIT = 8");
-    expect(shell).toContain("selected.slice(0, NAVIGATION_PANEL_LIMIT)");
+    expect(shell).toContain("GROUPED_NAVIGATION_PANEL_LIMIT = 24");
+    /*
+     * A grouped panel is an outline, not a list, so truncating it at eight cut
+     * a group in half and made a business with three maintenance services look
+     * like it had one.
+     */
+    expect(shell).toContain("grouped ? GROUPED_NAVIGATION_PANEL_LIMIT : NAVIGATION_PANEL_LIMIT");
     expect(shell).toContain("All {item.label.toLowerCase()}");
   });
 

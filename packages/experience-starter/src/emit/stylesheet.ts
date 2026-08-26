@@ -1298,6 +1298,12 @@ function expandedNavigationGrammar(design: ResolvedDesign): string {
 [data-platform-disclosure="static"] .${ns}-nav-all {
   grid-column: 1 / -1;
 }
+
+/* The compact menu already rules every link it contains; one line, not two. */
+[data-platform-disclosure="compact"] .${ns}-nav-all {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
 `;
 }
 

@@ -283,11 +283,15 @@ function archiveRegion(design: ResolvedDesign, scale: ClientScale): string {
   const budget = scale.archiveBudget;
   return `
       <div className="${ns}-shell ${ns}-archive-scope">
+        {/*
+          The heading states what the region is, not how many records are in it.
+          With no script the count cannot follow a filter, and "25 records"
+          standing over five filtered rows is worse than no number at all. The
+          counts live on the facet labels, where they stay true.
+        */}
         <div className="${ns}-archive-head">
-          <Label>All work</Label>
-          <h2 className="${ns}-record-title">
-            {archive.length} {archive.length === 1 ? "record" : "records"}
-          </h2>
+          <Label>Every job</Label>
+          <h2 className="${ns}-record-title">Find the work like yours</h2>
         </div>
 ${
   scale.projects.filtering
@@ -338,7 +342,15 @@ ${
               data-services={\` \${project.serviceIds.join(" ")} \`}
               key={project.projectId}
             >
-              <platform.Link href={\`/projects/\${project.slug}\`}>
+              {/*
+                No prefetch here, and only here. A reader scanning a hundred
+                rows to find one job is passing over ninety-nine they will not
+                open, and the framework prefetches a route payload for every
+                link that enters the viewport — including every time a facet
+                re-lays the list out. The curated records above keep their
+                prefetch, because those are few and are likely destinations.
+              */}
+              <platform.Link href={\`/projects/\${project.slug}\`} prefetch={false}>
                 <span className="${ns}-archive-row">
                   <span className="${ns}-archive-title">{project.title}</span>
                   <span className="${ns}-meta">
