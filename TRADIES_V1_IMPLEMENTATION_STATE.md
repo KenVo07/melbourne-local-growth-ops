@@ -241,6 +241,39 @@ passing all four checks. The zip's SHA-256 is published in
 repeated here, because this file travels *inside* the archive and a document
 cannot carry the hash of the thing containing it.
 
+## Phase J — verified in a browser, and through the deployment contracts
+
+Added after the first package was cut, closing the three things that pass had
+left open.
+
+**Codex.** Still not installed (`~/.claude/plugins` absent). The binary is
+present and authenticated, but invoking it sends this repository to an external
+service nobody asked to involve. The internal adversarial pass stands.
+
+**Browser.** Playwright with all three engines is available to
+`apps/managed-web`, so the built Northgate site was driven in Chromium at 1440
+and 390. Sixteen claims, all passing after four fixes:
+
+| Found | Fix |
+|---|---|
+| One facet change pulled 20 route payloads for 5 routes; scrolling the same archive caused 8 | Archive rows decline prefetching, using a field the Platform's link contract already had. Now 4, against 7 for scrolling |
+| A grouped panel truncated at 8 made a business with three maintenance services look like it had one | Separate limits for a flat list (8) and an outline (24) |
+| "25 records" printed above five filtered rows | The heading says what the region is; the counts live on the facet labels, where they stay true |
+| The compact menu already rules every link it contains, so the panel's divider doubled it | One rule, not two |
+
+The documentation had claimed "no request is made when a facet changes". Wrong as
+written; corrected in both places.
+
+**Deployment and handoff.** The composed configuration passes
+`validateWebsiteRuntimeConfig`, builds a deployment intent, executes against the
+deterministic provider, and re-runs idempotently. Delivery mode stays
+`MANAGED_ISOLATED` until handoff completes, secrets travel as references, and the
+artifact's own verifier reports `handoff integrity PASS: 163 files`. Nothing was
+deployed to Vercel — that needs a credential and publishes to the internet.
+
+Both passes are committed as one-off scripts under
+`scripts/tradies/verification/`, deliberately outside `pnpm check`.
+
 ## Final state
 
 | | |
@@ -249,6 +282,8 @@ cannot carry the hash of the thing containing it.
 | `main` | `5eca7ac…` unchanged |
 | Milestone base | `aeedbb5…` |
 | Tests | `pnpm check` exit 0 (945) · `tradie:test` 43 · `creative:test` 67 · `tradie:typecheck` exit 0 |
+| Browser | 16/16 claims, Chromium at 1440 and 390 |
+| Deployment | 6/6 claims, deterministic provider, nothing published |
 | Dependencies added | none |
 
 **Verdict: TRADIES_PROFILE_V1_READY_WITH_NAMED_NONBLOCKING_LIMITATIONS.**
