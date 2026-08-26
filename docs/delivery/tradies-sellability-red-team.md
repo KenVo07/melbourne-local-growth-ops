@@ -1,6 +1,6 @@
 # Sellability red team — Tradies Profile V1
 
-Fourteen ways the first paid delivery could go wrong, answered against the
+Fifteen ways the first paid delivery could go wrong, answered against the
 system as built rather than as intended. Every "yes" below was executed, not
 reasoned about.
 
@@ -161,6 +161,22 @@ Named, with the reason, rather than left to be discovered:
 | **Reverse shared-element continuity, notation-on-media, zero-specificity reset** | Still one client's evidence each. Unchanged from the post-Stone disposition. |
 | **A P3 Tradie delivery** | The seam is proven; a flagship is not. |
 
+## 15. It reaches production
+
+**Executed against the deployment contracts**, with the deterministic provider
+and no credential: the composed configuration passes the shared runtime
+validator, a deployment intent builds from it, execution produces an observed
+manifest, re-running the same intent is idempotent, delivery mode stays
+`MANAGED_ISOLATED` until handoff completes, and secrets travel as references.
+
+The artifact's own verifier — the command a client runs after taking ownership —
+reports `handoff integrity PASS: 163 files`.
+
+**Not proven:** no site was deployed to Vercel. That needs a credential and
+publishes to the internet.
+
+---
+
 ## Where the claim is weakest
 
 Three honest places:
@@ -175,3 +191,9 @@ Three honest places:
 3. **Intake takes as long as it takes.** Nothing here makes a client answer
    faster. What it does is make the questions answerable without design
    knowledge, and make the gaps visible with an owner attached.
+
+The behaviour *is* now verified in a real browser — sixteen claims in Chromium at
+1440 and 390, including hover, keyboard, reduced motion, touch depth and the
+accessibility tree. That pass is a one-off script rather than a committed suite:
+the Platform still owns no browser automation, and adopting one remains out of
+scope. It found four defects nothing else had.
