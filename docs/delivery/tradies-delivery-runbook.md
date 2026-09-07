@@ -15,7 +15,8 @@ see [premium-happy-path.md](premium-happy-path.md).
 SOLD
  └─ sale-handoff.json          who closed it writes this, before anything else
      └─ business-read.json     the agency, from public sources, before asking the client anything
-         └─ client-intake.json the client, factual questions only
+         ├─ client-intake.json the client, factual questions only
+         └─ pitch-architecture.json Proportion, proposed private-pitch structure only
              └─ media-inventory.json   the client sends; the agency judges
                  ├─ tradie shotlist    what is still missing, and what each frame would prove
                  └─ tradie recommend   a creative direction proposed from what is known
@@ -41,8 +42,17 @@ has to close it.
 | `sale-handoff.json` | Whoever closed the sale | Tier, scope, included pages and capabilities, exclusions, **commitments**, deadline, domain control, approval authority |
 | `business-read.json` | Proportion | Named public sources with dates, observations classified as verifiable or inferred, positioning, competitors, brand reality, trust strategy |
 | `client-intake.json` | The client | Services and their boundaries, areas, story, process, credentials, past jobs, FAQs, commercial basics, contact and quote model, team |
+| `pitch-architecture.json` | Proportion | Proposed private-pitch structure, an explicit `PROPORTION_CONTROLLED` `@proportion.systems` contact, visible proposal disclosure, and claim prohibitions; never credentials, completed jobs, testimonials, owner approval or Production authority |
 | `media-inventory.json` | The client sends, **Proportion audits** | Every asset with subject, audit grade, provenance, production lane, real dimensions, focal point, the claim it may support, and who approved publication |
-| `creative-configuration.json` | Proportion derives, the client approves | Perception targets, brand constraints, palette, typography, density, image treatment, motion appetite, proof emphasis, signature opportunity |
+| `creative-configuration.json` | Proportion derives; the client approves normal delivery, or Proportion separately approves private-pitch direction | Perception targets, brand constraints, palette, typography, density, image treatment, motion appetite, proof emphasis, signature opportunity |
+
+Exactly one structural authority is allowed. The normal path uses
+`client-intake.json`, retains `VERIFIED_CLIENT_FACT`, and requires real client
+direction approval. The private-pitch path uses `pitch-architecture.json`, records
+its values as `PROPOSED_PITCH_ARCHITECTURE`, keeps `clientApproval.approved=false`,
+and records a distinct agency pitch approval. A later client intake supersedes the
+proposal for factual authority; Production remains fail-closed until real client
+facts and approvals replace it.
 
 ### The client is never asked
 

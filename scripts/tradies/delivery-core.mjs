@@ -8,7 +8,8 @@
  *                 being built rather than from a universal checklist
  *   recommend   — a creative configuration proposed from positioning, audience
  *                 and media reality, for a human to edit and a client to approve
- *   compose     — intake + research + media → one validated `client-website.json`
+ *   compose     — factual intake or private-pitch structure + research + media
+ *                 → one validated `client-website.json`
  *                 and a truth ledger saying where every published fact came from
  *
  * Nothing here reads the filesystem or the network. The CLI does the reading and
@@ -32,6 +33,19 @@ function gap(owner, code, detail) {
   return Object.freeze({ owner, code, detail });
 }
 
+function assertPitchApprovalBoundary(pitchArchitecture, creativeConfiguration) {
+  if (creativeConfiguration === undefined) return;
+  if (pitchArchitecture !== undefined) {
+    if (creativeConfiguration.clientApproval?.approved !== false) {
+      throw refuse("CONTRACT_INVALID", "NONPRODUCTION_PITCH must keep clientApproval.approved=false; agency approval cannot be represented as client approval.");
+    }
+    return;
+  }
+  if (creativeConfiguration.agencyPitchApproval !== undefined) {
+    throw refuse("CONTRACT_INVALID", "agencyPitchApproval is valid only with NONPRODUCTION_PITCH structural authority.");
+  }
+}
+
 /**
  * What is present, what is missing, and who closes it.
  *
@@ -44,11 +58,16 @@ function gap(owner, code, detail) {
  * it needs — not when the delivery is perfect.
  */
 export function readinessReport(records) {
-  const { saleHandoff, businessRead, clientIntake, mediaInventory, creativeConfiguration } = records;
+  const { saleHandoff, businessRead, clientIntake, pitchArchitecture, mediaInventory, creativeConfiguration } = records;
+  if (clientIntake !== undefined && pitchArchitecture !== undefined) {
+    throw refuse("CONTRACT_INVALID", "A Factory workspace may carry client-intake OR pitch-architecture, never both.");
+  }
+  assertPitchApprovalBoundary(pitchArchitecture, creativeConfiguration);
   const clientId = assertSameClient({
     "sale-handoff": saleHandoff,
     "business-read": businessRead,
     "client-intake": clientIntake,
+    "pitch-architecture": pitchArchitecture,
     "media-inventory": mediaInventory,
     "creative-configuration": creativeConfiguration,
   });
@@ -58,6 +77,7 @@ export function readinessReport(records) {
     saleHandoff: saleHandoff !== undefined,
     businessRead: businessRead !== undefined,
     clientIntake: clientIntake !== undefined,
+    pitchArchitecture: pitchArchitecture !== undefined,
     mediaInventory: mediaInventory !== undefined,
     creativeConfiguration: creativeConfiguration !== undefined,
   };
@@ -68,8 +88,8 @@ export function readinessReport(records) {
   if (!present.businessRead) {
     gaps.push(gap("AGENCY", "BUSINESS_READ_MISSING", "Nobody has read the business yet. This is the first step, before anything is asked of the client."));
   }
-  if (!present.clientIntake) {
-    gaps.push(gap("CLIENT", "CLIENT_INTAKE_MISSING", "The client has not answered the factual questions."));
+  if (!present.clientIntake && !present.pitchArchitecture) {
+    gaps.push(gap("CLIENT", "CLIENT_INTAKE_MISSING", "Neither client factual intake nor authorized nonproduction pitch structure exists."));
   }
   if (!present.mediaInventory) {
     gaps.push(gap("CLIENT", "MEDIA_DUMP_MISSING", "The client has not sent their material. Ask for everything they have, uncurated."));
@@ -119,7 +139,12 @@ export function readinessReport(records) {
   }
 
   if (creativeConfiguration !== undefined && creativeConfiguration.clientApproval.approved !== true) {
-    gaps.push(gap("CLIENT", "DIRECTION_UNAPPROVED", "The client has not approved the representation and direction."));
+    if (pitchArchitecture === undefined) {
+      gaps.push(gap("CLIENT", "DIRECTION_UNAPPROVED", "The client has not approved the representation and direction."));
+    }
+  }
+  if (pitchArchitecture !== undefined && creativeConfiguration !== undefined && creativeConfiguration.agencyPitchApproval?.approved !== true) {
+    gaps.push(gap("AGENCY", "PITCH_DIRECTION_UNAPPROVED", "Founder/Proportion has not approved this private-pitch direction. This is agency authority, never client approval."));
   }
 
   /*
@@ -162,6 +187,7 @@ export const BLOCKING_GAPS = Object.freeze([
   "CREATIVE_CONFIGURATION_MISSING",
   "NO_APPROVED_MEDIA",
   "REFERENCE_ASSET_APPROVED",
+  "PITCH_DIRECTION_UNAPPROVED",
 ]);
 
 /* ------------------------------------------------------------------------ */
@@ -448,10 +474,24 @@ function ledgerEntry(field, truthClass, source, note) {
  * definition that does not pass the Factory's own contracts never reaches disk.
  */
 export function composeDefinition(records) {
-  const { saleHandoff, businessRead, clientIntake, mediaInventory, creativeConfiguration } = records;
+  const { saleHandoff, businessRead, clientIntake, pitchArchitecture, mediaInventory, creativeConfiguration } = records;
+  if (clientIntake !== undefined && pitchArchitecture !== undefined) {
+    throw refuse("CONTRACT_INVALID", "composeDefinition refuses ambiguous structural authority: client-intake and pitch-architecture are both present.");
+  }
+  assertPitchApprovalBoundary(pitchArchitecture, creativeConfiguration);
+  if (pitchArchitecture !== undefined && creativeConfiguration?.agencyPitchApproval?.approved !== true) {
+    throw refuse("CONTRACT_INVALID", "composeDefinition requires distinct Founder/Proportion agencyPitchApproval for NONPRODUCTION_PITCH.");
+  }
+  const structure = clientIntake ?? pitchArchitecture;
+  const pitchMode = pitchArchitecture !== undefined;
+  if (pitchMode && (structure.contact.ownership !== "PROPORTION_CONTROLLED" || !/^[^@\s]+@proportion\.systems$/i.test(structure.contact.enquiryEmail))) {
+    throw refuse("CONTRACT_INVALID", "NONPRODUCTION_PITCH enquiry contact must be explicitly Proportion-controlled before the connector can be labelled agency-managed.");
+  }
+  const structuralSource = pitchMode ? "pitch-architecture.json" : "client-intake.json";
+  const structuralTruthClass = pitchMode ? "PROPOSED_PITCH_ARCHITECTURE" : "VERIFIED_CLIENT_FACT";
   for (const [name, record] of Object.entries({
     saleHandoff,
-    clientIntake,
+    structure,
     mediaInventory,
     creativeConfiguration,
   })) {
@@ -463,6 +503,7 @@ export function composeDefinition(records) {
     "sale-handoff": saleHandoff,
     "business-read": businessRead,
     "client-intake": clientIntake,
+    "pitch-architecture": pitchArchitecture,
     "media-inventory": mediaInventory,
     "creative-configuration": creativeConfiguration,
   });
@@ -477,7 +518,7 @@ export function composeDefinition(records) {
 
   /* ---- profile ---------------------------------------------------------- */
 
-  const services = clientIntake.services.map((service) => {
+  const services = structure.services.map((service) => {
     const decision = {
       suitedTo: [...service.suitedTo],
       covers: [...service.covers],
@@ -502,9 +543,11 @@ export function composeDefinition(records) {
     ledger.push(
       ledgerEntry(
         `profile.services.${service.serviceId}`,
-        "VERIFIED_CLIENT_FACT",
-        "client-intake.json",
-        "Service scope, boundary and process as the client stated them.",
+        structuralTruthClass,
+        structuralSource,
+        pitchMode
+          ? "Agency-proposed private-pitch service architecture. Not a client fact and not Production authority."
+          : "Service scope, boundary and process as the client stated them.",
       ),
     );
     return {
@@ -518,13 +561,13 @@ export function composeDefinition(records) {
     };
   });
 
-  const groups = clientIntake.serviceGroups.map((group) => ({
+  const groups = structure.serviceGroups.map((group) => ({
     groupId: group.groupId,
     title: truncate(group.title, 200),
     ...(group.description === undefined ? {} : { description: group.description }),
   }));
 
-  const credentials = clientIntake.credentials.map((credential) => {
+  const credentials = (pitchMode ? [] : structure.credentials).map((credential) => {
     ledger.push(
       ledgerEntry(
         `profile.trust.${slugify(credential.label)}`,
@@ -550,7 +593,9 @@ export function composeDefinition(records) {
       type: "TRUST_SIGNALS",
       sectionId: "trust",
       heading: "Licences and cover",
-      items: credentials.length > 0 ? credentials : ["Credentials confirmed with the business before launch"],
+      items: credentials.length > 0
+        ? credentials
+        : [pitchMode ? "No credential claim is included in this private pitch" : "Credentials confirmed with the business before launch"],
       ...(credentials.length > 0
         ? {}
         : {
@@ -563,15 +608,15 @@ export function composeDefinition(records) {
       sectionId: "process",
       heading: "How a job runs",
       items:
-        clientIntake.process.length > 0
-          ? clientIntake.process.map((step) => ({
+        structure.process.length > 0
+          ? structure.process.map((step) => ({
               title: truncate(step.title, 200),
               description: truncate(step.description, 2_000),
             }))
           : [
               {
                 title: "Get in touch",
-                description: `Contact the business and describe the job. ${QUOTE_MODEL_SENTENCE[clientIntake.contact.quoteModel]}`,
+                description: `Contact the business and describe the job. ${QUOTE_MODEL_SENTENCE[structure.contact.quoteModel]}`,
               },
             ],
     },
@@ -580,15 +625,15 @@ export function composeDefinition(records) {
       sectionId: "faq",
       heading: "Questions we get asked",
       items:
-        clientIntake.faqs.length > 0
-          ? clientIntake.faqs.map((item) => ({
+        structure.faqs.length > 0
+          ? structure.faqs.map((item) => ({
               question: truncate(item.question, 200),
               answer: truncate(item.answer, 2_000),
             }))
           : [
               {
                 question: "Which areas do you cover?",
-                answer: `${clientIntake.serviceAreas.join(", ")}.`,
+                answer: `${structure.serviceAreas.join(", ")}.`,
               },
             ],
     },
@@ -596,34 +641,58 @@ export function composeDefinition(records) {
       type: "STORY",
       sectionId: "story",
       heading: "About the business",
-      body: truncate(clientIntake.story, 2_000),
+      body: truncate(structure.story, 2_000),
     },
     {
       type: "CONTACT",
       sectionId: "contact",
       heading: "Ask about your job",
-      body: `Describe the job and where it is, and the business will come back to you. ${QUOTE_MODEL_SENTENCE[clientIntake.contact.quoteModel]} Please do not send payment details or identity documents through this form.`,
+      body: `Describe the job and where it is, and the business will come back to you. ${QUOTE_MODEL_SENTENCE[structure.contact.quoteModel]} Please do not send payment details or identity documents through this form.`,
     },
     {
       type: "ACTIONS",
       sectionId: "actions",
       heading: "Direct contact",
-      actions: [buildEnquiryAction(clientIntake)],
+      actions: [buildEnquiryAction(structure)],
     },
   ];
 
   ledger.push(
-    ledgerEntry("profile.story", "VERIFIED_CLIENT_FACT", "client-intake.json", "The business's own account of itself."),
-    ledgerEntry("profile.serviceAreas", "VERIFIED_CLIENT_FACT", "client-intake.json", "Areas the client stated they work in."),
-    ledgerEntry("profile.brand", "INFERRED_OPPORTUNITY", "creative-configuration.json", "The agency's proposed identity, approved by the client as representation and direction — not a fact about the business."),
+    ledgerEntry(
+      "profile.story",
+      structuralTruthClass,
+      structuralSource,
+      pitchMode ? "Agency-proposed private-pitch narrative; not a client fact." : "The business's own account of itself.",
+    ),
+    ledgerEntry(
+      "profile.serviceAreas",
+      structuralTruthClass,
+      structuralSource,
+      pitchMode ? "Agency-proposed private-pitch service geography; not a client fact." : "Areas the client stated they work in.",
+    ),
+    ledgerEntry(
+      "profile.brand",
+      "INFERRED_OPPORTUNITY",
+      "creative-configuration.json",
+      pitchMode
+        ? "Agency-proposed identity approved by Founder/Proportion for this private pitch; not client approval or a business fact."
+        : "The agency's proposed identity, approved by the client as representation and direction — not a fact about the business.",
+    ),
   );
+  if (pitchMode) {
+    ledger.push(
+      ledgerEntry("profile.process", structuralTruthClass, structuralSource, "Agency-proposed private-pitch process; not a client fact."),
+      ledgerEntry("profile.faqs", structuralTruthClass, structuralSource, "Agency-proposed private-pitch FAQ structure; not a client fact."),
+      ledgerEntry("profile.contact", structuralTruthClass, structuralSource, "Agency-managed private-pitch enquiry destination; not the client's confirmed contact channel."),
+    );
+  }
 
   const profile = {
     schemaVersion: 1,
     profile: "CONTRACTOR",
     archetype: "SERVICE_LED",
     brand: {
-      eyebrow: truncate(clientIntake.tagline ?? clientIntake.businessName, 200),
+      eyebrow: truncate(structure.tagline ?? structure.businessName, 200),
       accentColor: creativeConfiguration.palette.accentColor,
       accentContrastColor: creativeConfiguration.palette.accentContrastColor,
       surfaceColor: creativeConfiguration.palette.surfaceColor,
@@ -635,7 +704,7 @@ export function composeDefinition(records) {
   /* ---- projects --------------------------------------------------------- */
 
   const projects = [];
-  for (const source of clientIntake.projects) {
+  for (const source of structure.projects) {
     const evidence = publishable.filter(
       (asset) =>
         asset.substantiates?.kind === "SPECIFIC_JOB" &&
@@ -677,13 +746,13 @@ export function composeDefinition(records) {
 
   /* ---- page graph ------------------------------------------------------- */
 
-  const pageGraph = buildPageGraph({ clientIntake, services, projects, saleHandoff });
+  const pageGraph = buildPageGraph({ clientIntake: structure, services, projects, saleHandoff });
 
   /* ---- configuration and assembly -------------------------------------- */
 
   const definition = {
     schemaVersion: 2,
-    configuration: buildConfiguration({ clientId, clientIntake, saleHandoff }),
+    configuration: buildConfiguration({ clientId, clientIntake: structure, saleHandoff, pitchMode }),
     profile,
     pageGraph,
     projects: { schemaVersion: 1, projects },
@@ -749,7 +818,7 @@ export function composeDefinition(records) {
       composedFrom: Object.freeze([
         "sale-handoff.json",
         ...(businessRead === undefined ? [] : ["business-read.json"]),
-        "client-intake.json",
+        structuralSource,
         "media-inventory.json",
         "creative-configuration.json",
       ]),
@@ -981,7 +1050,7 @@ export function decisionAnswers(service) {
   ].filter(Boolean).length;
 }
 
-function buildConfiguration({ clientId, clientIntake, saleHandoff }) {
+function buildConfiguration({ clientId, clientIntake, saleHandoff, pitchMode = false }) {
   const wantsForm = saleHandoff.includedCapabilities.includes("CONTACT_FORM");
   const modules = [];
   const connectors = [];
@@ -996,8 +1065,8 @@ function buildConfiguration({ clientId, clientIntake, saleHandoff }) {
     connectors.push({
       schemaVersion: 1,
       connectorId: "email-primary",
-      accountOwner: "CLIENT",
-      portability: "CLIENT_OWNED",
+      accountOwner: pitchMode ? "AGENCY" : "CLIENT",
+      portability: pitchMode ? "AGENCY_MANAGED" : "CLIENT_OWNED",
       type: "EMAIL_DELIVERY",
       provider: "RESEND",
       fromAddress: `website@${domainOf(saleHandoff)}`,
@@ -1011,10 +1080,12 @@ function buildConfiguration({ clientId, clientIntake, saleHandoff }) {
     configurationVersion: 1,
     clientId,
     entitlementId: `${clientId}-website-entitlement`,
-    deploymentId: `${clientId}-production`,
+    deploymentId: pitchMode ? `${clientId}-private-pitch` : `${clientId}-production`,
     display: {
       businessName: clientIntake.businessName,
-      ...(clientIntake.tagline === undefined ? {} : { tagline: clientIntake.tagline }),
+      ...(pitchMode
+        ? { tagline: "Private nonproduction pitch — proposed structure, not owner-confirmed business facts." }
+        : clientIntake.tagline === undefined ? {} : { tagline: clientIntake.tagline }),
       locationIds: [`${clientId}-primary`],
     },
     domains: [{ hostname: domainOf(saleHandoff), canonical: true }],

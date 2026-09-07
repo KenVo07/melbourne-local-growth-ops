@@ -61,6 +61,7 @@ export function starterBriefTemplate(creative, definition, mediaInventory) {
     published.has(asset.assetId),
   );
   const businessName = definition.configuration.display.businessName;
+  const pitchMode = definition.configuration.deploymentId.endsWith("-private-pitch");
 
   const hero = pick(assets, (asset) =>
     asset.subject === "COMPLETED_WORK" && asset.width >= asset.height,
@@ -119,9 +120,11 @@ export function starterBriefTemplate(creative, definition, mediaInventory) {
       scale: creative.imageTreatment,
       caption: "BELOW",
       radius: 0.25,
-      provenanceCaption: allRealWork
-        ? `Photographs of work completed by ${businessName}.`
-        : `${TODO}one line that is true of every photograph published on this site. The set is mixed, so it cannot claim they are all completed work.`,
+      provenanceCaption: pitchMode
+        ? "Pitch imagery is shown for private visual direction only; business-specific provenance remains subject to owner confirmation."
+        : allRealWork
+          ? `Photographs of work completed by ${businessName}.`
+          : `${TODO}one line that is true of every photograph published on this site. The set is mixed, so it cannot claim they are all completed work.`,
     },
     composition: {
       home: creative.imageTreatment === "DOMINANT" ? "IMAGE_LED" : "SPLIT_STATEMENT",
@@ -143,23 +146,28 @@ export function starterBriefTemplate(creative, definition, mediaInventory) {
       ...Object.fromEntries(
         Object.entries(EDITORIAL).map(([field, guidance]) => [field, `${TODO}${guidance}`]),
       ),
+      ...(pitchMode
+        ? { footerStatement: "Private nonproduction pitch — proposed structure, not owner-confirmed business facts." }
+        : {}),
       /* Chrome and restatement — derived, and safe to derive. */
       homeEyebrow: businessName,
       homePrimaryAction: "Ask about your job",
-      homeSecondaryAction: "See the work",
+      homeSecondaryAction: pitchMode ? "Review the proposal" : "See the work",
       homeServicesHeading: "What we do",
-      homeProjectsHeading: "Work",
+      homeProjectsHeading: pitchMode ? "Visual direction" : "Work",
       servicesEyebrow: "Services",
       serviceMoreLabel: "What this covers",
       questionsEyebrow: "Questions we get asked",
-      evidenceEyebrow: "Where we have done this",
-      projectsEyebrow: "Completed work",
-      relatedRecordLabel: "Another job",
+      evidenceEyebrow: pitchMode ? "References" : "Where we have done this",
+      projectsEyebrow: pitchMode ? "Proposed examples" : "Completed work",
+      relatedRecordLabel: pitchMode ? "Another reference" : "Another job",
       aboutEyebrow: "About",
       aboutLede: firstSentence(sectionBody(definition, "STORY")),
-      methodEyebrow: "How a job runs",
-      methodLede: "The same steps on every job, so nothing about the process is a surprise.",
-      claimsEyebrow: "Licences and cover",
+      methodEyebrow: pitchMode ? "Proposed process" : "How a job runs",
+      methodLede: pitchMode
+        ? "The proposed steps show an enquiry journey for discussion."
+        : "The same steps on every job, so nothing about the process is a surprise.",
+      claimsEyebrow: pitchMode ? "Claims pending confirmation" : "Licences and cover",
       contactEyebrow: "Contact",
       contactHeading: "Tell us about the job",
       checklistEyebrow: "Useful to include",
@@ -173,8 +181,8 @@ export function starterBriefTemplate(creative, definition, mediaInventory) {
       notFoundHeading: "That page is not here",
     },
     mediaPlan: {
-      homeHero: placement(hero, `Work completed by ${businessName}.`),
-      about: placement(about, `${businessName} at work.`),
+      homeHero: placement(hero, pitchMode ? "Private visual direction reference image." : `Work completed by ${businessName}.`, pitchMode),
+      about: placement(about, pitchMode ? "Private visual direction reference image." : `${businessName} at work.`, pitchMode),
     },
     serviceNarratives: [],
   };
@@ -197,13 +205,13 @@ export function unansweredCopy(brief) {
   return unanswered;
 }
 
-function placement(asset, fallbackAlt) {
+function placement(asset, fallbackAlt, forceFallbackAlt = false) {
   if (asset === undefined) {
     return { assetId: "missing-asset", alt: fallbackAlt, focal: { x: 0.5, y: 0.5 } };
   }
   return {
     assetId: asset.assetId,
-    alt: asset.alt ?? fallbackAlt,
+    alt: forceFallbackAlt ? fallbackAlt : asset.alt ?? fallbackAlt,
     focal: { x: asset.focalPoint.x, y: asset.focalPoint.y },
   };
 }

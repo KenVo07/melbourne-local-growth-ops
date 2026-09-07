@@ -22,8 +22,10 @@ and the workflow starts from it rather than re-deciding it.
 
 ## Inherited constraints — the workflow must not break these
 
-1. **`client-website.json` is the only business-truth authority.** Nothing the
-   workflow produces may introduce a fact the client has not stated.
+1. **`client-website.json` is the only composed website authority.** Its factual
+   claims still require client/public evidence. A separate `pitch-architecture.json`
+   may provide explicitly proposed structure for a private nonproduction pitch,
+   but it never becomes `VERIFIED_CLIENT_FACT` and cannot authorize Production.
 2. **P1 stays fast and simple.** No scroll listener, no rAF loop, no added step.
 3. **No promotion into Core without two clients.** The catalogue is the holding area.
 4. **Human gates stay human.** An agent cannot sign its own work.

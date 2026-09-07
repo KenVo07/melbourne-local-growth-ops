@@ -29,6 +29,7 @@ import {
   RECORD_FILES,
   REFUSALS,
   TradiesRefusal,
+  assertPitchCopySafe,
   assertRecord,
   refuse,
   validateRecord,
@@ -370,6 +371,11 @@ async function p1(): Promise<void> {
       `starter-brief.json still carries ${unanswered.length} unanswered copy field(s). A TODO is not copy, and a site must not ship one:\n  ${unanswered.join("\n  ")}`,
       { unanswered },
     );
+  }
+
+  const definitionRecord = definition as { configuration?: { deploymentId?: unknown } };
+  if (typeof definitionRecord.configuration?.deploymentId === "string" && definitionRecord.configuration.deploymentId.endsWith("-private-pitch")) {
+    assertPitchCopySafe(brief);
   }
 
   const output = join(build, "experience");

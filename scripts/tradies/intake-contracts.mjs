@@ -1,8 +1,9 @@
 /**
  * The Tradies delivery intake contracts.
  *
- * Five records an operator authors between "the client said yes" and "the
- * Factory has everything it needs", plus the vocabularies that make the
+ * Five required record roles exist between "the client said yes" and the
+ * Factory being ready. One structural role is supplied by exactly one of two
+ * records. The vocabularies make the
  * done-for-you workflow checkable rather than remembered.
  *
  * This file is deliberately in `scripts/` rather than in `packages/contracts`.
@@ -98,6 +99,7 @@ export const TRUTH_CLASSES = Object.freeze([
   "CLIENT_CLAIM",
   "VERIFIED_PUBLIC_FACT",
   "INFERRED_OPPORTUNITY",
+  "PROPOSED_PITCH_ARCHITECTURE",
   "UNKNOWN",
   "NOT_APPLICABLE",
 ]);
@@ -114,6 +116,35 @@ export const PUBLISHABLE_AS_FACT = Object.freeze([
   "VERIFIED_CLIENT_FACT",
   "VERIFIED_PUBLIC_FACT",
 ]);
+
+const PROHIBITED_PITCH_CLAIM_TEXT = Object.freeze([
+  /\b(?:licen[cs](?:e|ed)|registered electrical contractor|(?:electrical )?registration\s*(?:number|no\.?|#)?\s*\d+|REC\s*(?:number|no\.?|#)?\s*\d+|insured|insurance(?:\s+cover(?:ed)?)?|public liability(?:\s+(?:insurance|cover(?:age|ed)?))?)\b/i,
+  /\b(?:testimonials?|customer reviews?|client reviews?|reviews? from (?:our )?customers?|five[- ]star|[1-5](?:\.\d+)?[- ]star|rated (?:[1-5](?:\.\d+)?|five) stars?|customers? (?:say|said))\b/i,
+  /\b(?:(?:we|our (?:team|business|company)|the (?:team|business|company)) (?:have |has )?(?:completed|delivered|installed|repaired|built)|(?:recent|past|completed) (?:jobs?|projects?|work|installations?|repairs?))\b/i,
+]);
+
+function stringsWithin(value) {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(stringsWithin);
+  if (value !== null && typeof value === "object") return Object.values(value).flatMap(stringsWithin);
+  return [];
+}
+
+function carriesProhibitedPitchClaim(value) {
+  return stringsWithin(value).some((item) => {
+    const withoutExplicitDisclaimers = item
+      .replace(/\b(?:a|the|this|it is a) licen[cs]ed trade we do not hold\b/gi, "")
+      .replace(/\bno (?:licen[cs]e|registration|insurance|credential|completed[- ]work|testimonial) claim(?: is included| is made)?\b/gi, "")
+      .replace(/\b(?:not|never) (?:licen[cs]ed|insured)\b/gi, "");
+    return PROHIBITED_PITCH_CLAIM_TEXT.some((pattern) => pattern.test(withoutExplicitDisclaimers));
+  });
+}
+
+export function assertPitchCopySafe(value) {
+  if (carriesProhibitedPitchClaim(value)) {
+    throw refuse("CONTRACT_INVALID", "Private-pitch copy contains credential, testimonial, or completed-work claim language; omit it until supported by factual authority.");
+  }
+}
 
 export const RESEARCH_SOURCE_KINDS = Object.freeze([
   "EXISTING_WEBSITE",
@@ -757,6 +788,100 @@ VALIDATORS.set("client-intake", (record) => {
 });
 
 /**
+ * Agency-authored structure for a private nonproduction sales concept.
+ *
+ * This is deliberately NOT client-intake. Nothing in this record becomes a
+ * VERIFIED_CLIENT_FACT merely by existing. It may shape a private pitch, but it
+ * cannot carry credentials, completed jobs, testimonials or Production authority.
+ */
+VALIDATORS.set("pitch-architecture", (record) => {
+  const problems = [];
+  const check = checker(record, problems);
+  check.constant("schemaVersion", 1);
+  check.constant("kind", "PITCH_ARCHITECTURE");
+  check.identifier("clientId");
+  check.constant("mode", "NONPRODUCTION_PITCH");
+  check.date("proposedOn");
+  check.text("proposedBy");
+  check.text("businessName");
+  check.text("story");
+
+  const services = check.list("services", 1);
+  uniqueIdentifiers(services, "serviceId", "services", problems);
+  for (const [index, service] of services.entries()) {
+    if (service === null || typeof service !== "object") {
+      problems.push(`services[${index}] must be an object.`);
+      continue;
+    }
+    const at = `services[${index}]`;
+    if (typeof service.title !== "string" || service.title.trim() === "") problems.push(`${at}.title must be a non-empty string.`);
+    if (typeof service.summary !== "string" || service.summary.trim() === "") problems.push(`${at}.summary must be a non-empty string.`);
+    for (const field of ["covers", "excludes", "suitedTo", "whenToCall", "customerProvides"]) {
+      if (!Array.isArray(service[field])) problems.push(`${at}.${field} must be an array.`);
+      else for (const [itemIndex, item] of service[field].entries()) {
+        if (typeof item !== "string" || item.trim() === "") problems.push(`${at}.${field}[${itemIndex}] must be non-empty text.`);
+      }
+    }
+  }
+  const groups = check.listPresent("serviceGroups");
+  const groupIds = uniqueIdentifiers(groups, "groupId", "serviceGroups", problems);
+  for (const [index, group] of groups.entries()) {
+    if (group === null || typeof group !== "object") continue;
+    if (typeof group.title !== "string" || group.title.trim() === "") {
+      problems.push(`serviceGroups[${index}].title must be a non-empty string.`);
+    }
+  }
+  for (const [index, service] of services.entries()) {
+    if (service?.groupId === undefined) continue;
+    if (!groupIds.has(service.groupId)) {
+      problems.push(`services[${index}].groupId "${service.groupId}" is not a declared service group.`);
+    }
+  }
+  check.textList("serviceAreas", 1);
+  check.listPresent("process");
+  const credentials = check.listPresent("credentials");
+  if (credentials.length !== 0) problems.push("credentials must be empty in NONPRODUCTION_PITCH authority.");
+  const projects = check.listPresent("projects");
+  if (projects.length !== 0) problems.push("projects must be empty; a pitch may not invent completed work.");
+  const testimonials = check.value("testimonials");
+  if (testimonials !== undefined && (!Array.isArray(testimonials) || testimonials.length !== 0)) {
+    problems.push("testimonials must be absent or empty; a pitch may not invent customer testimony.");
+  }
+  const completedJobs = check.value("completedJobs");
+  if (completedJobs !== undefined && (!Array.isArray(completedJobs) || completedJobs.length !== 0)) {
+    problems.push("completedJobs must be absent or empty; a pitch may not invent completed work.");
+  }
+  if (check.value("clientApproval") !== undefined) problems.push("clientApproval must be absent; pitch architecture cannot carry owner approval.");
+  if (check.value("ownerApproval") !== undefined) problems.push("ownerApproval must be absent; pitch architecture cannot carry owner approval.");
+  if (carriesProhibitedPitchClaim([record.businessName, record.tagline, record.story, record.serviceGroups, record.services, record.process, record.faqs, record.commercial])) {
+    problems.push("pitch architecture contains credential, testimonial, or completed-work claim language; omit it until supported by factual authority.");
+  }
+  check.listPresent("faqs");
+  check.listPresent("commercial");
+  check.text("contact.enquiryEmail");
+  check.constant("contact.ownership", "PROPORTION_CONTROLLED");
+  const enquiryEmail = check.value("contact.enquiryEmail");
+  if (typeof enquiryEmail === "string" && !/^[^@\s]+@proportion\.systems$/i.test(enquiryEmail)) {
+    problems.push("contact.enquiryEmail must be a Proportion-controlled @proportion.systems address in NONPRODUCTION_PITCH mode.");
+  }
+  const phone = check.value("contact.phone");
+  if (phone !== undefined && (typeof phone !== "string" || !/^\+[1-9][0-9]{7,14}$/.test(phone))) {
+    problems.push("contact.phone must be international E.164-like text, or absent.");
+  }
+  check.oneOf("contact.quoteModel", ["SITE_VISIT_THEN_QUOTE", "PHONE_ESTIMATE", "FIXED_PRICE_LIST", "HOURLY_RATE", "OTHER"]);
+  check.boolean("contact.emergencyAvailable");
+  check.textList("sourceRefs", 1);
+  check.constant("claimPolicy.authority", "PROPOSED_PITCH_ARCHITECTURE");
+  check.constant("claimPolicy.publication", "PRIVATE_PITCH_ONLY");
+  check.constant("claimPolicy.clientPreviewAcceptanceRequired", true);
+  const prohibited = check.textList("claimPolicy.prohibitedClaims", 1);
+  for (const required of ["LICENCE_OR_REGISTRATION", "INSURANCE", "UNVERIFIED_COMPLETED_PROJECT", "UNVERIFIED_TESTIMONIAL"]) {
+    if (!prohibited.includes(required)) problems.push(`claimPolicy.prohibitedClaims must include ${required}.`);
+  }
+  return problems;
+});
+
+/**
  * Every asset the client sent, with the agency's judgement of each.
  *
  * The client is asked for volume and honesty, never curation. Which means this
@@ -941,6 +1066,13 @@ VALIDATORS.set("creative-configuration", (record) => {
     check.humanApprover("clientApproval.approvedBy");
     check.date("clientApproval.approvedOn");
   }
+  const agencyPitchApproval = check.value("agencyPitchApproval");
+  if (agencyPitchApproval !== undefined) {
+    check.constant("agencyPitchApproval.approved", true);
+    check.humanApprover("agencyPitchApproval.approvedBy");
+    check.date("agencyPitchApproval.approvedOn");
+    check.constant("agencyPitchApproval.scope", "PRIVATE_PITCH_DIRECTION");
+  }
   return problems;
 });
 
@@ -951,6 +1083,7 @@ export const RECORD_FILES = Object.freeze({
   "sale-handoff": "sale-handoff.json",
   "business-read": "business-read.json",
   "client-intake": "client-intake.json",
+  "pitch-architecture": "pitch-architecture.json",
   "media-inventory": "media-inventory.json",
   "creative-configuration": "creative-configuration.json",
 });
